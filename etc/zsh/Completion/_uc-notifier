@@ -1,5 +1,15 @@
 #compdef uc-notifier
 
+_uc-notifier_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
+  else
+    _files
+  fi
+}
+
 _uc-notifier_server() {
   local cword
   let cword=CURRENT-1
@@ -14,10 +24,10 @@ _uc-notifier() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" config create destroy disable enable list props server set subscribe test unsubscribe
+    compadd "$@" config corescript create destroy disable enable list props server set subscribe test unsubscribe
   else
     case "${words[2]}" in
-      server)
+      corescript|server)
         _uc-notifier_${words[2]}
         ;;
       *)

@@ -1,3 +1,13 @@
+_sfa-cmd_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _sfa-cmd_server() {
   local cur prev words cword
   _init_completion || return
@@ -22,7 +32,17 @@ _sfa-cmd_controller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test upnp-rescan' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_sfa-cmd_supervisor() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'lock message unlock' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -42,7 +62,7 @@ _sfa-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'pvt server-config ui' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript pvt server-config ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -122,7 +142,7 @@ _sfa-cmd_log() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'api critical debug error get info warning' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -132,10 +152,10 @@ _sfa-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user' -- "$cur" ))
   else
     case "${words[1]}" in
-      action|cloud|controller|cvar|cycle|edit|file|key|log|macro|notify|server|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
         _sfa-cmd_${words[1]}
         ;;
       *)

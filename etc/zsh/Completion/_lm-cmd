@@ -1,5 +1,15 @@
 #compdef lm-cmd
 
+_lm-cmd_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
+  else
+    _files
+  fi
+}
+
 _lm-cmd_server() {
   local cword
   let cword=CURRENT-1
@@ -14,7 +24,7 @@ _lm-cmd_controller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" append disable enable get list props reload remove set test
+    compadd "$@" append disable enable get list props reload remove set test upnp-rescan
   else
     _files
   fi
@@ -54,7 +64,7 @@ _lm-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" macro server-config
+    compadd "$@" corescript macro server-config
   else
     _files
   fi
@@ -134,7 +144,7 @@ _lm-cmd_log() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" critical debug error get info rotate warning
+    compadd "$@" api critical debug error get info warning
   else
     _files
   fi
@@ -144,10 +154,10 @@ _lm-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" clear cmd config controller create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user
+    compadd "$@" clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user
   else
     case "${words[2]}" in
-      config|controller|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
         _lm-cmd_${words[2]}
         ;;
       *)
