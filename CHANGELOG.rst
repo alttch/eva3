@@ -19,6 +19,11 @@ UC
     * Added "enable" flag in API and CLI to enable unit actions / sensor updates
       right after creation.
 
+SFA
+---
+
+    * supervisor features: API lock/unlock, broadcast messages
+
 3.3.0 (2020-02-05)
 ==================
 
