@@ -40,7 +40,6 @@ from eva.exceptions import MethodNotImplemented
 import eva.users
 import eva.notify
 import eva.benchmark
-import uuid
 
 from neotasker import g
 
@@ -98,8 +97,7 @@ def api_need_master(f):
 
 def init_api_call(**kwargs):
     aci = kwargs.copy() if kwargs else {}
-    if eva.core.config.keep_api_log:
-        aci['id'] = str(uuid.uuid4())
+    aci['id'] = str(cherrypy.serving.request.unique_id)
     g.set('aci', aci)
 
 
@@ -492,7 +490,7 @@ class API_Logger(object):
     def get_auth(self, func, params):
         ki = apikey.key_id(params.get('k'))
         if ki:
-            set_aci('ki', ki)
+            set_aci('key_id', ki)
         return ki, ki
 
 
@@ -501,12 +499,12 @@ class HTTP_API_Logger(API_Logger):
     def get_auth(self, func, params):
         ki = apikey.key_id(params.get('k'))
         if ki:
-            set_aci('ki', ki)
+            set_aci('key_id', ki)
         return f'{ki}@{http_real_ip(get_gw=True)}', ki
 
 
 def cp_check_perm(api_key=None, path_info=None):
-    k = api_key if api_key else cp_client_key()
+    k = api_key if api_key else cp_client_key(_aci=True)
     path = path_info if path_info is not None else \
             cherrypy.serving.request.path_info
     if k is not None:
@@ -1297,22 +1295,23 @@ def _http_client_key(_k=None, from_cookie=False):
     return k
 
 
-def key_token_parse(k):
+def key_token_parse(k, _aci=False):
     token = tokens.get_token(k)
     if not token:
         raise AccessDenied('Invalid token')
-    set_aci('auth', 'token')
-    set_aci('token', k)
-    set_aci('u', token['u'])
-    set_aci('utp', token['utp'])
+    if _aci:
+        set_aci('auth', 'token')
+        set_aci('token', k)
+        set_aci('u', token['u'])
+        set_aci('utp', token['utp'])
     return apikey.key_by_id(token['ki'])
 
 
-def cp_client_key(k=None, from_cookie=False):
+def cp_client_key(k=None, from_cookie=False, _aci=False):
     k = _http_client_key(k, from_cookie=from_cookie)
     if k and k.startswith('token:'):
         try:
-            return key_token_parse(k)
+            return key_token_parse(k, _aci=_aci)
         except AccessDenied as e:
             raise cp_forbidden_key(e)
     else:
@@ -1379,7 +1378,6 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         self._cp_config = api_cp_config.copy()
         if api_uri:
             self.api_uri = api_uri
-        self._cp_config['tools.init_call.on'] = True
         self._cp_config['tools.jsonrpc_pre.on'] = True
         self._cp_config['tools.json_out.on'] = True,
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
@@ -1416,7 +1414,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                     if not k:
                         raise AccessDenied
                     if k.startswith('token:'):
-                        k = key_token_parse(k)
+                        k = key_token_parse(k, _aci=True)
                         p['k'] = k
                     if not apikey.check(k=k):
                         raise AccessDenied
@@ -1514,7 +1512,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         GenericAPI.__init__(self)
         GenericHTTP_API_abstract.__init__(self)
         self._cp_config = api_cp_config.copy()
-        self._cp_config['tools.init_call.on'] = True
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
 
@@ -1685,6 +1682,7 @@ def error_page_500(*args, **kwargs):
 
 
 api_cp_config = {
+    'tools.init_call.on': True,
     'tools.nocache.on': True,
     'tools.trailing_slash.on': False,
     'error_page.400': error_page_400,

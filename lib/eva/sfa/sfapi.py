@@ -60,6 +60,8 @@ from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
 
+from eva.api import get_aci
+
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceBusy
@@ -124,9 +126,9 @@ def can_pass_supervisor_lock(k, op='l'):
             return True
         elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['key_id']:
             return True
-        elif ltp == 'u' and eva.api.get_aci('u') == \
+        elif ltp == 'u' and get_aci('u') == \
                 supervisor_lock['o'].get('u') and \
-                eva.api.get_aci('utp') == supervisor_lock['o'].get('utp'):
+                get_aci('utp') == supervisor_lock['o'].get('utp'):
             return True
     return False
 
@@ -162,9 +164,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             raise AccessDenied(
                 'master key required to override user or API key sender info')
         if not u:
-            u = eva.api.get_aci('u')
+            u = get_aci('u')
         if not a:
-            a = eva.api.get_aci('ki')
+            a = get_aci('key_id')
         eva.notify.supervisor_event(subject='message',
                                     data={
                                         'sender': {
@@ -226,11 +228,11 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if c not in [None, 'k', 'u']:
             raise InvalidParameter('c = <null|k|u>')
         if not u:
-            u = eva.api.get_aci('u')
+            u = get_aci('u')
         if not p:
-            p = eva.api.get_aci('utp')
+            p = get_aci('utp')
         if not a:
-            a = eva.api.get_aci('ki')
+            a = get_aci('key_id')
         if p and not u:
             raise InvalidParameter('user type is specified but no user login')
         if (l == 'u' or c == 'u') and not u:
@@ -1523,7 +1525,7 @@ def j2_state(i=None, g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key(from_cookie=True)
+        _k = cp_client_key(from_cookie=True, _aci=True)
     try:
         return api.state(k=_k, i=i, g=g, p=p)
     except:
@@ -1535,7 +1537,7 @@ def j2_groups(g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key(from_cookie=True)
+        _k = cp_client_key(from_cookie=True, _aci=True)
     try:
         return api.groups(k=_k, g=g, p=p)
     except:
@@ -1547,7 +1549,7 @@ def j2_api_call(method, params={}, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key(from_cookie=True)
+        _k = cp_client_key(from_cookie=True, _aci=True)
     f = getattr(api, method)
     try:
         result = f(k=_k, **params)
@@ -1582,7 +1584,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     except:
         env['evaHI'] = False
     try:
-        k = cp_client_key(from_cookie=True)
+        k = cp_client_key(from_cookie=True, _aci=True)
     except:
         k = None
     if k:
@@ -1595,6 +1597,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     template.globals['state'] = j2_state
     template.globals['groups'] = j2_groups
     template.globals['api_call'] = j2_api_call
+    template.globals['get_aci'] = get_aci
     try:
         return template.render(env).encode()
     except:
@@ -1690,7 +1693,11 @@ def json_yml_hook(*args, **kwargs):
 
 class UI_ROOT():
 
-    _cp_config = {'tools.j2.on': True, 'tools.jconverter.on': True}
+    _cp_config = {
+        'tools.init_call.on': True,
+        'tools.j2.on': True,
+        'tools.jconverter.on': True
+    }
 
     def __init__(self):
         cherrypy.tools.j2 = cherrypy.Tool('before_handler',
@@ -1727,7 +1734,7 @@ class SFA_HTTP_Root:
 
     @cherrypy.expose
     def rpvt(self, k=None, f=None, ic=None, nocache=None):
-        _k = cp_client_key(k, from_cookie=True)
+        _k = cp_client_key(k, from_cookie=True, _aci=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None:
             return _tool_error_response('uri not provided', code=400)
@@ -1797,7 +1804,7 @@ class SFA_HTTP_Root:
 
     @cherrypy.expose
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
-        _k = cp_client_key(k, from_cookie=True)
+        _k = cp_client_key(k, from_cookie=True, _aci=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
             raise cp_api_404()
