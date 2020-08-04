@@ -498,8 +498,8 @@ class UCItem(eva.item.Item):
                             m = self.value_in_range_min
                         except:
                             m = self.value_in_range_min
-                        if self.value_in_range_min == self.value_in_range_max and \
-                                self.value_in_range_min_eq and \
+                        if self.value_in_range_min == self.value_in_range_max \
+                                and self.value_in_range_min_eq and \
                                 self.value_in_range_max_eq:
                             cond_eq = True
                             value_condition = 'x == %s' % m
@@ -509,7 +509,8 @@ class UCItem(eva.item.Item):
                                 value_condition += '='
                             value_condition += ' x'
                     else:
-                        value_condition = 'x == \'%s\'' % self.value_in_range_min
+                        value_condition = 'x == \'%s\'' % \
+                                self.value_in_range_min
                         cond_eq = True
                 if (self.value_in_range_min is not None and \
                         isinstance(self.value_in_range_min, float) or \
