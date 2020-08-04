@@ -113,3 +113,18 @@ Example. Let's warn user when specified UC controller is not connected:
         UC controller is not connected
     {%- endif %}
 
+get_aci
+-------
+
+Get current API call info. Valid params are:
+
+* **id** unique API request ID
+* **u** current user
+* **utp** current user type
+* **key_id** current API key id
+
+Example:
+
+.. code-block:: jinja
+
+    Logged in as: {{ get_aci('u') }}
