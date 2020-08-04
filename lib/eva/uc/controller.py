@@ -740,6 +740,7 @@ def serialize_actions():
 
 @with_item_lock
 def start():
+    eva.core.plugins_exec('before_start')
     eva.uc.modbus.start()
     eva.uc.owfs.start()
     eva.uc.driverapi.start()
@@ -748,11 +749,13 @@ def start():
     for i, v in items_by_full_id.items():
         v.start_processors()
     eva.uc.driverapi.start_processors()
+    eva.core.plugins_exec('start')
 
 
 @with_item_lock
 @eva.core.stop
 def stop():
+    eva.core.plugins_exec('before_stop')
     eva.uc.driverapi.stop_processors()
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1:
@@ -764,6 +767,7 @@ def stop():
     eva.uc.driverapi.stop()
     eva.uc.owfs.stop()
     eva.uc.modbus.stop()
+    eva.core.plugins_exec('stop')
 
 
 def exec_mqtt_unit_action(unit, msg):

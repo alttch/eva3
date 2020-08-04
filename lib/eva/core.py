@@ -22,6 +22,13 @@ import gzip
 import timeouter
 import uuid
 import glob
+import importlib
+import yaml
+
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -50,6 +57,8 @@ env = {}
 cvars = {}
 
 controllers = set()
+
+plugin_modules = {}
 
 spawn = task_supervisor.spawn
 
@@ -96,7 +105,8 @@ config = SimpleNamespace(pid_file=None,
                          reactor_thread_pool=15,
                          pool_min_size='max',
                          pool_max_size=None,
-                         user_hook=None)
+                         user_hook=None,
+                         plugins=[])
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
@@ -330,6 +340,9 @@ def create_dump(e='request', msg=''):
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
+        result['plugins'] = {
+            p: exec_plugin_func(p, v, 'dump') for p, v in plugin_modules.items()
+        }
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
         dmp = format_json(result,
@@ -707,15 +720,71 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug('server.mqtt_update_default = %s' %
                       config.mqtt_update_default)
         try:
+            config.plugins = [
+                x.strip() for x in cfg.get('server', 'plugins').split(',')
+            ]
+        except:
+            pass
+        logging.debug('server.plugins = %s' % ', '.join(config.plugins))
+        try:
             config.default_cloud_key = cfg.get('cloud', 'default_key')
         except:
             pass
         logging.debug('cloud.default_key = %s' % config.default_cloud_key)
+        # init plugins
+        for p in config.plugins:
+            fname = f'{dir_eva}/plugins/{p}.py'
+            if os.path.isfile(fname):
+                try:
+                    with open(fname) as fh:
+                        n = {}
+                        exec(fh.read(), n)
+                        plugin_modules[p] = SimpleNamespace(**n)
+                except:
+                    logging.error(f'unable to load plugin {p} ({fname})')
+                    log_traceback()
+                    continue
+            else:
+                try:
+                    modname = f'evacontrib.{p}'
+                    importlib.import_module(modname)
+                except:
+                    logging.error(f'unable to load plugin {p} ({modname})')
+                    log_traceback()
+                    continue
+            logging.info(f'+ plugin {p}')
+        load_plugin_config(cfg)
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)
         log_traceback(display=True)
     return False
+
+
+def load_plugin_config(cfg):
+    c = dict(cfg)
+    for p, v in plugin_modules.items():
+        plugin_config = dict(c.get(p, {}))
+        exec_plugin_func(p, v, 'init', plugin_config)
+
+
+def plugins_exec(method, *args, **kwargs):
+    for p, v in plugin_modules.items():
+        exec_plugin_func(p, v, method, *args, **kwargs)
+
+
+def exec_plugin_func(pname, plugin, func, *args, **kwargs):
+    try:
+        m = getattr(plugin, func)
+    except:
+        return None
+    try:
+        logging.debug(f'Executing plugin func {pname}.{func}')
+        return m(*args, **kwargs)
+    except:
+        logging.error(f'Unable to exec plugin func {pname}.{func}')
+        log_traceback()
+        return None
 
 
 @cvars_lock

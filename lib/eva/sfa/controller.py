@@ -432,12 +432,14 @@ def serialize():
 
 
 def start():
+    eva.core.plugins_exec('before_start')
     uc_pool.start()
     for i, v in remote_ucs.items():
         eva.core.spawn(connect_remote_controller, uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
         eva.core.spawn(connect_remote_controller, lm_pool, v)
+    eva.core.plugins_exec('start')
 
 
 def connect_remote_controller(pool, v):
@@ -451,6 +453,7 @@ def connect_remote_controller(pool, v):
 
 @eva.core.stop
 def stop():
+    eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1:
         save()
@@ -458,6 +461,7 @@ def stop():
         uc_pool.stop()
     if lm_pool:
         lm_pool.stop()
+    eva.core.plugins_exec('stop')
 
 
 @eva.core.dump

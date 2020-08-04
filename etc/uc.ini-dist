@@ -77,6 +77,9 @@ layout = enterprise
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
 
+; plugins, comma separated
+;plugins =
+
 ;[msad]
 ; user authentication via MS Active Directory
 ;host = ad.yourdomain.com

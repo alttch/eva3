@@ -12,6 +12,7 @@ Common
       notifications with the specified time interval.
     * MS Active Directory authentication support
     * extended API logging, "api_log_get" SYS API function
+    * core plugins
 
 UC
 --

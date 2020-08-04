@@ -1149,6 +1149,7 @@ def pdme(item, ns=False):
 
 @with_item_lock
 def start():
+    eva.core.plugins_exec('before_start')
     eva.lm.extapi.start()
     Q.start()
     for i, r in dm_rules.items():
@@ -1168,6 +1169,7 @@ def start():
         except:
             eva.core.log_traceback()
     eva.lm.jobs.scheduler.start()
+    eva.core.plugins_exec('start')
 
 
 def connect_remote_controller(v):
@@ -1182,6 +1184,7 @@ def connect_remote_controller(v):
 @with_item_lock
 @eva.core.stop
 def stop():
+    eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1:
         save()
@@ -1197,6 +1200,7 @@ def stop():
     if Q:
         Q.stop()
     eva.lm.extapi.stop()
+    eva.core.plugins_exec('stop')
 
 
 def exec_macro(macro,

@@ -40,7 +40,15 @@ from functools import wraps
 _shared = {}
 _shared_lock = threading.RLock()
 
+_exposed_lock = threading.RLock()
+_exposed = {}
+
 mbi_code = ''
+
+
+def expose_object(n, o):
+    with _exposed_lock:
+        _exposed[n] = o
 
 
 def shared(name, default=None):
@@ -251,6 +259,11 @@ class MacroAPI(object):
             'get_cycle_info': self.macro_function(self.get_cycle_info),
             'is_cycle_running': self.macro_function(self.is_cycle_running)
         }
+        with _exposed_lock:
+            for fn, f in _exposed.items():
+                if f.__class__.__name__ == 'function':
+                    f = self.macro_function(f)
+                self.__globals[fn] = f
 
     def macro_function(self, f):
 
