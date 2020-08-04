@@ -25,7 +25,7 @@ SFA
 ---
 
     * supervisor features: API lock/unlock, broadcast messages
-    * SFA templates "get_aci" function
+    * SFA templates "get_aci" and "import_module" functions
 
 3.3.0 (2020-02-05)
 ==================

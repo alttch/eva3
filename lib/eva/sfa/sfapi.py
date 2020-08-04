@@ -8,6 +8,7 @@ import os
 import glob
 import logging
 import jinja2
+import importlib
 import requests
 import yaml
 import base64
@@ -1598,6 +1599,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     template.globals['groups'] = j2_groups
     template.globals['api_call'] = j2_api_call
     template.globals['get_aci'] = get_aci
+    template.globals['import_module'] = importlib.import_module
     try:
         return template.render(env).encode()
     except:

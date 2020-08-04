@@ -128,3 +128,15 @@ Example:
 .. code-block:: jinja
 
     Logged in as: {{ get_aci('u') }}
+
+import_module
+-------------
+
+Import any available Python module (mapped to *importlib.import_module*)
+
+Example:
+
+.. code-block:: jinja
+
+    {% set os=import_module('os') %}
+    Server PID: {{ os.getpid() }}
