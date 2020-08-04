@@ -188,7 +188,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         Args:
             k: .allow=supervisor
             .l: lock scope (null = any supervisor can pass, u = only owner can
-                pass, k = all users with owner's API key can pass
+                pass, k = all users with owner's API key can pass)
             .c: unlock/override scope (same as lock type)
             .u: lock user (requires master key)
             .p: user type (null for local, "msad" for Active Directory etc.)

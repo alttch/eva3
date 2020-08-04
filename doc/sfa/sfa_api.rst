@@ -735,7 +735,7 @@ When supervisor lock is set, SFA API functions become read-only for all users, e
 Parameters:
 
 * **k** API key with *allow=supervisor* permissions
-* **l** lock scope (null = any supervisor can pass, u = only owner can pass, k = all users with owner's API key can pass
+* **l** lock scope (null = any supervisor can pass, u = only owner can pass, k = all users with owner's API key can pass)
 * **c** unlock/override scope (same as lock type)
 * **u** lock user (requires master key)
 * **p** user type (null for local, "msad" for Active Directory etc.)
