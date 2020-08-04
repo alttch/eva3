@@ -7,6 +7,7 @@ import cherrypy
 import os
 import glob
 import logging
+import threading
 import jinja2
 import importlib
 import requests
@@ -93,6 +94,14 @@ c=<None|'u'|'k'>
 supervisor_lock = {}
 
 with_supervisor_lock = eva.core.RLocker('sfa/sfapi')
+
+_exposed_sfatpl_lock = threading.RLock()
+_exposed_sfatpl = {}
+
+
+def expose_sfatpl_object(n, o):
+    with _exposed_sfatpl_lock:
+        _exposed_sfatpl[n] = o
 
 
 def api_need_supervisor(f):
@@ -1600,6 +1609,9 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     template.globals['api_call'] = j2_api_call
     template.globals['get_aci'] = get_aci
     template.globals['import_module'] = importlib.import_module
+    with _exposed_sfatpl_lock:
+        for n, v in _exposed_sfatpl.items():
+            template.globals[n] = v
     try:
         return template.render(env).encode()
     except:
