@@ -11,7 +11,8 @@ Common
     * "interval" notifier property allows to schedule item state telemetry
       notifications with the specified time interval.
     * MS Active Directory authentication support
-    * extended API logging, "api_log_get" SYS API function
+    * extended API logging, ACI (API Call Info) core object, "api_log_get" SYS
+      API function
     * core plugins
 
 UC
@@ -24,6 +25,7 @@ SFA
 ---
 
     * supervisor features: API lock/unlock, broadcast messages
+    * SFA templates "get_aci" function
 
 3.3.0 (2020-02-05)
 ==================
