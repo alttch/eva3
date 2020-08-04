@@ -1,0 +1,104 @@
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
+__license__ = "Apache License 2.0"
+__version__ = "3.3.1"
+__api__ = 1
+
+import eva.core
+import logging
+
+# general functions
+
+
+def get_version():
+    """
+    Get plugin API version
+    """
+    return __api__
+
+
+def get_polldelay():
+    """
+    Get core poll delay
+    """
+    return eva.core.config.polldelay
+
+
+def get_system_name():
+    """
+    Get system name (host name)
+    """
+    return eva.core.config.system_name
+
+
+def get_product():
+    """
+    Get product object
+    
+    Returns:
+        namespace(name, code, build)
+    """
+    return eva.core.product
+
+
+def get_sleep_step():
+    """
+    Get core sleep step
+    """
+    return eva.core.sleep_step
+
+
+def get_timeout():
+    """
+    Get default timeout
+    """
+    return eva.core.config.timeout
+
+
+def critical():
+    """
+    Send critical event
+    """
+    return eva.core.critical(from_driver=True)
+
+
+def log_traceback():
+    """
+    Log traceback
+    """
+    return eva.core.log_traceback()
+
+
+# register methods and functions
+
+
+def register_lmacro_object(n, o):
+    """
+    Register custom object for LM PLC macros
+
+    Args:
+        n: object name
+        o: object itself
+    """
+    if get_product().code != 'lm':
+        raise RuntimeError(
+            'Can not register lmacro object, wrong controller type')
+    import eva.lm.macro_api
+    eva.lm.macro_api.expose_object(n, o)
+    logging.debug(f'lmacro object registered: {n} -> {o}')
+
+
+def register_sfatpl_object(n, o):
+    """
+    Register custom object for SFA Templates
+
+    Args:
+        n: object name
+        o: object itself
+    """
+    if get_product().code != 'sfa':
+        raise RuntimeError(
+            'Can not register SFA Templates object, wrong controller type')
+    import eva.sfa.sfapi
+    eva.sfa.sfapi.expose_sfatpl_object(n, o)
+    logging.debug(f'SFA Templates object registered: {n} -> {o}')
