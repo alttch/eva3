@@ -1732,6 +1732,12 @@ class UI_ROOT():
 
 class SFA_HTTP_Root:
 
+    _cp_config = {
+        'tools.init_call.on': True,
+        'tools.j2.on': True,
+        'tools.jconverter.on': True
+    }
+
     @cherrypy.expose
     def index(self, **kwargs):
         q = cherrypy.request.query_string
