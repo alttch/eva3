@@ -162,7 +162,12 @@ class MyAPIFuncs(pa.APIX):
         if x < 0:
             raise pa.InvalidParameter('x < 0')
         # return some result
-        return {'result': x * x, 'you': pa.get_aci('key_id')}
+        return {
+            'result': x * x,
+            'you': pa.get_aci('key_id'),
+            'me': [pa.get_directory('eva'),
+                   pa.get_product().build]
+        }
 
     # log API call as INFO
     @pa.api_log_i

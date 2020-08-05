@@ -1,18 +1,6 @@
 
 .. py:module:: eva.pluginapi
 
-EVA ICS Plugin API
-
-Public API methods are listed below
-
-The following variables are available as well:
-
-* **dir_eva** main EVA ICS directory
-* **dir_runtime** runtime directory
-* **dir_ui** UI directory
-* **dir_pvt** PVT directory
-* **dir_xc** XC directory
-
 
 .. py:class:: APIX()
    :module: eva.pluginapi
@@ -239,6 +227,16 @@ The following variables are available as well:
    :module: eva.pluginapi
 
    get SQLAlchemy connection to primary DB
+   
+
+.. py:function:: get_directory(tp)
+   :module: eva.pluginapi
+
+   Get path to EVA ICS directory
+   
+   :param tp: directory type: eva, runtime, ui, pvt or xc
+   
+   :raises LookupError: if directory type is invalid
    
 
 .. py:function:: get_masterkey()

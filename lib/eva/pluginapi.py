@@ -1,17 +1,3 @@
-"""
-EVA ICS Plugin API
-
-Public API methods are listed below
-
-The following variables are available as well:
-
-* **dir_eva** main EVA ICS directory
-* **dir_runtime** runtime directory
-* **dir_ui** UI directory
-* **dir_pvt** PVT directory
-* **dir_xc** XC directory
-"""
-
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -62,6 +48,21 @@ from eva.core import dir_eva, dir_runtime, dir_ui, dir_pvt, dir_xc
 
 
 # general functions
+def get_directory(tp):
+    """
+    Get path to EVA ICS directory
+
+    Args:
+        tp: directory type: eva, runtime, ui, pvt or xc
+    Raises:
+        LookupError: if directory type is invalid
+    """
+    if tp not in ['eva', 'runtime', 'ui', 'pvt', 'xc']:
+        raise LookupError
+    else:
+        return getattr(eva.core, f'dir_{tp}')
+
+
 def api_call(method, key_id=None, **kwargs):
     """
     Call controller API method
@@ -179,6 +180,7 @@ def log_traceback():
     """
     return eva.core.log_traceback()
 
+
 def spawn(f, *args, **kwargs):
     """
     Run function as a thread in EVA ICS thread pool
@@ -190,6 +192,7 @@ def spawn(f, *args, **kwargs):
         concurrent.futures Future object
     """
     return eva.core.spawn(f, *args, **kwargs)
+
 
 # register methods and functions
 
