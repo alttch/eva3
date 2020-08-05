@@ -139,6 +139,19 @@ def get_product():
     return eva.core.product
 
 
+def check_product(code):
+    """
+    Check controller type
+
+    Args:
+        code: required controller type (uc, lm or sfa)
+    Raises:
+        RuntimeError: if current controller type is wrong
+    """
+    if eva.core.product.code != code:
+        raise RuntimeError(f'This plugin can be run only inside {code.upper()}')
+
+
 def get_sleep_step():
     """
     Get core sleep step
