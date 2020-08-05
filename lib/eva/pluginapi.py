@@ -5,11 +5,27 @@ __version__ = "3.3.1"
 __api__ = 1
 
 import eva.core
-import eva.apikey as apikey
-import eva.api as api
-import logging
+from eva.apikey import check as key_check
+from eva.apikey import key_id as key_id
+from eva.apikey import check_master as key_check_master
 
+from eva.api import parse_api_params
 from eva.tools import parse_function_params
+
+from eva.api import log_d as api_log_d
+from eva.api import log_i as api_log_i
+from eva.api import log_w as api_log_w
+
+from eva.api import APIX
+
+from eva.api import api_need_master
+from eva.sysapi import api_need_file_management
+from eva.sysapi import api_need_rpvt
+from eva.sysapi import api_need_cmd
+from eva.sysapi import api_need_sysfunc
+from eva.sysapi import api_need_lock
+
+import logging
 
 # general functions
 
