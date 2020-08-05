@@ -110,7 +110,7 @@ MQTT event
 Triggered when MQTT message is received and its topic matches subscribed.
 
 To let core scripts react to MQTT events, they must be subscribed to MQTT
-topics, either with SYS API method *subscribe_corescript_mqtt* or with "eva
+topics, either with SYS API method *subscribe_corescripts_mqtt* or with "eva
 <controller> corescript mqtt-subscribe <topic>" console command ("+" and "#"
 MQTT masks are supported).
 
