@@ -18,7 +18,7 @@ Logic
 
 * :doc:`corescript` - tiny Python snippets to handle events, quickly and dirty
 
-* :doc:`/lm/macros` (:doc:/`lm/lm`) - tiny scripts to handle event logic or be
+* :doc:`/lm/macros` (:doc:`/lm/lm`) - tiny scripts to handle event logic or be
   executed on request
 
 * :doc:`/lm/ext` (:doc:`/lm/lm`) - extend functionality of logic macros to
