@@ -44,6 +44,7 @@ import logging
 
 from eva.core import db as get_db
 from eva.core import userdb as get_userdb
+from eva.core import dir_eva, dir_runtime, dir_ui, dir_pvt, dir_xc
 
 
 # general functions
