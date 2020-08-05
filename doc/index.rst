@@ -152,7 +152,7 @@ What you get with EVA
     integrations/yeelight
 
 .. toctree::
-    :caption:  Extension development
+    :caption:  API
     :maxdepth: 1
 
     sysapi
@@ -163,6 +163,11 @@ What you get with EVA
     uc/uc_api_restful
     lm/lm_api_restful
     sfa/sfa_api_restful
+
+.. toctree::
+    :caption:  Extension development
+    :maxdepth: 1
+
     api_clients
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>
