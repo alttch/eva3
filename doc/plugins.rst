@@ -4,4 +4,4 @@ Core plugins
 Resources
 =========
 
-.. include:: pydoc/plugins.rst
+.. include:: pydoc/pydoc_plugins.rst
