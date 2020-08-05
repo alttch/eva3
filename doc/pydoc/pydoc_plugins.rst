@@ -198,6 +198,16 @@ The following variables are available as well:
    API method decorator to pass if API key has "sysfunc" allowed
    
 
+.. py:function:: check_product(code)
+   :module: eva.pluginapi
+
+   Check controller type
+   
+   :param code: required controller type (uc, lm or sfa)
+   
+   :raises RuntimeError: if current controller type is wrong
+   
+
 .. py:function:: check_version(min_version)
    :module: eva.pluginapi
 
