@@ -58,7 +58,7 @@ def api_call(method, key_id=None, **kwargs):
     Returns:
         API function result
     Raises:
-        eva.exceptions.*
+        eva.exceptions
     """
     if not eva.api.jrpc:
         raise FunctionFailed('API not initialized')

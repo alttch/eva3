@@ -85,6 +85,9 @@ def expose_api_method(fn, f, sys_api=False):
 
 
 class MethodNotFound(Exception):
+    """
+    raised when requested method is not found
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -184,6 +187,9 @@ def cp_bad_request(message=None):
 
 
 def parse_api_params(params, names='', types='', defaults=None):
+    """
+    calls parse_function_params but omits API key
+    """
     if isinstance(names, str):
         n = 'k' + names
     elif isinstance(names, list):

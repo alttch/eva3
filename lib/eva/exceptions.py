@@ -17,6 +17,9 @@ class GenericException(Exception):
 
 
 class FunctionFailed(GenericException):
+    """
+    raised with function failed with any reason
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -24,6 +27,9 @@ class FunctionFailed(GenericException):
 
 
 class ResourceNotFound(GenericException):
+    """
+    raised when requested resource is not found
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -31,6 +37,9 @@ class ResourceNotFound(GenericException):
 
 
 class ResourceBusy(GenericException):
+    """
+    raised when requested resource is busy (e.g. can't be changed)
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -38,6 +47,9 @@ class ResourceBusy(GenericException):
 
 
 class ResourceAlreadyExists(GenericException):
+    """
+    raised when requested resource already exists
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -45,6 +57,9 @@ class ResourceAlreadyExists(GenericException):
 
 
 class AccessDenied(GenericException):
+    """
+    raised when call has no access to the resource
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -52,6 +67,10 @@ class AccessDenied(GenericException):
 
 
 class MethodNotImplemented(GenericException):
+    """
+    raised when requested method exists but requested functionality is not
+    implemented
+    """
 
     def __str__(self):
         msg = super().__str__()
@@ -59,6 +78,9 @@ class MethodNotImplemented(GenericException):
 
 
 class TimeoutException(GenericException):
+    """
+    raised when call is timed out
+    """
     pass
 
 
