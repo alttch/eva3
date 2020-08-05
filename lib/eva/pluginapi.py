@@ -8,6 +8,7 @@ import eva.core
 from eva.apikey import check as key_check
 from eva.apikey import key_id as key_id
 from eva.apikey import check_master as key_check_master
+from eva.apikey import get_masterkey
 
 from eva.api import parse_api_params
 from eva.tools import parse_function_params
@@ -15,6 +16,12 @@ from eva.tools import parse_function_params
 from eva.api import log_d as api_log_d
 from eva.api import log_i as api_log_i
 from eva.api import log_w as api_log_w
+
+import eva.api
+
+from eva.api import MethodNotFound
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
 
 from eva.api import APIX
 
@@ -27,7 +34,40 @@ from eva.sysapi import api_need_lock
 
 import logging
 
+from eva.core import db as get_db
+from eva.core import userdb as get_userdb
+
 # general functions
+def api_call(method, key_id=None, **kwargs):
+    """
+    Call controller API method
+
+    Args:
+        key_id: API key ID. If key_id is None, masterkey is used
+        other: passed to API method as-is
+    Returns:
+        API function result
+    Raises:
+        eva.exceptions.*
+    """
+    if not eva.api.jrpc:
+        raise FunctionFailed('API not initialized')
+    f = eva.api.jrpc._get_api_function(method)
+    if not f:
+        raise MethodNotFound
+    result = f(
+        k=apikey.key_by_id(key_id) if key_id is not None else get_masterkey(),
+        **kwargs)
+    if isinstance(result, tuple):
+        res, data = result
+        if res is True:
+            return data
+        elif res is False:
+            raise FunctionFailed
+        elif res is None:
+            raise ResourceNotFound
+    else:
+        return result
 
 
 def get_version():

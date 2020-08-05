@@ -1949,6 +1949,7 @@ def start():
                         'tools.staticdir.on': True
                     }, tiny_httpe)
         })
+    eva.api.jrpc = jrpc
     eva.sfa.cloudmanager.start()
 
 
