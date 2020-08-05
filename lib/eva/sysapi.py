@@ -62,6 +62,9 @@ lock_expire_jobs = {}
 
 
 def api_need_file_management(f):
+    """
+    API method decorator to pass if file management is allowed in server config
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -73,6 +76,9 @@ def api_need_file_management(f):
 
 
 def api_need_rpvt(f):
+    """
+    API method decorator to pass if rpvt is allowed in server config
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -84,6 +90,9 @@ def api_need_rpvt(f):
 
 
 def api_need_cmd(f):
+    """
+    API method decorator to pass if API key has "cmd" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -95,6 +104,9 @@ def api_need_cmd(f):
 
 
 def api_need_sysfunc(f):
+    """
+    API method decorator to pass if API key has "sysfunc" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -106,6 +118,9 @@ def api_need_sysfunc(f):
 
 
 def api_need_lock(f):
+    """
+    API method decorator to pass if API key has "lock" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):

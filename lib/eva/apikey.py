@@ -415,6 +415,12 @@ def load(fname=None, load_from_db=True):
 
 
 def key_by_id(key_id):
+    """
+    get API key by API key ID
+
+    Returns:
+        API key
+    """
     return None if not key_id or not key_id in keys_by_id else \
         keys_by_id[key_id].key
 
@@ -435,6 +441,12 @@ def key_private512(key_id):
 
 
 def key_id(k):
+    """
+    get key ID by API key
+
+    Returns:
+        API key ID
+    """
     return 'unknown' if not k or not k in keys else keys[k].key_id
 
 
@@ -461,6 +473,21 @@ def check(k,
           master=False,
           sysfunc=False,
           ro_op=False):
+    """
+    check API key access
+
+    Arguments are ACL which can be combined
+
+    Args:
+        items: item objects
+        allow: check allows
+        pvt_file: access to pvt resource
+        pvt_file: access to rpvt resource
+        ip: caller IP
+        master: is master access required
+        sysfunc: is sysfunc required
+        ro_op: is item operation read-only
+    """
     if eva.core.is_setup_mode():
         return True
     if not k or not k in keys or (master and not keys[k].master):
@@ -541,10 +568,19 @@ def check(k,
 
 
 def check_master(k):
+    """
+    check is given key a masterkey
+    """
     return check(k, master=True)
 
 
 def get_masterkey():
+    """
+    get master API key
+
+    Returns:
+        master API key
+    """
     return config.masterkey
 
 

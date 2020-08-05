@@ -99,6 +99,9 @@ class EvaHIAuthenticationRequired(Exception):
 
 
 def api_need_master(f):
+    """
+    API method decorator to pass if API key is masterkey
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -123,15 +126,37 @@ def log_api_call_result(status):
 
 
 def get_aci(field, default=None):
+    """
+    get API call info field
+
+    Args:
+        field: ACI field
+        default: default value if ACI field isn' set
+
+    Returns:
+        None if ACI field isn't set
+    """
     return g.get('aci', {}).get(field, default)
 
 
 def set_aci(field, value):
+    """
+    set API call info field
+
+    Args:
+        field: ACI field
+        value: field value
+
+    Returns:
+        True if value is set, False for error (e.g. ACI isn't initialized)
+    """
     try:
         g.get('aci')[field] = value
+        return True
     except TypeError:
         logging.error('Working with non-inialized API call')
         eva.core.log_traceback()
+        return False
 
 
 def http_api_result(result, env):
@@ -603,6 +628,9 @@ def cp_nocache():
 
 
 def log_d(f):
+    """
+    API method decorator to log API call as DEBUG
+    """
 
     @wraps(f)
     def do(self, *args, **kwargs):
@@ -617,6 +645,9 @@ def log_d(f):
 
 
 def log_i(f):
+    """
+    API method decorator to log API call as INFO
+    """
 
     @wraps(f)
     def do(self, *args, **kwargs):
@@ -627,6 +658,9 @@ def log_i(f):
 
 
 def log_w(f):
+    """
+    API method decorator to log API call as WARNING
+    """
 
     @wraps(f)
     def do(self, *args, **kwargs):
@@ -644,6 +678,9 @@ class API:
 
 
 class APIX(API):
+    """
+    API blueprint extension class
+    """
     pass
 
 

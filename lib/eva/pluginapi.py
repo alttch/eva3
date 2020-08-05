@@ -82,9 +82,23 @@ def api_call(method, key_id=None, **kwargs):
 
 def get_version():
     """
-    Get plugin API version
+    Get Plugin API version
     """
     return __api__
+
+
+def check_version(min_version):
+    """
+    Check plugin API version
+
+    Args:
+        min_version: min Plugin API version required
+    Raises:
+        RuntimeError: if Plugin API version is too old
+    """
+    if __api__ < min_version:
+        raise RuntimeError('Plugin API version '
+                           f'({__api__}) is too old, required: {min_version}')
 
 
 def get_polldelay():
