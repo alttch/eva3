@@ -146,6 +146,11 @@ if [ ! -d backup ]; then
     chmod 700 backup
 fi
 
+if [ ! -d plugins ]; then
+    mkdir plugins
+    chmod 755 plugins
+fi
+
 echo "- Installing new files"
 
 rm -f _update/eva-${VERSION}/ui/index.html
