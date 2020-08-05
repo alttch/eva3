@@ -1022,6 +1022,9 @@ fi
 mkdir -p backup
 chmod 700 backup
 
+mkdir -p plugins
+chmod 755 plugins
+
 echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
 echo "LINK=$LINK" >> ./etc/easy_setup
 
