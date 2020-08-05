@@ -170,7 +170,9 @@ class GenericCLI(GCLI):
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
                 ],
-                'list_plugins': ['name', 'version', 'author', 'license']
+                'list_plugins': [
+                    'name', 'version', 'ready', 'author', 'license'
+                ]
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
             self.common_fancy_indentsp = {'test': 14}

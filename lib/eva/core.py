@@ -336,13 +336,22 @@ def core_shutdown():
     task_supervisor.stop(wait=True)
 
 
+def serialize_plugin(plugin_name, plugin_module):
+    result = {
+        'name': plugin_name,
+        'author': getattr(plugin_module, '__author__', None),
+        'version': getattr(plugin_module, '__version__', None),
+        'license': getattr(plugin_module, '__license__', None)
+    }
+    try:
+        result['ready'] = plugin_module.flags.ready
+    except:
+        result['ready'] = None
+    return result
+
+
 def serialize_plugins():
-    return [{
-        'name': p,
-        'author': getattr(v, '__author__', None),
-        'version': getattr(v, '__version__', None),
-        'license': getattr(v, '__license__', None)
-    } for p, v in plugin_modules.items()]
+    return [serialize_plugin(p, v) for p, v in plugin_modules.items()]
 
 
 def create_dump(e='request', msg=''):
