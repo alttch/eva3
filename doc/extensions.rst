@@ -2,7 +2,7 @@ Extending HOWTO
 ***************
 
 There are several different ways to extend EVA ICS functionality, each one is
-proffered for the certain tasks.
+preferred for the certain tasks.
 
 I/O
 ===
