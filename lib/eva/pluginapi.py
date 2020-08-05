@@ -176,6 +176,16 @@ def register_sfatpl_object(n, o):
 def register_apix(o, sys_api=False):
     """
     Register API extension (APIX) object
+
+    All object methods (except internal and private) are automatically exposed
+    as API functions
+
+    Rule of good taste: use <plugin_name>_<method> as class method names, e.g.
+    "mycool_test"
+
+    Args:
+        o: APIX object
+        sys_api: if True, object functions are registered as SYS API
     """
     for m in dir(o):
         if not m.startswith('_'):
