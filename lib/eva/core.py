@@ -123,6 +123,9 @@ _userdb_lock = threading.RLock()
 
 db_update_codes = ['manual', 'instant', 'on_exit']
 
+"""
+main EVA ICS directory
+"""
 dir_eva = os.environ['EVA_DIR'] if 'EVA_DIR' in os.environ \
                                             else dir_eva_default
 dir_var = dir_eva + '/var'

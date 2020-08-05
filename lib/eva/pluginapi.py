@@ -1,3 +1,17 @@
+"""
+EVA ICS Plugin API
+
+Public API methods are listed below
+
+The following variables are available as well:
+
+* **dir_eva** main EVA ICS directory
+* **dir_runtime** runtime directory
+* **dir_ui** UI directory
+* **dir_pvt** PVT directory
+* **dir_xc** XC directory
+"""
+
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
