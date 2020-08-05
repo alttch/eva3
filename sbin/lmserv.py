@@ -18,7 +18,6 @@ import eva.api
 import eva.apikey
 import eva.users
 import eva.lm.controller
-import eva.lm.lmapi
 import eva.logs
 import eva.wsapi
 import eva.mailer
@@ -121,6 +120,7 @@ eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.upnp.start()
+import eva.lm.lmapi
 eva.lm.lmapi.start()
 
 eva.lm.controller.start()

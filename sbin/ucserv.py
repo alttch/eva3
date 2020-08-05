@@ -20,7 +20,6 @@ import eva.api
 import eva.apikey
 import eva.users
 import eva.uc.controller
-import eva.uc.ucapi
 import eva.logs
 import eva.uc.modbus
 import eva.wsapi
@@ -126,6 +125,7 @@ eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
 eva.upnp.start()
+import eva.uc.ucapi
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 

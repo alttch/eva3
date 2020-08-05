@@ -17,7 +17,6 @@ import eva.tokens
 import eva.apikey
 import eva.users
 import eva.sfa.controller
-import eva.sfa.sfapi
 import eva.logs
 import eva.sysapi
 import eva.upnp
@@ -117,6 +116,7 @@ eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.upnp.start()
+import eva.sfa.sfapi
 eva.sfa.sfapi.start()
 
 eva.sfa.controller.start()

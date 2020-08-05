@@ -72,6 +72,17 @@ api_result_accepted = 2
 
 msgpack_loads = partial(msgpack.loads, raw=False)
 
+_exposed_lock = threading.RLock()
+_exposed = {}
+
+
+def expose_api_method(fn, f, sys_api=False):
+    if f.__class__.__name__ != 'method':
+        raise ValueError('only class methods can be exposed')
+    else:
+        with _exposed_lock:
+            _exposed[fn] = (f, sys_api)
+
 
 class MethodNotFound(Exception):
 
@@ -589,11 +600,11 @@ def log_d(f):
 
     @wraps(f)
     def do(self, *args, **kwargs):
-        self.log_api_call(f,
-                          kwargs,
-                          logging.debug,
-                          self._fp_hide_in_log,
-                          debug=True)
+        self._log_api_call(f,
+                           kwargs,
+                           logging.debug,
+                           self._fp_hide_in_log,
+                           debug=True)
         return f(self, *args, **kwargs)
 
     return do
@@ -603,7 +614,7 @@ def log_i(f):
 
     @wraps(f)
     def do(self, *args, **kwargs):
-        self.log_api_call(f, kwargs, logging.info, self._fp_hide_in_log)
+        self._log_api_call(f, kwargs, logging.info, self._fp_hide_in_log)
         return f(self, *args, **kwargs)
 
     return do
@@ -613,13 +624,24 @@ def log_w(f):
 
     @wraps(f)
     def do(self, *args, **kwargs):
-        self.log_api_call(f, kwargs, logging.warning, self._fp_hide_in_log)
+        self._log_api_call(f, kwargs, logging.warning, self._fp_hide_in_log)
         return f(self, *args, **kwargs)
 
     return do
 
 
-class GenericAPI(object):
+class API:
+
+    def __init__(self):
+        self._fp_hide_in_log = {}
+        self._log_api_call = API_Logger()
+
+
+class APIX(API):
+    pass
+
+
+class GenericAPI(API):
 
     @staticmethod
     def _process_action_result(a):
@@ -717,10 +739,6 @@ class GenericAPI(object):
         if save:
             item.save()
         return True
-
-    def __init__(self):
-        self._fp_hide_in_log = {}
-        self.log_api_call = API_Logger()
 
     def _nofp_log(self, func, params):
         fp = self._fp_hide_in_log.setdefault(func, [])
@@ -1322,7 +1340,7 @@ class GenericHTTP_API_abstract:
 
     def __init__(self):
         self.__exposed = {}
-        self.log_api_call = HTTP_API_Logger()
+        self._log_api_call = HTTP_API_Logger()
 
     @generic_web_api_method
     @standard_web_api_method
@@ -1362,6 +1380,13 @@ class GenericHTTP_API_abstract:
                 self._expose(f, a)
             if set_api_uri:
                 self.api_uri = data['uri']
+            with _exposed_lock:
+                for fn, x in _exposed.items():
+                    f = x[0]
+                    s = x[1]
+                    if (s and data['uri'] == '/sys-api') or (
+                            not s and data['uri'] != '/sys-api'):
+                        self._expose(f, fn)
             eva.core.update_corescript_globals(self.__exposed)
         except:
             eva.core.critical()

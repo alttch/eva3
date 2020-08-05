@@ -5,7 +5,11 @@ __version__ = "3.3.1"
 __api__ = 1
 
 import eva.core
+import eva.apikey as apikey
+import eva.api as api
 import logging
+
+from eva.tools import parse_function_params
 
 # general functions
 
@@ -102,3 +106,16 @@ def register_sfatpl_object(n, o):
     import eva.sfa.sfapi
     eva.sfa.sfapi.expose_sfatpl_object(n, o)
     logging.debug(f'SFA Templates object registered: {n} -> {o}')
+
+
+def register_apix(o, sys_api=False):
+    """
+    Register API extension (APIX) object
+    """
+    for m in dir(o):
+        if not m.startswith('_'):
+            f = getattr(o, m)
+            if f.__class__.__name__ == 'method':
+                eva.api.expose_api_method(f.__name__, f, sys_api=sys_api)
+                logging.debug(f'API method registered: {f.__name__} -> {f}' +
+                              (' (SYS API)' if sys_api else ''))
