@@ -1328,7 +1328,7 @@ Get PHI test result (as-is). All PHIs respond to **self** command, **help** comm
 Parameters:
 
 * **k** API key with *master* permissions
-* **m** PHI id
+* **i** PHI id
 * **c** test command
 
 .. _ucapi_unlink_phi_mod:
