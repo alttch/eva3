@@ -445,6 +445,9 @@ def set_db(db_uri=None, userdb_uri=None):
 
 
 def db():
+    """
+    get SQLAlchemy connection to primary DB
+    """
     with _db_lock:
         if not g.has('db'):
             if config.db_update == 1:
@@ -464,6 +467,9 @@ def db():
 
 
 def userdb():
+    """
+    get SQLAlchemy connection to user DB
+    """
     with _userdb_lock:
         if not g.has('userdb'):
             if config.db_update == 1:
