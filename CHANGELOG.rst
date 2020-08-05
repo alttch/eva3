@@ -13,7 +13,7 @@ Common
     * MS Active Directory authentication support
     * extended API logging, ACI (API Call Info) core object, "api_log_get" SYS
       API function
-    * core plugins
+    * Core plug-ins
 
 UC
 --
