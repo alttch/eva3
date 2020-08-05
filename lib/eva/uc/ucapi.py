@@ -1726,7 +1726,7 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            .m: PHI id
+            .i: PHI id
             .c: test command
         """
         i, c = parse_api_params(kwargs, 'ic', 'SS')
