@@ -3031,6 +3031,7 @@ def notify(subject,
         if subject == 'state':
             eva.core.exec_corescripts(event=SimpleNamespace(
                 type=eva.core.CS_EVENT_STATE, source=data[0], data=data[1]))
+            eva.core.plugins_event_state(source=data[0], data=data[1])
         for i in list(notifiers):
             try:
                 if notifiers[i].can_notify():

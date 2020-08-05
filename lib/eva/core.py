@@ -341,7 +341,8 @@ def create_dump(e='request', msg=''):
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
         result['plugins'] = {
-            p: exec_plugin_func(p, v, 'dump') for p, v in plugin_modules.items()
+            p: exec_plugin_func(p, v, 'dump')
+            for p, v in plugin_modules.items()
         }
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
@@ -1179,6 +1180,20 @@ def _t_exec_corescripts(event=None, env_globals={}):
     logging.debug('executing core scripts, event type={}'.format(event.type))
     for c in cs_data.corescripts.copy():
         eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run()
+
+
+def plugins_event_state(source, data):
+    for p, v in plugin_modules.items():
+        f = getattr(v, 'handle_state_event')
+        spawn(_t_handle_state_event, p, f, source, data)
+
+
+def _t_handle_state_event(p, f, source, data):
+    try:
+        f(source, data)
+    except:
+        logging.error(f'Error executing {p}.handle_state_event method')
+        log_traceback()
 
 
 def register_controller(controller):
