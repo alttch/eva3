@@ -411,3 +411,14 @@ The following variables are available as well:
    
    :returns: True if value is set, False for error (e.g. ACI isn't initialized)
    
+
+.. py:function:: spawn(f, *args, **kwargs)
+   :module: eva.pluginapi
+
+   Run function as a thread in EVA ICS thread pool
+   
+   :param f: callable
+   :param args/kwargs: passed to function as-is
+   
+   :returns: concurrent.futures Future object
+   

@@ -179,6 +179,17 @@ def log_traceback():
     """
     return eva.core.log_traceback()
 
+def spawn(f, *args, **kwargs):
+    """
+    Run function as a thread in EVA ICS thread pool
+
+    Args:
+        f: callable
+        args/kwargs: passed to function as-is
+    Returns:
+        concurrent.futures Future object
+    """
+    return eva.core.spawn(f, *args, **kwargs)
 
 # register methods and functions
 
