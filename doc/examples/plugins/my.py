@@ -74,7 +74,7 @@ def init(config):
     # this feature is only for SFA
     try:
         pa.check_product('sfa')
-        # register SFA Templates function "get_weekend"
+        # register SFA Templates function "weekend_days"
         pa.register_sfatpl_object('weekend_days', get_weekend)
     except:
         pass
