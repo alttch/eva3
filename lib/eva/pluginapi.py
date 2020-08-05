@@ -181,7 +181,8 @@ def register_apix(o, sys_api=False):
     as API functions
 
     Rule of good taste: use <plugin_name>_<method> as class method names, e.g.
-    "mycool_test"
+    "mycool_test". APIX methods can also override EVA ICS API methods (use with
+    caution!)
 
     Args:
         o: APIX object
