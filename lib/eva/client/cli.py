@@ -169,7 +169,8 @@ class GenericCLI(GCLI):
                 ],
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
-                ]
+                ],
+                'list_plugins': ['name', 'version', 'author', 'license']
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
             self.common_fancy_indentsp = {'test': 14}
@@ -1483,7 +1484,6 @@ class ControllerCLI(object):
                                               help='List loaded core plugins')
 
         self.append_api_functions({'server:plugins': 'list_plugins'})
-        self.pd_cols['list_plugins'] = ['name', 'version', 'author', 'license']
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
