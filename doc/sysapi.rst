@@ -196,6 +196,25 @@ Optionally:
 * **w** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
 
+.. _sysapi_list_plugins:
+
+list_plugins - get list of loaded core plugins
+----------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_plugins.req
+    :response: http-examples/sysapi/list_plugins.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Returns:
+
+list with plugin module information
+
 .. _sysapi_set_debug:
 
 set_debug - switch debugging mode

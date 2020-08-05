@@ -336,10 +336,20 @@ def core_shutdown():
     task_supervisor.stop(wait=True)
 
 
+def serialize_plugins():
+    return [{
+        'name': p,
+        'author': getattr(v, '__author__', None),
+        'version': getattr(v, '__version__', None),
+        'license': getattr(v, '__license__', None)
+    } for p, v in plugin_modules.items()]
+
+
 def create_dump(e='request', msg=''):
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
+        result['plugin_modules'] = serialize_plugins()
         result['plugins'] = {
             p: exec_plugin_func(p, v, 'dump')
             for p, v in plugin_modules.items()

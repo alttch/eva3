@@ -14,7 +14,7 @@ _sfa-cmd_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch reload restart start status stop
+    compadd "$@" launch plugins reload restart start status stop
   else
     _files
   fi

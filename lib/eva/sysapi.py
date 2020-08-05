@@ -1079,6 +1079,20 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_master
+    def list_plugins(self, **kwargs):
+        """
+        get list of loaded core plugins
+
+        Args:
+            k: .master
+
+        Returns:
+            list with plugin module information
+        """
+        return eva.core.serialize_plugins()
+
+    @log_d
+    @api_need_master
     def get_cvar(self, **kwargs):
         """
         get the value of user-defined variable
@@ -1312,6 +1326,8 @@ class SysHTTP_API_REST_abstract:
     def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
+        if rtp == 'plugin':
+            return self.list_plugins(k=k)
         elif rtp == 'core@apilog':
             return self.api_log_get(k=k, **props)
         elif rtp == 'cvar':

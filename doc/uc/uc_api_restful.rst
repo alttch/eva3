@@ -157,6 +157,26 @@ Optionally:
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
 
 
+.. _ucapi_restful_list_plugins:
+
+get list of loaded core plugins
+-------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_plugins.rest
+    :response: http-examples/sysapi/list_plugins.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+list with plugin module information
+
+
 .. _ucapi_restful_shutdown_core:
 
 shutdown the controller

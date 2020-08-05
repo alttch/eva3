@@ -1479,6 +1479,12 @@ class ControllerCLI(object):
                                help='Show notifier event logs',
                                action='store_true')
 
+        ap_plugins = sp_controller.add_parser('plugins',
+                                              help='List loaded core plugins')
+
+        self.append_api_functions({'server:plugins': 'list_plugins'})
+        self.pd_cols['list_plugins'] = ['name', 'version', 'author', 'license']
+
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
