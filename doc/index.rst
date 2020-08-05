@@ -169,5 +169,6 @@ What you get with EVA
     :caption:  Extension development
     :maxdepth: 1
 
+    extensions
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>

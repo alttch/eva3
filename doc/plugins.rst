@@ -1,5 +1,5 @@
-Core plugins
-************
+Core plug-ins
+*************
 
 Resources
 =========
