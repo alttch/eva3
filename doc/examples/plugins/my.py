@@ -130,7 +130,7 @@ def handle_state_event(source, data):
         source: event source item (object)
         data: serialized item state dict
     """
-    logger.info('event from', source.oid)
+    logger.info(f'event from {source.oid}')
     logger.info(data)
 
 
