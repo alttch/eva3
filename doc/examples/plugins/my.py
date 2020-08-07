@@ -51,11 +51,14 @@ import logging
 logger = logging.getLogger('eva.plugin.my')
 
 
-def init(config):
+def init(config, **kwargs):
     """
     Called by EVA ICS core when the initial configuration is loaded. All
     methods are optional, if the method doesn't exist in plugin, no exception
     is raised
+
+    All methods should have **kwargs in argument list to accept extra arguments
+    from future Plugin API versions
 
     Args:
         config: plugin configuration (comes as key/value dict)
@@ -87,42 +90,42 @@ def init(config):
     flags.ready = True
 
 
-def before_start():
+def before_start(**kwargs):
     """
     Called right before controller start
     """
     logger.info('plugin my before start called')
 
 
-def start():
+def start(**kwargs):
     """
     Called after controller start
     """
     logger.info('plugin my start called')
 
 
-def before_stop():
+def before_stop(**kwargs):
     """
     Called right before controller stop
     """
     logger.info('plugin my before stop called')
 
 
-def stop():
+def stop(**kwargs):
     """
     Called after controller stop
     """
     logger.info('plugin my stop called')
 
 
-def dump():
+def dump(**kwargs):
     """
     Called after controller stop
     """
     return 'something'
 
 
-def handle_state_event(source, data):
+def handle_state_event(source, data, **kwargs):
     """
     Called when any state event is received
 
