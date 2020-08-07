@@ -165,6 +165,7 @@ class MyAPIFuncs(pa.APIX):
         if x < 0:
             raise pa.InvalidParameter('x < 0')
         # return some result
+        # if API method produces no result, it SHOULD return True
         return {
             'result': x * x,
             'you': pa.get_aci('key_id'),
