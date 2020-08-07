@@ -29,10 +29,10 @@ var2 = value2
 """
 
 # plugin header, required
-__author__ = "Altertech, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2020 Altertech"
-__license__ = "Apache License 2.0"
-__version__ = "0.0.1"
+__author__ = 'Altertech, https://www.altertech.com/'
+__copyright__ = 'Copyright (C) 2012-2020 Altertech'
+__license__ = 'Apache License 2.0'
+__version__ = '0.0.1'
 
 # import EVA ICS Plugin API library
 import eva.pluginapi as pa
