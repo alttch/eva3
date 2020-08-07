@@ -703,6 +703,8 @@ def create_macro(m_id, group=None, save=False):
     _m_id = oid_to_id(m_id, 'lmacro')
     if not _m_id:
         raise InvalidParameter('macro id not specified')
+    if group is None and '/' in _m_id:
+        group, _m_id = _m_id.rsplit('/', 1)
     if group and _m_id.find('/') != -1:
         raise InvalidParameter('group specified but macro id contains /')
     if _m_id.find('/') == -1:
