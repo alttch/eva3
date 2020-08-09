@@ -867,15 +867,16 @@ class GenericCLI(GCLI):
                 else:
                     cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
                 for c in cmds:
-                    print(self.get_prompt() + c)
-                    try:
-                        import shlex
-                        code = self.execute_function(shlex.split(c))
-                        self.suppress_colors = False
-                    except:
-                        code = 90
-                    if code and self.batch_stop_on_err:
-                        return code
+                    if c:
+                        print(self.get_prompt() + c)
+                        try:
+                            import shlex
+                            code = self.execute_function(shlex.split(c))
+                            self.suppress_colors = False
+                        except:
+                            code = 90
+                        if code and self.batch_stop_on_err:
+                            return code
             except:
                 print('Unable to open %s' % self.batch_file)
                 return 90
