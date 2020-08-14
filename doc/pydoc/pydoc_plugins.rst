@@ -47,6 +47,43 @@
    
       list of weak references to the object (if defined)
 
+.. py:class:: MQTT(notifier_id)
+   :module: eva.pluginapi
+
+   MQTT helper class
+   
+   :param notifier_id: MQTT notifier to use (default: eva_1)
+   
+   
+   .. py:method:: MQTT.__init__(notifier_id)
+      :module: eva.pluginapi
+   
+      :param notifier_id: MQTT notifier to use (default: eva_1)
+      
+   
+   .. py:attribute:: MQTT.__weakref__
+      :module: eva.pluginapi
+   
+      list of weak references to the object (if defined)
+   
+   .. py:method:: MQTT.register(topic, func, qos=1)
+      :module: eva.pluginapi
+   
+      Register MQTT topic handler
+      
+   
+   .. py:method:: MQTT.send(topic, data, retain=None, qos=1)
+      :module: eva.pluginapi
+   
+      Send MQTT message
+      
+   
+   .. py:method:: MQTT.unregister(topic, func)
+      :module: eva.pluginapi
+   
+      Unregister MQTT topic handler
+      
+
 .. py:exception:: MethodNotFound
    :module: eva.pluginapi
 
@@ -410,6 +447,40 @@
    :returns: True if value is set, False for error (e.g. ACI isn't initialized)
    
 
+.. py:function:: snmp_get(oid, host, port=161, community='public', timeout=0, retries=0, rf=<class 'str'>, snmp_ver=2, walk=False)
+   :module: eva.pluginapi
+
+   :param oid: SNMP OID or MIB name
+   :param host: target host
+   :param port: target port (default: 161)
+   :param community: SNMP community (default: public)
+   :param timeout: max SNMP timeout
+   :param retries: max retry count (default: 0)
+   :param rf: return format: str, float, int or None
+   :param snmp_ver: SNMP version (default: 2)
+   :param walk: if True, SNMP walk will be performed
+   
+   :returns: If rf is set to None, raw pysnmp object is returned, otherwise parsed
+             to float, int or str
+   
+             If walk is requested, list of pysnmp objects is returned
+   
+
+.. py:function:: snmp_set(oid, value, host, port=161, community='private', timeout=0, retries=0, snmp_ver=2)
+   :module: eva.pluginapi
+
+   :param oid: SNMP OID or MIB name
+   :param value: value to set
+   :param host: target host
+   :param port: target port (default: 161)
+   :param community: SNMP community (default: public)
+   :param timeout: max SNMP timeout
+   :param retries: max retry count (default: 0)
+   :param snmp_ver: SNMP version (default: 2)
+   
+   :returns: True if value is set, False if not
+   
+
 .. py:function:: spawn(f, *args, **kwargs)
    :module: eva.pluginapi
 
@@ -419,4 +490,25 @@
    :param args/kwargs: passed to function as-is
    
    :returns: concurrent.futures Future object
+   
+
+.. py:function:: upnp_discover(st, ip='239.255.255.250', port=1900, mx=True, interface=None, trailing_crlf=True, parse_data=True, discard_headers=['Cache-control', 'Host'], timeout=None)
+   :module: eva.pluginapi
+
+   discover uPnP equipment
+   
+   :param st: service type
+   :param ip: multicast ip
+   :param port: multicast port
+   :param mx: use MX header (=timeout)
+   :param interface: network interface (None - scan all)
+   :param trailing_crlf: put trailing CRLF at the end of msg
+   :param parse_data: if False, raw data will be returned
+   :param discard_headers: headers to discard (if parse_data is True)
+   :param timeout: socket timeout (for a single interface)
+   
+   :returns: list of dicts, where IP=equipment IP, otherwise
+             dict, where key=equipment IP addr, value=raw ssdp reply. Note: if data
+             is parsed, all variables are converted to lowercase and capitalized.
+   :rtype: if data is parsed
    
