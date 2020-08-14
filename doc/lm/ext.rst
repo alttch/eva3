@@ -250,6 +250,14 @@ There's no standard way to handle exceptions, however if any of exported
 functions raise them, this should be specified in extension help and readme
 file.
 
+Config validation
+-----------------
+
+Optional method *validate_config* can be implemented to automatically validate
+module configuration.
+
+.. include:: ../pydoc/pydoc_validateconfig.rst
+
 Testing
 -------
 
