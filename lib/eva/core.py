@@ -237,6 +237,8 @@ class GenericExtensionModule:
         """
 
         def _convert_type(v, type_required):
+            if type_required == 'any':
+                return v
             from pyaltt2.converters import val_to_boolean
             from pyaltt2.converters import safe_int
             if type_required == 'bool':
@@ -283,7 +285,9 @@ class GenericExtensionModule:
                 else:
                     return v
             else:
-                return v
+                err = f'Unsupported value type required: "{type_required}"'
+                self.log_error(err)
+                raise TypeError(err)
 
         help_array = getattr(self, f'_{config_type}_help').copy()
         help_array += xparams
