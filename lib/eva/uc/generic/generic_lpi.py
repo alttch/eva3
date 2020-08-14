@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.1"
 __description__ = "Generic LPI, don't use"
-__api__ = 4
+__api__ = 9
 
 __logic__ = 'abstract'
 
@@ -265,6 +265,13 @@ class LPI(GenericExtensionModule):
             'io_label') else 'port'
         if kwargs.get('info_only'):
             return
+        if not kwargs.get('config_validated'):
+            self.validate_config(self.lpi_cfg,
+                                 config_type='config',
+                                 xparams=[{
+                                     'name': 'io_label',
+                                     'type': 'str'
+                                 }])
         self.ready = True
 
     """
