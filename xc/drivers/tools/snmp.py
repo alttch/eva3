@@ -81,6 +81,20 @@ def set(oid,
         timeout=0,
         retries=0,
         snmp_ver=2):
+    """
+    Args:
+        oid: SNMP OID or MIB name
+        value: value to set
+        host: target host
+        port: target port (default: 161)
+        community: SNMP community (default: public)
+        timeout: max SNMP timeout
+        retries: max retry count (default: 0)
+        snmp_ver: SNMP version (default: 2)
+
+    Returns:
+        True if value is set, False if not
+    """
     try:
         for (err_i, err_st, err_idx, vals) in snmp_engine.setCmd(
                 snmp_engine.SnmpEngine(),

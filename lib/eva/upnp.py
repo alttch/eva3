@@ -112,6 +112,8 @@ def discover(st,
              discard_headers=['Cache-control', 'Host'],
              timeout=None):
     """
+    discover uPnP equipment
+
     Args:
         st: service type
         ip: multicast ip
