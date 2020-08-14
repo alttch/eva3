@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.6"
+__version__ = "1.3.0"
 __description__ = "Play audio file"
-__api__ = 5
+__api__ = 7
 __mods_required__ = []
 
 __config_help__ = [{
@@ -33,7 +33,7 @@ __functions__ = {'play(soundfile, gain=0, wait=True)': 'Play audio file'}
 __iec_functions__ = {
     'play': {
         'description':
-        'play audio file',
+            'play audio file',
         'var_in': [{
             'var': 'soundfile',
             'description': 'audio file to play'
@@ -81,8 +81,10 @@ class LMExt(GenericExt):
                 self.log_error('invalid gain value: %s' % self.cfg.get('g'))
                 raise
             try:
-                if 'd' in self.cfg: self.device = int(self.cfg.get('d'))
-                else: self.device = None
+                if 'd' in self.cfg:
+                    self.device = int(self.cfg.get('d'))
+                else:
+                    self.device = None
             except:
                 self.log_error('invalid device number: %s' % self.cfg.get('d'))
                 raise
@@ -111,8 +113,8 @@ class LMExt(GenericExt):
             if self.cmd:
                 cmd = self.cmd.replace(
                     '%g',
-                    str(gain)
-                    if gain is not None else str(self.gain)).replace('%f', f)
+                    str(gain) if gain is not None else str(self.gain)).replace(
+                        '%f', f)
                 if self.cmd.find('%f') == -1:
                     cmd += ' ' + f
                 if not wait:
@@ -127,7 +129,8 @@ class LMExt(GenericExt):
                 if data is None or not rate:
                     raise Exception('invalid audio file %s' % fname)
                 gain = gain if gain is not None else self.gain
-                if gain: data = data * self._gain_multiplier(gain)
+                if gain:
+                    data = data * self._gain_multiplier(gain)
                 self.sd.play(data, rate, blocking=wait, device=self.device)
                 return True
         except:
@@ -145,3 +148,8 @@ class LMExt(GenericExt):
         else:
             g = 0.0
         return g
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)

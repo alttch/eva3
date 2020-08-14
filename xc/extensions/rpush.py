@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __description__ = "Push client for Roboger"
-__api__ = 5
+__api__ = 7
 __mods_required__ = ['pyrpush']
 
 __config_help__ = [{
@@ -92,3 +92,8 @@ class LMExt(GenericExt):
         except:
             log_traceback()
             return False
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)

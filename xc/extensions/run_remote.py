@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __description__ = "Run macro on remote LM PLC"
-__api__ = 5
+__api__ = 7
 __mods_required__ = []
 
 __config_help__ = [{
@@ -32,7 +32,7 @@ __functions__ = {
 __iec_functions__ = {
     'run': {
         'description':
-        'run remote macro',
+            'run remote macro',
         'var_in': [{
             'var': 'macro',
             'description': 'macro id'
@@ -109,16 +109,27 @@ class LMExt(GenericExt):
             q=None,
             _uuid=None):
         params = {'i': macro_id}
-        if args is not None: params['a'] = args
-        if kwargs is not None: params['kw'] = kwargs
-        if priority is not None: params['p'] = priority
-        if wait is not None: params['w'] = wait
-        if q is not None: params['q'] = q
-        if _uuid is not None: params['u'] = _uuid
+        if args is not None:
+            params['a'] = args
+        if kwargs is not None:
+            params['kw'] = kwargs
+        if priority is not None:
+            params['p'] = priority
+        if wait is not None:
+            params['w'] = wait
+        if q is not None:
+            params['q'] = q
+        if _uuid is not None:
+            params['u'] = _uuid
         code, result = self.apiclient.call('run', params)
         if code:
-            self.log_error(
-                'Remote macro %s run failed, API code: %u' % (macro_id, code))
+            self.log_error('Remote macro %s run failed, API code: %u' %
+                           (macro_id, code))
             return None
         else:
             return result
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)
