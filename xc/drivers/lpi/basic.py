@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.3"
+__version__ = "1.3.0"
 __description__ = "Basic LPI for simple devices"
-__api__ = 5
+__api__ = 9
 
 __logic__ = 'basic status on/off'
 
@@ -52,14 +52,17 @@ class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         _state_in = state_in
-        if _state_in: evh = True
-        else: evh = False
+        if _state_in:
+            evh = True
+        else:
+            evh = False
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi._is_required.aao_get and not _state_in:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeouter.get())
-            if not _state_in: return self.state_result_error(_uuid)
+            if not _state_in:
+                return self.state_result_error(_uuid)
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
@@ -184,3 +187,8 @@ class LPI(GenericLPI):
             if set_result is False or set_result is None:
                 return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)

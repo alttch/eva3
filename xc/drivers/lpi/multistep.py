@@ -1,9 +1,9 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2020 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.4'
+__version__ = '1.2.0'
 __description__ = 'Multistep LPI (opener)'
-__api__ = 4
+__api__ = 9
 
 __logic__ = 'multistep with delays'
 
@@ -121,7 +121,8 @@ class LPI(BasicLPI):
     def get_item_cmap(self, cfg):
         result = super().get_item_cmap(cfg)
         dport = cfg.get('d' + self.io_label)
-        if not isinstance(dport, list): dport = [dport]
+        if not isinstance(dport, list):
+            dport = [dport]
         result['dport'] = dport
         return result
 
@@ -131,7 +132,8 @@ class LPI(BasicLPI):
 
     def _calc_delay(self, s, ns, steps, warmup=0, tuning=0):
         _delay = 0
-        if s == ns: return 0
+        if s == ns:
+            return 0
         if ns > s:
             _delay = sum(steps[s:ns])
             if s > 0:
@@ -171,7 +173,8 @@ class LPI(BasicLPI):
         _steps = cfg.get('steps')
         if not _steps:
             return self.action_result_error(_uuid, msg='no steps provided')
-        if not isinstance(_steps, list): _steps = [_steps]
+        if not isinstance(_steps, list):
+            _steps = [_steps]
         steps = []
         for i in _steps:
             try:
@@ -328,3 +331,8 @@ class LPI(BasicLPI):
         result = self.get_result(_u)
         self.clear_result(_u)
         return result
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)
