@@ -201,7 +201,7 @@ class RLocker(GenericLocker):
 
 class GenericExtensionModule:
 
-    def validate_config(self, config={}, config_type='config'):
+    def validate_config(self, config={}, config_type='config', **kwargs):
         """
         Validates module config
 
