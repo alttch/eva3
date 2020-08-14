@@ -40,6 +40,11 @@ from eva.sysapi import api_need_cmd
 from eva.sysapi import api_need_sysfunc
 from eva.sysapi import api_need_lock
 
+from eva.upnp import discover as upnp_discover
+from eva.uc.drivers.tools.mqtt import MQTT
+from eva.uc.drivers.tools.snmp import get as snmp_get
+from eva.uc.drivers.tools.snmp import set as snmp_set
+
 import logging
 
 from eva.core import db as get_db
