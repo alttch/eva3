@@ -5,7 +5,7 @@ __version__ = "1.4.0"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
-__api__ = 8
+__api__ = 9
 __required__ = ['port_get', 'port_set', 'action']
 __mods_required__ = []
 __lpi_default__ = 'basic'
