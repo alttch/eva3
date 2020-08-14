@@ -20,6 +20,12 @@ UC
 
     * Added "enable" flag in API and CLI to enable unit actions / sensor updates
       right after creation.
+    * Driver API 9: PHI & LPI mods config validation
+
+LM PLC
+------
+
+    * Extension API 7: config validation
 
 SFA
 ---
