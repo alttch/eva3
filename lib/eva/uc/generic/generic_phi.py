@@ -5,7 +5,7 @@ __version__ = "3.3.1"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
-__api__ = 8
+__api__ = 9
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
