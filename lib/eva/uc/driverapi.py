@@ -493,7 +493,12 @@ def load_phi(phi_id,
 
 
 @with_drivers_lock
-def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
+def load_driver(lpi_id,
+                lpi_mod_id,
+                phi_id,
+                lpi_cfg=None,
+                start=True,
+                config_validated=False):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
             'Unable to load LPI, unknown PHI: {}'.format(phi_id))
@@ -530,7 +535,9 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     except Exception as e:
         raise FunctionFailed('unable to load LPI mod {}: {}'.format(
             lpi_mod_id, e))
-    lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg, phi_id=phi_id)
+    lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg,
+                      phi_id=phi_id,
+                      config_validated=config_validated)
     if not lpi.ready:
         raise FunctionFailed('unable to init LPI mod %s' % lpi_mod_id)
     lpi.lpi_id = lpi_id
@@ -611,7 +618,7 @@ def set_driver_prop(driver_id, p, v):
     lpi = get_driver(driver_id)
     if not lpi:
         raise ResourceNotFound
-    cfg = lpi.lpi_cfg
+    cfg = lpi.lpi_cfg.copy()
     if p and not isinstance(v, dict):
         cfg[p] = v
     else:
@@ -625,7 +632,13 @@ def set_driver_prop(driver_id, p, v):
                     pass
     if v is None:
         del cfg[p]
-    lpi = load_driver(lpi.lpi_id, lpi.lpi_mod_id, lpi.phi_id, cfg, start=True)
+    lpi.validate_config(cfg, config_type='config')
+    lpi = load_driver(lpi.lpi_id,
+                      lpi.lpi_mod_id,
+                      lpi.phi_id,
+                      cfg,
+                      start=True,
+                      config_validated=True)
     if lpi:
         return True
 
