@@ -38,6 +38,7 @@ from eva.tools import Locker as GenericLocker
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
+from eva.exceptions import InvalidParameter
 
 from neotasker import g, FunctionCollection, task_supervisor
 
@@ -201,6 +202,11 @@ class RLocker(GenericLocker):
 class GenericExtensionModule:
 
     def validate_config(self, config={}, config_type='config'):
+        """
+        Validates module config
+
+        Does nothing by default
+        """
         return True
 
     def validate_config_whi(self,
@@ -208,6 +214,26 @@ class GenericExtensionModule:
                             config_type='config',
                             allow_extra=False,
                             xparams=[]):
+        """
+        Validate config with module help info
+
+        Help info: module help info variable (e.g. __config_help__ for config)
+
+        Args:
+            config: config to validate
+            config_type: config type (help info var to parse, default is:
+            'config')
+            allow_extra: allow any extra params in config
+            xparams: list of allowed extra params
+
+        Returns:
+            True if config is validated. Config dict variables are
+            automatically parsed and converted to the required types (except
+            extra params if not listed)
+
+        Raises:
+            eva.exceptions.InvalidParameter: if configuration is invalid
+        """
 
         def _convert_type(v, type_required):
             from pyaltt2.converters import val_to_boolean
@@ -274,11 +300,11 @@ class GenericExtensionModule:
                 except:
                     log_traceback()
                     errors.append('invalid param '
-                                  f'value {i}="{v}", should be {type_required}')
+                                  f'value {i}="{v}" should be {type_required}')
             elif not allow_extra:
                 errors.append(f'param "{i}" is not allowed')
         if errors:
-            raise ValueError(', '.join(errors))
+            raise InvalidParameter(', '.join(errors))
         else:
             return True
 
