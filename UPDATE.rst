@@ -15,7 +15,7 @@ Update instructions
 ===================
 
 New UC Driver and LM Extensions API require strict validation of module params
-(config, state / action for UC drivers) if supported by module. All modules
+(config, state / action for UC drivers) if supported by module. All modules,
 included in EVA ICS default distribution, have got validation support built-in.
 
 After applying update, controller error log should be checked as well as list
