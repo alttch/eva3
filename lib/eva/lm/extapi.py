@@ -168,7 +168,12 @@ def list_mods():
 
 
 @with_exts_lock
-def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
+def load_ext(ext_id,
+             ext_mod_id,
+             cfg=None,
+             start=True,
+             rebuild=True,
+             config_validated=False):
     if not ext_id:
         raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
@@ -194,7 +199,7 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     except Exception as e:
         raise FunctionFailed('unable to load ext mod {}: {}'.format(
             ext_mod_id, e))
-    ext = ext_mod.LMExt(cfg=cfg)
+    ext = ext_mod.LMExt(cfg=cfg, config_validated=config_validated)
     if not ext.ready:
         raise FunctionFailed('unable to init ext mod %s' % ext_mod_id)
     ext.ext_id = ext_id
@@ -250,7 +255,7 @@ def set_ext_prop(ext_id, p, v):
     ext = get_ext(ext_id)
     if not ext:
         raise ResourceNotFound
-    cfg = ext.cfg
+    cfg = ext.cfg.copy()
     mod_id = ext.mod_id
     if p and not isinstance(v, dict):
         cfg[p] = v
@@ -258,7 +263,8 @@ def set_ext_prop(ext_id, p, v):
         cfg.update(v)
     if v is None:
         del cfg[p]
-    ext = load_ext(ext_id, mod_id, cfg)
+    ext.validate_config(cfg, config_type='config')
+    ext = load_ext(ext_id, mod_id, cfg, config_validated=True)
     if ext:
         return True
 
