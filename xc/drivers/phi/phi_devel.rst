@@ -368,6 +368,14 @@ special record:
 must be present as first in a result. A special column *'!load'* in a
 column list is not required.
 
+Config validation
+=================
+
+Optional method *validate_config* can be implemented to automatically validate
+module configuration.
+
+.. include:: pydoc/pydoc_validateconfig.rst
+
 Working with unit values
 ========================
 

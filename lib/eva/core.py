@@ -205,7 +205,9 @@ class GenericExtensionModule:
         """
         Validates module config
 
-        Does nothing by default
+        Does nothing by default. Can e.g. call self.validate_config_whi to
+        validate config with module help info, validate config with JSON schema
+        or do everything manually
         """
         return True
 
@@ -221,8 +223,7 @@ class GenericExtensionModule:
 
         Args:
             config: config to validate
-            config_type: config type (help info var to parse, default is:
-            'config')
+            config_type: config type (help var to parse, default is 'config')
             allow_extra: allow any extra params in config
             xparams: list of allowed extra params
 
