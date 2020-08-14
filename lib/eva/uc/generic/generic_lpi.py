@@ -34,8 +34,10 @@ from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_phi
 from eva.uc.driverapi import get_timeout
 
+from eva.core import GenericExtensionModule
 
-class LPI(object):
+
+class LPI(GenericExtensionModule):
 
     connections = {'port': 'primary'}
     """
@@ -88,12 +90,12 @@ class LPI(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help.copy()
+                d = self._config_help.copy()
                 return d
             elif helpinfo == 'action':
-                d = self.__action_help.copy()
+                d = self._action_help.copy()
             elif helpinfo == 'update':
-                d = self.__state_help.copy()
+                d = self._state_help.copy()
             else:
                 d = None
             return d
@@ -255,9 +257,9 @@ class LPI(object):
         self.__api_version = mod.__api__
         self.__logic = mod.__logic__
         self.__features = mod.__features__
-        self.__config_help = mod.__config_help__
-        self.__action_help = mod.__action_help__
-        self.__state_help = mod.__state_help__
+        self._config_help = mod.__config_help__
+        self._action_help = mod.__action_help__
+        self._state_help = mod.__state_help__
         self.__help = mod.__help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'

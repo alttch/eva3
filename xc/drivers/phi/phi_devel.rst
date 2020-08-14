@@ -26,7 +26,7 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **8**
+* **__api__**           module API (integer number), current is **9**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
@@ -99,6 +99,7 @@ Property **type** may be:
 * **bin** binary number
 * **float** float number
 * **ufloat** unsigned float (greater or equal to 0)
+* **any** any type
 * **list:type** list of variables with type specified
 * **enum:type:a,b,c** list of the permitted specified type values
 

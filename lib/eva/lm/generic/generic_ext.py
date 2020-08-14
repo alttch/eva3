@@ -27,8 +27,10 @@ from eva.lm.extapi import load_data
 from eva.lm.extapi import save_data
 from eva.lm.extapi import log_traceback
 
+from eva.core import GenericExtensionModule
 
-class LMExt(object):
+
+class LMExt(GenericExtensionModule):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config
@@ -48,7 +50,7 @@ class LMExt(object):
         self.__version = mod.__version__
         self.__mods_required = mod.__mods_required__
         self.__api_version = mod.__api__
-        self.__config_help = mod.__config_help__
+        self._config_help = mod.__config_help__
         self.__functions = mod.__functions__
         self.__help = mod.__help__
         try:
@@ -91,7 +93,7 @@ class LMExt(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help
+                d = self._config_help
             elif helpinfo == 'functions':
                 d = self.__functions
             else:

@@ -122,7 +122,6 @@ _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
 db_update_codes = ['manual', 'instant', 'on_exit']
-
 """
 main EVA ICS directory
 """
@@ -197,6 +196,91 @@ class RLocker(GenericLocker):
 
         super().__init__(mod=mod, relative=True)
         self.critical = critical
+
+
+class GenericExtensionModule:
+
+    def validate_config(self, config={}, config_type='config'):
+        return True
+
+    def validate_config_whi(self,
+                            config={},
+                            config_type='config',
+                            allow_extra=False,
+                            xparams=[]):
+
+        def _convert_type(v, type_required):
+            from pyaltt2.converters import val_to_boolean
+            from pyaltt2.converters import safe_int
+            if type_required == 'bool':
+                value = val_to_boolean(v)
+                if value is None:
+                    raise ValueError
+                else:
+                    return value
+            elif type_required == 'str':
+                return str(v)
+            elif type_required == 'int':
+                return safe_int(v)
+            elif type_required == 'uint':
+                v = safe_int(v)
+                if v < 0:
+                    raise ValueError
+                else:
+                    return v
+            elif type_required == 'hex':
+                return int(v, 16)
+            elif type_required == 'bin':
+                return int(v, 2)
+            elif type_required == 'float':
+                return float(v)
+            elif type_required == 'ufloat':
+                v = float(v)
+                if v < 0:
+                    raise ValueError
+                else:
+                    return v
+            elif type_required.startswith('list:'):
+                type_required = type_required.split(':', 1)[1]
+                for i, val in enumerate(v):
+                    v[i] = _convert_type(val, type_required)
+                return v
+            elif type_required.startswith('enum:'):
+                _, type_required, values = type_required.split(':', 2)
+                values = [
+                    _convert_type(x, type_required) for x in values.split(',')
+                ]
+                v = _convert_type(v, type_required)
+                if v not in values:
+                    raise ValueError
+                else:
+                    return v
+            else:
+                return v
+
+        help_array = getattr(self, f'_{config_type}_help').copy()
+        help_array += xparams
+        help_info = {v['name']: v for v in help_array}
+        required_list = [v['name'] for v in help_array if v.get('required')]
+        errors = []
+        for i in required_list:
+            if i not in config:
+                errors.append(f'required param "{i}" is missing')
+        for i, v in config.items():
+            if i in help_info:
+                try:
+                    type_required = help_info[i].get('type', 'any')
+                    config[i] = _convert_type(v, type_required)
+                except:
+                    log_traceback()
+                    errors.append('invalid param '
+                                  f'value {i}="{v}", should be {type_required}')
+            elif not allow_extra:
+                errors.append(f'param "{i}" is not allowed')
+        if errors:
+            raise ValueError(', '.join(errors))
+        else:
+            return True
 
 
 cvars_lock = RLocker('core')

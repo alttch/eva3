@@ -44,7 +44,7 @@ from types import SimpleNamespace
 from neotasker import BackgroundEventWorker, task_supervisor
 
 
-class PHI(object):
+class PHI(eva.core.GenericExtensionModule):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config
@@ -70,9 +70,9 @@ class PHI(object):
         self.__required = mod.__required__
         self.__mods_required = mod.__mods_required__
         self.__lpi_default = mod.__lpi_default__
-        self.__config_help = mod.__config_help__
-        self.__get_help = mod.__get_help__
-        self.__set_help = mod.__set_help__
+        self._config_help = mod.__config_help__
+        self._get_help = mod.__get_help__
+        self._set_help = mod.__set_help__
         self.__help = mod.__help__
         if hasattr(mod, '__ports_help__'):
             self.__ports_help = mod.__ports_help__
@@ -91,9 +91,9 @@ class PHI(object):
         if self.__discover and not isinstance(self.__discover, list):
             self.__discover = [self.__discover]
         if hasattr(mod, '__discover_help__'):
-            self.__discover_help = mod.__discover_help__
+            self._discover_help = mod.__discover_help__
         else:
-            self.__discover_help = ''
+            self._discover_help = ''
         if isinstance(self.__features, str):
             self.__features = [self.__features]
         else:
@@ -134,6 +134,8 @@ class PHI(object):
                 self.log_error('feature unknown: {}'.format(f))
         if kwargs.get('info_only'):
             return
+        if not kwargs.get('config_validated'):
+            self.validate_config(self.phi_cfg, config_type='config')
         self.ready = True
         # cache time, useful for aao_get devices
         self._cache_set = 0
@@ -202,7 +204,7 @@ class PHI(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help.copy()
+                d = self._config_help.copy()
                 if 'cache' in self.__features:
                     d.append({
                         'name': 'cache',
@@ -218,13 +220,13 @@ class PHI(object):
                         'required': False
                     })
             elif helpinfo == 'get':
-                d = self.__get_help.copy()
+                d = self._get_help.copy()
             elif helpinfo == 'set':
-                d = self.__set_help.copy()
+                d = self._set_help.copy()
             elif helpinfo == 'ports':
                 d = self.__ports_help
             elif helpinfo == 'discover':
-                d = self.__discover_help
+                d = self._discover_help
             else:
                 d = None
             return d

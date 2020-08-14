@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.1"
-__api__ = 8
+__api__ = 9
 
 import importlib
 import logging
@@ -428,7 +428,11 @@ def update_item(i, data):
 
 
 @with_drivers_lock
-def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
+def load_phi(phi_id,
+             phi_mod_id,
+             phi_cfg=None,
+             start=True,
+             config_validated=False):
     if not phi_id:
         raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
@@ -461,7 +465,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     except Exception as e:
         raise FunctionFailed('unable to load PHI mod {}: {}'.format(
             phi_mod_id, e))
-    phi = phi_mod.PHI(phi_cfg=phi_cfg)
+    phi = phi_mod.PHI(phi_cfg=phi_cfg, config_validated=config_validated)
     if not phi.ready:
         raise FunctionFailed('unable to init PHI mod %s' % phi_mod_id)
     phi.phi_id = phi_id
@@ -554,7 +558,7 @@ def set_phi_prop(phi_id, p, v):
     phi = get_phi(phi_id)
     if not phi:
         raise ResourceNotFound
-    cfg = phi.phi_cfg
+    cfg = phi.phi_cfg.copy()
     phi_mod_id = phi.phi_mod_id
     if p and not isinstance(v, dict):
         cfg[p] = v
@@ -569,7 +573,8 @@ def set_phi_prop(phi_id, p, v):
                     pass
     if v is None:
         del cfg[p]
-    phi = load_phi(phi_id, phi_mod_id, cfg, start=True)
+    phi.validate_config(cfg, config_type='config')
+    phi = load_phi(phi_id, phi_mod_id, cfg, start=True, config_validated=True)
     if phi:
         return True
 
