@@ -2087,7 +2087,20 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound('item')
-        drv_p = '|' + d if d else None
+        if d:
+            drv_p = '|' + d
+            driver = eva.uc.driverapi.get_driver(d)
+            if driver is None:
+                raise ResourceNotFound(f'driver {d}')
+        else:
+            drv_p = None
+            driver = None
+        if c and not isinstance(c, dict):
+                c = dict_from_str(c)
+        if driver:
+            driver.validate_config(c, config_type='state')
+            if item.item_type == 'unit':
+                driver.validate_config(c, config_type='action')
         props = {'update_driver_config': c, 'update_exec': drv_p}
         if item.item_type == 'unit':
             props['action_driver_config'] = c
