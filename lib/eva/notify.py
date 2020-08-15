@@ -2414,7 +2414,12 @@ class GCP_IoT(GenericNotifier):
 
     def _call_jrpc(self, payload):
         eva.api.init_api_call(gw='gcpiot:' + self.notifier_id, http_call=False)
-        eva.api.jrpc(p=payload)
+        try:
+            eva.api.jrpc(p=payload)
+        except:
+            eva.core.log_traceback()
+        finally:
+            eva.api.clear_api_call()
 
     def check_connection(self, reconnect=False):
         if self.map is None:

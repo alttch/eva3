@@ -1670,7 +1670,6 @@ def mqtt_api_handler(notifier_id, data, callback):
         logging.warning('MQTT API: API call failed from {}: {}'.format(
             notifier_id, e))
         eva.core.log_traceback()
-        return
     finally:
         clear_api_call()
 
