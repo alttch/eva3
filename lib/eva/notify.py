@@ -2413,7 +2413,7 @@ class GCP_IoT(GenericNotifier):
                 return
 
     def _call_jrpc(self, payload):
-        eva.api.init_api_call(gw='gcpiot:' + self.notifier_id)
+        eva.api.init_api_call(gw='gcpiot:' + self.notifier_id, http_call=False)
         eva.api.jrpc(p=payload)
 
     def check_connection(self, reconnect=False):

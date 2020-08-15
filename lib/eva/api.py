@@ -113,18 +113,24 @@ def api_need_master(f):
     return do
 
 
-def init_api_call(**kwargs):
+def init_api_call(http_call=True, **kwargs):
     aci = kwargs.copy() if kwargs else {}
-    if eva.core.config.keep_api_log:
+    if http_call:
+        aci['id'] = str(cherrypy.serving.request.unique_id)
+    elif eva.core.config.keep_api_log:
         aci['id'] = str(uuid.uuid4())
     g.set('aci', aci)
 
 
+def clear_api_call():
+    g.clear('aci')
+
+
 def log_api_call_result(status):
     if eva.core.config.keep_api_log:
-        call_id = get_aci('id')
-        if call_id:
-            eva.users.api_log_set_status(call_id, status)
+        i = get_aci('id')
+        if i:
+            eva.users.api_log_set_status(i, status)
 
 
 def get_aci(field, default=None):
@@ -156,8 +162,6 @@ def set_aci(field, value):
         g.get('aci')[field] = value
         return True
     except TypeError:
-        logging.error('Working with non-initialized API call')
-        eva.core.log_traceback()
         return False
 
 
@@ -498,16 +502,17 @@ class API_Logger(object):
         # extended API call logging
         if not debug and eva.core.config.keep_api_log:
             i = get_aci('id')
-            gw = get_aci('gw', 'http')
-            auth = get_aci('auth', 'key')
-            u = get_aci('u')
-            utp = get_aci('utp')
-            ip = http_real_ip(get_gw=True, ip_only=True)
-            is_logged = get_aci('logged')
-            if not is_logged:
-                eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func,
-                                         info)
-                set_aci('logged', True)
+            if i:
+                gw = get_aci('gw', 'http')
+                auth = get_aci('auth', 'key')
+                u = get_aci('u')
+                utp = get_aci('utp')
+                ip = http_real_ip(get_gw=True, ip_only=True)
+                is_logged = get_aci('logged')
+                if not is_logged:
+                    eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func,
+                                             info)
+                    set_aci('logged', True)
 
     def __call__(self, func, params, logger, fp_hide, debug=False):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide,
@@ -1642,7 +1647,7 @@ def mqtt_api_handler(notifier_id, data, callback):
                 logging.warning('MQTT API: invalid JSON data or API key from ' +
                                 notifier_id)
                 raise
-        init_api_call(gw='mqtt:' + notifier_id)
+        init_api_call(gw='mqtt:' + notifier_id, http_call=False)
         try:
             response = jrpc(p=payload)
         except:
@@ -1663,6 +1668,8 @@ def mqtt_api_handler(notifier_id, data, callback):
             notifier_id, e))
         eva.core.log_traceback()
         return
+    finally:
+        clear_api_call()
 
 
 def start():
