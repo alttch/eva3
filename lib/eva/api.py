@@ -12,6 +12,7 @@ import importlib
 import rapidjson
 import msgpack
 import eva.tokens as tokens
+import uuid
 
 import eva.core
 import eva.crypto
@@ -114,7 +115,8 @@ def api_need_master(f):
 
 def init_api_call(**kwargs):
     aci = kwargs.copy() if kwargs else {}
-    aci['id'] = str(cherrypy.serving.request.unique_id)
+    if eva.core.config.keep_api_log:
+        aci['id'] = str(uuid.uuid4())
     g.set('aci', aci)
 
 
@@ -154,7 +156,7 @@ def set_aci(field, value):
         g.get('aci')[field] = value
         return True
     except TypeError:
-        logging.error('Working with non-inialized API call')
+        logging.error('Working with non-initialized API call')
         eva.core.log_traceback()
         return False
 
