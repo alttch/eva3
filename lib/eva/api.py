@@ -501,7 +501,11 @@ class API_Logger(object):
             u = get_aci('u')
             utp = get_aci('utp')
             ip = http_real_ip(get_gw=True, ip_only=True)
-            eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func, info)
+            is_logged = get_aci('logged')
+            if not is_logged:
+                eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func,
+                                         info)
+                set_aci('logged', True)
 
     def __call__(self, func, params, logger, fp_hide, debug=False):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide,
