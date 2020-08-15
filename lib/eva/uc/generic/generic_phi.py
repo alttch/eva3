@@ -35,6 +35,8 @@ from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import get_shared_namespace
 
+from eva.x import GenericX
+
 from time import time
 from time import sleep
 from time import perf_counter
@@ -44,7 +46,7 @@ from types import SimpleNamespace
 from neotasker import BackgroundEventWorker, task_supervisor
 
 
-class PHI(eva.core.GenericExtensionModule):
+class PHI(GenericX):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config

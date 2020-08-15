@@ -255,7 +255,7 @@
    get API call info field
    
    :param field: ACI field
-   :param default: default value if ACI field isn' set
+   :param default: default value if ACI field isn't set
    
    :returns: None if ACI field isn't set
    

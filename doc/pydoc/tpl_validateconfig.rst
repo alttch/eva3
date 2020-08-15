@@ -1,2 +1,2 @@
-.. autoclass:: eva.core.GenericExtensionModule
+.. autoclass:: eva.x.GenericX
     :members: validate_config, validate_config_whi

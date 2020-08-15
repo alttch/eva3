@@ -27,10 +27,10 @@ from eva.lm.extapi import load_data
 from eva.lm.extapi import save_data
 from eva.lm.extapi import log_traceback
 
-from eva.core import GenericExtensionModule
+from eva.x import GenericX
 
 
-class LMExt(GenericExtensionModule):
+class LMExt(GenericX):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config

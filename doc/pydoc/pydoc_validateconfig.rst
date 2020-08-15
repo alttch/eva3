@@ -1,10 +1,10 @@
 
-.. py:class:: GenericExtensionModule
-   :module: eva.core
+.. py:class:: GenericX
+   :module: eva.x
 
    
-   .. py:method:: GenericExtensionModule.validate_config(config={}, config_type='config')
-      :module: eva.core
+   .. py:method:: GenericX.validate_config(config={}, config_type='config', **kwargs)
+      :module: eva.x
    
       Validates module config
       
@@ -13,8 +13,8 @@
       or do everything manually
       
    
-   .. py:method:: GenericExtensionModule.validate_config_whi(config={}, config_type='config', allow_extra=False, xparams=[])
-      :module: eva.core
+   .. py:method:: GenericX.validate_config_whi(config={}, config_type='config', allow_extra=False, xparams=[])
+      :module: eva.x
    
       Validate config with module help info
       

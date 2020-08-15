@@ -34,10 +34,10 @@ from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_phi
 from eva.uc.driverapi import get_timeout
 
-from eva.core import GenericExtensionModule
+from eva.x import GenericX
 
 
-class LPI(GenericExtensionModule):
+class LPI(GenericX):
 
     connections = {'port': 'primary'}
     """
