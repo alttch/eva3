@@ -19,7 +19,7 @@ __config_help__ = [{
 }, {
     'name': 'timeout',
     'help': 'API timeout',
-    'type': 'int',
+    'type': 'ufloat',
     'required': False
 }]
 
