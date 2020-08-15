@@ -1318,7 +1318,8 @@ def update_corescript_globals(data):
 
 
 def exec_corescripts(event=None, env_globals={}):
-    spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
+    if cs_data.corescripts:
+        spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
 
 
 def _t_exec_corescripts(event=None, env_globals={}):
