@@ -263,6 +263,11 @@ class LPI(GenericExtensionModule):
         self.__help = mod.__help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
+        if self.io_label != 'port':
+            for l in self._action_help, self._state_help:
+                for v in l:
+                    if v['name'] == 'port':
+                        v['name'] = self.io_label
         if kwargs.get('info_only'):
             return
         if not kwargs.get('config_validated'):
