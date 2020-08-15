@@ -164,8 +164,8 @@ class GenericCLI(GCLI):
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'api_log_get': [
-                    'time', 'gw', 'ip', 'auth', 'u', 'utp', 'ki', 'func',
-                    'params'
+                    'time', 'gw', 'ip', 'auth', 'u', 'utp', 'ki', 'status',
+                    'func', 'params'
                 ],
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
