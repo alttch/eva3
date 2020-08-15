@@ -249,6 +249,12 @@ class GenericExtensionModule:
                     return value
             elif type_required == 'str':
                 return str(v)
+            elif type_required == 'url':
+                v = str(v)
+                if v.startswith('http://') or v.startswith('https://'):
+                    return v
+                else:
+                    raise ValueError
             elif type_required == 'int':
                 return safe_int(v)
             elif type_required == 'uint':
