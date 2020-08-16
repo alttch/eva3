@@ -11,6 +11,7 @@ Common
     * "interval" notifier property allows to schedule item state telemetry
       notifications with the specified time interval.
     * MS Active Directory authentication support
+    * custom primary log formats (e.g. JSON logs)
     * extended API logging, ACI (API Call Info) core object, "api_log_get" SYS
       API function
     * Core plug-ins

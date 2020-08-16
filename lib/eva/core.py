@@ -100,6 +100,7 @@ config = SimpleNamespace(pid_file=None,
                          exec_after_save=None,
                          mqtt_update_default=None,
                          enterprise_layout=True,
+                         log_format=None,
                          syslog=None,
                          syslog_format=None,
                          reactor_thread_pool=15,
@@ -533,6 +534,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.syslog = cfg.get('server', 'syslog')
                 if config.syslog == 'yes':
                     config.syslog = '/dev/log'
+            except:
+                pass
+            try:
+                config.log_format = cfg.get('server', 'log_format')
             except:
                 pass
             try:

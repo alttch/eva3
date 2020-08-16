@@ -7,6 +7,8 @@ polldelay = 0.01
 pid_file = var/sfa.pid
 ; log file
 log_file = log/sfa.log
+; custom primary log format (use double %)
+;log_format = { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s" }
 ; logging to local syslog
 ;syslog = yes
 ; logging to non-standard (/dev/log) local syslog socket
@@ -14,7 +16,7 @@ log_file = log/sfa.log
 ; logging to remote syslog
 ;syslog = hostname:514
 ; custom syslog format (use double %)
-;syslog_format = EVA: { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s"}
+;syslog_format = EVA: { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s" }
 ; db updates - instant, manual or on_exit
 db_update = instant
 ; db file, default runtime/db/sfa.db

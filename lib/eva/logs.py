@@ -56,14 +56,18 @@ def handle_append(rd, **kwargs):
 
 
 def init():
-    formatter = logging.Formatter(('%(asctime)s ' + \
-            eva.core.config.system_name + \
-        ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
-        'l:%(lineno)d th:%(threadName)s :: %(message)s') if \
-            eva.core.config.development else \
-            ('%(asctime)s ' + eva.core.config.system_name + \
-            '  %(levelname)s ' + eva.core.product.code + \
-            ' %(threadName)s: %(message)s'))
+    if eva.core.config.log_format:
+        log_format = eva.core.config.log_format
+    else:
+        log_format = ('%(asctime)s ' + \
+                eva.core.config.system_name + \
+            ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
+            'l:%(lineno)d th:%(threadName)s :: %(message)s') if \
+                eva.core.config.development else \
+                ('%(asctime)s ' + eva.core.config.system_name + \
+                '  %(levelname)s ' + eva.core.product.code + \
+                ' %(threadName)s: %(message)s')
+    formatter = logging.Formatter(log_format)
     pyaltt2.logs.handle_append = handle_append
     pyaltt2.logs.init(
         name=eva.core.product.code,
