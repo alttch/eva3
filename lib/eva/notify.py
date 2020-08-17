@@ -1094,6 +1094,8 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                     data_ts = dts
                     break
                 data_ts.append(dts)
+        elif self.method == 'list':
+            data_ts = [{**d, **v} for v in data]
         else:
             data_ts = d
             data_ts['data'] = data
@@ -1108,7 +1110,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 self.log_error(code=r.status_code)
                 return False
         if r.ok:
-            if r.status_code != 202:
+            if r.status_code != 202 and len(r.content) != 0:
                 result = r.json()
                 if not result.get('ok'):
                     error = result.get('error')
@@ -1140,6 +1142,8 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                     'params': d,
                     'id': req_id
                 }
+            elif self.method == 'list':
+                data_ts = [d]
             else:
                 data_ts = d
             r = self.rsession().post(self.uri,
@@ -1148,14 +1152,17 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                                      **self.xrargs)
             if not r.ok:
                 return False
-            result = r.json()
-            if self.method == 'jsonrpc':
-                if result.get('jsonrpc') != '2.0' or \
-                        result.get('id') != req_id or 'error' in result:
+            elif r.status_code == 202 or len(r.content) == 0:
+                return True
+            else:
+                result = r.json()
+                if self.method == 'jsonrpc':
+                    if result.get('jsonrpc') != '2.0' or \
+                            result.get('id') != req_id or 'error' in result:
+                        return False
+                elif not result.get('ok'):
                     return False
-            elif not result.get('ok'):
-                return False
-            return True
+                return True
         except:
             eva.core.log_traceback(notifier=True)
             return False
@@ -1171,7 +1178,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
 
     def set_prop(self, prop, value):
         if prop == 'method':
-            if value is not None and value not in ['jsonrpc']:
+            if value is not None and value not in ['jsonrpc', 'list']:
                 return False
             else:
                 self.method = value

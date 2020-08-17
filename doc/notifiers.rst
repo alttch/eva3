@@ -654,12 +654,19 @@ third-party or your own web applications.
 
 JSON notifier send POST request to specified URI with data:
 
-* **k** notification key the remote app may use to authorize the sender
+* **k** notification key the remote app may use to authorize the sender (if
+  set)
+* **space** notification space (if set)
 * **subject** event subject
 * **data** event data array
 
+If notification endpoint accepts only list data, set *method=list* in notifier
+properties. In this case, all above fields are included in each notification
+data row.
+
 Your application must respond with JSON if the event has been processed
-successfully:
+successfully (if empty response body is received, request is considered as
+successful):
 
 .. code-block:: json
 
