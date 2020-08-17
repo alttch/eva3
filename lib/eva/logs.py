@@ -44,7 +44,7 @@ def get_log_level_by_id(l):
         if lv in log_levels_by_name:
             return lv
     else:
-        level = log_levels_by_id(l)
+        level = log_levels_by_id[l]
     if not level:
         raise InvalidParameter('Invalid log level specified: {}'.format(l))
     return level
@@ -52,6 +52,7 @@ def get_log_level_by_id(l):
 
 def handle_append(rd, **kwargs):
     import eva.notify
+    rd['lvl'] = get_log_level_by_id(rd['l'])
     eva.notify.notify('log', [rd], **kwargs)
 
 
