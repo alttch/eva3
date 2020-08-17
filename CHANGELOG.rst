@@ -15,6 +15,7 @@ Common
     * extended API logging, ACI (API Call Info) core object, "api_log_get" SYS
       API function
     * Core plug-ins
+    * JSON notifiers "list" method to send all data in list format
 
 UC
 --
