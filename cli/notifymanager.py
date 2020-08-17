@@ -74,7 +74,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p',
                                help=textwrap.dedent('''
         Notifier properties:
-            json:http(s)://[key]@uri[#jsonrpc]
+            json:http(s)://[key]@uri[#jsonrpc|#list]
             mqtt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
@@ -424,6 +424,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         n = self.get_notifier(params['i'])
         prop = params.get('p')
         value = params.get('v')
+        if not value and '=' in prop:
+            prop, value = prop.split('=', 1)
         if not n or not n.set_prop(prop, value):
             return self.local_func_result_failed
         eva.notify.append_notifier(n)
