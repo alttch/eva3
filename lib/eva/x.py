@@ -1,4 +1,5 @@
 from eva.exceptions import InvalidParameter
+from types import SimpleNamespace
 
 
 class GenericX:
@@ -121,3 +122,20 @@ class GenericX:
             raise InvalidParameter(', '.join(errors))
         else:
             return True
+
+
+def import_sfm(fname):
+    """
+    Import single file as a module
+
+    Args:
+        fname: file name to import
+    Returns:
+        Module globals
+    Raises:
+        all possible exceptions
+    """
+    with open(fname) as fh:
+        n = {}
+        exec(fh.read(), n)
+        return SimpleNamespace(**n)

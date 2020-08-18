@@ -39,6 +39,8 @@ from eva.tools import Locker as GenericLocker
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
 
+from eva.x import import_sfm
+
 from neotasker import g, FunctionCollection, task_supervisor
 
 import pyaltt2.logs
@@ -769,10 +771,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             fname = f'{dir_eva}/plugins/{p}.py'
             if os.path.isfile(fname):
                 try:
-                    with open(fname) as fh:
-                        n = {}
-                        exec(fh.read(), n)
-                        plugin_modules[p] = SimpleNamespace(**n)
+                    plugin_modules[p] = import_sfm(fname)
                 except:
                     logging.error(f'unable to load plugin {p} ({fname})')
                     log_traceback()
