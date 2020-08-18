@@ -706,8 +706,10 @@ If notification endpoint accepts only list (ndjson) data, set *method=list* in
 JSON notifier properties. In this case, all above fields are included in each
 notification data row.
 
-`NDJSON <http://ndjson.org/>`_ (Newline Delimited JSON) allows to send, process and collect EVA ICS
-logs, state telemetry and other data as HTTP NDJSON-stream.
+This allows to send, process and collect EVA ICS logs, state telemetry and
+other data as HTTP `NDJSON <http://ndjson.org/>`_ (Newline Delimited JSON)
+stream, which is compatible with various data collectors, processors and
+aggregators.
 
 JSON RPC
 --------
