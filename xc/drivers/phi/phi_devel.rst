@@ -534,6 +534,7 @@ by itself. To perform this, PHI should support **aao_get** feature and be
 loaded with *update=N* config param. Updates, intervals as well as the whole
 update process are handled by parent class.
 
+
 Working with I2C/SMBus
 ======================
 
@@ -572,6 +573,7 @@ below:
 
 All I2C/SMBus exceptions, timeouts and retries should be handled by the code of
 your PHI.
+
 
 Working with Modbus
 ===================
@@ -636,6 +638,57 @@ The variable **client_type** of the port object (*mb.client_type*) holds the
 port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
+
+
+Working with Ethernet/IP
+========================
+
+The standard way to work with Ethernet/IP devices in EVA ICS is `cpppo
+<https://github.com/pjkundert/cpppo/>`_ Python module. The module isn't
+installed by default. Set *EXTRA="cpppo"* in */opt/eva/etc/venv* and rebuild
+EVA ICS venv (*/opt/eva/install/build-venv*).
+
+Here is helper usage example:
+
+.. code-block:: python
+
+    # ........
+    from eva.uc.drivers.tools.cpppo_eip import operate
+    from eva.uc.driverapi import log_traceback
+
+    class PHI(GenericPHI):
+
+        def get(self, port=None, cfg=None, timeout=0):
+            try:
+                result, failures = operate(
+                    host=self.phi_cfg['host'],
+                    port=self.phi_cfg['port'],
+                    tags=[port])
+                if failures:
+                    raise RuntimeError
+                else:
+                    # the module example returns unit status (int)
+                    return int(result[0][0])
+            except:
+                log_traceback()
+                return None
+
+        def set(self, port=None, data=None, cfg=None, timeout=0):
+            try:
+                _, failures = operate(
+                    host=self.phi_cfg['host'],
+                    port=self.phi_cfg['port'],
+                    tags=[f'{port}={data}'])
+                if failures:
+                    raise RuntimeError
+                else:
+                    return True
+            except:
+                log_traceback()
+                return False
+
+The helper function arguments are similar to *cpppo.server.enip.client* command
+line arguments. Refer to function pydoc or CLI help for more details.
 
 
 Working with Modbus slave memory space
@@ -798,6 +851,7 @@ need to use SNMP MIBs and dotted number SNMP OIDs are used instead.
 If you plan to use SNMP MIBs, you should warn user to download them and place
 to the proper location or include MIB directly into PHI code to generate it on
 the flow.
+
 
 Working with MQTT
 =================

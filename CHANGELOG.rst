@@ -22,7 +22,7 @@ UC
 
     * Added "enable" flag in API and CLI to enable unit actions / sensor updates
       right after creation.
-    * Driver API 9: PHI & LPI mods config validation
+    * Driver API 9: PHI & LPI mods config validation, Ethernet/IP client helper
 
 LM PLC
 ------
