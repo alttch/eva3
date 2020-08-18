@@ -137,5 +137,5 @@ def import_sfm(fname):
     """
     with open(fname) as fh:
         n = {}
-        exec(fh.read(), n)
+        exec(compile(fh.read(), fname, mode='exec'), n)
         return SimpleNamespace(**n)
