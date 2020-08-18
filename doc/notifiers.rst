@@ -64,7 +64,8 @@ When the system or you add record to the logs, the notification system sends
      "msg": "<message body>",
      "mod": "<MODULE>",
      "th": "<MODULE_THREAD>",
-     "t": <TIME(UNIX_TIMESTAMP)>
+     "t": <TIME(UNIX_TIMESTAMP)>,
+     "dt": <TIME RFC3339>
     }
 
 * **SYSTEM_NAME** the name specified in the configuration file of controller
