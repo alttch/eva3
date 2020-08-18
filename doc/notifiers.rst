@@ -660,10 +660,6 @@ JSON notifier send POST request to specified URI with data:
 * **subject** event subject
 * **data** event data array
 
-If notification endpoint accepts only list data, set *method=list* in notifier
-properties. In this case, all above fields are included in each notification
-data row.
-
 Your application must respond with JSON if the event has been processed
 successfully (if empty response body is received, request is considered as
 successful):
@@ -702,6 +698,15 @@ Example of custom notification processing server with Python and `Flask
         # process notification request
         return jsonify({'ok': True})
 
+NDJSON
+------
+
+If notification endpoint accepts only list (ndjson) data, set *method=list* in
+JSON notifier properties. In this case, all above fields are included in each
+notification data row.
+
+NDJSON (Newline Delimited JSON) allows to send, process and collect EVA ICS
+logs, state telemetry and other data as HTTP NDJSON-stream.
 
 JSON RPC
 --------
