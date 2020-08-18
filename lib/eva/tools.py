@@ -25,6 +25,7 @@ from pyaltt2.crypto import gen_random_str
 from pyaltt2.lp import parse_func_str
 from pyaltt2.network import parse_host_port, netacl_match
 
+from pathlib import Path
 
 class MultiOrderedDict(OrderedDict):
 
@@ -427,11 +428,16 @@ def fmt_time(t):
         return t
 
 
-def get_caller(stack_len=2):
+def get_caller(stack_len=0):
     import inspect
-    return inspect.getouterframes(inspect.currentframe(), 2)[stack_len]
+    return inspect.getouterframes(inspect.currentframe(), 2)[stack_len + 2]
 
 
-def get_caller_module(stack_len=2):
-    return get_caller(stack_len + 1).filename.rsplit('.', 1)[0].rsplit('/',
-                                                                       1)[-1]
+def get_caller_module(stack_len=0, sdir='plugins'):
+    fname = get_caller(stack_len + 1).filename
+    p = Path(fname)
+    parent = p.parent.name
+    if parent == sdir:
+        return p.stem
+    else:
+        return parent
