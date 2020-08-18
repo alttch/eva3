@@ -15,7 +15,6 @@ import rapidjson
 import signal
 import psutil
 import threading
-import inspect
 import sqlalchemy as sa
 import faulthandler
 import gzip
@@ -33,6 +32,7 @@ except:
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
+from eva.tools import get_caller
 
 from eva.tools import Locker as GenericLocker
 
@@ -165,7 +165,7 @@ def critical(log=True, from_driver=False):
     if _flags.ignore_critical:
         return
     try:
-        caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
+        caller = get_caller()
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
                                     caller.function)
     except:

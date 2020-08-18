@@ -425,3 +425,13 @@ def fmt_time(t):
         return time.time() - _p_periods.get(t[-1]) * int(t[:-1])
     except:
         return t
+
+
+def get_caller(stack_len=2):
+    import inspect
+    return inspect.getouterframes(inspect.currentframe(), 2)[stack_len]
+
+
+def get_caller_module(stack_len=2):
+    return get_caller(stack_len + 1).filename.rsplit('.', 1)[0].rsplit('/',
+                                                                       1)[-1]
