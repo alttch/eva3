@@ -410,9 +410,7 @@
    All object methods (except internal and private) are automatically exposed
    as API functions
    
-   Rule of good taste: use <plugin_name>_<method> as class method names, e.g.
-   "mycool_test". APIX methods can also override EVA ICS API methods (use with
-   caution!)
+   Functions are registered as x_{plugin}_{fn}
    
    :param o: APIX object
    :param sys_api: if True, object functions are registered as SYS API
@@ -423,6 +421,8 @@
 
    Register custom object for LM PLC macros
    
+   Object is registered as x_{plugin}_{n}
+   
    :param n: object name
    :param o: object itself
    
@@ -431,6 +431,8 @@
    :module: eva.pluginapi
 
    Register custom object for SFA Templates
+   
+   Object is registered as x_{plugin}_{n}
    
    :param n: object name
    :param o: object itself

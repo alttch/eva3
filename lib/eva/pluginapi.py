@@ -50,6 +50,7 @@ import logging
 from eva.core import db as get_db
 from eva.core import userdb as get_userdb
 from eva.core import dir_eva, dir_runtime, dir_ui, dir_pvt, dir_xc
+from eva.tools import get_caller_module
 
 # general functions
 
@@ -207,6 +208,8 @@ def register_lmacro_object(n, o):
     """
     Register custom object for LM PLC macros
 
+    Object is registered as x_{plugin}_{n}
+
     Args:
         n: object name
         o: object itself
@@ -215,6 +218,7 @@ def register_lmacro_object(n, o):
         raise RuntimeError(
             'Can not register lmacro object, wrong controller type')
     import eva.lm.macro_api
+    n = f'x_{get_caller_module()}_{n}'
     eva.lm.macro_api.expose_object(n, o)
     logging.debug(f'lmacro object registered: {n} -> {o}')
 
@@ -222,6 +226,8 @@ def register_lmacro_object(n, o):
 def register_sfatpl_object(n, o):
     """
     Register custom object for SFA Templates
+
+    Object is registered as x_{plugin}_{n}
 
     Args:
         n: object name
@@ -231,6 +237,7 @@ def register_sfatpl_object(n, o):
         raise RuntimeError(
             'Can not register SFA Templates object, wrong controller type')
     import eva.sfa.sfapi
+    n = f'x_{get_caller_module()}_{n}'
     eva.sfa.sfapi.expose_sfatpl_object(n, o)
     logging.debug(f'SFA Templates object registered: {n} -> {o}')
 
@@ -242,18 +249,18 @@ def register_apix(o, sys_api=False):
     All object methods (except internal and private) are automatically exposed
     as API functions
 
-    Rule of good taste: use <plugin_name>_<method> as class method names, e.g.
-    "mycool_test". APIX methods can also override EVA ICS API methods (use with
-    caution!)
+    Functions are registered as x_{plugin}_{fn}
 
     Args:
         o: APIX object
         sys_api: if True, object functions are registered as SYS API
     """
+    caller = get_caller_module()
     for m in dir(o):
         if not m.startswith('_'):
             f = getattr(o, m)
             if f.__class__.__name__ == 'method':
-                eva.api.expose_api_method(f.__name__, f, sys_api=sys_api)
-                logging.debug(f'API method registered: {f.__name__} -> {f}' +
+                n = f'x_{caller}_{f.__name__}'
+                eva.api.expose_api_method(n, f, sys_api=sys_api)
+                logging.debug(f'API method registered: {n} -> {f}' +
                               (' (SYS API)' if sys_api else ''))

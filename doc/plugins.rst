@@ -8,6 +8,11 @@ and :doc:`/sfa/sfa_templates` plus much and much more.
 Guide by example
 ================
 
+.. note::
+
+    All plugin objects and custom API functions are always registered as
+    x_{plugin}_{name}
+
 .. literalinclude:: examples/plugins/my.py
     :language: python
 
