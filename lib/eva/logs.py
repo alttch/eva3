@@ -44,9 +44,7 @@ def get_log_level_by_id(l):
         if lv in log_levels_by_name:
             return lv
     else:
-        level = log_levels_by_id[l]
-    if not level:
-        raise InvalidParameter('Invalid log level specified: {}'.format(l))
+        level = log_levels_by_id.get(l, logging.getLevelName(l))
     return level
 
 
