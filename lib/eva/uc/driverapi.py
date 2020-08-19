@@ -15,9 +15,9 @@ import importlib
 import eva.core
 from eva.tools import format_json
 
-from eva.x import import_sfm
+from eva.x import import_x
 from eva.x import serialize_x
-from eva.x import get_info_xobj
+from eva.x import get_x_iobj
 
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
@@ -205,10 +205,6 @@ def _get_module_fname(mod):
     return f'{eva.core.dir_xc}/drivers/phi/{mod}.py'
 
 
-def _get_phi_module_name(mod):
-    return f'eva.uc.drivers.phi.{mod}'
-
-
 @with_drivers_lock
 def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi':
@@ -296,8 +292,8 @@ def modinfo_phi(mod):
 
 def phi_discover(mod, interface, wait):
     try:
-        return get_info_xobj(_get_module_fname(mod),
-                             'PHI').discover(interface, wait)
+        return get_x_iobj(_get_module_fname(mod),
+                          'PHI').discover(interface, wait)
     except AttributeError:
         raise MethodNotImplemented
     except Exception as e:
@@ -428,41 +424,44 @@ def load_phi(phi_id,
              phi_mod_id,
              phi_cfg=None,
              start=True,
-             config_validated=False):
+             config_validated=False,
+             _o=None):
     if not phi_id:
         raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
         raise InvalidParameter('PHI %s id contains forbidden symbols' % phi_id)
-    try:
-        phi_mod = import_sfm(_get_module_fname(phi_mod_id))
-        # doesn't work but we hope
-        _api = phi_mod.__api__
-        _author = phi_mod.__author__
-        _version = phi_mod.__version__
-        _description = phi_mod.__description__
-        _license = phi_mod.__license__
-        _equipment = phi_mod.__equipment__
-        logging.info('PHI loaded %s v%s, author: %s, license: %s' %
-                     (phi_mod_id, _version, _author, _license))
-        logging.debug('%s: %s' % (phi_mod_id, _description))
-        if _equipment == 'abstract':
-            logging.error(
-                'Unable to activate PHI %s: ' % phi_mod_id + \
-                'abstract module'
-                )
-            raise FunctionFailed('PHI module is abstract')
-        if _api > __api__:
-            logging.error(
-                'Unable to activate PHI %s: ' % phi_mod_id + \
-                'controller driver API version is %s, ' % __api__ + \
-                'PHI driver API version is %s' % _api)
-            raise FunctionFailed('unsupported driver API version')
-    except Exception as e:
-        raise FunctionFailed('unable to load PHI mod {}: {}'.format(
-            phi_mod_id, e))
+    if _o is None:
+        # import module
+        try:
+            phi_mod = import_x(_get_module_fname(phi_mod_id))
+            _api = phi_mod.__api__
+            _author = phi_mod.__author__
+            _version = phi_mod.__version__
+            _description = phi_mod.__description__
+            _license = phi_mod.__license__
+            _equipment = phi_mod.__equipment__
+            logging.info('PHI loaded %s v%s, author: %s, license: %s' %
+                         (phi_mod_id, _version, _author, _license))
+            logging.debug('%s: %s' % (phi_mod_id, _description))
+            if _equipment == 'abstract':
+                logging.error(
+                    'Unable to activate PHI %s: ' % phi_mod_id + \
+                    'abstract module'
+                    )
+                raise FunctionFailed('PHI module is abstract')
+            if _api > __api__:
+                logging.error(
+                    'Unable to activate PHI %s: ' % phi_mod_id + \
+                    'controller driver API version is %s, ' % __api__ + \
+                    'PHI driver API version is %s' % _api)
+                raise FunctionFailed('unsupported driver API version')
+        except Exception as e:
+            raise FunctionFailed('unable to load PHI mod {}: {}'.format(
+                phi_mod_id, e))
+    else:
+        phi_mod = _o.__xmod__
     phi = phi_mod.PHI(phi_cfg=phi_cfg,
                       config_validated=config_validated,
-                      _name=phi_mod_id,
                       _xmod=phi_mod)
     if not phi.ready:
         raise FunctionFailed('unable to init PHI mod %s' % phi_mod_id)
@@ -579,7 +578,12 @@ def set_phi_prop(phi_id, p, v):
     if v is None:
         del cfg[p]
     phi.validate_config(cfg, config_type='config')
-    phi = load_phi(phi_id, phi_mod_id, cfg, start=True, config_validated=True)
+    phi = load_phi(phi_id,
+                   phi_mod_id,
+                   cfg,
+                   start=True,
+                   config_validated=True,
+                   _o=phi)
     if phi:
         return True
 

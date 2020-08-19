@@ -61,7 +61,8 @@ class PHI(GenericX):
         else:
             self.phi_cfg = {}
         mod = kwargs.get('_xmod')
-        self.phi_mod_id = kwargs.get('_name')
+        self.__xmod__ = mod
+        self.phi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__
