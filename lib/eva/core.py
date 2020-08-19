@@ -779,7 +779,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             else:
                 try:
                     modname = f'evacontrib.{p}'
-                    importlib.import_module(modname)
+                    plugin_modules[p] = importlib.import_module(modname)
                 except:
                     logging.error(f'unable to load plugin {p} ({modname})')
                     log_traceback()
@@ -1216,8 +1216,11 @@ def _t_exec_corescripts(event=None, env_globals={}):
 
 def plugins_event_state(source, data):
     for p, v in plugin_modules.items():
-        f = getattr(v, 'handle_state_event')
-        spawn(_t_handle_state_event, p, f, source, data)
+        try:
+            f = getattr(v, 'handle_state_event')
+            spawn(_t_handle_state_event, p, f, source, data)
+        except AttributeError:
+            pass
 
 
 def _t_handle_state_event(p, f, source, data):
