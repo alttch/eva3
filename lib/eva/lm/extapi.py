@@ -151,7 +151,7 @@ def modinfo(mod):
 
 def list_mods():
     result = []
-    mods = glob.glob(eva.core.dir_lib + '/eva/lm/extensions/*.py')
+    mods = glob.glob(_get_ext_module_fname('*'))
     for p in mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':

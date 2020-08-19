@@ -309,8 +309,8 @@ def phi_discover(mod, interface, wait):
 def modhelp_lpi(mod, context):
     try:
         result = serialize_x(_get_lpi_module_fname(mod),
-                               'LPI',
-                               helpinfo=context)
+                             'LPI',
+                             helpinfo=context)
     except Exception as e:
         raise FunctionFailed(e)
     if result is None:
@@ -335,7 +335,7 @@ def modinfo_lpi(mod):
 
 def list_phi_mods():
     result = []
-    phi_mods = glob.glob(eva.core.dir_lib + '/eva/uc/drivers/phi/*.py')
+    phi_mods = glob.glob(_get_phi_module_fname('*'))
     for p in phi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
@@ -351,7 +351,7 @@ def list_phi_mods():
 
 def list_lpi_mods():
     result = []
-    lpi_mods = glob.glob(eva.core.dir_lib + '/eva/uc/drivers/lpi/*.py')
+    lpi_mods = glob.glob(_get_lpi_module_fname('*'))
     for p in lpi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
