@@ -137,12 +137,16 @@ def import_sfm(fname, module_name=None, set_sys_modules=False):
     Raises:
         all possible exceptions
     """
+    from importlib.machinery import ModuleSpec
     with open(fname) as fh:
         n = {}
         exec(compile(fh.read(), fname, mode='exec'), n)
         mod = SimpleNamespace(**n)
         if module_name:
             mod.__name__ = module_name
+            mod.__spec__ = ModuleSpec(name=module_name,
+                                      loader=import_sfm,
+                                      origin=fname)
             if set_sys_modules:
                 sys.modules[module_name] = mod
         return mod
