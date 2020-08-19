@@ -1,4 +1,7 @@
 import sys
+import os
+import logging
+import threading
 
 from eva.exceptions import InvalidParameter
 from types import SimpleNamespace
@@ -126,6 +129,10 @@ class GenericX:
             return True
 
 
+_mod_cache_lock = threading.RLock()
+_mod_cache = {}
+
+
 def import_sfm(fname, module_name=None, set_sys_modules=False):
     """
     Import single file as a module
@@ -137,6 +144,19 @@ def import_sfm(fname, module_name=None, set_sys_modules=False):
     Raises:
         all possible exceptions
     """
+    mtime = os.path.getmtime(fname)
+    try:
+        with _mod_cache_lock:
+            cache_entry = _mod_cache[(fname, module_name)]
+        if cache_entry['mtime'] < mtime:
+            logging.debug(
+                f'{module_name} cache entry for {fname} is obsolete, loading from disk'
+            )
+        else:
+            return cache_entry['mod']
+    except KeyError:
+        logging.debug(
+            f'{module_name} no cache entry for {fname}, loading from disk')
     from importlib.machinery import ModuleSpec
     with open(fname) as fh:
         n = {}
@@ -149,6 +169,11 @@ def import_sfm(fname, module_name=None, set_sys_modules=False):
                                       origin=fname)
             if set_sys_modules:
                 sys.modules[module_name] = mod
+        with _mod_cache_lock:
+            _mod_cache[(fname, module_name)] = {
+                'mtime': os.path.getmtime(fname),
+                'mod': mod
+            }
         return mod
 
 
