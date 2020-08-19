@@ -436,7 +436,7 @@ def get_caller(stack_len=0):
 def get_caller_module(stack_len=0, sdir='plugins'):
     fname = get_caller(stack_len + 1).filename
     p = Path(fname)
-    parent = p.parent.name
+    parent = p.absolute().parent.name
     if parent == sdir:
         return p.stem
     else:
