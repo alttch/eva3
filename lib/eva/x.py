@@ -1,3 +1,7 @@
+import sys
+
+from pathlib import Path
+
 from eva.exceptions import InvalidParameter
 from types import SimpleNamespace
 
@@ -124,7 +128,7 @@ class GenericX:
             return True
 
 
-def import_sfm(fname):
+def import_sfm(fname, mod_pfx=None):
     """
     Import single file as a module
 
@@ -138,4 +142,8 @@ def import_sfm(fname):
     with open(fname) as fh:
         n = {}
         exec(compile(fh.read(), fname, mode='exec'), n)
-        return SimpleNamespace(**n)
+        mod = SimpleNamespace(**n)
+        if mod_pfx:
+            p = Path(fname)
+            sys.modules[f'{mod_pfx}.{p.stem}'] = mod
+        return mod

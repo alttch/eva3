@@ -146,12 +146,9 @@ if [ ! -d backup ]; then
     chmod 700 backup
 fi
 
-if [ ! -d plugins ]; then
-    mkdir plugins
-    chmod 755 plugins
-fi
-
 echo "- Installing new files"
+
+(cd ./lib/eva && ln -sf ../../plugins) || exit 1
 
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh

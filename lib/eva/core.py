@@ -771,7 +771,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             fname = f'{dir_eva}/plugins/{p}.py'
             if os.path.isfile(fname):
                 try:
-                    plugin_modules[p] = import_sfm(fname)
+                    plugin_modules[p] = importlib.import_module(
+                        f'eva.plugins.{p}')
                 except:
                     logging.error(f'unable to load plugin {p} ({fname})')
                     log_traceback()
