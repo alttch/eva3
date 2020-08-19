@@ -1,7 +1,5 @@
 import sys
 
-from pathlib import Path
-
 from eva.exceptions import InvalidParameter
 from types import SimpleNamespace
 
@@ -128,7 +126,7 @@ class GenericX:
             return True
 
 
-def import_sfm(fname, mod_pfx=None):
+def import_sfm(fname, module_name=None, set_sys_modules=False):
     """
     Import single file as a module
 
@@ -143,17 +141,21 @@ def import_sfm(fname, mod_pfx=None):
         n = {}
         exec(compile(fh.read(), fname, mode='exec'), n)
         mod = SimpleNamespace(**n)
-        if mod_pfx:
-            p = Path(fname)
-            sys.modules[f'{mod_pfx}.{p.stem}'] = mod
+        if module_name:
+            mod.__name__ = module_name
+            if set_sys_modules:
+                sys.modules[module_name] = mod
         return mod
 
 
-def get_info_xobj(fname, xclass):
-    mod = import_sfm(fname)
-    return getattr(mod, xclass)(info_only=True,
-                                _xmod=mod,
-                                _name=fname.rsplit('.', 1)[0].rsplit('/')[-1])
+def import_x(fname):
+    return import_sfm(fname,
+                      module_name=fname.rsplit('/', 1)[-1].rsplit('.', 1)[0])
+
+
+def get_x_iobj(fname, xclass):
+    mod = import_x(fname)
+    return getattr(mod, xclass)(info_only=True, _xmod=mod)
 
 
 def serialize_x(fname, xclass, **kwargs):
@@ -165,4 +167,4 @@ def serialize_x(fname, xclass, **kwargs):
         xclass: extension base class
         kwargs: passed to serialize function
     """
-    return get_info_xobj(fname, xclass).serialize(**kwargs)
+    return get_x_iobj(fname, xclass).serialize(**kwargs)
