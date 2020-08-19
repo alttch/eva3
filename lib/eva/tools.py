@@ -433,7 +433,7 @@ def get_caller(stack_len=0):
     return inspect.getouterframes(inspect.currentframe(), 2)[stack_len + 2]
 
 
-def get_caller_module(stack_len=0, sdir='plugins'):
+def get_caller_module(stack_len=0, sdir=None):
     fname = get_caller(stack_len + 1).filename
     p = Path(fname)
     parent = p.absolute().parent.name

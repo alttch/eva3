@@ -52,6 +52,10 @@ from eva.core import userdb as get_userdb
 from eva.core import dir_eva, dir_runtime, dir_ui, dir_pvt, dir_xc
 from eva.tools import get_caller_module
 
+from functools import partial
+
+get_cmod = partial(get_caller_module, sdir='plugins')
+
 # general functions
 
 
@@ -130,7 +134,7 @@ def get_logger():
     Returns:
         logger object
     """
-    return logging.getLogger(f'eva.plugins.{get_caller_module()}')
+    return logging.getLogger(f'eva.plugins.{get_cmod()}')
 
 
 def get_polldelay():
@@ -228,7 +232,7 @@ def register_lmacro_object(n, o):
         raise RuntimeError(
             'Can not register lmacro object, wrong controller type')
     import eva.lm.macro_api
-    n = f'x_{get_caller_module()}_{n}'
+    n = f'x_{get_cmod()}_{n}'
     eva.lm.macro_api.expose_object(n, o)
     logging.debug(f'lmacro object registered: {n} -> {o}')
 
@@ -247,7 +251,7 @@ def register_sfatpl_object(n, o):
         raise RuntimeError(
             'Can not register SFA Templates object, wrong controller type')
     import eva.sfa.sfapi
-    n = f'x_{get_caller_module()}_{n}'
+    n = f'x_{get_cmod()}_{n}'
     eva.sfa.sfapi.expose_sfatpl_object(n, o)
     logging.debug(f'SFA Templates object registered: {n} -> {o}')
 
@@ -265,7 +269,7 @@ def register_apix(o, sys_api=False):
         o: APIX object
         sys_api: if True, object functions are registered as SYS API
     """
-    caller = get_caller_module()
+    caller = get_cmod()
     for m in dir(o):
         if not m.startswith('_'):
             f = getattr(o, m)
