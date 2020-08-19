@@ -8,6 +8,8 @@ Common
 ------
 
     * fix: auth tokens are now always correctly destroyed at logout
+    * new generic extension engine: restarting controller after PHI, LPI & LM
+      PLC Ext module updates is no longer necessary (just load the new module)
     * "interval" notifier property allows to schedule item state telemetry
       notifications with the specified time interval.
     * MS Active Directory authentication support
@@ -23,6 +25,7 @@ UC
     * Added "enable" flag in API and CLI to enable unit actions / sensor updates
       right after creation.
     * Driver API 9: PHI & LPI mods config validation, Ethernet/IP client helper
+
 
 LM PLC
 ------
