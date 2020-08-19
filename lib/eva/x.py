@@ -147,3 +147,22 @@ def import_sfm(fname, mod_pfx=None):
             p = Path(fname)
             sys.modules[f'{mod_pfx}.{p.stem}'] = mod
         return mod
+
+
+def get_info_xobj(fname, xclass):
+    mod = import_sfm(fname)
+    return getattr(mod, xclass)(info_only=True,
+                                _xmod=mod,
+                                _name=fname.rsplit('.', 1)[0].rsplit('/')[-1])
+
+
+def serialize_x(fname, xclass, **kwargs):
+    """
+    Serialize GenericX
+
+    Args:
+        fname: sfm file
+        xclass: extension base class
+        kwargs: passed to serialize function
+    """
+    return get_info_xobj(fname, xclass).serialize(**kwargs)

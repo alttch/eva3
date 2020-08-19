@@ -4,16 +4,20 @@ __license__ = "Apache License 2.0"
 __version__ = "3.3.1"
 __api__ = 9
 
-import importlib
 import logging
 import rapidjson
 import re
 import glob
 import os
 import threading
+import importlib
 
 import eva.core
 from eva.tools import format_json
+
+from eva.x import import_sfm
+from eva.x import serialize_x
+from eva.x import get_info_xobj
 
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
@@ -197,6 +201,14 @@ def get_map(phi_id=None, action_map=False):
         return None
 
 
+def _get_module_fname(mod):
+    return f'{eva.core.dir_xc}/drivers/phi/{mod}.py'
+
+
+def _get_phi_module_name(mod):
+    return f'eva.uc.drivers.phi.{mod}'
+
+
 @with_drivers_lock
 def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi':
@@ -205,7 +217,7 @@ def unlink_phi_mod(mod):
         if p.phi_mod_id == mod:
             raise ResourceBusy('PHI module %s is in use, unable to unlink' %
                                mod)
-    fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
+    fname = _get_module_fname(mod)
     try:
         eva.core.prepare_save()
         os.unlink(fname)
@@ -221,12 +233,14 @@ def put_phi_mod(mod, content, force=False):
         raise InvalidParameter('Invalid module file name')
     if mod == 'generic_phi':
         raise ResourceAlreadyExists('generic PHI can not be overriden')
-    fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
+    fname = _get_module_fname(mod)
     if os.path.isfile(fname) and not force:
         raise ResourceAlreadyExists('PHI module {}'.format(fname))
     valid = False
     try:
+        # verify code compilation
         compile(content, fname, 'exec')
+        # save module code
         try:
             eva.core.prepare_save()
             with open(fname, 'w') as fd:
@@ -235,11 +249,8 @@ def put_phi_mod(mod, content, force=False):
         except Exception as e:
             raise FunctionFailed('Unable to put PHI module {}: {}'.format(
                 fname, e))
-        d = {}
-        code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
-                ' s=PHI(info_only=True).serialize(full=True)'
-        exec(code, d)
-        if 's' not in d or 'mod' not in d['s']:
+        # verify saved module
+        if 'mod' not in serialize_x(fname, 'PHI', full=True):
             raise FunctionFailed('Unable to verify module')
         valid = True
         return True
@@ -261,12 +272,8 @@ def put_phi_mod(mod, content, force=False):
 
 
 def modhelp_phi(mod, context):
-    code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
-            ' s=PHI(info_only=True).serialize(helpinfo=\'%s\')' % context
     try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
+        result = serialize_x(_get_module_fname(mod), 'PHI', helpinfo=context)
     except Exception as e:
         raise FunctionFailed(e)
     if result is None:
@@ -275,12 +282,8 @@ def modhelp_phi(mod, context):
 
 
 def modinfo_phi(mod):
-    code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
-            ' s=PHI(info_only=True).serialize(full=True)'
     try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
+        result = serialize_x(_get_module_fname(mod), 'PHI', full=True)
         if result:
             try:
                 del result['id']
@@ -292,13 +295,9 @@ def modinfo_phi(mod):
 
 
 def phi_discover(mod, interface, wait):
-    code = 'from eva.uc.drivers.phi.{} import PHI;'.format(mod) + \
-            ' s=PHI(info_only=True).discover(interface, {})'.format(wait)
     try:
-        d = {'interface': interface}
-        exec(code, d)
-        result = d.get('s')
-        return result
+        return get_info_xobj(_get_module_fname(mod),
+                             'PHI').discover(interface, wait)
     except AttributeError:
         raise MethodNotImplemented
     except Exception as e:
@@ -344,13 +343,10 @@ def list_phi_mods():
     for p in phi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
-            code = 'from eva.uc.drivers.phi.%s import PHI;' % f + \
-                    ' s=PHI(info_only=True).serialize(full=True)'
             try:
-                d = {}
-                exec(code, d)
-                if d['s']['equipment'][0] != 'abstract':
-                    result.append(d['s'])
+                d = serialize_x(p, 'PHI', full=True)
+                if d['equipment'][0] != 'abstract':
+                    result.append(d)
             except:
                 eva.core.log_traceback()
                 pass
@@ -438,9 +434,8 @@ def load_phi(phi_id,
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
         raise InvalidParameter('PHI %s id contains forbidden symbols' % phi_id)
     try:
-        phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_mod_id)
+        phi_mod = import_sfm(_get_module_fname(phi_mod_id))
         # doesn't work but we hope
-        importlib.reload(phi_mod)
         _api = phi_mod.__api__
         _author = phi_mod.__author__
         _version = phi_mod.__version__
@@ -465,7 +460,10 @@ def load_phi(phi_id,
     except Exception as e:
         raise FunctionFailed('unable to load PHI mod {}: {}'.format(
             phi_mod_id, e))
-    phi = phi_mod.PHI(phi_cfg=phi_cfg, config_validated=config_validated)
+    phi = phi_mod.PHI(phi_cfg=phi_cfg,
+                      config_validated=config_validated,
+                      _name=phi_mod_id,
+                      _xmod=phi_mod)
     if not phi.ready:
         raise FunctionFailed('unable to init PHI mod %s' % phi_mod_id)
     phi.phi_id = phi_id
