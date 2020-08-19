@@ -45,10 +45,8 @@ flags.ready = True # means plugin is correctly initialized and works properly
 from types import SimpleNamespace
 flags = SimpleNamespace(ready=False)
 
-import logging
-
-# create plugin logger
-logger = logging.getLogger('eva.plugin.my')
+# init plugin logger
+logger = pa.get_logger()
 
 
 def init(config, **kwargs):
