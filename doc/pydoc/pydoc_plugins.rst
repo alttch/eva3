@@ -276,6 +276,14 @@
    :raises LookupError: if directory type is invalid
    
 
+.. py:function:: get_logger()
+   :module: eva.pluginapi
+
+   Get plugin logger
+   
+   :returns: logger object
+   
+
 .. py:function:: get_masterkey()
    :module: eva.pluginapi
 
@@ -401,6 +409,70 @@
    :param defaults: dict (name/value)
    :param e: exception to raise
    
+
+.. py:class:: partial
+   :module: eva.pluginapi
+
+   partial(func, *args, **keywords) - new function with partial application
+   of the given arguments and keywords.
+   
+   
+   .. py:method:: partial.__call__
+      :module: eva.pluginapi
+   
+      Call self as a function.
+      
+   
+   .. py:method:: partial.__delattr__
+      :module: eva.pluginapi
+   
+      Implement delattr(self, name).
+      
+   
+   .. py:method:: partial.__getattribute__
+      :module: eva.pluginapi
+   
+      Return getattr(self, name).
+      
+   
+   .. py:method:: partial.__new__
+      :module: eva.pluginapi
+   
+      Create and return a new object.  See help(type) for accurate signature.
+      
+   
+   .. py:method:: partial.__reduce__
+      :module: eva.pluginapi
+   
+      Helper for pickle.
+      
+   
+   .. py:method:: partial.__repr__
+      :module: eva.pluginapi
+   
+      Return repr(self).
+      
+   
+   .. py:method:: partial.__setattr__
+      :module: eva.pluginapi
+   
+      Implement setattr(self, name, value).
+      
+   
+   .. py:attribute:: partial.args
+      :module: eva.pluginapi
+   
+      tuple of arguments to future partial calls
+   
+   .. py:attribute:: partial.func
+      :module: eva.pluginapi
+   
+      function object to use in future partial calls
+   
+   .. py:attribute:: partial.keywords
+      :module: eva.pluginapi
+   
+      dictionary of keyword arguments to future partial calls
 
 .. py:function:: register_apix(o, sys_api=False)
    :module: eva.pluginapi
