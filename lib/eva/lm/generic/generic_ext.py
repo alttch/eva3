@@ -42,7 +42,8 @@ class LMExt(GenericX):
             self.cfg = cfg
         else:
             self.cfg = {}
-        mod = sys.modules[self.__module__]
+        mod = kwargs.get('_xmod')
+        self.__xmod__ = mod
         self.mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
