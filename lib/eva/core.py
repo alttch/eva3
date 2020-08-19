@@ -39,8 +39,6 @@ from eva.tools import Locker as GenericLocker
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
 
-from eva.x import import_sfm
-
 from neotasker import g, FunctionCollection, task_supervisor
 
 import pyaltt2.logs
