@@ -201,8 +201,12 @@ def get_map(phi_id=None, action_map=False):
         return None
 
 
-def _get_module_fname(mod):
+def _get_phi_module_fname(mod):
     return f'{eva.core.dir_xc}/drivers/phi/{mod}.py'
+
+
+def _get_lpi_module_fname(mod):
+    return f'{eva.core.dir_xc}/drivers/lpi/{mod}.py'
 
 
 @with_drivers_lock
@@ -213,7 +217,7 @@ def unlink_phi_mod(mod):
         if p.phi_mod_id == mod:
             raise ResourceBusy('PHI module %s is in use, unable to unlink' %
                                mod)
-    fname = _get_module_fname(mod)
+    fname = _get_phi_module_fname(mod)
     try:
         eva.core.prepare_save()
         os.unlink(fname)
@@ -229,7 +233,7 @@ def put_phi_mod(mod, content, force=False):
         raise InvalidParameter('Invalid module file name')
     if mod == 'generic_phi':
         raise ResourceAlreadyExists('generic PHI can not be overriden')
-    fname = _get_module_fname(mod)
+    fname = _get_phi_module_fname(mod)
     if os.path.isfile(fname) and not force:
         raise ResourceAlreadyExists('PHI module {}'.format(fname))
     valid = False
@@ -269,7 +273,9 @@ def put_phi_mod(mod, content, force=False):
 
 def modhelp_phi(mod, context):
     try:
-        result = serialize_x(_get_module_fname(mod), 'PHI', helpinfo=context)
+        result = serialize_x(_get_phi_module_fname(mod),
+                             'PHI',
+                             helpinfo=context)
     except Exception as e:
         raise FunctionFailed(e)
     if result is None:
@@ -279,7 +285,7 @@ def modhelp_phi(mod, context):
 
 def modinfo_phi(mod):
     try:
-        result = serialize_x(_get_module_fname(mod), 'PHI', full=True)
+        result = serialize_x(_get_phi_module_fname(mod), 'PHI', full=True)
         if result:
             try:
                 del result['id']
@@ -292,7 +298,7 @@ def modinfo_phi(mod):
 
 def phi_discover(mod, interface, wait):
     try:
-        return get_x_iobj(_get_module_fname(mod),
+        return get_x_iobj(_get_phi_module_fname(mod),
                           'PHI').discover(interface, wait)
     except AttributeError:
         raise MethodNotImplemented
@@ -301,12 +307,10 @@ def phi_discover(mod, interface, wait):
 
 
 def modhelp_lpi(mod, context):
-    code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
-            ' s=LPI(info_only=True).serialize(helpinfo=\'%s\')' % context
     try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
+        result = serialize_x(_get_lpi_module_fname(mod),
+                               'LPI',
+                               helpinfo=context)
     except Exception as e:
         raise FunctionFailed(e)
     if result is None:
@@ -315,12 +319,8 @@ def modhelp_lpi(mod, context):
 
 
 def modinfo_lpi(mod):
-    code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
-            ' s=LPI(info_only=True).serialize(full=True)'
     try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
+        result = serialize_x(_get_lpi_module_fname(mod), 'LPI', full=True)
         if result:
             try:
                 del result['id']
@@ -355,13 +355,10 @@ def list_lpi_mods():
     for p in lpi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
-            code = 'from eva.uc.drivers.lpi.%s import LPI;' % f +  \
-                    ' s=LPI(info_only=True).serialize(full=True)'
             try:
-                d = {}
-                exec(code, d)
-                if d['s']['logic'] != 'abstract':
-                    result.append(d['s'])
+                d = serialize_x(p, 'LPI', full=True)
+                if d['logic'] != 'abstract':
+                    result.append(d)
             except:
                 eva.core.log_traceback()
                 pass
@@ -433,7 +430,7 @@ def load_phi(phi_id,
     if _o is None:
         # import module
         try:
-            phi_mod = import_x(_get_module_fname(phi_mod_id))
+            phi_mod = import_x(_get_phi_module_fname(phi_mod_id))
             _api = phi_mod.__api__
             _author = phi_mod.__author__
             _version = phi_mod.__version__
@@ -495,7 +492,8 @@ def load_driver(lpi_id,
                 phi_id,
                 lpi_cfg=None,
                 start=True,
-                config_validated=False):
+                config_validated=False,
+                _o=None):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
             'Unable to load LPI, unknown PHI: {}'.format(phi_id))
@@ -504,37 +502,40 @@ def load_driver(lpi_id,
     if not re.match("^[A-Za-z0-9_-]*$", lpi_id):
         raise InvalidParameter(
             'LPI {} id contains forbidden symbols'.format(lpi_id))
-    try:
-        lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_mod_id)
-        # doesn't work but we hope
-        importlib.reload(lpi_mod)
-        _api = lpi_mod.__api__
-        _author = lpi_mod.__author__
-        _version = lpi_mod.__version__
-        _description = lpi_mod.__description__
-        _license = lpi_mod.__license__
-        _logic = lpi_mod.__logic__
-        logging.info('LPI loaded %s v%s, author: %s, license: %s' %
-                     (lpi_mod_id, _version, _author, _license))
-        logging.debug('%s: %s' % (lpi_mod_id, _description))
-        if _logic == 'abstract':
-            logging.error(
-                'Unable to activate LPI %s: ' % lpi_mod_id + \
-                'abstract module'
-                )
-            return False
-        if _api > __api__:
-            logging.error(
-                'Unable to activate LPI %s: ' % lpi_mod_id + \
-                'controller driver API version is %s, ' % __api__ + \
-                'LPI driver API version is %s' % _api)
-            return False
-    except Exception as e:
-        raise FunctionFailed('unable to load LPI mod {}: {}'.format(
-            lpi_mod_id, e))
+    if _o is None:
+        # import module
+        try:
+            lpi_mod = import_x(_get_lpi_module_fname(lpi_mod_id))
+            _api = lpi_mod.__api__
+            _author = lpi_mod.__author__
+            _version = lpi_mod.__version__
+            _description = lpi_mod.__description__
+            _license = lpi_mod.__license__
+            _logic = lpi_mod.__logic__
+            logging.info('LPI loaded %s v%s, author: %s, license: %s' %
+                         (lpi_mod_id, _version, _author, _license))
+            logging.debug('%s: %s' % (lpi_mod_id, _description))
+            if _logic == 'abstract':
+                logging.error(
+                    'Unable to activate LPI %s: ' % lpi_mod_id + \
+                    'abstract module'
+                    )
+                return False
+            if _api > __api__:
+                logging.error(
+                    'Unable to activate LPI %s: ' % lpi_mod_id + \
+                    'controller driver API version is %s, ' % __api__ + \
+                    'LPI driver API version is %s' % _api)
+                return False
+        except Exception as e:
+            raise FunctionFailed('unable to load LPI mod {}: {}'.format(
+                lpi_mod_id, e))
+    else:
+        lpi_mod = _o.__xmod__
     lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg,
                       phi_id=phi_id,
-                      config_validated=config_validated)
+                      config_validated=config_validated,
+                      _xmod=lpi_mod)
     if not lpi.ready:
         raise FunctionFailed('unable to init LPI mod %s' % lpi_mod_id)
     lpi.lpi_id = lpi_id
@@ -640,7 +641,8 @@ def set_driver_prop(driver_id, p, v):
                       lpi.phi_id,
                       cfg,
                       start=True,
-                      config_validated=True)
+                      config_validated=True,
+                      _o=lpi)
     if lpi:
         return True
 

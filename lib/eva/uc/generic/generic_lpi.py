@@ -248,7 +248,8 @@ class LPI(GenericX):
         self.__terminate_lock = threading.Lock()
         self.__results_lock = threading.Lock()
 
-        mod = sys.modules[self.__module__]
+        mod = kwargs.get('_xmod')
+        self.__xmod__ = mod
         self.lpi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
