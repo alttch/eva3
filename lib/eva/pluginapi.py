@@ -123,6 +123,16 @@ def check_version(min_version):
                            f'({__api__}) is too old, required: {min_version}')
 
 
+def get_logger():
+    """
+    Get plugin logger
+
+    Returns:
+        logger object
+    """
+    return logging.getLogger(f'eva.plugins.{get_caller_module()}')
+
+
 def get_polldelay():
     """
     Get core poll delay
