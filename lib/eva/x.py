@@ -149,9 +149,8 @@ def import_sfm(fname, module_name=None, set_sys_modules=False):
         with _mod_cache_lock:
             cache_entry = _mod_cache[(fname, module_name)]
         if cache_entry['mtime'] < mtime:
-            logging.debug(
-                f'{module_name} cache entry for {fname} is obsolete, loading from disk'
-            )
+            logging.debug(f'{module_name} cache entry for {fname}'
+                          f' is obsolete, loading from disk')
         else:
             return cache_entry['mod']
     except KeyError:
