@@ -1219,6 +1219,14 @@ class LM_API(GenericAPI, GenericCloudAPI):
                                              group=g,
                                              save=save).serialize()
 
+    @log_i
+    @api_need_master
+    def create(self, **kwargs):
+        """
+        alias for create_lvar
+        """
+        return self.create_lvar(**kwargs)
+
     @log_w
     @api_need_master
     def destroy_lvar(self, **kwargs):
@@ -1231,6 +1239,14 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         return eva.lm.controller.destroy_item(i)
+
+    @log_w
+    @api_need_master
+    def destroy(self, **kwargs):
+        """
+        alias for destroy_lvar
+        """
+        return self.destroy_lvar(**kwargs)
 
 # controller management
 
