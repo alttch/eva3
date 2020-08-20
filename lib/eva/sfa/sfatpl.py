@@ -62,7 +62,7 @@ def j2_api_call(method, params={}, k=None):
         _k = apikey.key_by_id(k)
     else:
         _k = cp_client_key(from_cookie=True, _aci=True)
-    f = getattr(api, method)
+    f = getattr(_get_api(), method)
     try:
         result = f(k=_k, **params)
         if isinstance(result, tuple):
