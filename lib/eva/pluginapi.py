@@ -262,9 +262,9 @@ def register_sfatpl_object(n, o):
     if get_product().code != 'sfa':
         raise RuntimeError(
             'Can not register SFA Templates object, wrong controller type')
-    import eva.sfa.sfapi
+    import eva.sfa.sfatpl
     n = f'x_{get_cmod()}_{n}'
-    eva.sfa.sfapi.expose_sfatpl_object(n, o)
+    eva.sfa.sfatpl.expose_sfatpl_object(n, o)
     logging.debug(f'SFA Templates object registered: {n} -> {o}')
 
 
