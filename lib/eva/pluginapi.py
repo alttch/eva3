@@ -161,6 +161,18 @@ def get_product():
     return eva.core.product
 
 
+def get_item(i):
+    """
+    Get controller item
+
+    Args:
+        i: item oid
+    Returns:
+        None if item is not found
+    """
+    return eva.core.controllers[0].get_item(i)
+
+
 def check_product(code):
     """
     Check controller type
