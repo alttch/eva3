@@ -6,6 +6,7 @@ __version__ = "3.3.1"
 import importlib
 import jinja2
 import threading
+import cherrypy
 
 import eva.core
 from eva import apikey
@@ -22,6 +23,11 @@ _exposed_sfatpl = {}
 def expose_sfatpl_object(n, o):
     with _exposed_sfatpl_lock:
         _exposed_sfatpl[n] = o
+
+
+def _get_api():
+    import eva.sfa.sfapi
+    return eva.sfa.sfapi.api
 
 
 # j2 template engine functions
