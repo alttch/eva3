@@ -623,26 +623,6 @@ Optionally:
 * **save** save multi-update configuration immediately
 
 
-.. _ucapi_restful_create:
-
-create new item
----------------
-
-Creates new :doc:`item</items>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create.rest
-    :response: http-examples/ucapi/create.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-Optionally:
-
-* **save** save multi-update configuration immediately
-
-
 .. _ucapi_restful_create_sensor:
 
 create new sensor
@@ -681,22 +661,6 @@ Parameters:
 Optionally:
 
 * **save** save unit configuration immediately
-
-
-.. _ucapi_restful_destroy:
-
-delete item or group
---------------------
-
-Deletes the :doc:`item</items>` or the group (and all the items in it) from the system.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/destroy.rest
-    :response: http-examples/ucapi/destroy.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
 
 
 .. _ucapi_restful_get_config:

@@ -435,6 +435,17 @@ Returns:
 
 the list of all :ref:`lvars<lvar>` available
 
+.. _lmapi_create:
+
+create - alias for create_lvar
+------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create.req
+    :response: http-examples/lmapi/create.resp
+
 .. _lmapi_create_lvar:
 
 create_lvar - create lvar
@@ -455,6 +466,17 @@ Optionally:
 
 * **g** lvar group
 * **save** save lvar configuration immediately
+
+.. _lmapi_destroy:
+
+destroy - alias for destroy_lvar
+--------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy.req
+    :response: http-examples/lmapi/destroy.resp
 
 .. _lmapi_destroy_lvar:
 
