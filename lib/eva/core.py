@@ -56,7 +56,7 @@ dir_eva_default = '/opt/eva'
 env = {}
 cvars = {}
 
-controllers = set()
+controllers = []
 
 plugin_modules = {}
 
@@ -1231,7 +1231,7 @@ def _t_handle_state_event(p, f, source, data):
 
 
 def register_controller(controller):
-    controllers.add(controller)
+    controllers.append(controller)
 
 
 timeouter.set_default_exception_class(TimeoutException)
