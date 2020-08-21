@@ -53,10 +53,10 @@ Get list of item groups
 
 where:
 
-* **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
-
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required
+
+* **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
@@ -79,7 +79,7 @@ where:
 * **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
 
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`), required
+  *LV* for :ref:`lvar<lvar>`), required if ID is not in oid format
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
