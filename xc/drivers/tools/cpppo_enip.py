@@ -11,8 +11,73 @@ The helper module contains parts of cpppo code and licensed under GNU General
 Public License v3.
 """
 
+import threading
+
 from cpppo.server.enip.client import (connector, parse_operations, recycle,
                                       device)
+
+from cpppo.server.enip.get_attribute import proxy, proxy_simple
+
+from eva.core import log_traceback
+
+from types import GeneratorType
+
+class AbstractSafeProxy:
+
+    def __init__(self, *args, **kwargs):
+        self._proxy_lock = threading.RLock()
+        self.op_retries = 1
+
+    def operate(self, fn, *args, **kwargs):
+        """
+        call proxy function
+
+        e.g. operate('read', *args, **kwargs)
+        """
+        for x in range(self.op_retries + 1):
+            try:
+                result = getattr(self, fn)(*args, **kwargs)
+                if isinstance(result, GeneratorType):
+                    result = list(result)
+                if not result:
+                    raise Exception
+                return result
+            except:
+                with self._proxy_lock:
+                    try:
+                        self.close_gateway()
+                    except:
+                        log_traceback()
+                    try:
+                        self.open_gateway()
+                    except:
+                        log_traceback()
+        else:
+            return None
+
+
+class SafeProxy(proxy, AbstractSafeProxy):
+    """
+    Helper class for cpppo client proxy
+
+    Keeps the connection stable (self.op_retries = attempts)
+    """
+
+    def __init__(self, *args, **kwargs):
+        proxy.__init__(self, *args, **kwargs)
+        AbstractSafeProxy.__init__(self, *args, **kwargs)
+
+
+class SafeProxySimple(proxy_simple, AbstractSafeProxy):
+    """
+    Helper class for cpppo client proxy_simple
+
+    Keeps the connection stable (self.op_retries = attempts)
+    """
+
+    def __init__(self, *args, **kwargs):
+        proxy_simple.__init__(self, *args, **kwargs)
+        AbstractSafeProxy.__init__(self, *args, **kwargs)
 
 
 def operate(host='localhost',

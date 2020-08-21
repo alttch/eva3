@@ -654,7 +654,7 @@ Here is helper usage example:
 .. code-block:: python
 
     # ........
-    from eva.uc.drivers.tools.cpppo_eip import operate
+    from eva.uc.drivers.tools.cpppo_enip import operate
     from eva.uc.driverapi import log_traceback
 
     class PHI(GenericPHI):
@@ -690,6 +690,12 @@ Here is helper usage example:
 
 The helper function arguments are similar to *cpppo.server.enip.client* command
 line arguments. Refer to function pydoc or CLI help for more details.
+
+The above method is simple but it isn't recommended for the high load
+environments, as "operate" functions creates new connector for each request. To
+reuse connections, it's recommended to use **SafeProxy** and
+**SafeProxySimple** classes. Refer to *eva.uc.drivers.tools.cpppo_enip pydoc*
+for more info.
 
 
 Working with Modbus slave memory space
