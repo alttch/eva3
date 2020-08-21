@@ -276,6 +276,16 @@
    :raises LookupError: if directory type is invalid
    
 
+.. py:function:: get_item(i)
+   :module: eva.pluginapi
+
+   Get controller item
+   
+   :param i: item oid
+   
+   :returns: None if item is not found
+   
+
 .. py:function:: get_logger()
    :module: eva.pluginapi
 
