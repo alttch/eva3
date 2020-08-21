@@ -135,6 +135,28 @@ class PHI(GenericX):
                 setattr(self._has_feature, f, True)
             except:
                 self.log_error('feature unknown: {}'.format(f))
+        if 'cache' in self.__features:
+            for v in self._config_help:
+                if v['name'] == 'cache':
+                    break
+            else:
+                self._config_help.append({
+                    'name': 'cache',
+                    'help': 'caches state for N sec',
+                    'type': 'float',
+                    'required': False
+                })
+        if 'aao_get' in self.__features:
+            for v in self._config_help:
+                if v['name'] == 'update':
+                    break
+            else:
+                self._config_help.append({
+                    'name': 'update',
+                    'help': 'send updates to items every N sec',
+                    'type': 'float',
+                    'required': False
+                })
         if kwargs.get('info_only'):
             return
         if not kwargs.get('config_validated'):
@@ -208,20 +230,6 @@ class PHI(GenericX):
         if helpinfo:
             if helpinfo == 'cfg':
                 d = self._config_help.copy()
-                if 'cache' in self.__features:
-                    d.append({
-                        'name': 'cache',
-                        'help': 'caches state for N sec',
-                        'type': 'float',
-                        'required': False
-                    })
-                if 'aao_get' in self.__features:
-                    d.append({
-                        'name': 'update',
-                        'help': 'send updates to items every N sec',
-                        'type': 'float',
-                        'required': False
-                    })
             elif helpinfo == 'get':
                 d = self._get_help.copy()
             elif helpinfo == 'set':
