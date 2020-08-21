@@ -91,8 +91,8 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     env = {}
     env['request'] = cherrypy.serving.request
     try:
-        env['evaHI'] = cherrypy.serving.request.headers.get(
-            'User-Agent', '').find('evaHI ') == -1
+        env['evaHI'] = 'evaHI ' in cherrypy.serving.request.headers.get(
+            'User-Agent', '')
     except:
         env['evaHI'] = False
     try:
