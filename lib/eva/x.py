@@ -107,10 +107,18 @@ class GenericX:
         help_array += xparams
         help_info = {v['name']: v for v in help_array}
         required_list = [v['name'] for v in help_array if v.get('required')]
+        defaults = {
+            v['name']: v['default']
+            for v in help_array
+            if v.get('required') and 'default' in v
+        }
         errors = []
         for i in required_list:
             if i not in config:
-                errors.append(f'required param "{i}" is missing')
+                if i in defaults:
+                    config[i] = defaults[i]
+                else:
+                    errors.append(f'required param "{i}" is missing')
         for i, v in config.items():
             if i in help_info:
                 try:

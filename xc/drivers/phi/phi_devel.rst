@@ -87,6 +87,7 @@ following context:
 * **help** property description (help)
 * **type** property type
 * **required** *True* if property is required, *False* if it's optional
+* **default** default value (for required only)
 
 Property **type** may be:
 

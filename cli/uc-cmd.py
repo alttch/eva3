@@ -1459,8 +1459,8 @@ _pd_cols = {
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
     'get_phi_ports': ['port', 'name', 'description'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
-    'modhelp_lpi': ['name', 'type', 'required', 'help'],
-    'modhelp_phi': ['name', 'type', 'required', 'help']
+    'modhelp_lpi': ['name', 'type', 'required', 'default', 'help'],
+    'modhelp_phi': ['name', 'type', 'required', 'default', 'help']
 }
 
 _fancy_indentsp = {
