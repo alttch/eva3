@@ -137,6 +137,7 @@ What you get with EVA
     integrations/cctv
     integrations/denkovi
     integrations/energenie
+    integrations/ethernetip
     integrations/gcp
     integrations/grafana
     integrations/hue
