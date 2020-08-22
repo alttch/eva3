@@ -16,7 +16,7 @@ import logging
 
 from eva.core import log_traceback, config as core_config
 
-if not core_config.development or True:
+if not core_config.development:
     for x in ['enip', 'cpppo']:
         logging.getLogger(x).setLevel(logging.WARNING)
 
