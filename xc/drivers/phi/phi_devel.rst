@@ -654,12 +654,14 @@ Here is helper usage example:
 .. code-block:: python
 
     # ........
-    from eva.uc.drivers.tools.cpppo_enip import operate
     from eva.uc.driverapi import log_traceback
 
     class PHI(GenericPHI):
 
         def get(self, port=None, cfg=None, timeout=0):
+            # do not import anything in the main module code as cpppo module
+            # isn't included by default
+            from eva.uc.drivers.tools.cpppo_enip import operate
             try:
                 result, failures = operate(
                     host=self.phi_cfg['host'],
@@ -675,6 +677,7 @@ Here is helper usage example:
                 return None
 
         def set(self, port=None, data=None, cfg=None, timeout=0):
+            from eva.uc.drivers.tools.cpppo_enip import operate
             try:
                 _, failures = operate(
                     host=self.phi_cfg['host'],
