@@ -13,6 +13,7 @@ Public License v3.
 
 import threading
 import logging
+import timeouter as to
 
 from eva.core import log_traceback, config as core_config
 
@@ -55,11 +56,15 @@ class SafeProxy(proxy):
                     raise Exception
                 return result
             except:
+                if not to.has(self.timeout):
+                    raise TimeoutError
                 with self._proxy_lock:
                     try:
                         self.close_gateway()
                     except:
                         log_traceback()
+                    if not to.has(self.timeout):
+                        raise TimeoutError
                     try:
                         self.open_gateway()
                     except:
