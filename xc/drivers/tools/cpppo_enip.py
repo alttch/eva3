@@ -48,6 +48,8 @@ class SafeProxy(proxy):
         e.g. operate('read', *args, **kwargs)
         """
         for x in range(self.op_retries + 1):
+            if not to.has(self.timeout):
+                raise TimeoutError
             try:
                 result = getattr(self, fn)(*args, **kwargs)
                 if isinstance(result, GeneratorType):
@@ -58,7 +60,11 @@ class SafeProxy(proxy):
             except:
                 if not to.has(self.timeout):
                     raise TimeoutError
-                with self._proxy_lock:
+                if not self._proxy_lock.acquire(timeout=to.get(check=True)):
+                    raise TimeoutError('lock timeout')
+                try:
+                    if not to.has(self.timeout):
+                        raise TimeoutError
                     try:
                         self.close_gateway()
                     except:
@@ -69,6 +75,8 @@ class SafeProxy(proxy):
                         self.open_gateway()
                     except:
                         log_traceback()
+                finally:
+                    self._proxy_lock.release()
         else:
             raise RuntimeError(
                 f'Unable to communicate with EnIP ({self.host}:{self.port})')
