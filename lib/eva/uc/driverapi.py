@@ -220,9 +220,13 @@ def unlink_phi_mod(mod):
     fname = _get_phi_module_fname(mod)
     try:
         eva.core.prepare_save()
-        os.unlink(fname)
-        eva.core.finish_save()
-        return True
+        try:
+            os.unlink(fname)
+            return True
+        finally:
+            eva.core.finish_save()
+    except FileNotFoundError:
+        raise ResourceNotFound(f'PHI module file {fname}')
     except Exception as e:
         raise FunctionFailed('Unable to unlink PHI module {}: {}'.format(
             fname, e))
