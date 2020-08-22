@@ -318,7 +318,7 @@ def modhelp_lpi(mod, context):
     except Exception as e:
         raise FunctionFailed(e)
     if result is None:
-        raise ResourceNotFound('Help context not found')
+        raise ResourceNotFound('Help context')
     return result
 
 
