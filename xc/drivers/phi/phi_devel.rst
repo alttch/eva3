@@ -693,9 +693,8 @@ line arguments. Refer to function pydoc or CLI help for more details.
 
 The above method is simple but it isn't recommended for the high load
 environments, as "operate" functions creates new connector for each request. To
-reuse connections, it's recommended to use **SafeProxy** and
-**SafeProxySimple** classes. Refer to *eva.uc.drivers.tools.cpppo_enip pydoc*
-for more info.
+reuse connections, it's recommended to use **SafeProxy** class. Refer to
+*eva.uc.drivers.tools.cpppo_enip pydoc* for more info.
 
 
 Working with Modbus slave memory space

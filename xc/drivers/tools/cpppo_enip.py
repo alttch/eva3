@@ -12,19 +12,31 @@ Public License v3.
 """
 
 import threading
+import logging
+
+from eva.core import log_traceback, config as core_config
+
+if not core_config.development or True:
+    for x in ['enip', 'cpppo']:
+        logging.getLogger(x).setLevel(logging.WARNING)
 
 from cpppo.server.enip.client import (connector, parse_operations, recycle,
                                       device)
 
 from cpppo.server.enip.get_attribute import proxy, proxy_simple
 
-from eva.core import log_traceback
-
 from types import GeneratorType
 
-class AbstractSafeProxy:
+
+class SafeProxy(proxy):
+    """
+    Helper class for cpppo client proxy
+
+    Keeps the connection stable (self.op_retries = attempts)
+    """
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._proxy_lock = threading.RLock()
         self.op_retries = 1
 
@@ -53,31 +65,8 @@ class AbstractSafeProxy:
                     except:
                         log_traceback()
         else:
-            return None
-
-
-class SafeProxy(proxy, AbstractSafeProxy):
-    """
-    Helper class for cpppo client proxy
-
-    Keeps the connection stable (self.op_retries = attempts)
-    """
-
-    def __init__(self, *args, **kwargs):
-        proxy.__init__(self, *args, **kwargs)
-        AbstractSafeProxy.__init__(self, *args, **kwargs)
-
-
-class SafeProxySimple(proxy_simple, AbstractSafeProxy):
-    """
-    Helper class for cpppo client proxy_simple
-
-    Keeps the connection stable (self.op_retries = attempts)
-    """
-
-    def __init__(self, *args, **kwargs):
-        proxy_simple.__init__(self, *args, **kwargs)
-        AbstractSafeProxy.__init__(self, *args, **kwargs)
+            raise RuntimeError(
+                f'Unable to communicate with EnIP ({self.host}:{self.port})')
 
 
 def operate(host='localhost',
