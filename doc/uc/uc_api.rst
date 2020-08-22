@@ -1129,6 +1129,22 @@ Parameters:
 * **c** command to exec
 * **a** command argument
 
+.. _ucapi_get_phi:
+
+get_phi - get loaded PHI information
+------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi.req
+    :response: http-examples/ucapi/get_phi.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+
 .. _ucapi_get_phi_ports:
 
 get_phi_ports - get list of PHI ports
