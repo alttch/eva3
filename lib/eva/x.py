@@ -152,7 +152,7 @@ class GenericX:
                     log_traceback()
                     errors.append('invalid param '
                                   f'value {i}="{v}" should be {type_required}')
-            elif not allow_extra and (ignore_private is True and
+            elif not allow_extra and (ignore_private is False or
                                       not i.startswith('_')):
                 errors.append(f'param "{i}" is not allowed')
         if errors:
