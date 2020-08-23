@@ -43,10 +43,6 @@ build-increase:
 check:
 	@./dev/check_code
 
-test:
-	lab-xs1 on
-	ssh lab-xs1 "cd /opt/et && make test"
-
 start:
 	./sbin/eva-control start
 
