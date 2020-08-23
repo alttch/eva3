@@ -13,9 +13,11 @@ jks:
 	jks build eva-${VERSION}
 
 d:
+	mkdir -p dist
 	@./dev/make-dist
 
 dmaster:
+	mkdir -p dist
 	@./dev/make-dist master
 
 release:
