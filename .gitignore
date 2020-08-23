@@ -9,7 +9,6 @@ etc/watchdog
 etc/*.ini
 etc/venv
 keys
-dev
 dist
 lib/ei/css/ei.min.css
 lib/ei/js/lm.min.js

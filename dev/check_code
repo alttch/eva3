@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "JS files with long lines:"
+find . -name *.js -exec ./dev/linchecker {} 80 \;|grep -v '/lib/'|grep -v '\.min\.js'
+echo "CSS files with long lines:"
+find . -name *.css -exec ./dev/linchecker {} 80 \;|grep -v '/lib/'|grep -v '\.min\.css'
+echo "HTML files with long lines:"
+find . -name *.html -exec ./dev/linchecker {} 80 \;
+echo "Python files with long lines:"
+find lib/eva -name *.py -exec ./dev/linchecker {} 80 \;
+echo "PHP files with long lines:"
+find . -name *.php -exec ./dev/linchecker {} 80 \;
+
+echo "Checking JS"
+
+prettier lib/ei/js/*.js > /dev/null
+
+echo "Checking CSS"
+
+cat lib/ei/css/*.css > tmp1.css
+yui-compressor tmp1.css > /dev/null
+
+rm -f tmp1.css
+

@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+
+import configparser
+import os
+import sys
+import getopt
+import jsonpickle
+import readline
+import traceback
+import time
+from termcolor import colored
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+import eva.client.apiclient
+
+from eva.tools import format_json
+
+api = eva.client.apiclient.APIClientLocal('uc')
+
+
+devmode_warning = colored("dev_ funcs are for developers only. NEVER USE IN PRODUCTION!","red",attrs=['bold'])
+
+timeout = 10
+apikey = None
+masterkey = api._key
+api_url = api._uri
+
+if not masterkey or not api_url: sys.exit(2)
+
+wait = ''
+
+interactive = False
+
+def usage():
+    print("""
+Usage: api <API_function> [params]
+
+API url and keys are always got from UC configs
+
+returns JSON dump. For internal use and API testing only.
+    """)
+
+if len(sys.argv)>1: api_func = sys.argv[1]
+else: api_func = 'i'
+
+apikey = masterkey
+
+if api_func == 'i':
+    usage()
+    print("Starting interactive mode, API key: %s" % apikey)
+    interactive = True
+
+print()
+
+while True:
+
+    args = []
+
+    if interactive:
+        d = ''
+        while (d == ''):
+            try: d = input("> ").strip()
+            except:
+                print("Bye")
+                sys.exit(0)
+            if d == 'i':
+                print("already interactive ;)")
+                d = ''
+            elif d == 'k':
+                print("API KEY: %s" % apikey)
+                d = ''
+            elif d == 'q':
+                print("Bye")
+                sys.exit(0)
+            elif d == 'l' or d == 'd' or d == '.' or d == 'a': pass
+            elif len(d) == 1:
+                print("l - for func list")
+                print("d - or . for dev func list (" + devmode_warning + ")")
+                print("a - for a brief list of all func")
+                print("k - show current key")
+                print("q - for quit")
+                d = ''
+            elif d[:2] == 'k=':
+                apikey = d[2:]
+                if apikey == '':
+                    apikey = masterkey
+                    print("API key set to masterkey: %s" % apikey)
+                else: print("New API key: %s" % apikey)
+                d = ''
+        if d.find(' ') == -1: api_func = d
+        else:
+            z = list(filter(None, d.split(' ')))
+            api_func = z[0]
+            if len(z)>1:
+                args = z[1:]
+    else:
+        if len(sys.argv)>2: args = sys.argv[2:]
+
+    if api_func[0] == '.':
+        if len(api_func)>1: api_func = 'dev_' + api_func[1:]
+        else: api_func = 'd'
+
+    if api_func == "l" or api_func == 'd' or api_func == 'a':
+        if (api_func == 'd' or api_func == 'a'): print(devmode_warning + "\n")
+        n = False
+        comment = ''
+        if api_func == 'l' or api_func == 'a':
+            print ('System functions ( /sys-api/ ):\n')
+            for f in sorted(eva.apiclient._sysapi_func):
+                print(colored(f, 'green'))
+            for i, v in eva.apiclient._api_func.items():
+                print ('\n%s functions ( %s )\n' % (i, v['uri']))
+                for f in sorted(v['func']):
+                    print(colored(f, 'green'))
+        print()
+    else:
+        print("API function:",end=' ')
+        if api_func[:4] != 'dev_': print(colored(api_func,'green'))
+        else: print(colored(api_func,'yellow',attrs=['bold']))
+        print("Function arguments:",end = ' ')
+        for a in args: print(a,end = ' ')
+        print("\n")
+        func_params = {}
+        for p in args:
+            if p == 'bk': apikey = 'BADKEY'
+            else:
+                try:
+                    k,v = p.split('=')
+                    func_params[k] = v
+                except: func_params[p] = ''
+    
+        if not 'k' in func_params: func_params['k'] = apikey
+    
+        t = time.time()
+        print("GET " + colored(api_url + ' func '  + api_func, 'yellow'))
+        if api_func[:4] == 'dev_':
+            if api_func[:7] == 'dev_uc_': u = '/uc-api/'
+            else: u = '/sys-api/'
+        else:
+            u = None
+        code, raw_result = api.call(api_func, func_params, timeout, _return_raw = True, _api_uri = u)
+        try:
+            result = jsonpickle.decode(raw_result)
+        except:
+            result = None
+        print("HTTP code: %u" % code)
+        try:
+            te = time.time()
+            print("TIME: " + colored("%fs" % (te - t), 'green', attrs = []),end='')
+            if (te - t) < 1: print("   ( " + colored("%fms" % ((te - t)*1000), 'green', attrs = []) + " )")
+            else: print()
+            if not result:
+                print("RAW: ")
+                print("-------------------------------------------------------------------")
+                print(colored(raw_result,'white', attrs = ['bold']))
+                print("-------------------------------------------------------------------")
+            else:
+                print("RESULT: ")
+                print("-------------------------------------------------------------------")
+                print(colored(format_json(result, minimal = False),'white', attrs = ['bold']))
+                print("-------------------------------------------------------------------")
+        except Exception as e:
+            print(colored(traceback.format_exc(),'red', attrs = ['bold']))
+
+    if not interactive: sys.exit(0)
+

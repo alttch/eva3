@@ -1,0 +1,196 @@
+#!/bin/bash
+
+TEST_UC_FULL=
+
+echo "Trying to stop everything"
+./sbin/eva-control stop
+
+ps auxw|grep -v grep|grep /opt/eva/sbin/safe-run.sh
+
+if [ $? -eq 0 ]; then
+    echo "Something is running. Stop it before testing!"
+    exit 2
+fi
+
+cd /opt/eva || exit 1
+
+echo "Generating new runtime..."
+rm -rf runtime/*
+cp -prf runtime.test/* runtime/ || exit 1
+
+chown nobody runtime/db
+#./set-run-under-user.sh all nobody || exit 1
+
+OUT=""
+
+function createNotifier() {
+    local T=$1
+    echo "Creating notifier for ${T}"
+    $T-notifier create -i eva_1 -p mqtt -h localhost -A eva:test || exit 1
+    $T-notifier set_prop -i eva_1 -p keepalive -v 5 || exit 1
+    $T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || exit 1
+    $T-notifier enable -i eva_1
+    $T-notifier list_props -i eva_1 | jq -r ".enabled" | grep true > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "Notifier creation error"
+        exit 1
+    fi
+}
+
+function t() {
+    local T=$1
+    local CMD=$2
+    local ARGS=" ${*:3}"
+    [ "x${ARGS}" == "x " ] && local ARGS=""
+    echo -n "T> ${T}-cmd ${CMD}${ARGS} -> "
+    OUT=`$T-cmd ${CMD} ${ARGS} 2>&1` # | tr "\n" "|"`
+    if [ $? -ne 0 ]; then
+        echo "Failed!"
+        echo "Command output:"
+        echo "-------------------------------------"
+        echo ${OUT} | tr "|" "\n"
+        #./sbin/eva-control stop
+        exit 1
+    fi
+    echo "OK"
+}
+
+function tj() {
+    local var=$1
+    local val=$2
+    t ${*:3}
+    local vv=`echo $OUT|tr "|" "\n"|jq -r ${var}`
+    if [ "x${vv}" != "x${val}" ]; then
+        echo "ERROR! ${var} != '${val}' ( = '${vv}')"
+        echo "Command output:"
+        echo "-------------------------------------"
+        echo ${OUT} | tr "|" "\n"
+        ./sbin/eva-control stop
+        exit 1
+    fi
+}
+
+createNotifier uc
+createNotifier lm
+createNotifier sfa
+
+./sbin/uc-control start
+sleep 1
+
+t uc test
+t uc create_unit -i test1 -g test1grp
+
+if [ "x${TEST_UC_FULL}" == "x1" ]; then
+    t uc set_cvar -i test -v testval
+    tj .test testval uc get_cvar -i test
+    
+    t uc create_unit -i test2 -g test1grp
+    
+    t uc destroy -i test2
+    
+    tj '.[0]' test1grp uc groups -p U
+    
+    tj .test1.oid unit:test1grp/test1 uc list -p U
+    
+    t uc set_prop -i test1 -p action_allow_termination -v 1
+    tj .action_allow_termination true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p action_always_exec -v 1
+    tj .action_always_exec true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p action_enabled -v 1
+    tj .action_enabled true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p action_exec -v t_test1
+    tj .action_exec t_test1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p action_queue -v 1
+    tj .action_queue 1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p action_timeout -v 5
+    tj .action_timeout 5 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p auto_off -v 1
+    tj .auto_off 1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p auto_off -v 0
+    tj .auto_off 0 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p description -v testdesc
+    tj .description testdesc uc list_props -i test1
+    
+    t uc set_prop -i test1 -p expires -v 1
+    tj .expires 1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p mqtt_control -v eva_1
+    tj .mqtt_control eva_1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p mqtt_update -v eva_1
+    tj .mqtt_update eva_1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p status:0 -v STOP
+    tj '.status_labels."0"' STOP uc list_props -i test1 
+    
+    t uc set_prop -i test1 -p term_kill_interval -v 1
+    tj .term_kill_interval 1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_delay -v 2
+    tj .update_delay 2 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_exec -v tu_test1
+    tj .update_exec tu_test1 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_exec_after_action -v 1
+    tj .update_exec_after_action true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_exec_after_action -v 0
+    tj .update_exec_after_action false uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_if_action -v 1
+    tj .update_if_action true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_interval -v 999
+    tj .update_interval 999 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_state_after_action -v 0
+    tj .update_state_after_action false uc list_props -i test1
+    
+    t uc set_prop -i test1 -p update_timeout -v 5
+    tj .update_timeout 5 uc list_props -i test1
+    
+    t uc set_prop -i test1 -p virtual -v 1
+    tj .virtual true uc list_props -i test1
+    
+    t uc set_prop -i test1 -p virtual -v 0
+    tj .virtual false uc list_props -i test1
+fi
+
+./sbin/lm-control start
+sleep 1
+t lm test
+t lm set_cvar -i test -v testval
+tj .test testval lm get_cvar -i test
+t lm append_controller -u http://localhost:8812 -a \$masterkey
+tj '.[0]'.id lab-d-s2 lm list_controllers
+
+tj '.[0].full_id' test1grp/test1 lm list_remote
+
+t lm create_lvar -i test -g testgrp
+
+tj '.[0]'.status 1 lm state
+
+t lm create_macro -i test -g test-macros
+
+tj '.[0]'.full_id test-macros/test lm list_macros
+
+./sbin/sfa-control start
+sleep 1
+t sfa test
+t sfa set_cvar -i test -v testval
+tj .test testval sfa get_cvar -i test
+t sfa append_controller -u http://localhost:8812 -a \$masterkey
+t sfa append_controller -u http://localhost:8817 -a \$masterkey
+
+#./sbin/eva-control stop
+#cat dev/OK
+figlet -f slant ALLES IST GUT!

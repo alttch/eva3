@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import sys
+from termcolor import colored
+
+def usage():
+    print("""
+ Usage: linchecker <fname> <max_line_length> [-v]
+
+ -v - for verbose
+ """)
+
+if len(sys.argv) < 2:
+    usage()
+    sys.exit(1)
+
+fname = sys.argv[1]
+maxl = int(sys.argv[2])
+
+if len(sys.argv) > 3 and sys.argv[3] == '-v':
+    verb = True
+else:
+    verb = False
+
+l = 0
+for x in open(fname).readlines():
+    l +=1
+    x = x.replace('\t', '    ').replace('\n', '').replace('\r', '')
+    if len(x)> maxl:
+        if not verb:
+            print(fname)
+            sys.exit()
+        if len(x) > 85:
+            x = x[:80] + '...'
+        print('%s:%s%s' % (colored(l, 'cyan'), x[:80], colored(x[80:], 'red')))
