@@ -73,9 +73,12 @@ complete:
                 - { api: clear, i: timers/timer1 }
                 - { api: reload_controller, i: uc/uc1 }
                 - { api: reload_controller, i: uc/uc2 }
+                - { api: custom_fn, _pass: true, param1: 123, param2: "x" }
 
 API calls are always executed in the specified order, one-by-one, *api:* field
-contains API function to execute, others specify function parameters.
+contains API function to execute, others specify function parameters. The
+special parameter *_pass* in the last call allows deployment to ignore failed
+API call (warning will be printed).
 
 .. note::
 

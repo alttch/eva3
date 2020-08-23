@@ -37,6 +37,7 @@ SFA
 
     * supervisor features: API lock/unlock, broadcast messages
     * SFA templates "get_aci" and "import_module" functions
+    * before/after deploy API calls can be skipped in case of failure
 
 
 3.3.0 (2020-02-05)

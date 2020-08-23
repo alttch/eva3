@@ -683,10 +683,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             '-u', '--user', help='Sender user', dest='u',
             metavar='LOGIN').completer = ComplUser(self)
         sp_supervisor_message.add_argument('-a',
-                                        '--key-id',
-                                        help='Sender API key',
-                                        metavar='ID',
-                                        dest='a').completer = ComplKey(self)
+                                           '--key-id',
+                                           help='Sender API key',
+                                           metavar='ID',
+                                           dest='a').completer = ComplKey(self)
 
     def add_sfa_controller_functions(self):
         ap_controller = self.sp.add_parser(
@@ -1040,12 +1040,18 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         []):
                         try:
                             func = a['api']
+                            can_pass_err = a.get('_pass')
                             params = a.copy()
                             del params['api']
-                        except:
+                            try:
+                                del params['_pass']
+                            except:
+                                pass
+                        except Exception as e:
                             raise Exception(
-                                'Controller {}, invalid before-{}deploy'.format(
-                                    c, 'un' if und else ''))
+                                'Controller {}, invalid before-{}deploy, {} {}'.
+                                format(c, 'un' if und else '',
+                                       e.__class__.__name__, e))
                         print(' -- {} {}'.format(func, params))
                         code = macall({
                             'i': c,
@@ -1053,8 +1059,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'p': params
                         })[1].get('code')
                         if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            msg = f'API call failed, code {code}'
+                            if can_pass_err:
+                                self.print_warn(msg)
+                            else:
+                                raise Exception(msg)
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
                 self._perform_deploy(props, cfg, macall, dirname)
@@ -1070,12 +1079,18 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         []):
                         try:
                             func = a['api']
+                            can_pass_err = a.get('_pass')
                             params = a.copy()
                             del params['api']
-                        except:
+                            try:
+                                del params['_pass']
+                            except:
+                                pass
+                        except Exception as e:
                             raise Exception(
-                                'Controller {}, invalid after-{}deploy'.format(
-                                    c, 'un' if und else ''))
+                                'Controller {}, invalid after-{}deploy, {} {}'.
+                                format(c, 'un' if und else '',
+                                       e.__class__.__name__, e))
                         print(' -- {} {}'.format(func, params))
                         code = macall({
                             'i': c,
@@ -1083,8 +1098,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'p': params
                         })[1].get('code')
                         if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            msg = f'API call failed, code {code}'
+                            if can_pass_err:
+                                self.print_warn(msg)
+                            else:
+                                raise Exception(msg)
             if props.get('save'):
                 print('Saving configurations')
                 for c in controllers:
