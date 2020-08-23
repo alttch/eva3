@@ -9,7 +9,7 @@ all:
 	@./sbin/lm-control version
 	@./sbin/sfa-control version
 
-jks:
+j:
 	jks build eva-${VERSION}
 
 d:
