@@ -1559,8 +1559,8 @@ def serve_json_yml(fname, dts='ui'):
                     data = 'var {} = {};'.format(
                         var, format_json(data, minimal=False))
                 else:
-                    data = 'var {}={}'.format(var,
-                                              format_json(data, minimal=True))
+                    data = 'var {}={};'.format(var,
+                                               format_json(data, minimal=True))
             elif func:
                 if eva.core.config.development:
                     data = 'function {}() {{\n  return {};\n}}'.format(
