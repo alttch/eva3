@@ -37,11 +37,6 @@ echo "Preparing..."
 mv eva3 eva || exit 1
 
 cd eva || exit 1
-grep -Rl " ipdb" *
-if [ $? -eq 0 ]; then
-  echo "remove ipdb"
-  exit 1
-fi
 rm -rf .git
 rm -rf dev
 rm -f Makefile
@@ -49,6 +44,12 @@ rm -f .gitignore
 rm -f TODO
 rm -f update.sh
 rm -rf install/demos
+
+grep -Rl " ipdb" *
+if [ $? -eq 0 ]; then
+  echo "remove ipdb"
+  exit 1
+fi
 
 ../../dev/make-min ${VERSION} ${BUILD} || exit 1
 
