@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2020 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 9
 
@@ -17,7 +17,7 @@ __config_help__ = [{
 }, {
     'name': 'logic',
     'help': 'default: default circuit, rdc: reversible DC',
-    'type': 'enum:str:default:rdc',
+    'type': 'enum:str:default,rdc',
     'required': False
 }]
 
