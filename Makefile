@@ -10,6 +10,7 @@ all:
 	@./sbin/sfa-control version
 
 pub:
+	git push
 	jks build eva-${VERSION}
 
 d:
