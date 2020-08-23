@@ -31,12 +31,12 @@ __state_help__ = [{
 __help__ = """
 Basic LPI for simple unit status control (on/off) and monitoring. Support
 status 0 and 1. Unit driver config fields should have property 'port' with a
-port label/number for PHI. 'io_label' prop allows to rename 'port' i.e. to
+port label/number for PHI. 'io_label' prop allows to rename 'port' e.g. to
 'socket' for a more fancy unit configuration. Each port may be specified as a
 single value or contain an array of values, in this case multiple ports are
 used simultaneously.
 
-You may set i: before the port label/number, i.e. i:2, to return/use inverted
+You may set i: before the port label/number, e.g. i:2, to return/use inverted
 port state.
 """
 
