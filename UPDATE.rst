@@ -22,3 +22,6 @@ After applying update, controller error log should be checked as well as list
 of loaded drivers / extensions. In case of errors, stop the controller,
 manually edit *runtime/uc_drivers.json* and *runtime/lm_extensions.json*,
 correct invalid parameters and start it again.
+
+Note for Python 3.6 users: support of Python 3.6 is very limited, consider
+upgrading to 3.7+.
