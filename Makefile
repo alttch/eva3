@@ -9,7 +9,7 @@ all:
 	@./sbin/lm-control version
 	@./sbin/sfa-control version
 
-j:
+pub:
 	jks build eva-${VERSION}
 
 d:
@@ -41,7 +41,9 @@ build-increase:
 check:
 	@./dev/check_code
 
-test: docker docker-run
+test:
+	lab-xs1 on
+	ssh lab-xs1 "cd /opt/et && make test"
 
 start:
 	./sbin/eva-control start
