@@ -29,6 +29,12 @@ release:
 test-release:
 	@./dev/make-release --test
 
+test:
+	ssh -t lab-xs1 "cd /opt/et && make test-c"
+
+test-full:
+	ssh -t lab-xs1 "cd /opt/et && make test"
+
 t:
 	cd doc && make clean html
 
