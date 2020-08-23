@@ -9,13 +9,35 @@ from types import SimpleNamespace
 
 class GenericX:
 
-    def validate_config(self, config={}, config_type='config', **kwargs):
+    def validate_config(self,
+                        config={},
+                        config_type='config',
+                        ignore_private=False,
+                        **kwargs):
         """
         Validates module config
 
         Does nothing by default. Can e.g. call self.validate_config_whi to
         validate config with module help info, validate config with JSON schema
         or do everything manually
+
+        Note: "driver_assign" always assigns the same parameters for "action"
+        and "state" by default. Consider either ignoring config_type='state'
+        validation or allow action parameters there.
+
+        Args:
+            config: config to validate (may be modified on-the-flow to convert
+                variable types for extension config)
+            config_type: validation config type ('config', 'state', 'action'
+                etc., matches help variable)
+            ignore_private: allow any private (starting with "_") parameters as
+                they're usually passed as-is to lower level extension (e.g. LPI
+                -> PHI)
+            kwargs: reserved for the future
+        Returns:
+            True if config is validated
+        Raises:
+            eva.exceptions.InvalidParameter: if config contains invalid params
         """
         return True
 
@@ -23,6 +45,7 @@ class GenericX:
                             config={},
                             config_type='config',
                             allow_extra=False,
+                            ignore_private=False,
                             xparams=[]):
         """
         Validate config with module help info
@@ -129,7 +152,8 @@ class GenericX:
                     log_traceback()
                     errors.append('invalid param '
                                   f'value {i}="{v}" should be {type_required}')
-            elif not allow_extra:
+            elif not allow_extra and (ignore_private is True and
+                                      not i.startswith('_')):
                 errors.append(f'param "{i}" is not allowed')
         if errors:
             raise InvalidParameter(', '.join(errors))

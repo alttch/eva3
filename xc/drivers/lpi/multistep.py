@@ -333,6 +333,10 @@ class LPI(BasicLPI):
         return result
 
     def validate_config(self, config={}, config_type='config', **kwargs):
-        self.validate_config_whi(config=config,
-                                 config_type=config_type,
-                                 **kwargs)
+        if config_type in ['config', 'action']:
+            return self.validate_config_whi(config=config,
+                                            config_type=config_type,
+                                            ignore_private=True,
+                                            **kwargs)
+        else:
+            return True

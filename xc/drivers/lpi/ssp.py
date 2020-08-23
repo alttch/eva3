@@ -55,4 +55,5 @@ class LPI(GenericLPI):
     def validate_config(self, config={}, config_type='config', **kwargs):
         self.validate_config_whi(config=config,
                                  config_type=config_type,
+                                 ignore_private=True,
                                  **kwargs)

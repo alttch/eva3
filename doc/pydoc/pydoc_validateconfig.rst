@@ -12,6 +12,14 @@
       validate config with module help info, validate config with JSON schema
       or do everything manually
       
+      Note: "driver_assign" always assigns the same parameters for "action"
+      and "state" by default. Consider either ignoring config_type='state'
+      validation or allow action parameters there.
+      
+      :returns: True if config is validated
+      
+      :raises eva.exceptions.InvalidParameter: if config contains invalid params
+      
    
    .. py:method:: GenericX.validate_config_whi(config={}, config_type='config', allow_extra=False, xparams=[])
       :module: eva.x
