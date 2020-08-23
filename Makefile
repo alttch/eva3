@@ -12,6 +12,7 @@ all:
 pub:
 	git push
 	jks build eva-${VERSION}
+	figlet -f slant "TESTED OK"
 
 d:
 	mkdir -p dist
