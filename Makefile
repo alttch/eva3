@@ -9,6 +9,9 @@ all:
 	@./sbin/lm-control version
 	@./sbin/sfa-control version
 
+jks:
+	jks build eva-${VERSION}
+
 d:
 	@./dev/make-dist
 
