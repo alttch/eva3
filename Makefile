@@ -30,9 +30,11 @@ test-release:
 	@./dev/make-release --test
 
 test:
+	lab-xs1 on
 	ssh -t lab-xs1 "cd /opt/et && make test-c"
 
 test-full:
+	lab-xs1 on
 	ssh -t lab-xs1 "cd /opt/et && make test"
 
 t:
