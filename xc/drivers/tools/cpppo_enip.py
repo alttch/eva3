@@ -24,7 +24,7 @@ if not core_config.development:
 from cpppo.server.enip.client import (connector, parse_operations, recycle,
                                       device)
 
-from cpppo.server.enip.get_attribute import proxy, proxy_simple
+from cpppo.server.enip.get_attribute import proxy
 
 from types import GeneratorType
 
