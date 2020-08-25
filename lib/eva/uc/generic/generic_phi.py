@@ -181,6 +181,7 @@ class PHI(GenericX):
         self._last_update_state = None
         # benchmarking
         self.__update_count = 0
+        self.__update_active = False
         self.__last_update_reset = 0
         self.__benchmark = self.phi_cfg.get('benchmark', False)
 
@@ -355,7 +356,11 @@ class PHI(GenericX):
         await self._update_processor.trigger()
 
     async def _run_update_processor(self, **kwargs):
-        eva.core.spawn(self._launch_update)
+        if not self.__update_active:
+            self.__update_active = True
+            eva.core.spawn(self._launch_update)
+        else:
+            self.log_warning('update is already in progress. skipping')
 
     def _launch_update(self):
         try:
@@ -363,6 +368,8 @@ class PHI(GenericX):
         except:
             self.log_error('update error')
             eva.core.log_traceback()
+        finally:
+            self.__update_active = False
 
     def _perform_update(self):
         self.log_debug('performing update')
