@@ -33,8 +33,8 @@ test:
 	ssh -t lab-xs4 "cd /opt/et && make test-c"
 
 test-full:
-	lab-xs1 on
-	ssh -t lab-xs1 "cd /opt/et && make test"
+	lab-xs4 on
+	ssh -t lab-xs4 "cd /opt/et && make test"
 
 t:
 	cd doc && make clean html
