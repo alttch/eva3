@@ -654,6 +654,11 @@ class GenericCLI(GCLI):
                                 help='Display full log records',
                                 dest='_full_display',
                                 action='store_true')
+        sp_log_get.add_argument('-f',
+                                '--follow',
+                                help='Follow log until C-c',
+                                dest='_follow',
+                                action='store_true')
 
         sp_log_api = sp_log.add_parser('api', help='Get API call log')
         sp_log_api.add_argument('-s',
@@ -962,15 +967,15 @@ class GenericCLI(GCLI):
                             self.apikey = d[1 if d[0] == 'k' else 2]
                         except:
                             pass
-                        print('key: %s' % self.apikey
-                              if self.apikey is not None else '<default>')
+                        print('key: %s' % self.apikey if self.
+                              apikey is not None else '<default>')
                     if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apiuri = d[1]
                         except:
                             pass
-                        print('API uri: %s' % self.apiuri
-                              if self.apiuri is not None else '<default>')
+                        print('API uri: %s' % self.apiuri if self.
+                              apiuri is not None else '<default>')
                     if (d[0] == 't' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.timeout = float(d[1 if d[0] == 't' else 3])
@@ -978,12 +983,10 @@ class GenericCLI(GCLI):
                             pass
                         print('timeout: %.2f' % self.timeout)
                     elif d[0] == 'a' and self.remote_api_enabled:
-                        print('API uri: %s' %
-                              (self.apiuri
-                               if self.apiuri is not None else '<default>'))
-                        print('key: %s' %
-                              (self.apikey
-                               if self.apikey is not None else '<default>'))
+                        print('API uri: %s' % (self.apiuri if self.apiuri
+                                               is not None else '<default>'))
+                        print('key: %s' % (self.apikey if self.apikey
+                                           is not None else '<default>'))
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -1128,6 +1131,95 @@ class GenericCLI(GCLI):
                 self.suppress_colors = False
         return 0
 
+    def log_tail(self, params):
+        try:
+            import websocket, msgpack, threading
+            from eva.types import CT_MSGPACK
+            import eva.client.apiclient
+
+            ping_msg = eva.client.apiclient.pack_msgpack({'s': 'ping'})
+
+            log_level_id = self.get_log_level_code(params['l'])
+
+            if log_level_id is None:
+                log_level_id = 20
+
+            if not isinstance(log_level_id, int):
+                self.print_err(f'Invalid log level: {log_level_id}')
+                raise RuntimeError
+
+            def format_log_msg(msg, full=False):
+                from datetime import datetime
+                msg['level'] = msg['lvl'].upper()
+                s = datetime.strftime(datetime.fromtimestamp(
+                    msg['t']), '%Y-%m-%d %T') + ' ' + msg['h'] + '  ' + msg[
+                        'level'] + ' ' + msg['p'] + ' ' + msg['msg']
+                s = s if full else s[:120].replace('\n', ' ').replace('\r', '')
+                return self.format_log_str(s, msg)
+
+            api = params.get('_api')
+            uri = api._uri
+            apikey = api._key
+            timeout = api._timeout
+
+            n = params.get('n')
+
+            if n is None:
+                n = 10
+
+            if uri.startswith('https://'):
+                ws_uri = 'wss' + uri[5:]
+            elif uri.startswith('http://'):
+                ws_uri = 'ws' + uri[4:]
+            else:
+                ws_uri = 'ws://' + uri
+
+            ws = websocket.create_connection(
+                f'{ws_uri}/ws?k={apikey}&c={CT_MSGPACK}', timeout=timeout)
+            ws.settimeout(timeout)
+
+            def pinger():
+                import time
+                while True:
+                    try:
+                        ws.send(ping_msg, opcode=0x02)
+                        time.sleep(5)
+                    except:
+                        break
+
+            threading.Thread(target=pinger, daemon=True).start()
+
+            try:
+                ws.send(eva.client.apiclient.pack_msgpack({
+                    's': 'log',
+                    'l': log_level_id
+                }),
+                        opcode=0x02)
+                code, data = api.call('log_get', {'l': log_level_id, 'n': n})
+                if code != eva.client.apiclient.result_ok:
+                    raise Exception
+                for d in data:
+                    print(
+                        format_log_msg(d,
+                                       full=self.cur_api_func_is_full == '_'))
+                while True:
+                    frame = ws.recv_frame()
+                    if frame:
+                        data = msgpack.loads(frame.data, raw=False)
+                        if data.get('s') == 'log':
+                            for d in data['d']:
+                                print(
+                                    format_log_msg(
+                                        d,
+                                        full=self.cur_api_func_is_full == '_'))
+            finally:
+                ws.close()
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
     def call(self, args=None):
         opts = []
         if self.remote_api_enabled:
@@ -1231,6 +1323,7 @@ class GenericCLI(GCLI):
         else:
             api = None
         self.cur_api_func_is_full = ''
+        self.cur_api_func_follow = False
         if getattr(a, '_full', False):
             params['full'] = 1
             self.cur_api_func_is_full = '_'
@@ -1238,10 +1331,14 @@ class GenericCLI(GCLI):
             params['has_all'] = 1
         elif getattr(a, '_full_display', False):
             self.cur_api_func_is_full = '_'
+        elif getattr(a, '_full_display', False):
+            self.cur_api_func_is_full = '_'
         if getattr(a, '_save', False):
             params['save'] = 1
         if getattr(a, '_force', False):
             params['force'] = 1
+        if getattr(a, '_follow', False):
+            self.cur_api_func_follow = True
         code = self.prepare_run(api_func, params, a)
         if code:
             return code
@@ -1264,6 +1361,8 @@ class GenericCLI(GCLI):
             self.print_debug('API func: %s' % api_func)
             self.print_debug('timeout: %.2f' % timeout)
             self.print_debug('params %s' % params)
+        if api_func == 'log_get' and self.cur_api_func_follow:
+            api_func = self.log_tail
         if isinstance(api_func, str) and self.remote_api_enabled:
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
