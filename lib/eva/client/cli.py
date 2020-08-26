@@ -1164,9 +1164,6 @@ class GenericCLI(GCLI):
 
             n = params.get('n')
 
-            if n is None:
-                n = 10
-
             if uri.startswith('https://'):
                 ws_uri = 'wss' + uri[5:]
             elif uri.startswith('http://'):
@@ -1176,14 +1173,14 @@ class GenericCLI(GCLI):
 
             ws = websocket.create_connection(
                 f'{ws_uri}/ws?k={apikey}&c={CT_MSGPACK}', timeout=timeout)
-            ws.settimeout(timeout)
+            ws.settimeout(timeout * 2)
 
             def pinger():
                 import time
                 while True:
                     try:
                         ws.send(ping_msg, opcode=0x02)
-                        time.sleep(5)
+                        time.sleep(timeout if timeout < 5 else 5)
                     except:
                         break
 
