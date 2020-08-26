@@ -254,6 +254,19 @@ def suicide(**kwargs):
     logging.critical('SUICIDE')
     if config.show_traceback:
         faulthandler.dump_traceback()
+    try:
+        pp = psutil.Process(os.getpid())
+        childs = []
+        for child in pp.children(recursive=True):
+            childs.append(child)
+        for child in childs:
+            try:
+                child.kill()
+            except:
+                pass
+        return
+    except:
+        pass
     os.kill(os.getpid(), signal.SIGKILL)
 
 
