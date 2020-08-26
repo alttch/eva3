@@ -21,7 +21,7 @@ dmaster:
 	mkdir -p dist
 	@./dev/make-dist master
 
-release:
+stable-release:
 	@./dev/make-release
 	jks build get.eva-ics.com
 
