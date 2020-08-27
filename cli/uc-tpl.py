@@ -205,6 +205,8 @@ elif func == 'generate':
             api = apiclient.APIClientLocal('uc')
         except:
             print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+            import traceback
+            traceback.print_exc()
             sys.exit(98)
     else:
         api = apiclient.APIClient()
