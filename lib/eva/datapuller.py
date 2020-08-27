@@ -134,7 +134,7 @@ class DataPuller:
             if x[0] != 'u':
                 raise MethodNotImplemented(cmd[1])
             status = x[1]
-            status = None if status == 'None' else int(status)
+            status = None if status in ('N', 'None') else int(status)
             try:
                 value = x[2]
                 for q in ['\'', '"']:
