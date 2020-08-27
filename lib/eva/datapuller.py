@@ -62,7 +62,12 @@ class DataPuller:
         self.timeout = eva.core.config.timeout
 
     def serialize(self):
-        return {'name': self.name, 'cmd': self.cmd, 'active': self.active}
+        return {
+            'name': self.name,
+            'cmd': self.cmd,
+            'active': self.active,
+            'pid': self.p.pid if self.p and self.active else None
+        }
 
     def start(self, auto=False):
 

@@ -1483,7 +1483,7 @@ _pd_cols = {
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
     'modhelp_lpi': ['name', 'type', 'required', 'default', 'help'],
     'modhelp_phi': ['name', 'type', 'required', 'default', 'help'],
-    'list_datapullers': ['name', 'active', 'cmd'],
+    'list_datapullers': ['name', 'active', 'pid', 'cmd'],
 }
 
 _fancy_indentsp = {
