@@ -372,6 +372,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
         else:
             return super().prepare_result_dict(data, api_func, itype)
 
+    class ComplDataPuller(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('datapuller list')
+            if code:
+                return True
+            result = set()
+            for v in data:
+                result.add(v['name'])
+            return list(result)
+
     def setup_parser(self):
         super().setup_parser()
         self.enable_controller_management_functions('uc')
@@ -1262,13 +1273,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_dp_list = sp_dp.add_parser('list', help='List data pullers')
 
         sp_dp_start = sp_dp.add_parser('start', help='Start data puller')
-        sp_dp_start.add_argument('i', help='Data puller name', metavar='NAME')
+        sp_dp_start.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
 
         sp_dp_stop = sp_dp.add_parser('stop', help='Start data puller')
-        sp_dp_stop.add_argument('i', help='Data puller name', metavar='NAME')
+        sp_dp_stop.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
 
         sp_dp_restart = sp_dp.add_parser('restart', help='Start data puller')
-        sp_dp_restart.add_argument('i', help='Data puller name', metavar='NAME')
+        sp_dp_restart.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
 
     def edit_action(self, props):
         if self.apiuri:
