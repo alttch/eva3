@@ -1220,6 +1220,22 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _ucapi_restful_get_phi:
+
+get loaded PHI information
+--------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi.rest
+    :response: http-examples/ucapi/get_phi.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _ucapi_restful_list_phi:
 
 list loaded PHIs
@@ -1519,6 +1535,102 @@ Unloads driver. Driver should not be used by any :doc:`item</items>`.
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/unload_driver.rest
     :response: http-examples/ucapi/unload_driver.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+
+.. _ucapi_restful_cat_datapuller:
+
+Data pullers
+============
+
+
+
+.. _ucapi_restful_get_datapuller:
+
+Get data puller
+---------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_datapuller.rest
+    :response: http-examples/ucapi/get_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+Data puller info
+
+
+.. _ucapi_restful_list_datapullers:
+
+List data pullers
+-----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_datapullers.rest
+    :response: http-examples/ucapi/list_datapullers.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+List of all configured data pullers
+
+
+.. _ucapi_restful_restart_datapuller:
+
+Restart data puller
+-------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/restart_datapuller.rest
+    :response: http-examples/ucapi/restart_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_start_datapuller:
+
+Start data puller
+-----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_datapuller.rest
+    :response: http-examples/ucapi/start_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_stop_datapuller:
+
+Stop data puller
+----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_datapuller.rest
+    :response: http-examples/ucapi/stop_datapuller.resp-rest
 
 Parameters:
 

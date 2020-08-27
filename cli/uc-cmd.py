@@ -387,6 +387,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         self.add_uc_modbus_functions()
         self.add_uc_owfs_functions()
         self.add_uc_driver_functions()
+        self.add_uc_datapuller_functions()
 
     def add_uc_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get item state')
@@ -1252,6 +1253,23 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
+    def add_uc_datapuller_functions(self):
+        ap_dp = self.sp.add_parser('datapuller', help='Data pullers')
+        sp_dp = ap_dp.add_subparsers(dest='_func',
+                                     metavar='func',
+                                     help='Data puller commands')
+
+        sp_dp_list = sp_dp.add_parser('list', help='List data pullers')
+
+        sp_dp_start = sp_dp.add_parser('start', help='Start data puller')
+        sp_dp_start.add_argument('i', help='Data puller name', metavar='NAME')
+
+        sp_dp_stop = sp_dp.add_parser('stop', help='Start data puller')
+        sp_dp_stop.add_argument('i', help='Data puller name', metavar='NAME')
+
+        sp_dp_restart = sp_dp.add_parser('restart', help='Start data puller')
+        sp_dp_restart.add_argument('i', help='Data puller name', metavar='NAME')
+
     def edit_action(self, props):
         if self.apiuri:
             self.print_local_only()
@@ -1426,6 +1444,10 @@ _api_functions = {
     'driver:unload': 'unload_driver',
     'driver:assign': 'assign_driver',
     'driver:unassign': 'assign_driver',
+    'datapuller:list': 'list_datapullers',
+    'datapuller:stop': 'stop_datapuller',
+    'datapuller:start': 'start_datapuller',
+    'datapuller:restart': 'restart_datapuller',
     'edit:action': cli.edit_action,
     'edit:update': cli.edit_update,
     'edit:template': cli.edit_tpl
@@ -1460,7 +1482,8 @@ _pd_cols = {
     'get_phi_ports': ['port', 'name', 'description'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
     'modhelp_lpi': ['name', 'type', 'required', 'default', 'help'],
-    'modhelp_phi': ['name', 'type', 'required', 'default', 'help']
+    'modhelp_phi': ['name', 'type', 'required', 'default', 'help'],
+    'list_datapullers': ['name', 'active', 'cmd'],
 }
 
 _fancy_indentsp = {
@@ -1477,7 +1500,7 @@ cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
-    'driver', 'modbus-slave', 'maintenance'
+    'driver', 'modbus-slave', 'maintenance', 'datapuller'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)

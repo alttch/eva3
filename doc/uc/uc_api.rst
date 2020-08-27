@@ -1557,6 +1557,101 @@ Parameters:
 * **i** driver ID
 
 
+.. _ucapi_cat_datapuller:
+
+Data pullers
+============
+
+
+
+.. _ucapi_get_datapuller:
+
+get_datapuller - Get data puller
+--------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_datapuller.req
+    :response: http-examples/ucapi/get_datapuller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller name
+
+Returns:
+
+Data puller info
+
+.. _ucapi_list_datapullers:
+
+list_datapullers - List data pullers
+------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_datapullers.req
+    :response: http-examples/ucapi/list_datapullers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Returns:
+
+List of all configured data pullers
+
+.. _ucapi_restart_datapuller:
+
+restart_datapuller - Restart data puller
+----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/restart_datapuller.req
+    :response: http-examples/ucapi/restart_datapuller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller name
+
+.. _ucapi_start_datapuller:
+
+start_datapuller - Start data puller
+------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_datapuller.req
+    :response: http-examples/ucapi/start_datapuller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller name
+
+.. _ucapi_stop_datapuller:
+
+stop_datapuller - Stop data puller
+----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_datapuller.req
+    :response: http-examples/ucapi/stop_datapuller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller name
+
+
 .. _ucapi_cat_device:
 
 Devices

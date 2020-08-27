@@ -21,6 +21,7 @@ import eva.uc.ucmu
 import eva.uc.driverapi
 import eva.uc.modbus
 import eva.uc.owfs
+import eva.datapuller
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -750,6 +751,7 @@ def start():
         v.start_processors()
     eva.uc.driverapi.start_processors()
     eva.core.plugins_exec('start')
+    eva.datapuller.start()
 
 
 @with_item_lock
@@ -768,6 +770,7 @@ def stop():
     eva.uc.owfs.stop()
     eva.uc.modbus.stop()
     eva.core.plugins_exec('stop')
+    eva.datapuller.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):

@@ -77,6 +77,7 @@ What you get with EVA
     What's new <changelog>
     security
     notifiers
+    datapullers
     cli
     tutorial/tutorial
     iac

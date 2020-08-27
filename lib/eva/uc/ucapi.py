@@ -55,6 +55,8 @@ import eva.uc.controller
 import eva.uc.driverapi
 import eva.uc.modbus
 import eva.uc.owfs
+import eva.datapuller
+
 import eva.ei
 import jinja2
 import rapidjson
@@ -1631,6 +1633,96 @@ class UC_API(GenericAPI):
         return sorted(sorted(result, key=lambda k: k['path']),
                       key=lambda k: k['type'])
 
+    # master functions for data pullers
+
+    @log_d
+    @api_need_master
+    def list_datapullers(self, **kwargs):
+        """
+        List data pullers
+
+        Args:
+            k: .master
+
+        Returns:
+            List of all configured data pullers
+        """
+        return eva.datapuller.serialize()
+
+    @log_d
+    @api_need_master
+    def get_datapuller(self, **kwargs):
+        """
+        Get data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+
+        Returns:
+            Data puller info
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        return dp.serialize()
+
+    @log_i
+    @api_need_master
+    def start_datapuller(self, **kwargs):
+        """
+        Start data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.start()
+        return True
+
+    @log_w
+    @api_need_master
+    def stop_datapuller(self, **kwargs):
+        """
+        Stop data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.stop()
+        return True
+
+    @log_w
+    @api_need_master
+    def restart_datapuller(self, **kwargs):
+        """
+        Restart data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.restart()
+        return True
+
     # master functions for PHI configuration
 
     @log_i
@@ -2096,7 +2188,7 @@ class UC_API(GenericAPI):
             drv_p = None
             driver = None
         if c and not isinstance(c, dict):
-                c = dict_from_str(c)
+            c = dict_from_str(c)
         if driver:
             driver.validate_config(c, config_type='state')
             if item.item_type == 'unit':
@@ -2167,6 +2259,11 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, p=rtp, i=ii, **props)
         elif rtp == 'action':
             return self.result(k=k, u=ii, **props)
+        elif rtp == 'datapuller':
+            if ii:
+                return self.get_datapuller(k=k, i=ii)
+            else:
+                return self.list_datapullers(k=k)
         elif rtp == 'driver':
             if ii:
                 return self.get_driver(k=k, i=ii)
@@ -2267,6 +2364,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         return result
                 elif method == 'update' or not method:
                     return self.update(k=k, i=ii, **props)
+        elif rtp == 'datapuller':
+            cmd = props.get('cmd')
+            if cmd == 'start':
+                return self.start_datapuller(k=k, i=ii)
+            elif cmd == 'stop':
+                return self.stop_datapuller(k=k, i=ii)
+            elif cmd == 'restart':
+                return self.restart_datapuller(k=k, i=ii)
+            else:
+                raise MethodNotImplemented
         elif rtp == 'phi':
             if ii:
                 if '/' in ii:

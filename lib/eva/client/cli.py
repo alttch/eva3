@@ -967,15 +967,15 @@ class GenericCLI(GCLI):
                             self.apikey = d[1 if d[0] == 'k' else 2]
                         except:
                             pass
-                        print('key: %s' % self.apikey if self.
-                              apikey is not None else '<default>')
+                        print('key: %s' % self.apikey
+                              if self.apikey is not None else '<default>')
                     if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apiuri = d[1]
                         except:
                             pass
-                        print('API uri: %s' % self.apiuri if self.
-                              apiuri is not None else '<default>')
+                        print('API uri: %s' % self.apiuri
+                              if self.apiuri is not None else '<default>')
                     if (d[0] == 't' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.timeout = float(d[1 if d[0] == 't' else 3])
@@ -983,10 +983,12 @@ class GenericCLI(GCLI):
                             pass
                         print('timeout: %.2f' % self.timeout)
                     elif d[0] == 'a' and self.remote_api_enabled:
-                        print('API uri: %s' % (self.apiuri if self.apiuri
-                                               is not None else '<default>'))
-                        print('key: %s' % (self.apikey if self.apikey
-                                           is not None else '<default>'))
+                        print('API uri: %s' %
+                              (self.apiuri
+                               if self.apiuri is not None else '<default>'))
+                        print('key: %s' %
+                              (self.apikey
+                               if self.apikey is not None else '<default>'))
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -1555,38 +1557,6 @@ class ControllerCLI(object):
         return result
 
     def add_manager_control_functions(self):
-        ap_controller = self.sp.add_parser(
-            'server', help='Controller server management functions')
-        sp_controller = ap_controller.add_subparsers(dest='_func',
-                                                     metavar='func',
-                                                     help='Management commands')
-
-        ap_start = sp_controller.add_parser('start',
-                                            help='Start controller server')
-        ap_stop = sp_controller.add_parser('stop',
-                                           help='Stop controller server')
-        ap_restart = sp_controller.add_parser('restart',
-                                              help='Restart controller server')
-        if self.remote_api_enabled:
-            ap_reload = sp_controller.add_parser(
-                'reload', help='Reload controller server')
-        ap_status = sp_controller.add_parser(
-            'status', help='Status of the controller server')
-        ap_launch = sp_controller.add_parser(
-            'launch', help='Launch controller server in foreground')
-        ap_launch.add_argument('-n',
-                               '--show-notifier-logs',
-                               help='Show notifier event logs',
-                               action='store_true')
-
-        ap_plugins = sp_controller.add_parser('plugins',
-                                              help='List loaded core plugins')
-
-        self.append_api_functions({'server:plugins': 'list_plugins'})
-
-        if 'server' not in self.arg_sections:
-            self.arg_sections.append('server')
-
         ap_corescript = self.sp.add_parser('corescript',
                                            help='Controller core scripts')
         sp_corescript = ap_corescript.add_subparsers(
@@ -1640,6 +1610,38 @@ class ControllerCLI(object):
 
         if 'corescript' not in self.arg_sections:
             self.arg_sections.append('corescript')
+
+        ap_controller = self.sp.add_parser(
+            'server', help='Controller server management functions')
+        sp_controller = ap_controller.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Management commands')
+
+        ap_start = sp_controller.add_parser('start',
+                                            help='Start controller server')
+        ap_stop = sp_controller.add_parser('stop',
+                                           help='Stop controller server')
+        ap_restart = sp_controller.add_parser('restart',
+                                              help='Restart controller server')
+        if self.remote_api_enabled:
+            ap_reload = sp_controller.add_parser(
+                'reload', help='Reload controller server')
+        ap_status = sp_controller.add_parser(
+            'status', help='Status of the controller server')
+        ap_launch = sp_controller.add_parser(
+            'launch', help='Launch controller server in foreground')
+        ap_launch.add_argument('-n',
+                               '--show-notifier-logs',
+                               help='Show notifier event logs',
+                               action='store_true')
+
+        ap_plugins = sp_controller.add_parser('plugins',
+                                              help='List loaded core plugins')
+
+        self.append_api_functions({'server:plugins': 'list_plugins'})
+
+        if 'server' not in self.arg_sections:
+            self.arg_sections.append('server')
 
     def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(

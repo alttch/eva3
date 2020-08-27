@@ -96,6 +96,7 @@ eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
 eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
+eva.datapuller.update_config(cfg)
 
 eva.core.start()
 eva.core.register_controller(eva.uc.controller)
