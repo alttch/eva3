@@ -114,3 +114,23 @@ critical, first letter is enough e.g. *w* for warning).
 
 Data puller can also print messages to STDERR, they will be automatically
 logged with *error* level.
+
+Pulr
+====
+
+`Pulr <https://github.com/alttch/pulr>`_ is a free data pulling tool, 100%
+compatible with EVA ICS. Refer to Pulr documentation about the tool
+configuration, here are few remarks how to use it:
+
+* In Pulr configuration, set *output: eva/datapuller* to output data in EVA ICS
+  native format.
+
+* Set *beacon* value less than :doc:`/uc/uc` default timeout, otherwise the
+  Pulr subprocesses will be killed and continuously restarted.
+
+* All fields in *process* sections must have *set-id* param, to convert pulled
+  data IDs into EVA ICS item IDs (*<unit|sensor>:<group>/<id>*)
+
+* *set-id* must end with either *.status* or *.value* to set the proper
+  :doc:`EVA ICS items<items>` state fields. If no ending is specified, item
+  state value is updated.
