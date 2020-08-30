@@ -550,6 +550,38 @@ Parameters:
 * **API Key** valid API key
 
 
+.. _sfapi_restful_decrement:
+
+decrement lvar value
+--------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/decrement.rest
+    :response: http-examples/sfapi/decrement.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _sfapi_restful_increment:
+
+increment lvar value
+--------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/increment.rest
+    :response: http-examples/sfapi/increment.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
 .. _sfapi_restful_reset:
 
 reset lvar state
@@ -585,46 +617,6 @@ Optionally:
 
 * **s** lvar status
 * **v** lvar value
-
-
-
-.. _sfapi_restful_cat_lvar:
-
-LVar functions
-==============
-
-
-
-.. _sfapi_restful_decrement:
-
-decrement lvar value
---------------------
-
-Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/decrement.rest
-    :response: http-examples/sfapi/decrement.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-
-.. _sfapi_restful_increment:
-
-increment lvar value
---------------------
-
-Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/increment.rest
-    :response: http-examples/sfapi/increment.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
 
 
 

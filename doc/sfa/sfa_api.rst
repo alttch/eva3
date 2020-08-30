@@ -489,6 +489,38 @@ Parameters:
 * **k** valid API key
 * **i** lvar id
 
+.. _sfapi_decrement:
+
+decrement - decrement lvar value
+--------------------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/decrement.req
+    :response: http-examples/sfapi/decrement.resp
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+.. _sfapi_increment:
+
+increment - increment lvar value
+--------------------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/increment.req
+    :response: http-examples/sfapi/increment.resp
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
 .. _sfapi_reset:
 
 reset - reset lvar state
@@ -536,46 +568,6 @@ set status (if **expires** lvar param > 0) or value (if **expires** isn't set) o
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/toggle.req
     :response: http-examples/sfapi/toggle.resp
-
-Parameters:
-
-* **k** valid API key
-* **i** lvar id
-
-
-.. _sfapi_cat_lvar:
-
-LVar functions
-==============
-
-
-
-.. _sfapi_decrement:
-
-decrement - decrement lvar value
---------------------------------
-
-Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/decrement.req
-    :response: http-examples/sfapi/decrement.resp
-
-Parameters:
-
-* **k** valid API key
-* **i** lvar id
-
-.. _sfapi_increment:
-
-increment - increment lvar value
---------------------------------
-
-Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/increment.req
-    :response: http-examples/sfapi/increment.resp
 
 Parameters:
 
