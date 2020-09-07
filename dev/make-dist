@@ -59,7 +59,7 @@ echo "Compressing archive"
 
 mv eva eva-${VERSION}
 rm -f eva-${VERSION}-${BUILD}.tgz
-tar czf eva-${VERSION}-${BUILD}.tgz eva-${VERSION} || exit 1
+tar --owner=root --group=root -czf eva-${VERSION}-${BUILD}.tgz eva-${VERSION} || exit 1
 rm -rf eva-${VERSION}
 
 echo "Uploading to eva-ics.com"
