@@ -127,14 +127,16 @@ def check_version(min_version):
                            f'({__api__}) is too old, required: {min_version}')
 
 
-def get_logger():
+def get_logger(mod=None):
     """
     Get plugin logger
 
+    Args:
+        mod: self module name (optional)
     Returns:
         logger object
     """
-    return logging.getLogger(f'eva.plugins.{get_cmod()}')
+    return logging.getLogger(f'eva.plugins.{mod if mod else get_cmod()}')
 
 
 def get_polldelay():
@@ -230,7 +232,7 @@ def spawn(f, *args, **kwargs):
 # register methods and functions
 
 
-def register_lmacro_object(n, o):
+def register_lmacro_object(n, o, mod=None):
     """
     Register custom object for LM PLC macros
 
@@ -239,17 +241,18 @@ def register_lmacro_object(n, o):
     Args:
         n: object name
         o: object itself
+        mod: self module name (optional)
     """
     if get_product().code != 'lm':
         raise RuntimeError(
             'Can not register lmacro object, wrong controller type')
     import eva.lm.macro_api
-    n = f'x_{get_cmod()}_{n}'
+    n = f'x_{mod if mod else get_cmod()}_{n}'
     eva.lm.macro_api.expose_object(n, o)
     logging.debug(f'lmacro object registered: {n} -> {o}')
 
 
-def register_sfatpl_object(n, o):
+def register_sfatpl_object(n, o, mod=None):
     """
     Register custom object for SFA Templates
 
@@ -258,17 +261,18 @@ def register_sfatpl_object(n, o):
     Args:
         n: object name
         o: object itself
+        mod: self module name (optional)
     """
     if get_product().code != 'sfa':
         raise RuntimeError(
             'Can not register SFA Templates object, wrong controller type')
     import eva.sfa.sfatpl
-    n = f'x_{get_cmod()}_{n}'
+    n = f'x_{mod if mod else get_cmod()}_{n}'
     eva.sfa.sfatpl.expose_sfatpl_object(n, o)
     logging.debug(f'SFA Templates object registered: {n} -> {o}')
 
 
-def register_apix(o, sys_api=False):
+def register_apix(o, sys_api=False, mod=None):
     """
     Register API extension (APIX) object
 
@@ -280,8 +284,9 @@ def register_apix(o, sys_api=False):
     Args:
         o: APIX object
         sys_api: if True, object functions are registered as SYS API
+        mod: self module name (optional)
     """
-    caller = get_cmod()
+    caller = mod if mod else get_cmod()
     for m in dir(o):
         if not m.startswith('_'):
             f = getattr(o, m)
