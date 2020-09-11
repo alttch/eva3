@@ -7,6 +7,7 @@ __api__ = 1
 import eva.core
 from eva.apikey import check as key_check
 from eva.apikey import key_id as key_id
+from eva.apikey import key_by_id
 from eva.apikey import check_master as key_check_master
 from eva.apikey import get_masterkey
 
@@ -91,9 +92,8 @@ def api_call(method, key_id=None, **kwargs):
     f = eva.api.jrpc._get_api_function(method)
     if not f:
         raise MethodNotFound
-    result = f(
-        k=apikey.key_by_id(key_id) if key_id is not None else get_masterkey(),
-        **kwargs)
+    result = f(k=key_by_id(key_id) if key_id is not None else get_masterkey(),
+               **kwargs)
     if isinstance(result, tuple):
         res, data = result
         if res is True:

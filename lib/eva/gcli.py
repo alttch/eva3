@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import getopt
@@ -92,6 +94,7 @@ class GCLI(object):
 
         def __call__(self, prefix, **kwargs):
             result = []
+            import glob
             for m in self.mask:
                 result += glob.glob(prefix + m)
             return result
@@ -242,12 +245,12 @@ class GCLI(object):
     def fancy_print_other(self, result, func, itype):
         print(result)
 
-    def fancy_print_dict(result, func, itype, indent=0, print_ok=True):
+    def fancy_print_dict(self, result, func, itype, indent=0, print_ok=True):
         _result = self.prepare_result_dict(result, func, itype)
         rprinted = False
         out = None
         err = None
-        indentsp = self.fancy_indentsp.get(api_func, itype)
+        indentsp = self.fancy_indentsp.get(f'{itype}_{func}')
         if not indentsp:
             indentsp = 10
         for v in sorted(_result.keys()):
@@ -294,9 +297,10 @@ class GCLI(object):
                 for i, c in r.items():
                     t[i] = self.list_to_str(c)
             table.append(t)
+        import rapidtables
         header, rows = rapidtables.format_table(table,
                                                 rapidtables.FORMAT_GENERATOR)
-        header = header[:w]
+        # header = header[:w]
         print(self.colored(header, color='blue', attrs=[]))
         print(self.colored('-' * len(header), color='grey', attrs=[]))
         for r in rows:
@@ -343,7 +347,7 @@ class GCLI(object):
         else:
             return self.local_func_result_failed
 
-    def result_empty():
+    def result_empty(self):
         return self.local_func_result_empty
 
     def process_result(self, result, code, func, itype, a):

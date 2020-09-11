@@ -1543,7 +1543,7 @@ def serve_json_yml(fname, dts='ui'):
             try:
                 data = format_json(data,
                                    minimal=not eva.core.config.development)
-            except:
+            except Exception as e:
                 return _tool_error_response(e)
             cherrypy.serving.response.headers[
                 'Content-Type'] = 'application/json'

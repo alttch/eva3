@@ -1039,7 +1039,7 @@ class UC_API(GenericAPI):
             for m in mu:
                 try:
                     i = m['id']
-                    g = u['group']
+                    g = m['group']
                 except:
                     raise InvalidParameter('no id field for unit')
                 try:
@@ -1852,7 +1852,11 @@ class UC_API(GenericAPI):
         phi = eva.uc.driverapi.get_phi(i)
         if not phi:
             raise ResourceNotFound
-        result = phi.exec(c, a)
+        try:
+            xfunc = getattr(phi, 'exec')
+        except AttributeError:
+            return {'output': 'not implemented'}
+        result = xfunc(c, a)
         if result is None or result is False:
             raise FunctionFailed('exec failed')
         if isinstance(result, dict):

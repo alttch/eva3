@@ -4,7 +4,7 @@ import logging
 import threading
 
 from eva.exceptions import InvalidParameter
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 
 class GenericX:

@@ -24,7 +24,7 @@ from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
 
 from functools import wraps
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 exts = {}
 env = {}

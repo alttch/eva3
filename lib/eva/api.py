@@ -46,7 +46,7 @@ from neotasker import g
 
 from functools import wraps
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from eva.types import CT_JSON, CT_MSGPACK
 
@@ -431,7 +431,7 @@ def update_config(cfg):
         except:
             config.ssl_module = 'builtin'
         config.ssl_cert = cfg.get('webapi', 'ssl_cert')
-        if ssl_cert[0] != '/':
+        if config.ssl_cert[0] != '/':
             config.ssl_cert = eva.core.dir_etc + '/' + config.ssl_cert
         ssl_key = cfg.get('webapi', 'ssl_key')
         if ssl_key[0] != '/':

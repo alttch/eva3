@@ -27,6 +27,18 @@ from pyaltt2.network import parse_host_port, netacl_match
 
 from pathlib import Path
 
+
+class SimpleNamespace():
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+def compare(a, b):
+    return (a > b) - (a < b)
+
+
 class MultiOrderedDict(OrderedDict):
 
     def __setitem__(self, key, value):

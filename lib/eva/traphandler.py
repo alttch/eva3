@@ -12,7 +12,7 @@ from eva.tools import parse_host_port
 from eva.tools import netacl_match
 
 from netaddr import IPNetwork
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 from neotasker import background_worker
 
 subscribed_items = set()

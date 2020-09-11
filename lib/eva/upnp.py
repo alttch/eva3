@@ -48,7 +48,8 @@ import eva.core
 
 from eva.tools import parse_host_port
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
+
 from neotasker import background_worker
 
 config = SimpleNamespace(host=None,

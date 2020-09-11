@@ -55,10 +55,9 @@ def parse_host_port(hp, default_port):
     try:
         host, port = hp.split(':')
         port = int(port)
+        return (host, port)
     except:
-        log_traceback()
         return (None, None)
-    return (host, port)
 
 
 class APIClient(object):

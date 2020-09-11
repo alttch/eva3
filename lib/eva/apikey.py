@@ -24,13 +24,13 @@ from eva.core import userdb
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
 from eva.tools import gen_random_str
+from eva.tools import SimpleNamespace
 
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 
 from functools import partial
-from types import SimpleNamespace
 
 config = SimpleNamespace(masterkey=None)
 

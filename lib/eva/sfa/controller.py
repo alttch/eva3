@@ -27,7 +27,7 @@ from eva.exceptions import ResourceAlreadyExists
 
 from eva.exceptions import InvalidParameter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 remote_ucs = {}
 remote_lms = {}

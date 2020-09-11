@@ -41,7 +41,7 @@ from time import time
 from time import sleep
 from time import perf_counter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from neotasker import BackgroundEventWorker, task_supervisor
 
@@ -268,9 +268,6 @@ class PHI(GenericX):
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
         return d
-
-    def exec(self, cmd=None, args=None):
-        return 'not implemented'
 
     def push_state(self, payload=None):
         self.log_warning('push_state not implemented')

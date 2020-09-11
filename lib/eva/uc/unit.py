@@ -514,8 +514,7 @@ class UnitAction(eva.item.ItemAction):
                                         out=out,
                                         err=err)
             if not result:
-                if lock:
-                    self.unit_action_lock.release()
+                self.unit_action_lock.release()
                 return False
             if self.is_status_running():
                 self.item.set_state(nstatus=self.nstatus, nvalue=self.nvalue)

@@ -15,6 +15,7 @@ from eva.api import cp_client_key
 from eva.api import api_result_accepted
 from eva.api import http_real_ip
 from eva.api import get_aci
+from eva.api import cp_api_404
 
 _exposed_sfatpl_lock = threading.RLock()
 _exposed_sfatpl = {}

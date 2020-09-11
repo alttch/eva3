@@ -21,6 +21,7 @@ from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.tools import fmt_time
 from eva.tools import _p_periods
+from eva.tools import compare
 # from evacpp.evacpp import GenericAction
 from eva.generic import GenericAction
 
@@ -1297,7 +1298,7 @@ class ItemAction(GenericAction):
         self.item_action_lock.release()
 
     def __cmp__(self, other):
-        return cmp(self.priority, other.priority) if \
+        return compare(self.priority, other.priority) if \
                 other is not None else 1
 
     def __lt__(self, other):

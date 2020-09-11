@@ -48,7 +48,7 @@ from eva import apikey
 
 from netaddr import IPNetwork
 from cryptography.fernet import Fernet
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 config = SimpleNamespace(host=None,
                          port=None,

@@ -45,7 +45,7 @@ from eva.tools import parse_function_params
 
 from neotasker import task_supervisor
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 import eva.apikey
 
@@ -219,7 +219,6 @@ class LockAPI(object):
         except KeyError:
             raise ResourceNotFound
         except Exception as e:
-            raise
             raise FunctionFailed(e)
 
     @log_i

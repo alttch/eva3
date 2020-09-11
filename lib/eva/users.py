@@ -10,6 +10,7 @@ import rapidjson
 import sqlalchemy as sa
 import subprocess
 import time
+import dateutil
 from datetime import datetime
 
 from eva import apikey
@@ -26,7 +27,7 @@ from neotasker import background_worker
 
 from pyaltt2.db import format_condition as format_sql_condition
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from eva.tools import fmt_time
 

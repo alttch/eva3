@@ -18,7 +18,7 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 with_ports_lock = eva.core.RLocker('uc/owfs')
 

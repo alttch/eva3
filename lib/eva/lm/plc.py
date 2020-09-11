@@ -14,6 +14,7 @@ import threading
 import time
 import os
 import re
+import shlex
 import logging
 import rapidjson
 
@@ -23,7 +24,7 @@ from eva.tools import parse_func_str
 
 from eva.exceptions import FunctionFailed
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 macro_functions = {}
 macro_function_codes = {}

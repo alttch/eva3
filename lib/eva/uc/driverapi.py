@@ -27,7 +27,7 @@ from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import MethodNotImplemented
 
 from functools import wraps
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 phis = {}
 drivers = {}
@@ -175,7 +175,6 @@ def _gen_phi_map(phi_id, pmap, action_map=False):
                 }
             except:
                 raise
-                continue
             g.setdefault('items', []).append(info)
             g.setdefault('lpi', {}).setdefault(
                 getattr(i, prop + '_exec')[1:].split('.')[1], []).append(info)

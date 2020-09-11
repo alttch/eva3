@@ -36,6 +36,8 @@ from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
 from eva.tools import get_caller
+from eva.tools import SimpleNamespace
+
 
 from eva.tools import Locker as GenericLocker
 
@@ -45,8 +47,6 @@ from eva.exceptions import TimeoutException
 from neotasker import g, FunctionCollection, task_supervisor
 
 import pyaltt2.logs
-
-from types import SimpleNamespace
 
 version = __version__
 

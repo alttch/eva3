@@ -13,7 +13,7 @@ import pyaltt2.logs
 
 from eva.exceptions import InvalidParameter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from functools import partial
 

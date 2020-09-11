@@ -20,7 +20,7 @@ from eva.tools import format_json
 from eva.tools import parse_host_port
 from eva.tools import safe_int
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 import threading
 

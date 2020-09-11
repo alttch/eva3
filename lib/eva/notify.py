@@ -37,14 +37,13 @@ from neotasker import g
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
+from eva.tools import SimpleNamespace
 
 from eva.types import CT_JSON, CT_MSGPACK
 
 from eva.client.apiclient import pack_msgpack
 
 from ws4py.websocket import WebSocket
-
-from types import SimpleNamespace
 
 default_log_level = 20
 
@@ -1571,6 +1570,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     cf, kf = None, None
                 self.mq.tls_set(ca_certs=ca_certs, certfile=cf, keyfile=kf)
             except:
+                import eva
                 eva.core.log_traceback(notifier=True)
                 self.log_error(message='can not load ssl files')
                 pass
@@ -2502,7 +2502,7 @@ class GCP_IoT(GenericNotifier):
                             value = float(value)
                         except:
                             try:
-                                value = jsonpikcle.decode(value)
+                                value = rapidjson.decode(value)
                             except:
                                 pass
                     elif value == '':
@@ -3003,7 +3003,8 @@ def save(notifier_id=None):
             try:
                 n.save_config()
             except:
-                logging.error('can not save notifier\'s config for %s' % i)
+                logging.error('can not save notifier\'s config for %s' %
+                              notifier_id)
     else:
         for i, n in _get_notifiers_copy().items():
             if i and not n.nt_client:

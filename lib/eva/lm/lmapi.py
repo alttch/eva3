@@ -244,6 +244,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: lvar id
         """
         k, i, = parse_function_params(kwargs, 'ki', '.s')
+        item = eva.lm.controller.get_lvar(i)
         if not item:
             raise ResourceNotFound
         elif not apikey.check(k, item):

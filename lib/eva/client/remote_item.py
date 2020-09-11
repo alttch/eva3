@@ -7,6 +7,8 @@ import eva.core
 import eva.item
 import eva.tools
 
+import logging
+
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
 

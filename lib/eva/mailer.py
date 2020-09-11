@@ -14,7 +14,7 @@ from eva.tools import parse_host_port
 
 from eva.exceptions import FunctionFailed
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 config = SimpleNamespace(sender='eva@' + platform.node(),
                          smtp_host='localhost',
@@ -82,7 +82,7 @@ def send(subject=None, text=None, rcp=None):
         else:
             _rcp = config.default_rcp
     else:
-        if isinstance(_rcp, str):
+        if isinstance(rcp, str):
             _rcp = [rcp]
         else:
             _rcp = rcp

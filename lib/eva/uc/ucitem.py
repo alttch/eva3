@@ -634,8 +634,8 @@ class UCItem(eva.item.Item):
             'value_in_range_max_eq': r_ixiq
         }
 
-        def is_expired(self):
-            if not self.expires or \
-                    self.maintenance_end + self.expires >= time.time():
-                return False
-            return time.time() - self.set_time > self.expires
+    def is_expired(self):
+        if not self.expires or \
+                self.maintenance_end + self.expires >= time.time():
+            return False
+        return time.time() - self.set_time > self.expires

@@ -9,16 +9,17 @@ import eva.item
 import eva.tools
 import eva.apikey
 import eva.client.coreapiclient
-import eva.client.apiclient
 import eva.client.remote_item
 import logging
 import time
+import ssl
 import threading
 import websocket
 import rapidjson
 import msgpack
 import uuid
 import random
+from eva.client import apiclient
 from neotasker import BackgroundIntervalWorker, BackgroundWorker
 from eva.types import CT_JSON, CT_MSGPACK
 
@@ -161,7 +162,7 @@ class WebSocketWorker(BackgroundWorker):
             logging.debug('WS {}: processing data frame'.format(
                 self.controller.oid))
             if frame.opcode == websocket.ABNF.OPCODE_PING:
-                ws.pong(frame.data)
+                self.ws.pong(frame.data)
             elif frame.opcode == websocket.ABNF.OPCODE_CLOSE:
                 self.stop_ping()
                 if eva.core.is_shutdown_requested():
@@ -755,7 +756,7 @@ class RemoteControllerPool(object):
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
         if controller_id not in self.controllers:
-            return apiclient.result_not_found, None
+            return eva.client.apiclient.result_not_found, None
         c = self.controllers[controller_id]
         p = {'c': command}
         if args is not None:
