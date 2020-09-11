@@ -1,7 +1,10 @@
+from __future__ import print_function
+
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.2"
+
 
 import sys
 import platform
@@ -871,12 +874,12 @@ def save_cvars(fname=None):
     try:
         with open(fname_full, 'w') as fd:
             fd.write(format_json(cvars, minimal=False))
+        _flags.cvars_modified = False
         return True
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
         return False
-    _flags.cvars_modified = False
 
 
 @corescript_lock
@@ -887,12 +890,12 @@ def save_cs(fname=None):
         with open(fname_full, 'w') as fd:
             fd.write(format_json({'mqtt-topics': cs_data.topics},
                                  minimal=False))
+        _flags.cs_modified = False
         return True
     except:
         logging.error('can not save corescript config to %s' % fname_full)
         log_traceback()
         return False
-    _flags.cs_modified = False
 
 
 @cvars_lock
@@ -1116,7 +1119,7 @@ def register_corescript_topics():
                 n = eva.notify.get_notifier(get_default=True)
                 topic = t
             if not n:
-                raise LookupError(f('Notifier {notifier_id}'))
+                raise LookupError(f'Notifier {notifier_id}')
             n.handler_append(topic, handle_corescript_mqtt_event, qos)
         except:
             logging.error(f'Unable to register corescript topic {t}')
