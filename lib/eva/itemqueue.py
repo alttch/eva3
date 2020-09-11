@@ -195,4 +195,4 @@ async def action_cleaner(**kwargs):
                 logging.warning(
                     '%s action %s too old, status is %s ' % \
                     (o.q_id, a.uuid,
-                        eva.item.ia_status_names[status]))
+                        eva.item.ia_status_names[a.status]))
