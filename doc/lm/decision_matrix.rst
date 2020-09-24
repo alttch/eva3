@@ -117,11 +117,17 @@ Modifiable Parameters:
   the rule processing algorithm when the server is started and the initial item
   states are received
 
-* **for_item_group** the rule matches only for a specific group of items ((# or
+* **for_item_group** the rule matches only for a specific group of items (# or
   null - for all groups)
 
 * **for_item_id** the rule matches only for a specific item (# or null - for
   all items), may contain the mask \*id, id\* or \*id\*, i.e. *\*.temperature*
+
+* **for_item_type** the rule matches only for a specific type of items (# or
+  null - for all types)
+
+* **for_oid** "virtual" parameter which allows get/set rule condition in the
+  readable format (e.g. sensor:group1/#.value)
 
 * **for_prop** the state property of the item (**status** or **value**) the
   rule is checking. For :ref:`unit<unit>` state, **nstatus** and **nvalue**
