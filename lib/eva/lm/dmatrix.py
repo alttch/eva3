@@ -380,6 +380,8 @@ class DecisionRule(eva.item.Item):
             del d['group']
         if 'full_id' in d:
             del d['full_id']
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def update_config(self, data):
