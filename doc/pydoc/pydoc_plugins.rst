@@ -286,10 +286,12 @@
    :returns: None if item is not found
    
 
-.. py:function:: get_logger()
+.. py:function:: get_logger(mod=None)
    :module: eva.pluginapi
 
    Get plugin logger
+   
+   :param mod: self module name (optional)
    
    :returns: logger object
    
@@ -344,6 +346,14 @@
    :module: eva.pluginapi
 
    Get Plugin API version
+   
+
+.. py:function:: key_by_id(key_id)
+   :module: eva.pluginapi
+
+   get API key by API key ID
+   
+   :returns: API key
    
 
 .. py:function:: key_check(k, item=None, allow=[], pvt_file=None, rpvt_uri=None, ip=None, master=False, sysfunc=False, ro_op=False)
@@ -484,7 +494,7 @@
    
       dictionary of keyword arguments to future partial calls
 
-.. py:function:: register_apix(o, sys_api=False)
+.. py:function:: register_apix(o, sys_api=False, mod=None)
    :module: eva.pluginapi
 
    Register API extension (APIX) object
@@ -496,9 +506,10 @@
    
    :param o: APIX object
    :param sys_api: if True, object functions are registered as SYS API
+   :param mod: self module name (optional)
    
 
-.. py:function:: register_lmacro_object(n, o)
+.. py:function:: register_lmacro_object(n, o, mod=None)
    :module: eva.pluginapi
 
    Register custom object for LM PLC macros
@@ -507,9 +518,10 @@
    
    :param n: object name
    :param o: object itself
+   :param mod: self module name (optional)
    
 
-.. py:function:: register_sfatpl_object(n, o)
+.. py:function:: register_sfatpl_object(n, o, mod=None)
    :module: eva.pluginapi
 
    Register custom object for SFA Templates
@@ -518,6 +530,7 @@
    
    :param n: object name
    :param o: object itself
+   :param mod: self module name (optional)
    
 
 .. py:function:: set_aci(field, value)

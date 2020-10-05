@@ -19,10 +19,10 @@ globally or in EVA ICS venv.
 
 Plugin configuration
 
-Put a section [<pluginname>] in controller config, e.g. for this plugin:
+Put a section [plugin.<pluginname>] in controller config, e.g. for this plugin:
 
 ......
-[my]
+[plugin.my]
 var1 = value1
 var2 = value2
 ......

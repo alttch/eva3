@@ -3,7 +3,7 @@
    :module: eva.x
 
    
-   .. py:method:: GenericX.validate_config(config={}, config_type='config', **kwargs)
+   .. py:method:: GenericX.validate_config(config={}, config_type='config', ignore_private=False, **kwargs)
       :module: eva.x
    
       Validates module config
@@ -16,12 +16,21 @@
       and "state" by default. Consider either ignoring config_type='state'
       validation or allow action parameters there.
       
+      :param config: config to validate (may be modified on-the-flow to convert
+                     variable types for extension config)
+      :param config_type: validation config type ('config', 'state', 'action'
+                          etc., matches help variable)
+      :param ignore_private: allow any private (starting with "_") parameters as
+                             they're usually passed as-is to lower level extension (e.g. LPI
+                             -> PHI)
+      :param kwargs: reserved for the future
+      
       :returns: True if config is validated
       
       :raises eva.exceptions.InvalidParameter: if config contains invalid params
       
    
-   .. py:method:: GenericX.validate_config_whi(config={}, config_type='config', allow_extra=False, xparams=[])
+   .. py:method:: GenericX.validate_config_whi(config={}, config_type='config', allow_extra=False, ignore_private=False, xparams=[])
       :module: eva.x
    
       Validate config with module help info
