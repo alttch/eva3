@@ -1,6 +1,19 @@
 EVA ICS CHANGELOG
 *****************
 
+3.3.2 (TBA)
+
+Common
+------
+
+    * deep code audit and tons of bug fixes
+    * Core Plugins API v2
+
+UC
+--
+
+    * data pullers
+
 3.3.1 (2020-08-26)
 ==================
 

@@ -1,27 +1,19 @@
-EVA ICS 3.3.1
+EVA ICS 3.3.2
 *************
 
 What's new
 ==========
 
-* Active directory support
-* extended API logging
-* Core plug-ins
-* SFA supervisor locks
+* Core Plugins API v2
+* Data pullers
 
-Complete change log: https://get.eva-ics.com/3.3.1/stable/CHANGELOG.html
+Complete change log: https://get.eva-ics.com/3.3.2/stable/CHANGELOG.html
 
 Update instructions
 ===================
 
-New UC Driver and LM Extensions API require strict validation of module params
-(config, state / action for UC drivers) if supported by module. All modules,
-included in EVA ICS default distribution, have got validation support built-in.
-
-After applying update, controller error log should be checked as well as list
-of loaded drivers / extensions. In case of errors, stop the controller,
-manually edit *runtime/uc_drivers.json* and *runtime/lm_extensions.json*,
-correct invalid parameters and start it again.
+* If core plugins are used, change their config sections to
+  [plugin.<pluginname>] in the controllers' ini files.
 
 Note for Python 3.6 users: support of Python 3.6 is very limited, consider
 upgrading to 3.7+.
