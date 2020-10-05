@@ -798,7 +798,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
 def load_plugin_config(cfg):
     c = dict(cfg)
     for p, v in plugin_modules.items():
-        plugin_config = dict(c.get(p, {}))
+        plugin_config = dict(c.get(f'plugin.{p}', {}))
         exec_plugin_func(p, v, 'init', plugin_config)
 
 
