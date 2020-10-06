@@ -15,6 +15,7 @@ UC
 --
 
     * data pullers
+    * auto_off unit state processor can be cancelled / modified while running
 
 LM PLC
 ------

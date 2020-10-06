@@ -40,7 +40,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.nvalue = ''
         self.last_action = 0
         self.auto_processor = None
-        self.auto_processor_lock = threading.Lock()
+        self.auto_processor_lock = threading.RLock()
         self.modbus_status = None
         # labels have string keys to be JSON compatible
         self.default_status_labels = {
@@ -269,6 +269,10 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                 self.auto_off = auto_off
                 self.log_set(prop, auto_off)
                 self.set_modified(save)
+                if self.auto_off == 0:
+                    self.stop_auto_processor()
+                else:
+                    self.start_auto_processor()
             return True
         elif prop == 'status_labels' and isinstance(val, dict):
             self.status_labels = val
@@ -311,21 +315,26 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
     def stop_processors(self):
         super().stop_processors()
         self.unregister_modbus_status_updates()
+        self.stop_auto_processor()
 
     def start_auto_processor(self):
+        with self.auto_processor_lock:
+            self.stop_auto_processor()
+            if self.auto_off and self.status > 0:
+                self.auto_processor = task_supervisor.create_async_job(
+                    target=self._job_auto_off, number=1, timer=self.auto_off)
+
+    def stop_auto_processor(self):
         with self.auto_processor_lock:
             if self.auto_processor:
                 self.auto_processor.cancel()
                 self.auto_processor = None
-            if self.auto_off and self.status > 0:
-                self.auto_processor = task_supervisor.create_async_job(
-                    target=self._job_auto_off, number=1, timer=self.auto_off)
 
     async def _job_auto_off(self):
         with self.auto_processor_lock:
             logging.debug('%s auto off after %u seconds' % \
                         (self.oid, self.auto_off))
-            self.last_action = time.time()
+            # self.last_action = time.time()
             eva.core.spawn(eva.uc.controller.exec_unit_action,
                            self,
                            0,
