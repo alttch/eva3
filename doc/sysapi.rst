@@ -826,7 +826,7 @@ Parameters:
 set_user_password - set user password
 -------------------------------------
 
-
+Either master key and user login must be specified or a user must be logged in and a session token used
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/set_user_password.req
@@ -834,7 +834,7 @@ set_user_password - set user password
 
 Parameters:
 
-* **k** API key with *master* permissions
+* **k** master key or token
 * **u** user login
 * **p** new password
 

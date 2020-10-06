@@ -8,6 +8,8 @@ Common
 
     * deep code audit and tons of bug fixes
     * Core Plugins API v2
+    * "set_user_password" SYS API function now allows logged in users to change
+      their passwords
 
 UC
 --

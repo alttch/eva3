@@ -817,28 +817,43 @@ class UserAPI(object):
             p: property (password or key)
             v: value
         """
-        u, p, v = parse_api_params(kwargs, 'upv', 'SSS')
+        k, u, p, v = parse_function_params(kwargs, 'upv', 'SSS')
         tokens.remove_token(user=u)
         if p == 'password':
-            return eva.users.set_user_password(u, v)
+            return eva.users.set_user_password(k, u, v)
         elif p == 'key':
             return eva.users.set_user_key(u, v)
         else:
             raise InvalidParameter('Property unknown: {}'.format(p))
 
     @log_w
-    @api_need_master
     def set_user_password(self, **kwargs):
         """
         set user password
 
+        Either master key and user login must be specified or a user must be
+        logged in and a session token used
+
         Args:
-            k: .master
+            k: master key or token
             .u: user login
             p: new password
         """
-        u, p = parse_api_params(kwargs, 'up', 'SS')
-        tokens.remove_token(user=u)
+        k, u, p = parse_function_params(kwargs, 'kup', '.sS')
+        if u:
+            if not eva.apikey.check(k, master=True):
+                raise AccessDenied('master key is required for "u" param')
+            else:
+                tokens.remove_token(user=u)
+        else:
+            from eva.api import get_aci
+            if get_aci('utp'):
+                raise FunctionFailed(
+                    'unable to change password for a non-local user')
+            u = get_aci('u')
+        if not u:
+            raise InvalidParameter(
+                'user should be either specified in "u" param or logged in')
         return eva.users.set_user_password(u, p)
 
     @log_w
