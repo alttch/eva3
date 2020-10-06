@@ -14,6 +14,11 @@ UC
 
     * data pullers
 
+LM PLC
+------
+
+    * SSL, TLS and SMTP auth support for mailer
+
 3.3.1 (2020-08-26)
 ==================
 

@@ -6,6 +6,7 @@ What's new
 
 * Core Plugins API v2
 * Data pullers
+* SSL, TLS and SMTP auth support for LM PLC mailer
 
 Complete change log: https://get.eva-ics.com/3.3.2/stable/CHANGELOG.html
 

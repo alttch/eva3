@@ -120,9 +120,13 @@ session_timeout = 3600
 
 [mailer]
 ; mailer for mail() macro function
-smtp = localhost
+smtp = localhost:25
 from = eva@eva3-lm1
 default_rcp = admin@localhost, root@localhost
+;ssl = yes
+;tls = yes
+;login = smtp_login
+;password = smtp_password
 
 [cloud]
 ;default_key = default
