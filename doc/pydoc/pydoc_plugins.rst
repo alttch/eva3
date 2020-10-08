@@ -243,10 +243,29 @@
    :raises RuntimeError: if Plugin API version is too old
    
 
+.. py:function:: create_db_engine(db_uri, timeout=None)
+   :module: eva.pluginapi
+
+   Create SQLAlchemy database Engine
+   
+   - database timeout is set to core timeout, if not specified
+   - database pool size is auto-configured
+   - for all engines, except SQLite, "READ UNCOMMITED" isolation level is used
+   
+
 .. py:function:: critical()
    :module: eva.pluginapi
 
    Send critical event
+   
+
+.. py:function:: format_db_uri(db_uri)
+   :module: eva.pluginapi
+
+   Formats short database URL to SQLAlchemy URI
+   
+   - if no DB engine specified, SQLite is used
+   - if relative SQLite db path is used, it's created under EVA dir
    
 
 .. py:function:: get_aci(field, default=None)
@@ -304,6 +323,16 @@
    :returns: master API key
    
 
+.. py:function:: get_plugin_db(db, mod=None)
+   :module: eva.pluginapi
+
+   Get plugin custom database SQLAlchemy connection
+   
+   The connection object is stored as thread-local and re-used if possible
+   
+   :param db: SQLAlchemy DB engine
+   
+
 .. py:function:: get_polldelay()
    :module: eva.pluginapi
 
@@ -330,6 +359,18 @@
    Get system name (host name)
    
 
+.. py:function:: get_thread_local(var, default=None, mod=None)
+   :module: eva.pluginapi
+
+   Get thread-local variable
+   
+   :param var: variable name
+   :param default: default, if doesn't exists
+   :param mod: self module name (optional)
+   
+   :returns: variable value or None if variable isn't set
+   
+
 .. py:function:: get_timeout()
    :module: eva.pluginapi
 
@@ -346,6 +387,17 @@
    :module: eva.pluginapi
 
    Get Plugin API version
+   
+
+.. py:function:: has_thread_local(var, mod=None)
+   :module: eva.pluginapi
+
+   Check if thread-local variable exists
+   
+   :param var: variable name
+   :param mod: self module name (optional)
+   
+   :returns: True if exists
    
 
 .. py:function:: key_by_id(key_id)
@@ -533,6 +585,23 @@
    :param mod: self module name (optional)
    
 
+.. py:function:: sendmail(subject=None, text=None, rcp=None)
+   :module: eva.pluginapi
+
+   send email message
+   
+   The function uses *[mailer]* section of the :ref:`LM PLC
+   configuration<lm_ini>` to get sender address and list of the recipients (if
+   not specified).
+   
+   Optional:
+       subject: email subject
+       text: email text
+       rcp: recipient or array of the recipients
+   
+   :raises FunctionFailed: mail is not sent
+   
+
 .. py:function:: set_aci(field, value)
    :module: eva.pluginapi
 
@@ -542,6 +611,16 @@
    :param value: field value
    
    :returns: True if value is set, False for error (e.g. ACI isn't initialized)
+   
+
+.. py:function:: set_thread_local(var, value=None, mod=None)
+   :module: eva.pluginapi
+
+   Set thread-local variable
+   
+   :param var: variable name
+   :param value: value to set
+   :param mod: self module name (optional)
    
 
 .. py:function:: snmp_get(oid, host, port=161, community='public', timeout=0, retries=0, rf=<class 'str'>, snmp_ver=2, walk=False)

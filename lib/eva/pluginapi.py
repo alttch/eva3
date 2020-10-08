@@ -4,6 +4,8 @@ __license__ = "Apache License 2.0"
 __version__ = "3.3.2"
 __api__ = 2
 
+import threading
+
 import eva.core
 from eva.apikey import check as key_check
 from eva.apikey import key_id as key_id
@@ -46,16 +48,24 @@ from eva.uc.drivers.tools.mqtt import MQTT
 from eva.uc.drivers.tools.snmp import get as snmp_get
 from eva.uc.drivers.tools.snmp import set as snmp_set
 
+from eva.mailer import send as sendmail
+
 import logging
 
 from eva.core import db as get_db
 from eva.core import userdb as get_userdb
+from eva.core import format_db_uri
+from eva.core import create_db_engine
 from eva.core import dir_eva, dir_runtime, dir_ui, dir_pvt, dir_xc
 from eva.tools import get_caller_module
 
 from functools import partial
 
+from neotasker import g
+
 get_cmod = partial(get_caller_module, sdir='plugins')
+
+g_lock = threading.RLock()
 
 # general functions
 
@@ -227,6 +237,71 @@ def spawn(f, *args, **kwargs):
         concurrent.futures Future object
     """
     return eva.core.spawn(f, *args, **kwargs)
+
+
+def get_thread_local(var, default=None, mod=None):
+    """
+    Get thread-local variable
+
+    Args:
+        var: variable name
+        default: default, if doesn't exists
+        mod: self module name (optional)
+    Returns:
+        variable value or None if variable isn't set
+    """
+    return g.get(f'x_{mod if mod else get_cmod()}_{var}', default)
+
+
+def set_thread_local(var, value=None, mod=None):
+    """
+    Set thread-local variable
+
+    Args:
+        var: variable name
+        value: value to set
+        mod: self module name (optional)
+    """
+    return g.set(f'x_{mod if mod else get_cmod()}_{var}', value)
+
+
+def has_thread_local(var, mod=None):
+    """
+    Check if thread-local variable exists
+
+    Args:
+        var: variable name
+        mod: self module name (optional)
+    Returns:
+        True if exists
+    """
+    return g.has(f'x_{mod if mod else get_cmod()}_{var}')
+
+
+def get_plugin_db(db, mod=None):
+    """
+    Get plugin custom database SQLAlchemy connection
+
+    The connection object is stored as thread-local and re-used if possible
+
+    Args:
+        db: SQLAlchemy DB engine
+    """
+    n = (f'x_{mod if mod else get_cmod()}___dbconn')
+    with g_lock:
+        if not g.has(n):
+            g.set(n, db.connect())
+        else:
+            try:
+                dbconn = g.get(n)
+                dbconn.execute('select 1')
+            except:
+                try:
+                    dbconn.close()
+                except:
+                    pass
+                g.set(n, db.connect())
+        return g.get(n)
 
 
 # register methods and functions

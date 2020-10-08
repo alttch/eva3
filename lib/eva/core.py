@@ -5,7 +5,6 @@ __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.2"
 
-
 import sys
 import platform
 import os
@@ -37,7 +36,6 @@ from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
 from eva.tools import get_caller
 from eva.tools import SimpleNamespace
-
 
 from eva.tools import Locker as GenericLocker
 
@@ -118,7 +116,7 @@ log_engine = SimpleNamespace(logger=None,
                              log_file_handler=None,
                              syslog_handler=None)
 
-db_pool_size = 15
+db_pool_size = 15  # changed to thread count when WEB API is initialized
 
 sleep_step = 0.1
 
@@ -218,6 +216,12 @@ stop = FunctionCollection(on_error=log_traceback)
 
 
 def format_db_uri(db_uri):
+    """
+    Formats short database URL to SQLAlchemy URI
+
+    - if no DB engine specified, SQLite is used
+    - if relative SQLite db path is used, it's created under EVA dir
+    """
     if not db_uri:
         return None
     _db_uri = db_uri
@@ -235,6 +239,13 @@ def format_db_uri(db_uri):
 
 
 def create_db_engine(db_uri, timeout=None):
+    """
+    Create SQLAlchemy database Engine
+
+    - database timeout is set to core timeout, if not specified
+    - database pool size is auto-configured
+    - for all engines, except SQLite, "READ UNCOMMITED" isolation level is used
+    """
     if not db_uri:
         return None
     if db_uri.startswith('sqlite:///'):
