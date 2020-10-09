@@ -324,6 +324,7 @@ def modbus_slave_block(size):
 
 
 def start():
+
     if not config.slave['tcp'] and \
             not config.slave['udp'] and \
             not config.slave['serial']:
@@ -333,6 +334,26 @@ def start():
         modbus_device = importlib.import_module('pymodbus.device')
         modbus_transactions = importlib.import_module('pymodbus.transaction')
         modbus_datastore = importlib.import_module('pymodbus.datastore')
+
+        # monkey-patch for pymodbus/server/asynchronous 2.2.0: udp server fix
+        def datagramReceived_pymodbus_2_2_0_mp(self, data, addr):
+            _logger = modbus_server._logger
+            hexlify_packets = modbus_server.hexlify_packets
+            _logger.debug("Client Connected [%s]" % addr[0])
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Datagram Received: " + hexlify_packets(data))
+            if not self.control.ListenOnly:
+                continuation = lambda request: self._execute(request, addr)
+                units = self.store.slaves()
+                single = self.store.single
+                self.framer.processIncomingPacket(data,
+                                                  continuation,
+                                                  single=single,
+                                                  unit=units)
+
+        modbus_server.ModbusUdpProtocol.datagramReceived = \
+                datagramReceived_pymodbus_2_2_0_mp
+        # end monkey-patch
     except:
         logging.error('Unable to import pymodbus module')
         eva.core.log_traceback()
