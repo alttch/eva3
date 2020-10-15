@@ -73,7 +73,7 @@ function usage {
     echo " --supervisor             Use supervisord (should be installed)"
     echo " -u USER                  set up all controllers to run under specified user"
     echo
-    echo " --link                   link all controllers statically (requires --mqtt)"
+    echo " --link                   link all controllers statically"
     echo "                          WARNING: it's not possible to change controller id"
     echo "                          after linking. IDs of all controllers are automatically"
     echo "                          set to the current host name. If you want to use different"
