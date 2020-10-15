@@ -8,6 +8,7 @@ import eva.item
 import eva.tools
 
 import logging
+import threading
 
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
@@ -25,6 +26,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.value = state.get('value')
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
+        self.remote_update_lock = threading.RLock()
 
     def notify(self,
                retain=None,
@@ -71,31 +73,33 @@ class RemoteLVar(RemoteUpdatableItem):
         self.expires = state.get('expires')
         self.set_time = state.get('set_time')
 
-    def set_state_from_serialized(self, data, from_mqtt=False):
-        need_notify = False
-        try:
-            if 'expires' in data:
-                try:
-                    expires = float(data['expires'])
-                    if self.expires != expires:
-                        self.expires = expires
-                        need_notify = True
-                    need_notify = True
-                except:
-                    pass
-            if 'set_time' in data:
-                try:
-                    set_time = float(data['set_time'])
-                    if self.set_time != set_time:
-                        self.set_time = set_time
-                        need_notify = True
-                except:
-                    pass
-            super().set_state_from_serialized(data,
-                                              from_mqtt=from_mqtt,
-                                              force_notify=need_notify)
-        except:
-            eva.core.log_traceback()
+    def set_state_from_serialized(self, data, from_mqtt=False, timestamp=None):
+        with self.remote_update_lock:
+            need_notify = False
+            try:
+                if super().set_state_from_serialized(data,
+                                                     from_mqtt=from_mqtt,
+                                                     force_notify=need_notify,
+                                                     timestamp=timestamp):
+                    if 'expires' in data:
+                        try:
+                            expires = float(data['expires'])
+                            if self.expires != expires:
+                                self.expires = expires
+                                need_notify = True
+                            need_notify = True
+                        except:
+                            pass
+                    if 'set_time' in data:
+                        try:
+                            set_time = float(data['set_time'])
+                            if self.set_time != set_time:
+                                self.set_time = set_time
+                                need_notify = True
+                        except:
+                            pass
+            except:
+                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,

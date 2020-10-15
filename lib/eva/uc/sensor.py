@@ -26,7 +26,8 @@ class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False):
+                         force_notify=False,
+                         timestamp=None):
         if self.is_maintenance_mode():
             logging.info('Ignoring {} update in maintenance mode'.format(
                 self.oid))
@@ -43,4 +44,5 @@ class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
                                         value=value,
                                         from_mqtt=from_mqtt,
                                         force_notify=force_notify,
-                                        update_expiration=ue)
+                                        update_expiration=ue,
+                                        timestamp=timestamp)

@@ -67,7 +67,8 @@ class LVar(eva.item.VariableItem):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False):
+                         force_notify=False,
+                         timestamp=None):
         if not self.status and status != 1:
             return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
@@ -81,7 +82,8 @@ class LVar(eva.item.VariableItem):
             if super().update_set_state(status=status,
                                         value=value,
                                         from_mqtt=from_mqtt,
-                                        force_notify=force_notify):
+                                        force_notify=force_notify,
+                                        timestamp=timestamp):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status

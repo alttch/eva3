@@ -1025,16 +1025,19 @@ class RemoteUCPool(RemoteControllerPool):
             logging.critical('RemoteUCPool::process_state locking broken')
             eva.core.critical()
             return False
+        timestamp = time.time()
         try:
             for s in states if isinstance(states, list) else [states]:
                 if s['type'] == 'unit':
                     if s['full_id'] in self.units:
-                        self.units[s['full_id']].update_set_state(
-                            status=s['status'], value=s['value'])
-                        self.units[s['full_id']].update_nstate(
-                            nstatus=s['nstatus'], nvalue=s['nvalue'])
-                        self.units[
-                            s['full_id']].action_enabled = s['action_enabled']
+                        if self.units[s['full_id']].update_set_state(
+                                status=s['status'],
+                                value=s['value'],
+                                timestamp=timestamp):
+                            self.units[s['full_id']].update_nstate(
+                                nstatus=s['nstatus'], nvalue=s['nvalue'])
+                            self.units[s['full_id']].action_enabled = s[
+                                'action_enabled']
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1042,7 +1045,9 @@ class RemoteUCPool(RemoteControllerPool):
                 elif s['type'] == 'sensor':
                     if s['full_id'] in self.sensors:
                         self.sensors[s['full_id']].update_set_state(
-                            status=s['status'], value=s['value'])
+                            status=s['status'],
+                            value=s['value'],
+                            timestamp=timestamp)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1244,6 +1249,7 @@ class RemoteUCPool(RemoteControllerPool):
             eva.core.critical()
             return False
         try:
+            timestamp = time.time()
             units = uc.load_units()
             if units is not None:
                 p = {}
@@ -1256,11 +1262,13 @@ class RemoteUCPool(RemoteControllerPool):
                         self.controllers_by_unit[u.full_id] = uc
                         u.start_processors()
                     else:
-                        self.units[u.full_id].update_set_state(status=u.status,
-                                                               value=u.value)
-                        self.units[u.full_id].update_nstate(nstatus=u.nstatus,
-                                                            nvalue=u.nvalue)
-                        self.units[u.full_id].action_enabled = u.action_enabled
+                        unit = self.units[u.full_id]
+                        if unit.update_set_state(status=u.status,
+                                                 value=u.value,
+                                                 timestamp=timestamp):
+                            unit.update_nstate(nstatus=u.nstatus,
+                                               nvalue=u.nvalue)
+                            unit.action_enabled = u.action_enabled
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
                     if _u:
@@ -1288,6 +1296,7 @@ class RemoteUCPool(RemoteControllerPool):
             else:
                 logging.error('Failed to reload units from %s' % controller_id)
                 return False
+            timestamp = time.time()
             sensors = uc.load_sensors()
             if sensors is not None:
                 p = {}
@@ -1300,7 +1309,7 @@ class RemoteUCPool(RemoteControllerPool):
                         u.start_processors()
                     else:
                         self.sensors[u.full_id].update_set_state(
-                            status=u.status, value=u.value)
+                            status=u.status, value=u.value, timestamp=timestamp)
                     p[u.full_id] = u
                     _u = self.get_sensor(u.full_id)
                     if _u:
@@ -1427,13 +1436,14 @@ class RemoteLMPool(RemoteControllerPool):
             logging.critical('RemoteLMPool::process_state locking broken')
             eva.core.critical()
             return False
+        timestamp = time.time()
         try:
             for s in states if isinstance(states, list) else [states]:
                 if s['type'] == 'lvar':
                     _u = self.get_lvar(s['full_id'])
                     if _u:
                         _u.update_config(s)
-                        _u.set_state_from_serialized(s)
+                        _u.set_state_from_serialized(s, timestamp=timestamp)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1442,7 +1452,7 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_cycle(s['full_id'])
                     if _u:
                         _u.update_config(s)
-                        _u.set_state_from_serialized(s)
+                        _u.set_state_from_serialized(s, timestamp=timestamp)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1637,6 +1647,7 @@ class RemoteLMPool(RemoteControllerPool):
             eva.core.critical()
             return False
         try:
+            timestamp = time.time()
             lvars = lm.load_lvars()
             if lvars is not None:
                 p = {}
@@ -1652,7 +1663,8 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_lvar(u.full_id)
                     if _u:
                         _u.update_config(u.serialize(config=True))
-                        _u.set_state_from_serialized(u.serialize())
+                        _u.set_state_from_serialized(u.serialize(),
+                                                     timestamp=timestamp)
                 if controller_id in self.lvars_by_controller:
                     for i in self.lvars_by_controller[controller_id].copy(
                     ).keys():
