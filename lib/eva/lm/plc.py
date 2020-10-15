@@ -812,7 +812,7 @@ class Cycle(eva.item.Item):
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
-            if d['macro'].startswith('@func/'):
+            if d['macro'] and d['macro'].startswith('@func/'):
                 d['macro'] = '@' + d['macro'][6:]
             d['on_error'] = self.on_error.full_id if self.on_error else None
             d['macro_args'] = self.macro_args
