@@ -78,7 +78,10 @@ class DataPuller:
                     time.sleep(1)
                 if eva.core.is_shutdown_requested():
                     return
-                self.p = subprocess.Popen([self.cmd],
+                self.p = subprocess.Popen([
+                    self.cmd if self.cmd.startswith('/') else
+                    f'{eva.core.dir_eva}/{self.cmd}'
+                ],
                                           shell=True,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
