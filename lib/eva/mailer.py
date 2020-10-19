@@ -105,6 +105,8 @@ def send(subject=None, text=None, rcp=None):
                                  'recipient in config not specified')
         else:
             _rcp = config.default_rcp
+    else:
+        _rcp = rcp
     if isinstance(_rcp, list) and len(_rcp) == 1:
         _rcp = _rcp[0]
     try:
