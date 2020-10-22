@@ -508,6 +508,7 @@ class ModbusPort(object):
                 self.client = modbus_client.ModbusSerialClient(
                     method=p[0],
                     port=port,
+                    bytesize=bits,
                     stopbits=stopbits,
                     parity=parity,
                     baudrate=speed)
