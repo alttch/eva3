@@ -359,6 +359,29 @@ Using system shell
 
     The system downgrade is officially not supported and not recommended.
 
+With a pre-downloaded tarball
+-----------------------------
+
+Put *update.sh* and the new version tarball to EVA ICS root directory
+(/opt/eva). Run the update:
+
+.. code-block:: bash
+
+    ./update.sh
+
+The script will use tarball located in EVA ICS directory. If the required
+version tarball file doesn't exists, it will be downloaded.
+
+To prepare Python venv and explore new version files (e.g. may be required for
+the offline updating), run
+
+.. code-block:: bash
+
+    env CHECK_ONLY=1 ./update.sh
+
+The script will exit after preparing the virtual environment. The new version
+files will be kept in *_update* directory.
+
 Intermediate versions
 ---------------------
 
