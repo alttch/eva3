@@ -17,6 +17,7 @@ Common
         * sendmail
     * "set_user_password" SYS API function now allows logged in users to change
       their passwords
+    * update with pre-downloaded tarballs
 
 UC
 --
