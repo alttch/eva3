@@ -82,6 +82,11 @@ echo "- Installing missing modules"
 
 ./_update/eva-${VERSION}/install/build-venv . || exit 2
 
+if [ "$CHECK_ONLY" = 1 ]; then
+  echo "Check passed. New version files can be explored in the _update dir"
+  exit 0
+fi
+
 echo "- Removing obsolete files and folders"
 
 for o in ${OBS}; do
