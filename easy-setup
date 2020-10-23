@@ -517,6 +517,10 @@ do
             SKIP_CHECK=1
             shift
         ;;
+        --skip-venv)
+            SKIP_VENV=1
+            shift
+        ;;
         -h|--help)
             usage
             exit 0
@@ -662,7 +666,7 @@ fi
 
 # check mods, build venv
 
-if [ -z $SKIP_CHECK ]; then
+if [ -z $SKIP_VENV ]; then
     echo "Building VENV"
     ./install/build-venv || exit 1
     echo

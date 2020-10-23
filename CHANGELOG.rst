@@ -6,6 +6,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * install option "--skip-venv". "--skip-check" no longer skips venv building
     * deep code audit and tons of bug fixes
     * Core Plugins API v2, new functions:
         * create_db_engine"
