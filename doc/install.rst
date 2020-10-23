@@ -377,7 +377,7 @@ the offline updating), run
 
 .. code-block:: bash
 
-    env CHECK_ONLY=1 ./update.sh
+    env CHECK_ONLY=1 bash update-xxxxxxx.sh
 
 The script will exit after preparing the virtual environment. The new version
 files will be kept in *_update* directory.
