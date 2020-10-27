@@ -278,6 +278,19 @@ def has_thread_local(var, mod=None):
     return g.has(f'x_{mod if mod else get_cmod()}_{var}')
 
 
+def clear_thread_local(var, mod=None):
+    """
+    Check if thread-local variable exists
+
+    Args:
+        var: variable name
+        mod: self module name (optional)
+    Returns:
+        True if exists
+    """
+    return g.clear(f'x_{mod if mod else get_cmod()}_{var}')
+
+
 def get_plugin_db(db, mod=None):
     """
     Get plugin custom database SQLAlchemy connection

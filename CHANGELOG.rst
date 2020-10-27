@@ -14,6 +14,7 @@ Common
         * get_thread_local
         * has_thread_local
         * set_thread_local
+        * clear_thread_local
         * sendmail
     * "set_user_password" SYS API function now allows logged in users to change
       their passwords

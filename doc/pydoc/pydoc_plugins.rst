@@ -243,6 +243,17 @@
    :raises RuntimeError: if Plugin API version is too old
    
 
+.. py:function:: clear_thread_local(var, mod=None)
+   :module: eva.pluginapi
+
+   Check if thread-local variable exists
+   
+   :param var: variable name
+   :param mod: self module name (optional)
+   
+   :returns: True if exists
+   
+
 .. py:function:: create_db_engine(db_uri, timeout=None)
    :module: eva.pluginapi
 
