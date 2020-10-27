@@ -19,6 +19,7 @@ Common
     * "set_user_password" SYS API function now allows logged in users to change
       their passwords
     * update with pre-downloaded tarballs
+    * mailer feature available in all controller types (used by core plugins)
 
 UC
 --

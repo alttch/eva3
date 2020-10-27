@@ -111,6 +111,16 @@ session_timeout = 3600
 ; uncomment to use frontend X-Real-IP header to get client real IP address
 ;x_real_ip = yes
 
+[mailer]
+; mailer for mail() macro function
+smtp = localhost:25
+from = eva@eva3-sfa
+default_rcp = admin@localhost, root@localhost
+;ssl = yes
+;tls = yes
+;login = smtp_login
+;password = smtp_password
+
 [cloud]
 ; enable cloud manager services
 ;cloud_manager = yes
