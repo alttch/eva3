@@ -23,6 +23,7 @@ import eva.uc.controller
 import eva.logs
 import eva.uc.modbus
 import eva.wsapi
+import eva.mailer
 
 
 def usage(version_only=False):
@@ -95,6 +96,7 @@ eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
 eva.sysapi.update_config(cfg)
+eva.mailer.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
 eva.datapuller.update_config(cfg)
 

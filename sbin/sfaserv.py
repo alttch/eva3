@@ -21,6 +21,7 @@ import eva.logs
 import eva.sysapi
 import eva.upnp
 import eva.wsapi
+import eva.mailer
 
 
 def usage(version_only=False):
@@ -86,6 +87,7 @@ eva.logs.start()
 
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
+eva.mailer.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp._data.discover_ports = (1912, 1917)
 
