@@ -295,8 +295,8 @@ def load(fname=None, load_from_db=True):
     logging.info('Loading API keys')
     fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
     if not fname_full:
-        logging.warning('No file or product specified ' + \
-                                'skipping loading custom variables')
+        logging.warning('No file or product specified '
+                        'skipping loading API keys')
         return False
     try:
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -305,9 +305,7 @@ def load(fname=None, load_from_db=True):
             try:
                 k = cfg.get(ks, 'key')
                 if k in keys.keys():
-                    logging.warning(
-                            'duplicate key %s, problems might occur' % \
-                                    k)
+                    logging.warning(f'duplicate key {k}, problems might occur')
                 key = APIKey(k, ks)
                 try:
                     key.master = (cfg.get(ks, 'master') == 'yes')
@@ -328,7 +326,7 @@ def load(fname=None, load_from_db=True):
                         key.hosts_allow = \
                                 [ IPNetwork(h) for h in _hosts_allow ]
                     except:
-                        logging.error('key %s bad host acl!, skipping' % ks)
+                        logging.error(f'key {ks} invalid host acl!, skipping')
                         eva.core.log_traceback()
                         continue
                 try:
@@ -342,7 +340,7 @@ def load(fname=None, load_from_db=True):
                         key.hosts_assign = \
                                 [ IPNetwork(h) for h in _hosts_assign ]
                     except:
-                        logging.warning('key %s bad hosts_assign' % ks)
+                        logging.warning(f'key {ks} invalid hosts_assign')
                         eva.core.log_traceback()
                 try:
                     key.item_ids = list(
@@ -405,7 +403,7 @@ def load(fname=None, load_from_db=True):
             keys.update(_keys_from_db)
             keys_by_id.update(_keys_from_db_by_id)
         if not config.masterkey:
-            logging.warning('no masterkey in this configuration')
+            logging.warning('no masterkey specified')
         eva.core.update_corescript_globals({'masterkey': config.masterkey})
         return True
     except:
