@@ -20,6 +20,7 @@ Common
       their passwords
     * update with pre-downloaded tarballs
     * mailer feature available in all controller types (used by core plugins)
+    * "cdata" (custom data) API key field
 
 UC
 --

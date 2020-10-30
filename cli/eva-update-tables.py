@@ -76,9 +76,11 @@ print('Creating missing table columns')
 
 append_db_column('apikeys', 'i_ro', 'VARCHAR(1024)', dbconn)
 append_db_column('apikeys', 'g_ro', 'VARCHAR(1024)', dbconn)
+append_db_column('apikeys', 'cdata', 'VARCHAR(4096)', dbconn)
 
 dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
 dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
+dbconn.execute('update apikeys set cdata = "" where cdata is null')
 
 eva.core.shutdown()
 print()

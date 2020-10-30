@@ -49,6 +49,7 @@ class APIKey(object):
         self.key_id = key_id
         self.master = False
         self.sysfunc = False
+        self.cdata = ''
         self.item_ids = []
         self.groups = []
         self.item_ids_ro = []
@@ -69,6 +70,7 @@ class APIKey(object):
             'master': self.master,
             'key': self.key,
             'sysfunc': self.sysfunc,
+            'cdata': self.cdata,
             'items': self.item_ids,
             'groups': self.groups,
             'items_ro': self.item_ids_ro,
@@ -222,6 +224,12 @@ class APIKey(object):
                 self.rpvt_uris = val
                 self.set_modified(save)
             return True
+        elif prop == 'cdata':
+            val = '' if value is None else value
+            if self.cdata != val:
+                self.cdata = val
+                self.set_modified(save)
+            return True
         raise ResourceNotFound('property ' + prop)
 
     def set_modified(self, save):
@@ -246,42 +254,44 @@ class APIKey(object):
                 # still be present in the database
                 dbconn.execute(sql('delete from apikeys where k_id=:k_id'),
                                k_id=data['id'])
-                dbconn.execute(
-                    sql('insert into apikeys(k_id, k, m, s, i,' +
-                        ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
-                        '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, ' +
-                        ':hal, :has, :pvt, :rpvt)'),
-                    k_id=data['id'],
-                    k=data['key'],
-                    m=1 if data['master'] else 0,
-                    s=1 if data['sysfunc'] else 0,
-                    i=data['items'],
-                    g=data['groups'],
-                    i_ro=data['items_ro'],
-                    g_ro=data['groups_ro'],
-                    a=data['allow'],
-                    hal=data['hosts_allow'],
-                    has=data['hosts_assign'],
-                    pvt=data['pvt'],
-                    rpvt=data['rpvt'])
+                dbconn.execute(sql(
+                    'insert into apikeys(k_id, k, m, s, i,'
+                    ' g, i_ro, g_ro, a,hal, has, pvt, rpvt, cdata) values '
+                    '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, '
+                    ':hal, :has, :pvt, :rpvt, :cdata)'),
+                               k_id=data['id'],
+                               k=data['key'],
+                               m=1 if data['master'] else 0,
+                               s=1 if data['sysfunc'] else 0,
+                               i=data['items'],
+                               g=data['groups'],
+                               i_ro=data['items_ro'],
+                               g_ro=data['groups_ro'],
+                               a=data['allow'],
+                               hal=data['hosts_allow'],
+                               has=data['hosts_assign'],
+                               pvt=data['pvt'],
+                               rpvt=data['rpvt'],
+                               cdata=data['cdata'])
             else:
-                dbconn.execute(
-                    sql('update apikeys set k=:k, s=:s, i=:i, g=:g, ' +
-                        'i_ro=:i_ro, g_ro=:g_ro, a=:a, ' +
-                        'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt where ' +
-                        'k_id=:k_id'),
-                    k=self.key,
-                    s=1 if data['sysfunc'] else 0,
-                    i=data['items'],
-                    g=data['groups'],
-                    i_ro=data['items_ro'],
-                    g_ro=data['groups_ro'],
-                    a=data['allow'],
-                    hal=data['hosts_allow'],
-                    has=data['hosts_assign'],
-                    pvt=data['pvt'],
-                    rpvt=data['rpvt'],
-                    k_id=data['id'])
+                dbconn.execute(sql(
+                    'update apikeys set k=:k, s=:s, i=:i, g=:g, '
+                    'i_ro=:i_ro, g_ro=:g_ro, a=:a, '
+                    'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt, cdata=:cdata '
+                    'where k_id=:k_id'),
+                               k=self.key,
+                               s=1 if data['sysfunc'] else 0,
+                               i=data['items'],
+                               g=data['groups'],
+                               i_ro=data['items_ro'],
+                               g_ro=data['groups_ro'],
+                               a=data['allow'],
+                               hal=data['hosts_allow'],
+                               has=data['hosts_assign'],
+                               pvt=data['pvt'],
+                               rpvt=data['rpvt'],
+                               cdata=data['cdata'],
+                               k_id=data['id'])
         except:
             eva.core.report_userdb_error()
         self.in_db = True
@@ -389,6 +399,10 @@ def load(fname=None, load_from_db=True):
                         filter(None, [
                             x.strip() for x in cfg.get(ks, 'allow').split(',')
                         ]))
+                except:
+                    pass
+                try:
+                    key.cdata = cfg.get(ks, 'cdata')
                 except:
                     pass
                 keys[k] = key
@@ -590,6 +604,7 @@ def serialized_acl(k):
     _k = keys[k]
     r['key_id'] = _k.key_id
     r['master'] = _k.master or setup_on
+    r['cdata'] = _k.cdata
     if _k.master or setup_on:
         return r
     r['sysfunc'] = _k.sysfunc
@@ -674,7 +689,8 @@ def load_keys_from_db():
                          sa.Column('hal', sa.String(1024)),
                          sa.Column('has', sa.String(1024)),
                          sa.Column('pvt', sa.String(1024)),
-                         sa.Column('rpvt', sa.String(1024)))
+                         sa.Column('rpvt', sa.String(1024)),
+                         sa.Column('cdata', sa.String(4096)))
     try:
         meta.create_all(dbconn)
     except:
@@ -688,6 +704,7 @@ def load_keys_from_db():
                 break
             key = APIKey(r.k, r.k_id)
             key.sysfunc = True if val_to_boolean(r.s) else False
+            key.cdata = r.cdata
             for i, v in {
                     'item_ids': 'i',
                     'groups': 'g',
