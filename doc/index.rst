@@ -80,6 +80,7 @@ What you get with EVA
     datapullers
     cli
     tutorial/tutorial
+    auth
     iac
     faq
     highload
@@ -156,7 +157,6 @@ What you get with EVA
     :caption:  API
     :maxdepth: 1
 
-    auth
     sysapi
     uc/uc_api
     uc/uc_udp_api
