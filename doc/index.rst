@@ -156,6 +156,7 @@ What you get with EVA
     :caption:  API
     :maxdepth: 1
 
+    auth
     sysapi
     uc/uc_api
     uc/uc_udp_api
