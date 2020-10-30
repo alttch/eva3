@@ -38,7 +38,7 @@ Token will expire and become invalid, if:
 
 * on any API key modification, which is token assigned to
 
-* on any user account modification, whom token is assigned to (if token was
-  obtained with user credentials)
+* on any user account modification, which the token is assigned to (if token
+  was obtained with user credentials)
 
 * the controller was restarted.
