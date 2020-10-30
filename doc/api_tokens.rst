@@ -21,7 +21,7 @@ earlier.
 
 :doc:`/sfa/sfa_templates` and :doc:`/sfa/sfa_pvt` methods additionally accept
 authentication tokens set in **auth** cookie. After successful login,
-:ref:`js_framework` automatically set this cookie for URI paths */ui*, */pvt*
+:ref:`js_framework` automatically sets this cookie for URI paths */ui*, */pvt*
 and */rpvt*.
 
 Expiration
@@ -38,7 +38,7 @@ Token will expire and become invalid, if:
 
 * on any API key modification, which is token assigned to
 
-* on any user account modification, which is token assigned to (if token was
+* on any user account modification, whom token is assigned to (if token was
   obtained with user credentials)
 
-* controller has been restarted.
+* the controller was restarted.

@@ -81,7 +81,7 @@ API key properties:
   items. Wildcards aren't possible.
 
 * **key** key itself (up to 64 characters). Filled with 32 random chars
-  automatically after creation.
+  automatically after creation
 
 * **master** key is the master key if set to True
 
