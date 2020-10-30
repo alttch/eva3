@@ -103,6 +103,8 @@ class APIKey(object):
                 regenerate_key(self.key_id, k=value, save=False)
                 self.set_modified(save)
             return True
+        elif prop == 'dynamic':
+            return False
         elif prop == 'sysfunc':
             val = val_to_boolean(value)
             if val is None:
