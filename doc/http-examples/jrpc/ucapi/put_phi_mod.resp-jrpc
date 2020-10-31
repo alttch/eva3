@@ -1,3 +1,10 @@
+HTTP/1.1 200 OK
+Cache-Control: no-cache, no-store, must-revalidate
+Content-Length: 902
+Content-Type: application/json
+Expires: 0
+Pragma: no-cache
+
 {
     "id": 1,
     "jsonrpc": "2.0",
