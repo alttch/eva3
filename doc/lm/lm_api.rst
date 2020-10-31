@@ -140,74 +140,6 @@ In case API function has been failed, response body will contain JSON data with
 
 .. contents::
 
-.. _lmapi_cat_general:
-
-General functions
-=================
-
-
-
-.. _lmapi_test:
-
-test - test API/key and get system info
----------------------------------------
-
-Test can be executed with any valid API key of the controller the function is called to.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/test.req
-    :response: http-examples/lmapi/test.resp
-
-Parameters:
-
-* **k** any valid API key
-
-Returns:
-
-JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
-
-.. _lmapi_login:
-
-login - log in and get authentication token
--------------------------------------------
-
-Obtains authentication :doc:`token</api_tokens>` which can be used in API calls instead of API key.
-
-If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
-
-If authentication token is specified, the function will check it and return token information if it is valid.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/login.req
-    :response: http-examples/lmapi/login.resp
-
-Parameters:
-
-* **k** valid API key or
-* **u** user login
-* **p** user password
-* **a** authentication token
-
-Returns:
-
-A dict, containing API key ID and authentication token
-
-.. _lmapi_logout:
-
-logout - log out and purge authentication token
------------------------------------------------
-
-Purges authentication :doc:`token</api_tokens>`
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/logout.req
-    :response: http-examples/lmapi/logout.resp
-
-Parameters:
-
-* **k** valid token
-
-
 .. _lmapi_cat_lvar:
 
 LVar functions
@@ -223,8 +155,8 @@ clear - clear lvar state
 set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/clear.req
-    :response: http-examples/lmapi/clear.resp
+    :request: http-examples/jrpc/lmapi/clear.req-jrpc
+    :response: http-examples/jrpc/lmapi/clear.resp-jrpc
 
 Parameters:
 
@@ -239,8 +171,8 @@ decrement - decrement lvar value
 Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/decrement.req
-    :response: http-examples/lmapi/decrement.resp
+    :request: http-examples/jrpc/lmapi/decrement.req-jrpc
+    :response: http-examples/jrpc/lmapi/decrement.resp-jrpc
 
 Parameters:
 
@@ -255,8 +187,8 @@ groups - get item group list
 Get the list of item groups. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups.req
-    :response: http-examples/lmapi/groups.resp
+    :request: http-examples/jrpc/lmapi/groups.req-jrpc
+    :response: http-examples/jrpc/lmapi/groups.resp-jrpc
 
 Parameters:
 
@@ -271,8 +203,8 @@ increment - increment lvar value
 Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/increment.req
-    :response: http-examples/lmapi/increment.resp
+    :request: http-examples/jrpc/lmapi/increment.req-jrpc
+    :response: http-examples/jrpc/lmapi/increment.resp-jrpc
 
 Parameters:
 
@@ -287,8 +219,8 @@ reset - reset lvar state
 Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar is being used as a timer to reset it, or as a flag to set it *True*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reset.req
-    :response: http-examples/lmapi/reset.resp
+    :request: http-examples/jrpc/lmapi/reset.req-jrpc
+    :response: http-examples/jrpc/lmapi/reset.resp-jrpc
 
 Parameters:
 
@@ -303,8 +235,8 @@ set - set lvar state
 Set status and value of a :ref:`logic variable<lvar>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set.req
-    :response: http-examples/lmapi/set.resp
+    :request: http-examples/jrpc/lmapi/set.req-jrpc
+    :response: http-examples/jrpc/lmapi/set.resp-jrpc
 
 Parameters:
 
@@ -324,8 +256,8 @@ state - get lvar state
 State of lvar or all lvars can be obtained using state command.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/state.req
-    :response: http-examples/lmapi/state.resp
+    :request: http-examples/jrpc/lmapi/state.req-jrpc
+    :response: http-examples/jrpc/lmapi/state.resp-jrpc
 
 Parameters:
 
@@ -348,8 +280,8 @@ State history of one :doc:`item</items>` or several items of the specified type 
 If master key is used, method attempt to get stored state for item even if it currently doesn't present.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/state_history.req
-    :response: http-examples/lmapi/state_history.resp
+    :request: http-examples/jrpc/lmapi/state_history.req-jrpc
+    :response: http-examples/jrpc/lmapi/state_history.resp-jrpc
 
 Parameters:
 
@@ -401,8 +333,8 @@ toggle - toggle lvar state
 switch value of a :ref:`logic variable<lvar>` between *0* and *1*. Useful when lvar is being used as a flag to switch it between *True*/*False*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/toggle.req
-    :response: http-examples/lmapi/toggle.resp
+    :request: http-examples/jrpc/lmapi/toggle.req-jrpc
+    :response: http-examples/jrpc/lmapi/toggle.resp-jrpc
 
 Parameters:
 
@@ -425,8 +357,8 @@ list - list lvars
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list.req
-    :response: http-examples/lmapi/list.resp
+    :request: http-examples/jrpc/lmapi/list.req-jrpc
+    :response: http-examples/jrpc/lmapi/list.resp-jrpc
 
 Parameters:
 
@@ -449,8 +381,8 @@ create - alias for create_lvar
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create.req
-    :response: http-examples/lmapi/create.resp
+    :request: http-examples/jrpc/lmapi/create.req-jrpc
+    :response: http-examples/jrpc/lmapi/create.resp-jrpc
 
 .. _lmapi_create_lvar:
 
@@ -460,8 +392,8 @@ create_lvar - create lvar
 Create new :ref:`lvar<lvar>`
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_lvar.req
-    :response: http-examples/lmapi/create_lvar.resp
+    :request: http-examples/jrpc/lmapi/create_lvar.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_lvar.resp-jrpc
 
 Parameters:
 
@@ -481,8 +413,8 @@ destroy - alias for destroy_lvar
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy.req
-    :response: http-examples/lmapi/destroy.resp
+    :request: http-examples/jrpc/lmapi/destroy.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy.resp-jrpc
 
 .. _lmapi_destroy_lvar:
 
@@ -492,8 +424,8 @@ destroy_lvar - delete lvar
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_lvar.req
-    :response: http-examples/lmapi/destroy_lvar.resp
+    :request: http-examples/jrpc/lmapi/destroy_lvar.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_lvar.resp-jrpc
 
 Parameters:
 
@@ -508,8 +440,8 @@ get_config - get lvar configuration
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_config.req
-    :response: http-examples/lmapi/get_config.resp
+    :request: http-examples/jrpc/lmapi/get_config.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_config.resp-jrpc
 
 Parameters:
 
@@ -528,8 +460,8 @@ list_props - list lvar properties
 Get all editable parameters of the :ref:`lvar<lvar>` confiugration.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_props.req
-    :response: http-examples/lmapi/list_props.resp
+    :request: http-examples/jrpc/lmapi/list_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_props.resp-jrpc
 
 Parameters:
 
@@ -544,8 +476,8 @@ save_config - save lvar configuration
 Saves :ref:`lvar<lvar>`. configuration on disk (even if it hasn't been changed)
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/save_config.req
-    :response: http-examples/lmapi/save_config.resp
+    :request: http-examples/jrpc/lmapi/save_config.req-jrpc
+    :response: http-examples/jrpc/lmapi/save_config.resp-jrpc
 
 Parameters:
 
@@ -560,8 +492,8 @@ set_prop - set lvar property
 Set configuration parameters of the :ref:`lvar<lvar>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_prop.req
-    :response: http-examples/lmapi/set_prop.resp
+    :request: http-examples/jrpc/lmapi/set_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_prop.resp-jrpc
 
 Parameters:
 
@@ -590,8 +522,8 @@ create_rule - create new rule
 Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is generated automatically unless specified.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_rule.req
-    :response: http-examples/lmapi/create_rule.resp
+    :request: http-examples/jrpc/lmapi/create_rule.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_rule.resp-jrpc
 
 Parameters:
 
@@ -611,8 +543,8 @@ destroy_rule - delete rule
 Deletes :doc:`decision rule<decision_matrix>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_rule.req
-    :response: http-examples/lmapi/destroy_rule.resp
+    :request: http-examples/jrpc/lmapi/destroy_rule.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_rule.resp-jrpc
 
 Parameters:
 
@@ -627,8 +559,8 @@ get_rule - get rule information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_rule.req
-    :response: http-examples/lmapi/get_rule.resp
+    :request: http-examples/jrpc/lmapi/get_rule.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_rule.resp-jrpc
 
 Parameters:
 
@@ -643,8 +575,8 @@ list_rule_props - list rule properties
 Get all editable parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_rule_props.req
-    :response: http-examples/lmapi/list_rule_props.resp
+    :request: http-examples/jrpc/lmapi/list_rule_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_rule_props.resp-jrpc
 
 Parameters:
 
@@ -659,8 +591,8 @@ list_rules - get rules list
 Get the list of all available :doc:`decision rules<decision_matrix>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_rules.req
-    :response: http-examples/lmapi/list_rules.resp
+    :request: http-examples/jrpc/lmapi/list_rules.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_rules.resp-jrpc
 
 Parameters:
 
@@ -678,8 +610,8 @@ Set configuration parameters of the :doc:`decision rule</lm/decision_matrix>`.
     Master key is required for batch set.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_rule_prop.req
-    :response: http-examples/lmapi/set_rule_prop.resp
+    :request: http-examples/jrpc/lmapi/set_rule_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_rule_prop.resp-jrpc
 
 Parameters:
 
@@ -708,8 +640,8 @@ create_macro - create new macro
 Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_macro.req
-    :response: http-examples/lmapi/create_macro.resp
+    :request: http-examples/jrpc/lmapi/create_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_macro.resp-jrpc
 
 Parameters:
 
@@ -728,8 +660,8 @@ destroy_macro - delete macro
 Deletes :doc:`macro<macros>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_macro.req
-    :response: http-examples/lmapi/destroy_macro.resp
+    :request: http-examples/jrpc/lmapi/destroy_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_macro.resp-jrpc
 
 Parameters:
 
@@ -744,8 +676,8 @@ get_macro - get macro information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_macro.req
-    :response: http-examples/lmapi/get_macro.resp
+    :request: http-examples/jrpc/lmapi/get_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_macro.resp-jrpc
 
 Parameters:
 
@@ -760,8 +692,8 @@ groups_macro - get macro groups list
 Get the list of macros. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups_macro.req
-    :response: http-examples/lmapi/groups_macro.resp
+    :request: http-examples/jrpc/lmapi/groups_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/groups_macro.resp-jrpc
 
 Parameters:
 
@@ -775,8 +707,8 @@ list_macro_props - get macro configuration properties
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macro_props.req
-    :response: http-examples/lmapi/list_macro_props.resp
+    :request: http-examples/jrpc/lmapi/list_macro_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_macro_props.resp-jrpc
 
 Parameters:
 
@@ -791,8 +723,8 @@ list_macros - get macro list
 Get the list of all available :doc:`macros<macros>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macros.req
-    :response: http-examples/lmapi/list_macros.resp
+    :request: http-examples/jrpc/lmapi/list_macros.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_macros.resp-jrpc
 
 Parameters:
 
@@ -810,8 +742,8 @@ result - macro execution result
 Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/result.req
-    :response: http-examples/lmapi/result.resp
+    :request: http-examples/jrpc/lmapi/result.req-jrpc
+    :response: http-examples/jrpc/lmapi/result.resp-jrpc
 
 Parameters:
 
@@ -836,8 +768,8 @@ run - execute macro
 Execute a :doc:`macro<macros>` with the specified arguments.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/run.req
-    :response: http-examples/lmapi/run.resp
+    :request: http-examples/jrpc/lmapi/run.req-jrpc
+    :response: http-examples/jrpc/lmapi/run.resp-jrpc
 
 Parameters:
 
@@ -861,8 +793,8 @@ set_macro_prop - set macro configuration property
 Set configuration parameters of the :doc:`macro<macros>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_macro_prop.req
-    :response: http-examples/lmapi/set_macro_prop.resp
+    :request: http-examples/jrpc/lmapi/set_macro_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_macro_prop.resp-jrpc
 
 Parameters:
 
@@ -891,8 +823,8 @@ create_cycle - create new cycle
 Creates new :doc:`cycle<cycles>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_cycle.req
-    :response: http-examples/lmapi/create_cycle.resp
+    :request: http-examples/jrpc/lmapi/create_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_cycle.resp-jrpc
 
 Parameters:
 
@@ -912,8 +844,8 @@ destroy_cycle - delete cycle
 Deletes :doc:`cycle<cycles>`. If cycle is running, it is stopped before deletion.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_cycle.req
-    :response: http-examples/lmapi/destroy_cycle.resp
+    :request: http-examples/jrpc/lmapi/destroy_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_cycle.resp-jrpc
 
 Parameters:
 
@@ -928,8 +860,8 @@ get_cycle - get cycle information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_cycle.req
-    :response: http-examples/lmapi/get_cycle.resp
+    :request: http-examples/jrpc/lmapi/get_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_cycle.resp-jrpc
 
 Parameters:
 
@@ -948,8 +880,8 @@ groups_cycle - get cycle groups list
 Get the list of cycles. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups_cycle.req
-    :response: http-examples/lmapi/groups_cycle.resp
+    :request: http-examples/jrpc/lmapi/groups_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/groups_cycle.resp-jrpc
 
 Parameters:
 
@@ -963,8 +895,8 @@ list_cycle_props - get cycle configuration properties
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_cycle_props.req
-    :response: http-examples/lmapi/list_cycle_props.resp
+    :request: http-examples/jrpc/lmapi/list_cycle_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_cycle_props.resp-jrpc
 
 Parameters:
 
@@ -979,8 +911,8 @@ list_cycles - get cycle list
 Get the list of all available :doc:`cycles<cycles>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_cycles.req
-    :response: http-examples/lmapi/list_cycles.resp
+    :request: http-examples/jrpc/lmapi/list_cycles.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_cycles.resp-jrpc
 
 Parameters:
 
@@ -998,8 +930,8 @@ reset_cycle_stats - reset cycle statistic
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reset_cycle_stats.req
-    :response: http-examples/lmapi/reset_cycle_stats.resp
+    :request: http-examples/jrpc/lmapi/reset_cycle_stats.req-jrpc
+    :response: http-examples/jrpc/lmapi/reset_cycle_stats.resp-jrpc
 
 Parameters:
 
@@ -1014,8 +946,8 @@ set_cycle_prop - set cycle property
 Set configuration parameters of the :doc:`cycle<cycles>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_cycle_prop.req
-    :response: http-examples/lmapi/set_cycle_prop.resp
+    :request: http-examples/jrpc/lmapi/set_cycle_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_cycle_prop.resp-jrpc
 
 Parameters:
 
@@ -1036,8 +968,8 @@ start_cycle - start cycle
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/start_cycle.req
-    :response: http-examples/lmapi/start_cycle.resp
+    :request: http-examples/jrpc/lmapi/start_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/start_cycle.resp-jrpc
 
 Parameters:
 
@@ -1052,8 +984,8 @@ stop_cycle - stop cycle
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/stop_cycle.req
-    :response: http-examples/lmapi/stop_cycle.resp
+    :request: http-examples/jrpc/lmapi/stop_cycle.req-jrpc
+    :response: http-examples/jrpc/lmapi/stop_cycle.resp-jrpc
 
 Parameters:
 
@@ -1080,8 +1012,8 @@ get_ext - get loaded extension information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_ext.req
-    :response: http-examples/lmapi/get_ext.resp
+    :request: http-examples/jrpc/lmapi/get_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_ext.resp-jrpc
 
 Parameters:
 
@@ -1096,8 +1028,8 @@ list_ext - get list of available macro extensions
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_ext.req
-    :response: http-examples/lmapi/list_ext.resp
+    :request: http-examples/jrpc/lmapi/list_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_ext.resp-jrpc
 
 Parameters:
 
@@ -1115,8 +1047,8 @@ list_ext_mods - get list of available extension modules
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_ext_mods.req
-    :response: http-examples/lmapi/list_ext_mods.resp
+    :request: http-examples/jrpc/lmapi/list_ext_mods.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_ext_mods.resp-jrpc
 
 Parameters:
 
@@ -1130,8 +1062,8 @@ load_ext - load extension module
 Loads:doc:`macro extension</lm/ext>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/load_ext.req
-    :response: http-examples/lmapi/load_ext.resp
+    :request: http-examples/jrpc/lmapi/load_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/load_ext.resp-jrpc
 
 Parameters:
 
@@ -1152,8 +1084,8 @@ modhelp_ext - get extension usage help
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/modhelp_ext.req
-    :response: http-examples/lmapi/modhelp_ext.resp
+    :request: http-examples/jrpc/lmapi/modhelp_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/modhelp_ext.resp-jrpc
 
 Parameters:
 
@@ -1169,8 +1101,8 @@ modinfo_ext - get extension module info
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/modinfo_ext.req
-    :response: http-examples/lmapi/modinfo_ext.resp
+    :request: http-examples/jrpc/lmapi/modinfo_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/modinfo_ext.resp-jrpc
 
 Parameters:
 
@@ -1185,8 +1117,8 @@ set_ext_prop - set extension configuration property
 appends property to extension configuration and reloads module
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_ext_prop.req
-    :response: http-examples/lmapi/set_ext_prop.resp
+    :request: http-examples/jrpc/lmapi/set_ext_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_ext_prop.resp-jrpc
 
 Parameters:
 
@@ -1207,8 +1139,8 @@ unload_ext - unload macro extension
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/unload_ext.req
-    :response: http-examples/lmapi/unload_ext.resp
+    :request: http-examples/jrpc/lmapi/unload_ext.req-jrpc
+    :response: http-examples/jrpc/lmapi/unload_ext.resp-jrpc
 
 Parameters:
 
@@ -1231,8 +1163,8 @@ append_controller - connect remote UC via HTTP
 Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/append_controller.req
-    :response: http-examples/lmapi/append_controller.resp
+    :request: http-examples/jrpc/lmapi/append_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/append_controller.resp-jrpc
 
 Parameters:
 
@@ -1255,8 +1187,8 @@ disable_controller - disable connected controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/disable_controller.req
-    :response: http-examples/lmapi/disable_controller.resp
+    :request: http-examples/jrpc/lmapi/disable_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/disable_controller.resp-jrpc
 
 Parameters:
 
@@ -1275,8 +1207,8 @@ enable_controller - enable connected controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/enable_controller.req
-    :response: http-examples/lmapi/enable_controller.resp
+    :request: http-examples/jrpc/lmapi/enable_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/enable_controller.resp-jrpc
 
 Parameters:
 
@@ -1295,8 +1227,8 @@ get_controller - get connected controller information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_controller.req
-    :response: http-examples/lmapi/get_controller.resp
+    :request: http-examples/jrpc/lmapi/get_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_controller.resp-jrpc
 
 Parameters:
 
@@ -1311,8 +1243,8 @@ list_controller_props - get controller connection parameters
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_controller_props.req
-    :response: http-examples/lmapi/list_controller_props.resp
+    :request: http-examples/jrpc/lmapi/list_controller_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_controller_props.resp-jrpc
 
 Parameters:
 
@@ -1327,8 +1259,8 @@ list_controllers - get controllers list
 Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_controllers.req
-    :response: http-examples/lmapi/list_controllers.resp
+    :request: http-examples/jrpc/lmapi/list_controllers.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_controllers.resp-jrpc
 
 Parameters:
 
@@ -1342,8 +1274,8 @@ list_remote - get a list of items from connected UCs
 Get a list of the items loaded from the connected :ref:`UC controllers<lm_remote_uc>`. Useful to debug the controller connections.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_remote.req
-    :response: http-examples/lmapi/list_remote.resp
+    :request: http-examples/jrpc/lmapi/list_remote.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_remote.resp-jrpc
 
 Parameters:
 
@@ -1363,8 +1295,8 @@ reload_controller - reload controller
 Reloads items from connected UC
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reload_controller.req
-    :response: http-examples/lmapi/reload_controller.resp
+    :request: http-examples/jrpc/lmapi/reload_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/reload_controller.resp-jrpc
 
 Parameters:
 
@@ -1379,8 +1311,8 @@ remove_controller - disconnect controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/remove_controller.req
-    :response: http-examples/lmapi/remove_controller.resp
+    :request: http-examples/jrpc/lmapi/remove_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/remove_controller.resp-jrpc
 
 Parameters:
 
@@ -1395,8 +1327,8 @@ set_controller_prop - set controller connection parameters
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_controller_prop.req
-    :response: http-examples/lmapi/set_controller_prop.resp
+    :request: http-examples/jrpc/lmapi/set_controller_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_controller_prop.resp-jrpc
 
 Parameters:
 
@@ -1417,8 +1349,8 @@ test_controller - test connection to remote controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/test_controller.req
-    :response: http-examples/lmapi/test_controller.resp
+    :request: http-examples/jrpc/lmapi/test_controller.req-jrpc
+    :response: http-examples/jrpc/lmapi/test_controller.resp-jrpc
 
 Parameters:
 
@@ -1433,8 +1365,8 @@ upnp_rescan_controllers - rescan controllers via UPnP
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/upnp_rescan_controllers.req
-    :response: http-examples/lmapi/upnp_rescan_controllers.resp
+    :request: http-examples/jrpc/lmapi/upnp_rescan_controllers.req-jrpc
+    :response: http-examples/jrpc/lmapi/upnp_rescan_controllers.resp-jrpc
 
 Parameters:
 
@@ -1456,8 +1388,8 @@ create_job - create new job
 Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is generated automatically unless specified.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_job.req
-    :response: http-examples/lmapi/create_job.resp
+    :request: http-examples/jrpc/lmapi/create_job.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_job.resp-jrpc
 
 Parameters:
 
@@ -1477,8 +1409,8 @@ destroy_job - delete job
 Deletes :doc:`scheduled job<jobs>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_job.req
-    :response: http-examples/lmapi/destroy_job.resp
+    :request: http-examples/jrpc/lmapi/destroy_job.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_job.resp-jrpc
 
 Parameters:
 
@@ -1493,8 +1425,8 @@ get_job - get job information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_job.req
-    :response: http-examples/lmapi/get_job.resp
+    :request: http-examples/jrpc/lmapi/get_job.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_job.resp-jrpc
 
 Parameters:
 
@@ -1509,8 +1441,8 @@ list_job_props - list job properties
 Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_job_props.req
-    :response: http-examples/lmapi/list_job_props.resp
+    :request: http-examples/jrpc/lmapi/list_job_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_job_props.resp-jrpc
 
 Parameters:
 
@@ -1525,8 +1457,8 @@ list_jobs - get jobs list
 Get the list of all available :doc:`scheduled jobs<jobs>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_jobs.req
-    :response: http-examples/lmapi/list_jobs.resp
+    :request: http-examples/jrpc/lmapi/list_jobs.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_jobs.resp-jrpc
 
 Parameters:
 
@@ -1540,8 +1472,8 @@ set_job_prop - set job parameters
 Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_job_prop.req
-    :response: http-examples/lmapi/set_job_prop.resp
+    :request: http-examples/jrpc/lmapi/set_job_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_job_prop.resp-jrpc
 
 Parameters:
 
