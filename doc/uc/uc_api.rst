@@ -140,74 +140,6 @@ In case API function has been failed, response body will contain JSON data with
 
 .. contents::
 
-.. _ucapi_cat_general:
-
-General functions
-=================
-
-
-
-.. _ucapi_test:
-
-test - test API/key and get system info
----------------------------------------
-
-Test can be executed with any valid API key of the controller the function is called to.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/test.req
-    :response: http-examples/ucapi/test.resp
-
-Parameters:
-
-* **k** any valid API key
-
-Returns:
-
-JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
-
-.. _ucapi_login:
-
-login - log in and get authentication token
--------------------------------------------
-
-Obtains authentication :doc:`token</api_tokens>` which can be used in API calls instead of API key.
-
-If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
-
-If authentication token is specified, the function will check it and return token information if it is valid.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/login.req
-    :response: http-examples/ucapi/login.resp
-
-Parameters:
-
-* **k** valid API key or
-* **u** user login
-* **p** user password
-* **a** authentication token
-
-Returns:
-
-A dict, containing API key ID and authentication token
-
-.. _ucapi_logout:
-
-logout - log out and purge authentication token
------------------------------------------------
-
-Purges authentication :doc:`token</api_tokens>`
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/logout.req
-    :response: http-examples/ucapi/logout.resp
-
-Parameters:
-
-* **k** valid token
-
-
 .. _ucapi_cat_item:
 
 Item functions
@@ -223,8 +155,8 @@ action - unit control action
 The call is considered successful when action is put into the action queue of selected unit.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/action.req
-    :response: http-examples/ucapi/action.resp
+    :request: http-examples/jrpc/ucapi/action.req-jrpc
+    :response: http-examples/jrpc/ucapi/action.resp-jrpc
 
 Parameters:
 
@@ -252,8 +184,8 @@ action_toggle - toggle unit status
 Create unit control action to toggle its status (1->0, 0->1)
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/action_toggle.req
-    :response: http-examples/ucapi/action_toggle.resp
+    :request: http-examples/jrpc/ucapi/action_toggle.req-jrpc
+    :response: http-examples/jrpc/ucapi/action_toggle.resp-jrpc
 
 Parameters:
 
@@ -279,8 +211,8 @@ disable_actions - disable unit actions
 Disables unit to run and queue new actions.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/disable_actions.req
-    :response: http-examples/ucapi/disable_actions.resp
+    :request: http-examples/jrpc/ucapi/disable_actions.req-jrpc
+    :response: http-examples/jrpc/ucapi/disable_actions.resp-jrpc
 
 Parameters:
 
@@ -295,8 +227,8 @@ enable_actions - enable unit actions
 Enables unit to run and queue new actions.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/enable_actions.req
-    :response: http-examples/ucapi/enable_actions.resp
+    :request: http-examples/jrpc/ucapi/enable_actions.req-jrpc
+    :response: http-examples/jrpc/ucapi/enable_actions.resp-jrpc
 
 Parameters:
 
@@ -311,8 +243,8 @@ groups - get item group list
 Get the list of item groups. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/groups.req
-    :response: http-examples/ucapi/groups.resp
+    :request: http-examples/jrpc/ucapi/groups.req-jrpc
+    :response: http-examples/jrpc/ucapi/groups.resp-jrpc
 
 Parameters:
 
@@ -327,8 +259,8 @@ kill - kill unit actions
 Apart from canceling all queued commands, this function also terminates the current running action.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/kill.req
-    :response: http-examples/ucapi/kill.resp
+    :request: http-examples/jrpc/ucapi/kill.req-jrpc
+    :response: http-examples/jrpc/ucapi/kill.resp-jrpc
 
 Parameters:
 
@@ -347,8 +279,8 @@ q_clean - clean action queue of unit
 Cancels all queued actions, keeps the current action running.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/q_clean.req
-    :response: http-examples/ucapi/q_clean.resp
+    :request: http-examples/jrpc/ucapi/q_clean.req-jrpc
+    :response: http-examples/jrpc/ucapi/q_clean.resp-jrpc
 
 Parameters:
 
@@ -363,8 +295,8 @@ result - get action status
 Checks the result of the action by its UUID or returns the actions for the specified unit.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/result.req
-    :response: http-examples/ucapi/result.resp
+    :request: http-examples/jrpc/ucapi/result.req-jrpc
+    :response: http-examples/jrpc/ucapi/result.resp-jrpc
 
 Parameters:
 
@@ -389,8 +321,8 @@ start_item_maintenance - start item maintenance mode
 During maintenance mode all item updates are ignored, however actions still can be executed
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/start_item_maintenance.req
-    :response: http-examples/ucapi/start_item_maintenance.resp
+    :request: http-examples/jrpc/ucapi/start_item_maintenance.req-jrpc
+    :response: http-examples/jrpc/ucapi/start_item_maintenance.resp-jrpc
 
 Parameters:
 
@@ -405,8 +337,8 @@ state - get item state
 State of the item or all items of the specified type can be obtained using state command.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/state.req
-    :response: http-examples/ucapi/state.resp
+    :request: http-examples/jrpc/ucapi/state.req-jrpc
+    :response: http-examples/jrpc/ucapi/state.resp-jrpc
 
 Parameters:
 
@@ -429,8 +361,8 @@ State history of one :doc:`item</items>` or several items of the specified type 
 If master key is used, method attempt to get stored state for item even if it currently doesn't present.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/state_history.req
-    :response: http-examples/ucapi/state_history.resp
+    :request: http-examples/jrpc/ucapi/state_history.req-jrpc
+    :response: http-examples/jrpc/ucapi/state_history.resp-jrpc
 
 Parameters:
 
@@ -482,8 +414,8 @@ stop_item_maintenance - stop item maintenance mode
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/stop_item_maintenance.req
-    :response: http-examples/ucapi/stop_item_maintenance.resp
+    :request: http-examples/jrpc/ucapi/stop_item_maintenance.req-jrpc
+    :response: http-examples/jrpc/ucapi/stop_item_maintenance.resp-jrpc
 
 Parameters:
 
@@ -498,8 +430,8 @@ terminate - terminate action execution
 Terminates or cancel the action if it is still queued
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/terminate.req
-    :response: http-examples/ucapi/terminate.resp
+    :request: http-examples/jrpc/ucapi/terminate.req-jrpc
+    :response: http-examples/jrpc/ucapi/terminate.resp-jrpc
 
 Parameters:
 
@@ -523,8 +455,8 @@ Updates the status and value of the :doc:`item</items>`. This is one of the ways
     Calling without **s** and **v** params will force item to perform     passive update requesting its status from update script or driver.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/update.req
-    :response: http-examples/ucapi/update.resp
+    :request: http-examples/jrpc/ucapi/update.req-jrpc
+    :response: http-examples/jrpc/ucapi/update.resp-jrpc
 
 Parameters:
 
@@ -552,8 +484,8 @@ list - list items
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list.req
-    :response: http-examples/ucapi/list.resp
+    :request: http-examples/jrpc/ucapi/list.req-jrpc
+    :response: http-examples/jrpc/ucapi/list.resp-jrpc
 
 Parameters:
 
@@ -577,8 +509,8 @@ create - create new item
 Creates new :doc:`item</items>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create.req
-    :response: http-examples/ucapi/create.resp
+    :request: http-examples/jrpc/ucapi/create.req-jrpc
+    :response: http-examples/jrpc/ucapi/create.resp-jrpc
 
 Parameters:
 
@@ -599,8 +531,8 @@ create_mu - create multi-update
 Creates new :ref:`multi-update<multiupdate>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create_mu.req
-    :response: http-examples/ucapi/create_mu.resp
+    :request: http-examples/jrpc/ucapi/create_mu.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_mu.resp-jrpc
 
 Parameters:
 
@@ -620,8 +552,8 @@ create_sensor - create new sensor
 Creates new :ref:`sensor<sensor>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create_sensor.req
-    :response: http-examples/ucapi/create_sensor.resp
+    :request: http-examples/jrpc/ucapi/create_sensor.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_sensor.resp-jrpc
 
 Parameters:
 
@@ -642,8 +574,8 @@ create_unit - create new unit
 Creates new :ref:`unit<unit>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create_unit.req
-    :response: http-examples/ucapi/create_unit.resp
+    :request: http-examples/jrpc/ucapi/create_unit.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_unit.resp-jrpc
 
 Parameters:
 
@@ -664,8 +596,8 @@ destroy - delete item or group
 Deletes the :doc:`item</items>` or the group (and all the items in it) from the system.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/destroy.req
-    :response: http-examples/ucapi/destroy.resp
+    :request: http-examples/jrpc/ucapi/destroy.req-jrpc
+    :response: http-examples/jrpc/ucapi/destroy.resp-jrpc
 
 Parameters:
 
@@ -681,8 +613,8 @@ get_config - get item configuration
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_config.req
-    :response: http-examples/ucapi/get_config.resp
+    :request: http-examples/jrpc/ucapi/get_config.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_config.resp-jrpc
 
 Parameters:
 
@@ -701,8 +633,8 @@ list_props - list item properties
 Get all editable parameters of the :doc:`item</items>` confiugration.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_props.req
-    :response: http-examples/ucapi/list_props.resp
+    :request: http-examples/jrpc/ucapi/list_props.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_props.resp-jrpc
 
 Parameters:
 
@@ -717,8 +649,8 @@ save_config - save item configuration
 Saves :doc:`item</items>`. configuration on disk (even if it hasn't been changed)
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/save_config.req
-    :response: http-examples/ucapi/save_config.resp
+    :request: http-examples/jrpc/ucapi/save_config.req-jrpc
+    :response: http-examples/jrpc/ucapi/save_config.resp-jrpc
 
 Parameters:
 
@@ -733,8 +665,8 @@ set_prop - set item property
 Set configuration parameters of the :doc:`item</items>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/set_prop.req
-    :response: http-examples/ucapi/set_prop.resp
+    :request: http-examples/jrpc/ucapi/set_prop.req-jrpc
+    :response: http-examples/jrpc/ucapi/set_prop.resp-jrpc
 
 Parameters:
 
@@ -755,8 +687,8 @@ clone - clone item
 Creates a copy of the :doc:`item</items>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/clone.req
-    :response: http-examples/ucapi/clone.resp
+    :request: http-examples/jrpc/ucapi/clone.req-jrpc
+    :response: http-examples/jrpc/ucapi/clone.resp-jrpc
 
 Parameters:
 
@@ -777,8 +709,8 @@ clone_group - clone group
 Creates a copy of all :doc:`items</items>` from the group.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/clone_group.req
-    :response: http-examples/ucapi/clone_group.resp
+    :request: http-examples/jrpc/ucapi/clone_group.req-jrpc
+    :response: http-examples/jrpc/ucapi/clone_group.resp-jrpc
 
 Parameters:
 
@@ -810,8 +742,8 @@ Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
 Parameter "location" ("n") should contain the connection configuration, e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-Wire bus via I2C, depending on type.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create_owfs_bus.req
-    :response: http-examples/ucapi/create_owfs_bus.resp
+    :request: http-examples/jrpc/ucapi/create_owfs_bus.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_owfs_bus.resp-jrpc
 
 Parameters:
 
@@ -843,8 +775,8 @@ Deletes (undefines) :doc:`OWFS bus</owfs>`.
     In some cases deleted OWFS bus located on I2C may lock *libow*     library calls, which require controller restart until you can use     (create) the same I2C bus again.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/destroy_owfs_bus.req
-    :response: http-examples/ucapi/destroy_owfs_bus.resp
+    :request: http-examples/jrpc/ucapi/destroy_owfs_bus.req-jrpc
+    :response: http-examples/jrpc/ucapi/destroy_owfs_bus.resp-jrpc
 
 Parameters:
 
@@ -859,8 +791,8 @@ get_owfs_bus - get OWFS bus configuration
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_owfs_bus.req
-    :response: http-examples/ucapi/get_owfs_bus.resp
+    :request: http-examples/jrpc/ucapi/get_owfs_bus.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_owfs_bus.resp-jrpc
 
 Parameters:
 
@@ -875,8 +807,8 @@ list_owfs_buses - list OWFS buses
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_owfs_buses.req
-    :response: http-examples/ucapi/list_owfs_buses.resp
+    :request: http-examples/jrpc/ucapi/list_owfs_buses.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_owfs_buses.resp-jrpc
 
 Parameters:
 
@@ -890,8 +822,8 @@ scan_owfs_bus - scan OWFS bus
 Scan :doc:`OWFS bus</owfs>` for connected 1-Wire devices.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/scan_owfs_bus.req
-    :response: http-examples/ucapi/scan_owfs_bus.resp
+    :request: http-examples/jrpc/ucapi/scan_owfs_bus.req-jrpc
+    :response: http-examples/jrpc/ucapi/scan_owfs_bus.resp-jrpc
 
 Parameters:
 
@@ -922,8 +854,8 @@ test_owfs_bus - test OWFS bus
 Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/test_owfs_bus.req
-    :response: http-examples/ucapi/test_owfs_bus.resp
+    :request: http-examples/jrpc/ucapi/test_owfs_bus.req-jrpc
+    :response: http-examples/jrpc/ucapi/test_owfs_bus.resp-jrpc
 
 Parameters:
 
@@ -952,8 +884,8 @@ Modbus params should contain the configuration of hardware Modbus port. The foll
 * **rtu**, **ascii**, **binary** Modbus protocol implementations for     the local bus connected with USB or serial port. The params should     be specified as:     *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.     *rtu:/dev/ttyS0:9600:8:E:1*
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create_modbus_port.req
-    :response: http-examples/ucapi/create_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/create_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -981,8 +913,8 @@ destroy_modbus_port - delete virtual Modbus port
 Deletes virtual :doc:`Modbus port</modbus>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/destroy_modbus_port.req
-    :response: http-examples/ucapi/destroy_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/destroy_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/destroy_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -997,8 +929,8 @@ get_modbus_port - get virtual Modbus port configuration
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_modbus_port.req
-    :response: http-examples/ucapi/get_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/get_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -1013,8 +945,8 @@ list_modbus_ports - list virtual Modbus ports
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_modbus_ports.req
-    :response: http-examples/ucapi/list_modbus_ports.resp
+    :request: http-examples/jrpc/ucapi/list_modbus_ports.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_modbus_ports.resp-jrpc
 
 Parameters:
 
@@ -1031,8 +963,8 @@ Modbus registers must be specified as list or comma separated memory addresses p
 Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/read_modbus_port.req
-    :response: http-examples/ucapi/read_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/read_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/read_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -1057,8 +989,8 @@ Verifies virtual :doc:`Modbus port</modbus>` by calling connect() Modbus client 
     As Modbus UDP doesn't require a port to be connected, API call     always returns success unless the port is locked.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/test_modbus_port.req
-    :response: http-examples/ucapi/test_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/test_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/test_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -1073,8 +1005,8 @@ write_modbus_port - write Modbus register(s) to remote slave
 Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, c - coil).
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/write_modbus_port.req
-    :response: http-examples/ucapi/write_modbus_port.resp
+    :request: http-examples/jrpc/ucapi/write_modbus_port.req-jrpc
+    :response: http-examples/jrpc/ucapi/write_modbus_port.resp-jrpc
 
 Parameters:
 
@@ -1101,8 +1033,8 @@ Modbus registers must be specified as list or comma separated memory addresses p
 Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_modbus_slave_data.req
-    :response: http-examples/ucapi/get_modbus_slave_data.resp
+    :request: http-examples/jrpc/ucapi/get_modbus_slave_data.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_modbus_slave_data.resp-jrpc
 
 Parameters:
 
@@ -1125,8 +1057,8 @@ exec_phi - execute additional PHI commands
 Execute PHI command and return execution result (as-is). **help** command returns all available commands.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/exec_phi.req
-    :response: http-examples/ucapi/exec_phi.resp
+    :request: http-examples/jrpc/ucapi/exec_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/exec_phi.resp-jrpc
 
 Parameters:
 
@@ -1143,8 +1075,8 @@ get_phi - get loaded PHI information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi.req
-    :response: http-examples/ucapi/get_phi.resp
+    :request: http-examples/jrpc/ucapi/get_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_phi.resp-jrpc
 
 Parameters:
 
@@ -1159,8 +1091,8 @@ get_phi_ports - get list of PHI ports
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi_ports.req
-    :response: http-examples/ucapi/get_phi_ports.resp
+    :request: http-examples/jrpc/ucapi/get_phi_ports.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_phi_ports.resp-jrpc
 
 Parameters:
 
@@ -1175,8 +1107,8 @@ list_phi - list loaded PHIs
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_phi.req
-    :response: http-examples/ucapi/list_phi.resp
+    :request: http-examples/jrpc/ucapi/list_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_phi.resp-jrpc
 
 Parameters:
 
@@ -1191,8 +1123,8 @@ list_phi_mods - get list of available PHI modules
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_phi_mods.req
-    :response: http-examples/ucapi/list_phi_mods.resp
+    :request: http-examples/jrpc/ucapi/list_phi_mods.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_phi_mods.resp-jrpc
 
 Parameters:
 
@@ -1206,8 +1138,8 @@ load_phi - load PHI module
 Loads :doc:`Physical Interface</drivers>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/load_phi.req
-    :response: http-examples/ucapi/load_phi.resp
+    :request: http-examples/jrpc/ucapi/load_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/load_phi.resp-jrpc
 
 Parameters:
 
@@ -1228,8 +1160,8 @@ modhelp_phi - get PHI usage help
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/modhelp_phi.req
-    :response: http-examples/ucapi/modhelp_phi.resp
+    :request: http-examples/jrpc/ucapi/modhelp_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/modhelp_phi.resp-jrpc
 
 Parameters:
 
@@ -1245,8 +1177,8 @@ modinfo_phi - get PHI module info
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/modinfo_phi.req
-    :response: http-examples/ucapi/modinfo_phi.resp
+    :request: http-examples/jrpc/ucapi/modinfo_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/modinfo_phi.resp-jrpc
 
 Parameters:
 
@@ -1261,8 +1193,8 @@ phi_discover - discover installed equipment supported by PHI module
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/phi_discover.req
-    :response: http-examples/ucapi/phi_discover.resp
+    :request: http-examples/jrpc/ucapi/phi_discover.req-jrpc
+    :response: http-examples/jrpc/ucapi/phi_discover.resp-jrpc
 
 Parameters:
 
@@ -1284,8 +1216,8 @@ Allows to perform update of PHI ports by external application.
 If called as RESTful, the whole request body is used as a payload (except fields "k", "save", "kind" and "method", which are reserved)
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/push_phi_state.req
-    :response: http-examples/ucapi/push_phi_state.resp
+    :request: http-examples/jrpc/ucapi/push_phi_state.req-jrpc
+    :response: http-examples/jrpc/ucapi/push_phi_state.resp-jrpc
 
 Parameters:
 
@@ -1301,8 +1233,8 @@ put_phi_mod - upload PHI module
 Allows to upload new PHI module to *xc/drivers/phi* folder.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/put_phi_mod.req
-    :response: http-examples/ucapi/put_phi_mod.resp
+    :request: http-examples/jrpc/ucapi/put_phi_mod.req-jrpc
+    :response: http-examples/jrpc/ucapi/put_phi_mod.resp-jrpc
 
 Parameters:
 
@@ -1322,8 +1254,8 @@ set_phi_prop - set PHI configuration property
 appends property to PHI configuration and reloads module
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/set_phi_prop.req
-    :response: http-examples/ucapi/set_phi_prop.resp
+    :request: http-examples/jrpc/ucapi/set_phi_prop.req-jrpc
+    :response: http-examples/jrpc/ucapi/set_phi_prop.resp-jrpc
 
 Parameters:
 
@@ -1344,8 +1276,8 @@ test_phi - test PHI
 Get PHI test result (as-is). All PHIs respond to **self** command, **help** command returns all available test commands.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/test_phi.req
-    :response: http-examples/ucapi/test_phi.resp
+    :request: http-examples/jrpc/ucapi/test_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/test_phi.resp-jrpc
 
 Parameters:
 
@@ -1361,8 +1293,8 @@ unlink_phi_mod - delete PHI module file
 Deletes PHI module file, if the module is loaded, all its instances should be unloaded first.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/unlink_phi_mod.req
-    :response: http-examples/ucapi/unlink_phi_mod.resp
+    :request: http-examples/jrpc/ucapi/unlink_phi_mod.req-jrpc
+    :response: http-examples/jrpc/ucapi/unlink_phi_mod.resp-jrpc
 
 Parameters:
 
@@ -1379,8 +1311,8 @@ Unloads PHI. PHI should not be used by any :doc:`driver</drivers>` (except *defa
 If driver <phi_id.default> (which's loaded automatically with PHI) is present, it will be unloaded as well.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/unload_phi.req
-    :response: http-examples/ucapi/unload_phi.resp
+    :request: http-examples/jrpc/ucapi/unload_phi.req-jrpc
+    :response: http-examples/jrpc/ucapi/unload_phi.resp-jrpc
 
 Parameters:
 
@@ -1407,8 +1339,8 @@ Sets the specified driver to :doc:`item</items>`, automatically updating item pr
 To unassign driver, set driver ID to empty/null.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/assign_driver.req
-    :response: http-examples/ucapi/assign_driver.resp
+    :request: http-examples/jrpc/ucapi/assign_driver.req-jrpc
+    :response: http-examples/jrpc/ucapi/assign_driver.resp-jrpc
 
 Parameters:
 
@@ -1429,8 +1361,8 @@ get_driver - get loaded driver information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_driver.req
-    :response: http-examples/ucapi/get_driver.resp
+    :request: http-examples/jrpc/ucapi/get_driver.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_driver.resp-jrpc
 
 Parameters:
 
@@ -1445,8 +1377,8 @@ list_drivers - list loaded drivers
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_drivers.req
-    :response: http-examples/ucapi/list_drivers.resp
+    :request: http-examples/jrpc/ucapi/list_drivers.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_drivers.resp-jrpc
 
 Parameters:
 
@@ -1461,8 +1393,8 @@ list_lpi_mods - get list of available LPI modules
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_lpi_mods.req
-    :response: http-examples/ucapi/list_lpi_mods.resp
+    :request: http-examples/jrpc/ucapi/list_lpi_mods.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_lpi_mods.resp-jrpc
 
 Parameters:
 
@@ -1476,8 +1408,8 @@ load_driver - load a driver
 Loads a :doc:`driver</drivers>`, combining previously loaded PHI and chosen LPI module.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/load_driver.req
-    :response: http-examples/ucapi/load_driver.resp
+    :request: http-examples/jrpc/ucapi/load_driver.req-jrpc
+    :response: http-examples/jrpc/ucapi/load_driver.resp-jrpc
 
 Parameters:
 
@@ -1499,8 +1431,8 @@ modhelp_lpi - get LPI usage help
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/modhelp_lpi.req
-    :response: http-examples/ucapi/modhelp_lpi.resp
+    :request: http-examples/jrpc/ucapi/modhelp_lpi.req-jrpc
+    :response: http-examples/jrpc/ucapi/modhelp_lpi.resp-jrpc
 
 Parameters:
 
@@ -1516,8 +1448,8 @@ modinfo_lpi - get LPI module info
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/modinfo_lpi.req
-    :response: http-examples/ucapi/modinfo_lpi.resp
+    :request: http-examples/jrpc/ucapi/modinfo_lpi.req-jrpc
+    :response: http-examples/jrpc/ucapi/modinfo_lpi.resp-jrpc
 
 Parameters:
 
@@ -1532,8 +1464,8 @@ set_driver_prop - set driver (LPI) configuration property
 appends property to LPI configuration and reloads module
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/set_driver_prop.req
-    :response: http-examples/ucapi/set_driver_prop.resp
+    :request: http-examples/jrpc/ucapi/set_driver_prop.req-jrpc
+    :response: http-examples/jrpc/ucapi/set_driver_prop.resp-jrpc
 
 Parameters:
 
@@ -1554,8 +1486,8 @@ unload_driver - unload driver
 Unloads driver. Driver should not be used by any :doc:`item</items>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/unload_driver.req
-    :response: http-examples/ucapi/unload_driver.resp
+    :request: http-examples/jrpc/ucapi/unload_driver.req-jrpc
+    :response: http-examples/jrpc/ucapi/unload_driver.resp-jrpc
 
 Parameters:
 
@@ -1578,8 +1510,8 @@ get_datapuller - Get data puller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_datapuller.req
-    :response: http-examples/ucapi/get_datapuller.resp
+    :request: http-examples/jrpc/ucapi/get_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/get_datapuller.resp-jrpc
 
 Parameters:
 
@@ -1598,8 +1530,8 @@ list_datapullers - List data pullers
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_datapullers.req
-    :response: http-examples/ucapi/list_datapullers.resp
+    :request: http-examples/jrpc/ucapi/list_datapullers.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_datapullers.resp-jrpc
 
 Parameters:
 
@@ -1617,8 +1549,8 @@ restart_datapuller - Restart data puller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/restart_datapuller.req
-    :response: http-examples/ucapi/restart_datapuller.resp
+    :request: http-examples/jrpc/ucapi/restart_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/restart_datapuller.resp-jrpc
 
 Parameters:
 
@@ -1633,8 +1565,8 @@ start_datapuller - Start data puller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/start_datapuller.req
-    :response: http-examples/ucapi/start_datapuller.resp
+    :request: http-examples/jrpc/ucapi/start_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/start_datapuller.resp-jrpc
 
 Parameters:
 
@@ -1649,8 +1581,8 @@ stop_datapuller - Stop data puller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/stop_datapuller.req
-    :response: http-examples/ucapi/stop_datapuller.resp
+    :request: http-examples/jrpc/ucapi/stop_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/stop_datapuller.resp-jrpc
 
 Parameters:
 
@@ -1673,8 +1605,8 @@ deploy_device - deploy device items from template
 Deploys the :ref:`device<device>` from the specified template.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/deploy_device.req
-    :response: http-examples/ucapi/deploy_device.resp
+    :request: http-examples/jrpc/ucapi/deploy_device.req-jrpc
+    :response: http-examples/jrpc/ucapi/deploy_device.resp-jrpc
 
 Parameters:
 
@@ -1694,8 +1626,8 @@ list_device_tpl - list device templates
 List available device templates from runtime/tpl
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/list_device_tpl.req
-    :response: http-examples/ucapi/list_device_tpl.resp
+    :request: http-examples/jrpc/ucapi/list_device_tpl.req-jrpc
+    :response: http-examples/jrpc/ucapi/list_device_tpl.resp-jrpc
 
 Parameters:
 
@@ -1709,8 +1641,8 @@ undeploy_device - delete device items
 Works in an opposite way to :ref:`ucapi_deploy_device` function, destroying all items specified in the template.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/undeploy_device.req
-    :response: http-examples/ucapi/undeploy_device.resp
+    :request: http-examples/jrpc/ucapi/undeploy_device.req-jrpc
+    :response: http-examples/jrpc/ucapi/undeploy_device.resp-jrpc
 
 Parameters:
 
@@ -1733,8 +1665,8 @@ update_device - update device items
 Works similarly to :ref:`ucapi_deploy_device` function but doesn't create new items, updating the item configuration of the existing ones.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/update_device.req
-    :response: http-examples/ucapi/update_device.resp
+    :request: http-examples/jrpc/ucapi/update_device.req-jrpc
+    :response: http-examples/jrpc/ucapi/update_device.resp-jrpc
 
 Parameters:
 
