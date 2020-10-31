@@ -1,7 +1,7 @@
-SYS API
+Common methods
 **************
 
-SYS API is a common API present in all EVA controllers. SYS API functions are used to manage controller itself. 
+Common methods are present in all EVA controllers. They are used to manage controller itself. 
 
 RESTful API equivalent calls can be found in corresponding component RESTful API docs.
 
@@ -9,70 +9,13 @@ RESTful API equivalent calls can be found in corresponding component RESTful API
 API basics
 ==========
 
-Standard API (direct method calling)
---------------------------------------
-
-.. warning::
-
-    Direct method calling is deprecated and scheduled to be removed (not
-    implemented) in EVA ICS v4. Use JSON RPC API, whenever it is possible.
-
-SYS API functions are called through URL request
-
-    **\http://<ip_address:port>/sys-api/function**
-
-If SSL is allowed in the controller configuration file, you can also use https
-calls.
-
-.. warning::
-
-    It's highly not recommended to perform long API calls, calling API
-    functions from JavaScript in a web browser (e.g. giving "w" param to action
-    methods to wait until action finish). Web browser may repeat API call
-    continuously, which may lead to absolutely unexpected behavior.
-
-Standard API responses
-~~~~~~~~~~~~~~~~~~~~~~
-
-Good for backward compatibility with any devices, as all API functions can be
-called using GET and POST. When POST is used, the parameters can be passed to
-functions either as multipart/form-data or as JSON.
-
-API key can be sent in request parameters, session (if enabled and user is
-logged in) or in HTTP **X-Auth-Key** header.
-
-**Standard responses in status/body:**
-
-* **200 OK** *{ "result": "OK" }* API call completed successfully.
-
-**Standard error responses in status:**
-
-* **400 Bad Request** Invalid request params
-* **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** method or resource/object doesn't exist
-* **405 Method Not Allowed** API function/method not found or HTTP method is
-  not either GET or POST
-* **409 Conflict** resource/object already exists or is locked
-* **500 API Error** API function execution has been failed. Check input
-  parameters and server logs.
-
-In case API function has been failed, response body will contain JSON data with
-*_error* field, which contains error message.
-
-.. code-block:: json
-
-    {
-        "_error": "unable to add object, already present",
-        "result": "ERROR"
-    }
-
 JSON RPC
 --------
 
-Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. Note that default JSON RPC
-result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no error
-result, as JSON RPC sends errors in "error" field.
+`JSON RPC 2.0 <https://www.jsonrpc.org/specification>`_ protocol is the primary
+EVA ICS API protocol. Note that default JSON RPC result is *{ "ok": true }*
+(instead of *{ "result": "OK" }* in the direct API).  There's no *{ result:
+"ERROR" }* responses, as JSON RPC sends errors in "error" field.
 
 If JSON RPC request is called without ID and server should not return a result,
 it will return http response with a code *202 Accepted*.
@@ -136,6 +79,64 @@ Long API calls
   expected "wait" timeout in API call, otherwise client controller will repeat
   API calls continuously, up to max **retries** for the target controller.
 
+
+Direct API
+----------
+
+.. warning::
+
+    Direct method calling is deprecated and scheduled to be removed (not
+    implemented) in EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
+Common methods functions are called through URL request
+
+    **\http://<ip_address:port>/sys-api/function**
+
+If SSL is allowed in the controller configuration file, you can also use https
+calls.
+
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
+Direct API responses
+~~~~~~~~~~~~~~~~~~~~
+
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
+
+**Standard responses in status/body:**
+
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
+
+**Standard error responses in status:**
+
+* **400 Bad Request** Invalid request params
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource/object doesn't exist
+* **405 Method Not Allowed** API function/method not found or HTTP method is
+  not either GET or POST
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check input
+  parameters and server logs.
+
+In case API function has been failed, response body will contain JSON data with
+*_error* field, which contains error message.
+
+.. code-block:: json
+
+    {
+        "_error": "unable to add object, already present",
+        "result": "ERROR"
+    }
+
 .. contents::
 
 .. _sysapi_cat_general:
@@ -153,8 +154,8 @@ test - test API/key and get system info
 Test can be executed with any valid API key of the controller the function is called to.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/test.req
-    :response: http-examples/sysapi/test.resp
+    :request: http-examples/jrpc/sysapi/test.req-jrpc
+    :response: http-examples/jrpc/sysapi/test.resp-jrpc
 
 Parameters:
 
@@ -172,8 +173,8 @@ save - save database and runtime configuration
 All modified items, their status, and configuration will be written to the disk. If **exec_before_save** command is defined in the controller's configuration file, it's called before saving and **exec_after_save** after (e.g. to switch the partition to write mode and back to read-only).
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/save.req
-    :response: http-examples/sysapi/save.resp
+    :request: http-examples/jrpc/sysapi/save.req-jrpc
+    :response: http-examples/jrpc/sysapi/save.resp-jrpc
 
 Parameters:
 
@@ -187,8 +188,8 @@ cmd - execute a remote system command
 Executes a :ref:`command script<cmd>` on the server where the controller is installed.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/cmd.req
-    :response: http-examples/sysapi/cmd.resp
+    :request: http-examples/jrpc/sysapi/cmd.req-jrpc
+    :response: http-examples/jrpc/sysapi/cmd.resp-jrpc
 
 Parameters:
 
@@ -209,8 +210,8 @@ list_plugins - get list of loaded core plugins
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_plugins.req
-    :response: http-examples/sysapi/list_plugins.resp
+    :request: http-examples/jrpc/sysapi/list_plugins.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_plugins.resp-jrpc
 
 Parameters:
 
@@ -228,8 +229,8 @@ set_debug - switch debugging mode
 Enables and disables debugging mode while the controller is running. After the controller is restarted, this parameter is lost and controller switches back to the mode specified in the configuration file.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/set_debug.req
-    :response: http-examples/sysapi/set_debug.resp
+    :request: http-examples/jrpc/sysapi/set_debug.req-jrpc
+    :response: http-examples/jrpc/sysapi/set_debug.resp-jrpc
 
 Parameters:
 
@@ -244,8 +245,8 @@ shutdown_core - shutdown the controller
 Controller process will be exited and then (should be) restarted by watchdog. This allows to restart controller remotely.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/shutdown_core.req
-    :response: http-examples/sysapi/shutdown_core.resp
+    :request: http-examples/jrpc/sysapi/shutdown_core.req-jrpc
+    :response: http-examples/jrpc/sysapi/shutdown_core.resp-jrpc
 
 Parameters:
 
@@ -263,8 +264,8 @@ If both **k** and **u** args are absent, but API method is called with HTTP requ
 If authentication token is specified, the function will check it and return token information if it is valid.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/login.req
-    :response: http-examples/sysapi/login.resp
+    :request: http-examples/jrpc/sysapi/login.req-jrpc
+    :response: http-examples/jrpc/sysapi/login.resp-jrpc
 
 Parameters:
 
@@ -285,8 +286,8 @@ logout - log out and purge authentication token
 Purges authentication :doc:`token</api_tokens>`
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/logout.req
-    :response: http-examples/sysapi/logout.resp
+    :request: http-examples/jrpc/sysapi/logout.req-jrpc
+    :response: http-examples/jrpc/sysapi/logout.resp-jrpc
 
 Parameters:
 
@@ -310,8 +311,8 @@ get_cvar - get the value of user-defined variable
     Even if different EVA controllers are working on the same     server, they have different sets of variables To set the variables     for each subsystem, use SYS API on the respective address/port.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/get_cvar.req
-    :response: http-examples/sysapi/get_cvar.resp
+    :request: http-examples/jrpc/sysapi/get_cvar.req-jrpc
+    :response: http-examples/jrpc/sysapi/get_cvar.resp-jrpc
 
 Parameters:
 
@@ -333,8 +334,8 @@ set_cvar - set the value of user-defined variable
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/set_cvar.req
-    :response: http-examples/sysapi/set_cvar.resp
+    :request: http-examples/jrpc/sysapi/set_cvar.req-jrpc
+    :response: http-examples/jrpc/sysapi/set_cvar.resp-jrpc
 
 Parameters:
 
@@ -361,8 +362,8 @@ get_lock - get lock status
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/get_lock.req
-    :response: http-examples/sysapi/get_lock.resp
+    :request: http-examples/jrpc/sysapi/get_lock.req-jrpc
+    :response: http-examples/jrpc/sysapi/get_lock.resp-jrpc
 
 Parameters:
 
@@ -389,8 +390,8 @@ used to restrict parallel process starting or access to system files/resources. 
     Even if different EVA controllers are working on the same server,     their lock tokens are stored in different bases. To work with the     token of each subsystem, use SYS API on the respective     address/port.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/lock.req
-    :response: http-examples/sysapi/lock.resp
+    :request: http-examples/jrpc/sysapi/lock.req-jrpc
+    :response: http-examples/jrpc/sysapi/lock.resp-jrpc
 
 Parameters:
 
@@ -410,8 +411,8 @@ unlock - release lock
 Releases the previously acquired lock.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/unlock.req
-    :response: http-examples/sysapi/unlock.resp
+    :request: http-examples/jrpc/sysapi/unlock.req-jrpc
+    :response: http-examples/jrpc/sysapi/unlock.resp-jrpc
 
 Parameters:
 
@@ -434,8 +435,8 @@ log - put message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log.req
-    :response: http-examples/sysapi/log.resp
+    :request: http-examples/jrpc/sysapi/log.req-jrpc
+    :response: http-examples/jrpc/sysapi/log.resp-jrpc
 
 Parameters:
 
@@ -451,8 +452,8 @@ log_debug - put debug message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_debug.req
-    :response: http-examples/sysapi/log_debug.resp
+    :request: http-examples/jrpc/sysapi/log_debug.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_debug.resp-jrpc
 
 Parameters:
 
@@ -467,8 +468,8 @@ log_info - put info message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_info.req
-    :response: http-examples/sysapi/log_info.resp
+    :request: http-examples/jrpc/sysapi/log_info.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_info.resp-jrpc
 
 Parameters:
 
@@ -483,8 +484,8 @@ log_warning - put warning message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_warning.req
-    :response: http-examples/sysapi/log_warning.resp
+    :request: http-examples/jrpc/sysapi/log_warning.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_warning.resp-jrpc
 
 Parameters:
 
@@ -499,8 +500,8 @@ log_error - put error message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_error.req
-    :response: http-examples/sysapi/log_error.resp
+    :request: http-examples/jrpc/sysapi/log_error.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_error.resp-jrpc
 
 Parameters:
 
@@ -515,8 +516,8 @@ log_critical - put critical message to log file
 An external application can put a message in the logs on behalf of the controller.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_critical.req
-    :response: http-examples/sysapi/log_critical.resp
+    :request: http-examples/jrpc/sysapi/log_critical.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_critical.resp-jrpc
 
 Parameters:
 
@@ -531,8 +532,8 @@ log_get - get records from the controller log
 Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_get.req
-    :response: http-examples/sysapi/log_get.resp
+    :request: http-examples/jrpc/sysapi/log_get.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_get.resp-jrpc
 
 Parameters:
 
@@ -552,8 +553,8 @@ log_rotate - rotate log file
 Deprecated, not required since 3.3.0
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_rotate.req
-    :response: http-examples/sysapi/log_rotate.resp
+    :request: http-examples/jrpc/sysapi/log_rotate.req-jrpc
+    :response: http-examples/jrpc/sysapi/log_rotate.resp-jrpc
 
 Parameters:
 
@@ -571,8 +572,8 @@ api_log_get - get API call log
 * API call with an authentication token returns records for the   current authorized user
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/api_log_get.req
-    :response: http-examples/sysapi/api_log_get.resp
+    :request: http-examples/jrpc/sysapi/api_log_get.req-jrpc
+    :response: http-examples/jrpc/sysapi/api_log_get.resp-jrpc
 
 Parameters:
 
@@ -630,8 +631,8 @@ API keys are defined statically in etc/<controller>_apikeys.ini file as well as 
 Keys with master permission can not be created.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/create_key.req
-    :response: http-examples/sysapi/create_key.resp
+    :request: http-examples/jrpc/sysapi/create_key.req-jrpc
+    :response: http-examples/jrpc/sysapi/create_key.resp-jrpc
 
 Parameters:
 
@@ -651,8 +652,8 @@ destroy_key - delete API key
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/destroy_key.req
-    :response: http-examples/sysapi/destroy_key.resp
+    :request: http-examples/jrpc/sysapi/destroy_key.req-jrpc
+    :response: http-examples/jrpc/sysapi/destroy_key.resp-jrpc
 
 Parameters:
 
@@ -671,8 +672,8 @@ Lists API key permissons (including a key itself)
     API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_key_props.req
-    :response: http-examples/sysapi/list_key_props.resp
+    :request: http-examples/jrpc/sysapi/list_key_props.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_key_props.resp-jrpc
 
 Parameters:
 
@@ -688,8 +689,8 @@ list_keys - list API keys
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_keys.req
-    :response: http-examples/sysapi/list_keys.resp
+    :request: http-examples/jrpc/sysapi/list_keys.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_keys.resp-jrpc
 
 Parameters:
 
@@ -703,8 +704,8 @@ regenerate_key - regenerate API key
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/regenerate_key.req
-    :response: http-examples/sysapi/regenerate_key.resp
+    :request: http-examples/jrpc/sysapi/regenerate_key.req-jrpc
+    :response: http-examples/jrpc/sysapi/regenerate_key.resp-jrpc
 
 Parameters:
 
@@ -723,8 +724,8 @@ set_key_prop - set API key permissions
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/set_key_prop.req
-    :response: http-examples/sysapi/set_key_prop.resp
+    :request: http-examples/jrpc/sysapi/set_key_prop.req-jrpc
+    :response: http-examples/jrpc/sysapi/set_key_prop.resp-jrpc
 
 Parameters:
 
@@ -752,8 +753,8 @@ create_user - create user account
     All changes to user accounts are instant, if the system works in     read/only mode, set it to read/write before performing user     management.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/create_user.req
-    :response: http-examples/sysapi/create_user.resp
+    :request: http-examples/jrpc/sysapi/create_user.req-jrpc
+    :response: http-examples/jrpc/sysapi/create_user.resp-jrpc
 
 Parameters:
 
@@ -770,8 +771,8 @@ destroy_user - delete user account
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/destroy_user.req
-    :response: http-examples/sysapi/destroy_user.resp
+    :request: http-examples/jrpc/sysapi/destroy_user.req-jrpc
+    :response: http-examples/jrpc/sysapi/destroy_user.resp-jrpc
 
 Parameters:
 
@@ -786,8 +787,8 @@ get_user - get user account info
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/get_user.req
-    :response: http-examples/sysapi/get_user.resp
+    :request: http-examples/jrpc/sysapi/get_user.req-jrpc
+    :response: http-examples/jrpc/sysapi/get_user.resp-jrpc
 
 Parameters:
 
@@ -802,8 +803,8 @@ list_users - list user accounts
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_users.req
-    :response: http-examples/sysapi/list_users.resp
+    :request: http-examples/jrpc/sysapi/list_users.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_users.resp-jrpc
 
 Parameters:
 
@@ -817,8 +818,8 @@ set_user_key - assign API key to user
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/set_user_key.req
-    :response: http-examples/sysapi/set_user_key.resp
+    :request: http-examples/jrpc/sysapi/set_user_key.req-jrpc
+    :response: http-examples/jrpc/sysapi/set_user_key.resp-jrpc
 
 Parameters:
 
@@ -834,8 +835,8 @@ set_user_password - set user password
 Either master key and user login must be specified or a user must be logged in and a session token used
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/set_user_password.req
-    :response: http-examples/sysapi/set_user_password.resp
+    :request: http-examples/jrpc/sysapi/set_user_password.req-jrpc
+    :response: http-examples/jrpc/sysapi/set_user_password.resp-jrpc
 
 Parameters:
 
@@ -861,8 +862,8 @@ disable_notifier - disable notifier
     The notifier is disabled until controller restart. To disable     notifier permanently, use notifier management CLI.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/disable_notifier.req
-    :response: http-examples/sysapi/disable_notifier.resp
+    :request: http-examples/jrpc/sysapi/disable_notifier.req-jrpc
+    :response: http-examples/jrpc/sysapi/disable_notifier.resp-jrpc
 
 Parameters:
 
@@ -879,8 +880,8 @@ enable_notifier - enable notifier
     The notifier is enabled until controller restart. To enable     notifier permanently, use notifier management CLI.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/enable_notifier.req
-    :response: http-examples/sysapi/enable_notifier.resp
+    :request: http-examples/jrpc/sysapi/enable_notifier.req-jrpc
+    :response: http-examples/jrpc/sysapi/enable_notifier.resp-jrpc
 
 Parameters:
 
@@ -895,8 +896,8 @@ get_notifier - get notifier configuration
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/get_notifier.req
-    :response: http-examples/sysapi/get_notifier.resp
+    :request: http-examples/jrpc/sysapi/get_notifier.req-jrpc
+    :response: http-examples/jrpc/sysapi/get_notifier.resp-jrpc
 
 Parameters:
 
@@ -911,8 +912,8 @@ list_notifiers - list notifiers
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_notifiers.req
-    :response: http-examples/sysapi/list_notifiers.resp
+    :request: http-examples/jrpc/sysapi/list_notifiers.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_notifiers.resp-jrpc
 
 Parameters:
 
@@ -934,8 +935,8 @@ file_put - put file to runtime folder
 Puts a new file into runtime folder. If the file with such name exists, it will be overwritten. As all files in runtime are text, binary data can not be put.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/file_put.req
-    :response: http-examples/sysapi/file_put.resp
+    :request: http-examples/jrpc/sysapi/file_put.req-jrpc
+    :response: http-examples/jrpc/sysapi/file_put.resp-jrpc
 
 Parameters:
 
@@ -951,8 +952,8 @@ file_set_exec - set file exec permission
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/file_set_exec.req
-    :response: http-examples/sysapi/file_set_exec.resp
+    :request: http-examples/jrpc/sysapi/file_set_exec.req-jrpc
+    :response: http-examples/jrpc/sysapi/file_set_exec.resp-jrpc
 
 Parameters:
 
@@ -968,8 +969,8 @@ file_get - get file contents from runtime folder
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/file_get.req
-    :response: http-examples/sysapi/file_get.resp
+    :request: http-examples/jrpc/sysapi/file_get.req-jrpc
+    :response: http-examples/jrpc/sysapi/file_get.resp-jrpc
 
 Parameters:
 
@@ -984,8 +985,8 @@ file_unlink - delete file from runtime folder
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/file_unlink.req
-    :response: http-examples/sysapi/file_unlink.resp
+    :request: http-examples/jrpc/sysapi/file_unlink.req-jrpc
+    :response: http-examples/jrpc/sysapi/file_unlink.resp-jrpc
 
 Parameters:
 
@@ -1008,8 +1009,8 @@ list_corescript_mqtt_topics - List MQTT topics core scripts react on
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/list_corescript_mqtt_topics.req
-    :response: http-examples/sysapi/list_corescript_mqtt_topics.resp
+    :request: http-examples/jrpc/sysapi/list_corescript_mqtt_topics.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_corescript_mqtt_topics.resp-jrpc
 
 Parameters:
 
@@ -1023,8 +1024,8 @@ reload_corescripts - Reload core scripts if some was added or deleted
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/reload_corescripts.req
-    :response: http-examples/sysapi/reload_corescripts.resp
+    :request: http-examples/jrpc/sysapi/reload_corescripts.req-jrpc
+    :response: http-examples/jrpc/sysapi/reload_corescripts.resp-jrpc
 
 Parameters:
 
@@ -1038,8 +1039,8 @@ subscribe_corescripts_mqtt - Subscribe core scripts to MQTT topic
 The method subscribes core scripts to topic of default MQTT notifier (eva_1). To specify another notifier, set topic as <notifer_id>:<topic>
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/subscribe_corescripts_mqtt.req
-    :response: http-examples/sysapi/subscribe_corescripts_mqtt.resp
+    :request: http-examples/jrpc/sysapi/subscribe_corescripts_mqtt.req-jrpc
+    :response: http-examples/jrpc/sysapi/subscribe_corescripts_mqtt.resp-jrpc
 
 Parameters:
 
@@ -1056,8 +1057,8 @@ unsubscribe_corescripts_mqtt - Unsubscribe core scripts from MQTT topic
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/unsubscribe_corescripts_mqtt.req
-    :response: http-examples/sysapi/unsubscribe_corescripts_mqtt.resp
+    :request: http-examples/jrpc/sysapi/unsubscribe_corescripts_mqtt.req-jrpc
+    :response: http-examples/jrpc/sysapi/unsubscribe_corescripts_mqtt.resp-jrpc
 
 Parameters:
 

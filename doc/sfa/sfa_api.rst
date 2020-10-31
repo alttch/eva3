@@ -10,70 +10,13 @@ API look :doc:`/sfa/sfa_api_restful`.
 API basics
 ==========
 
-Standard API (direct method calling)
---------------------------------------
-
-.. warning::
-
-    Direct method calling is deprecated and scheduled to be removed (not
-    implemented) in EVA ICS v4. Use JSON RPC API, whenever it is possible.
-
-SFA API functions are called through URL request
-
-    **\http://<ip_address:8828>/sfa-api/function**
-
-If SSL is allowed in the controller configuration file, you can also use https
-calls.
-
-.. warning::
-
-    It's highly not recommended to perform long API calls, calling API
-    functions from JavaScript in a web browser (e.g. giving "w" param to action
-    methods to wait until action finish). Web browser may repeat API call
-    continuously, which may lead to absolutely unexpected behavior.
-
-Standard API responses
-~~~~~~~~~~~~~~~~~~~~~~
-
-Good for backward compatibility with any devices, as all API functions can be
-called using GET and POST. When POST is used, the parameters can be passed to
-functions either as multipart/form-data or as JSON.
-
-API key can be sent in request parameters, session (if enabled and user is
-logged in) or in HTTP **X-Auth-Key** header.
-
-**Standard responses in status/body:**
-
-* **200 OK** *{ "result": "OK" }* API call completed successfully.
-
-**Standard error responses in status:**
-
-* **400 Bad Request** Invalid request params
-* **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** method or resource/object doesn't exist
-* **405 Method Not Allowed** API function/method not found or HTTP method is
-  not either GET or POST
-* **409 Conflict** resource/object already exists or is locked
-* **500 API Error** API function execution has been failed. Check input
-  parameters and server logs.
-
-In case API function has been failed, response body will contain JSON data with
-*_error* field, which contains error message.
-
-.. code-block:: json
-
-    {
-        "_error": "unable to add object, already present",
-        "result": "ERROR"
-    }
-
 JSON RPC
 --------
 
-Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. Note that default JSON RPC
-result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no error
-result, as JSON RPC sends errors in "error" field.
+`JSON RPC 2.0 <https://www.jsonrpc.org/specification>`_ protocol is the primary
+EVA ICS API protocol. Note that default JSON RPC result is *{ "ok": true }*
+(instead of *{ "result": "OK" }* in the direct API).  There's no *{ result:
+"ERROR" }* responses, as JSON RPC sends errors in "error" field.
 
 If JSON RPC request is called without ID and server should not return a result,
 it will return http response with a code *202 Accepted*.
@@ -136,6 +79,64 @@ Long API calls
   *wait* param), remote controller timeout should be always greater than max.
   expected "wait" timeout in API call, otherwise client controller will repeat
   API calls continuously, up to max **retries** for the target controller.
+
+
+Direct API
+----------
+
+.. warning::
+
+    Direct method calling is deprecated and scheduled to be removed (not
+    implemented) in EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
+SFA API functions are called through URL request
+
+    **\http://<ip_address:8828>/sfa-api/function**
+
+If SSL is allowed in the controller configuration file, you can also use https
+calls.
+
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
+Direct API responses
+~~~~~~~~~~~~~~~~~~~~
+
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
+
+**Standard responses in status/body:**
+
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
+
+**Standard error responses in status:**
+
+* **400 Bad Request** Invalid request params
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource/object doesn't exist
+* **405 Method Not Allowed** API function/method not found or HTTP method is
+  not either GET or POST
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check input
+  parameters and server logs.
+
+In case API function has been failed, response body will contain JSON data with
+*_error* field, which contains error message.
+
+.. code-block:: json
+
+    {
+        "_error": "unable to add object, already present",
+        "result": "ERROR"
+    }
 
 .. contents::
 
