@@ -1492,13 +1492,15 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 if not f:
                     raise MethodNotFound
                 k = p.get('k')
+                ip = http_real_ip()
                 if method != 'login':
                     if not k:
-                        raise AccessDenied
-                    if k.startswith('token:'):
+                        k = eva.apikey.key_by_ip_address(ip)
+                        p['k'] = k
+                    elif k.startswith('token:'):
                         k = key_token_parse(k, _aci=True)
                         p['k'] = k
-                    if not apikey.check(k=k):
+                    if not apikey.check(k=k, ip=ip):
                         raise AccessDenied
                 res = f(**p)
                 if isinstance(res, tuple):
