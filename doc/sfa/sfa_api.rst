@@ -140,74 +140,6 @@ In case API function has been failed, response body will contain JSON data with
 
 .. contents::
 
-.. _sfapi_cat_general:
-
-General functions
-=================
-
-
-
-.. _sfapi_test:
-
-test - test API/key and get system info
----------------------------------------
-
-Test can be executed with any valid API key of the controller the function is called to.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/test.req
-    :response: http-examples/sfapi/test.resp
-
-Parameters:
-
-* **k** any valid API key
-
-Returns:
-
-JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
-
-.. _sfapi_login:
-
-login - log in and get authentication token
--------------------------------------------
-
-Obtains authentication :doc:`token</api_tokens>` which can be used in API calls instead of API key.
-
-If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
-
-If authentication token is specified, the function will check it and return token information if it is valid.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/login.req
-    :response: http-examples/sfapi/login.resp
-
-Parameters:
-
-* **k** valid API key or
-* **u** user login
-* **p** user password
-* **a** authentication token
-
-Returns:
-
-A dict, containing API key ID and authentication token
-
-.. _sfapi_logout:
-
-logout - log out and purge authentication token
------------------------------------------------
-
-Purges authentication :doc:`token</api_tokens>`
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/logout.req
-    :response: http-examples/sfapi/logout.resp
-
-Parameters:
-
-* **k** valid token
-
-
 .. _sfapi_cat_item:
 
 Item functions
@@ -223,8 +155,8 @@ action - create unit control action
 The call is considered successful when action is put into the action queue of selected unit.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/action.req
-    :response: http-examples/sfapi/action.resp
+    :request: http-examples/jrpc/sfapi/action.req-jrpc
+    :response: http-examples/jrpc/sfapi/action.resp-jrpc
 
 Parameters:
 
@@ -252,8 +184,8 @@ action_toggle - toggle unit status
 Create unit control action to toggle its status (1->0, 0->1)
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/action_toggle.req
-    :response: http-examples/sfapi/action_toggle.resp
+    :request: http-examples/jrpc/sfapi/action_toggle.req-jrpc
+    :response: http-examples/jrpc/sfapi/action_toggle.resp-jrpc
 
 Parameters:
 
@@ -279,8 +211,8 @@ disable_actions - disable unit actions
 Disables unit to run and queue new actions.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/disable_actions.req
-    :response: http-examples/sfapi/disable_actions.resp
+    :request: http-examples/jrpc/sfapi/disable_actions.req-jrpc
+    :response: http-examples/jrpc/sfapi/disable_actions.resp-jrpc
 
 Parameters:
 
@@ -295,8 +227,8 @@ enable_actions - enable unit actions
 Enables unit to run and queue new actions.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/enable_actions.req
-    :response: http-examples/sfapi/enable_actions.resp
+    :request: http-examples/jrpc/sfapi/enable_actions.req-jrpc
+    :response: http-examples/jrpc/sfapi/enable_actions.resp-jrpc
 
 Parameters:
 
@@ -311,8 +243,8 @@ groups - get item group list
 Get the list of item groups. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups.req
-    :response: http-examples/sfapi/groups.resp
+    :request: http-examples/jrpc/sfapi/groups.req-jrpc
+    :response: http-examples/jrpc/sfapi/groups.resp-jrpc
 
 Parameters:
 
@@ -327,8 +259,8 @@ kill - kill unit actions
 Apart from canceling all queued commands, this function also terminates the current running action.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/kill.req
-    :response: http-examples/sfapi/kill.resp
+    :request: http-examples/jrpc/sfapi/kill.req-jrpc
+    :response: http-examples/jrpc/sfapi/kill.resp-jrpc
 
 Parameters:
 
@@ -347,8 +279,8 @@ q_clean - clean action queue of unit
 Cancels all queued actions, keeps the current action running.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/q_clean.req
-    :response: http-examples/sfapi/q_clean.resp
+    :request: http-examples/jrpc/sfapi/q_clean.req-jrpc
+    :response: http-examples/jrpc/sfapi/q_clean.resp-jrpc
 
 Parameters:
 
@@ -363,8 +295,8 @@ result - get action status or macro run result
 Checks the result of the action by its UUID or returns the actions for the specified unit or execution result of the specified macro.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/result.req
-    :response: http-examples/sfapi/result.resp
+    :request: http-examples/jrpc/sfapi/result.req-jrpc
+    :response: http-examples/jrpc/sfapi/result.resp-jrpc
 
 Parameters:
 
@@ -389,8 +321,8 @@ state - get item state
 State of the item or all items of the specified type can be obtained using state command.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/state.req
-    :response: http-examples/sfapi/state.resp
+    :request: http-examples/jrpc/sfapi/state.req-jrpc
+    :response: http-examples/jrpc/sfapi/state.resp-jrpc
 
 Parameters:
 
@@ -413,8 +345,8 @@ State history of one :doc:`item</items>` or several items of the specified type 
 If master key is used, method attempt to get stored state for item even if it currently doesn't present.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/state_history.req
-    :response: http-examples/sfapi/state_history.resp
+    :request: http-examples/jrpc/sfapi/state_history.req-jrpc
+    :response: http-examples/jrpc/sfapi/state_history.resp-jrpc
 
 Parameters:
 
@@ -466,8 +398,8 @@ terminate - terminate action execution
 Terminates or cancel the action if it is still queued
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/terminate.req
-    :response: http-examples/sfapi/terminate.resp
+    :request: http-examples/jrpc/sfapi/terminate.req-jrpc
+    :response: http-examples/jrpc/sfapi/terminate.resp-jrpc
 
 Parameters:
 
@@ -487,8 +419,8 @@ clear - clear lvar state
 set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/clear.req
-    :response: http-examples/sfapi/clear.resp
+    :request: http-examples/jrpc/sfapi/clear.req-jrpc
+    :response: http-examples/jrpc/sfapi/clear.resp-jrpc
 
 Parameters:
 
@@ -503,8 +435,8 @@ decrement - decrement lvar value
 Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/decrement.req
-    :response: http-examples/sfapi/decrement.resp
+    :request: http-examples/jrpc/sfapi/decrement.req-jrpc
+    :response: http-examples/jrpc/sfapi/decrement.resp-jrpc
 
 Parameters:
 
@@ -519,8 +451,8 @@ increment - increment lvar value
 Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/increment.req
-    :response: http-examples/sfapi/increment.resp
+    :request: http-examples/jrpc/sfapi/increment.req-jrpc
+    :response: http-examples/jrpc/sfapi/increment.resp-jrpc
 
 Parameters:
 
@@ -535,8 +467,8 @@ reset - reset lvar state
 Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar is being used as a timer to reset it, or as a flag to set it *True*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reset.req
-    :response: http-examples/sfapi/reset.resp
+    :request: http-examples/jrpc/sfapi/reset.req-jrpc
+    :response: http-examples/jrpc/sfapi/reset.resp-jrpc
 
 Parameters:
 
@@ -551,8 +483,8 @@ set - set lvar state
 Set status and value of a :ref:`logic variable<lvar>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/set.req
-    :response: http-examples/sfapi/set.resp
+    :request: http-examples/jrpc/sfapi/set.req-jrpc
+    :response: http-examples/jrpc/sfapi/set.resp-jrpc
 
 Parameters:
 
@@ -572,8 +504,8 @@ toggle - clear lvar state
 set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/toggle.req
-    :response: http-examples/sfapi/toggle.resp
+    :request: http-examples/jrpc/sfapi/toggle.req-jrpc
+    :response: http-examples/jrpc/sfapi/toggle.resp-jrpc
 
 Parameters:
 
@@ -596,8 +528,8 @@ groups_macro - get macro groups list
 Get the list of macros. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups_macro.req
-    :response: http-examples/sfapi/groups_macro.resp
+    :request: http-examples/jrpc/sfapi/groups_macro.req-jrpc
+    :response: http-examples/jrpc/sfapi/groups_macro.resp-jrpc
 
 Parameters:
 
@@ -611,8 +543,8 @@ list_macros - get macro list
 Get the list of all available :doc:`macros</lm/macros>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_macros.req
-    :response: http-examples/sfapi/list_macros.resp
+    :request: http-examples/jrpc/sfapi/list_macros.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_macros.resp-jrpc
 
 Parameters:
 
@@ -631,8 +563,8 @@ run - execute macro
 Execute a :doc:`macro</lm/macros>` with the specified arguments.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/run.req
-    :response: http-examples/sfapi/run.resp
+    :request: http-examples/jrpc/sfapi/run.req-jrpc
+    :response: http-examples/jrpc/sfapi/run.resp-jrpc
 
 Parameters:
 
@@ -664,8 +596,8 @@ get_cycle - get cycle information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/get_cycle.req
-    :response: http-examples/sfapi/get_cycle.resp
+    :request: http-examples/jrpc/sfapi/get_cycle.req-jrpc
+    :response: http-examples/jrpc/sfapi/get_cycle.resp-jrpc
 
 Parameters:
 
@@ -684,8 +616,8 @@ groups_cycle - get cycle groups list
 Get the list of cycles. Useful e.g. for custom interfaces.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups_cycle.req
-    :response: http-examples/sfapi/groups_cycle.resp
+    :request: http-examples/jrpc/sfapi/groups_cycle.req-jrpc
+    :response: http-examples/jrpc/sfapi/groups_cycle.resp-jrpc
 
 Parameters:
 
@@ -699,8 +631,8 @@ list_cycles - get cycle list
 Get the list of all available :doc:`cycles</lm/cycles>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_cycles.req
-    :response: http-examples/sfapi/list_cycles.resp
+    :request: http-examples/jrpc/sfapi/list_cycles.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_cycles.resp-jrpc
 
 Parameters:
 
@@ -727,8 +659,8 @@ supervisor_lock - set supervisor API lock
 When supervisor lock is set, SFA API functions become read-only for all users, except users in the lock scope.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/supervisor_lock.req
-    :response: http-examples/sfapi/supervisor_lock.resp
+    :request: http-examples/jrpc/sfapi/supervisor_lock.req-jrpc
+    :response: http-examples/jrpc/sfapi/supervisor_lock.resp-jrpc
 
 Parameters:
 
@@ -747,8 +679,8 @@ supervisor_unlock - clear supervisor API lock
 API key should have permission to clear existing supervisor lock
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/supervisor_unlock.req
-    :response: http-examples/sfapi/supervisor_unlock.resp
+    :request: http-examples/jrpc/sfapi/supervisor_unlock.req-jrpc
+    :response: http-examples/jrpc/sfapi/supervisor_unlock.resp-jrpc
 
 Parameters:
 
@@ -766,8 +698,8 @@ supervisor_message - send broadcast message
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/supervisor_message.req
-    :response: http-examples/sfapi/supervisor_message.resp
+    :request: http-examples/jrpc/sfapi/supervisor_message.req-jrpc
+    :response: http-examples/jrpc/sfapi/supervisor_message.resp-jrpc
 
 Parameters:
 
@@ -792,8 +724,8 @@ append_controller - connect remote controller via HTTP
 Connects remote :ref:`controller<sfa_remote_c>` to the local.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/append_controller.req
-    :response: http-examples/sfapi/append_controller.resp
+    :request: http-examples/jrpc/sfapi/append_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/append_controller.resp-jrpc
 
 Parameters:
 
@@ -817,8 +749,8 @@ disable_controller - disable connected controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/disable_controller.req
-    :response: http-examples/sfapi/disable_controller.resp
+    :request: http-examples/jrpc/sfapi/disable_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/disable_controller.resp-jrpc
 
 Parameters:
 
@@ -837,8 +769,8 @@ enable_controller - enable connected controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/enable_controller.req
-    :response: http-examples/sfapi/enable_controller.resp
+    :request: http-examples/jrpc/sfapi/enable_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/enable_controller.resp-jrpc
 
 Parameters:
 
@@ -857,8 +789,8 @@ get_controller - get connected controller information
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/get_controller.req
-    :response: http-examples/sfapi/get_controller.resp
+    :request: http-examples/jrpc/sfapi/get_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/get_controller.resp-jrpc
 
 Parameters:
 
@@ -873,8 +805,8 @@ list_controller_props - get controller connection parameters
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_controller_props.req
-    :response: http-examples/sfapi/list_controller_props.resp
+    :request: http-examples/jrpc/sfapi/list_controller_props.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_controller_props.resp-jrpc
 
 Parameters:
 
@@ -889,8 +821,8 @@ list_controllers - get controllers list
 Get the list of all connected :ref:`controllers<sfa_remote_c>`.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_controllers.req
-    :response: http-examples/sfapi/list_controllers.resp
+    :request: http-examples/jrpc/sfapi/list_controllers.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_controllers.resp-jrpc
 
 Parameters:
 
@@ -905,8 +837,8 @@ list_remote - get a list of items from connected controllers
 Get a list of the items loaded from the connected controllers. Useful to debug the controller connections.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_remote.req
-    :response: http-examples/sfapi/list_remote.resp
+    :request: http-examples/jrpc/sfapi/list_remote.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_remote.resp-jrpc
 
 Parameters:
 
@@ -926,8 +858,8 @@ matest_controller - test management API connection to remote controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/matest_controller.req
-    :response: http-examples/sfapi/matest_controller.resp
+    :request: http-examples/jrpc/sfapi/matest_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/matest_controller.resp-jrpc
 
 Parameters:
 
@@ -942,8 +874,8 @@ reload_controller - reload controller
 Reloads items from connected controller. If controller ID "ALL" is specified, all connected controllers are reloaded.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reload_controller.req
-    :response: http-examples/sfapi/reload_controller.resp
+    :request: http-examples/jrpc/sfapi/reload_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/reload_controller.resp-jrpc
 
 Parameters:
 
@@ -958,8 +890,8 @@ remove_controller - disconnect controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/remove_controller.req
-    :response: http-examples/sfapi/remove_controller.resp
+    :request: http-examples/jrpc/sfapi/remove_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/remove_controller.resp-jrpc
 
 Parameters:
 
@@ -974,8 +906,8 @@ set_controller_prop - set controller connection parameters
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/set_controller_prop.req
-    :response: http-examples/sfapi/set_controller_prop.resp
+    :request: http-examples/jrpc/sfapi/set_controller_prop.req-jrpc
+    :response: http-examples/jrpc/sfapi/set_controller_prop.resp-jrpc
 
 Parameters:
 
@@ -996,8 +928,8 @@ test_controller - test connection to remote controller
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/test_controller.req
-    :response: http-examples/sfapi/test_controller.resp
+    :request: http-examples/jrpc/sfapi/test_controller.req-jrpc
+    :response: http-examples/jrpc/sfapi/test_controller.resp-jrpc
 
 Parameters:
 
@@ -1012,8 +944,8 @@ upnp_rescan_controllers - rescan controllers via UPnP
 
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/upnp_rescan_controllers.req
-    :response: http-examples/sfapi/upnp_rescan_controllers.resp
+    :request: http-examples/jrpc/sfapi/upnp_rescan_controllers.req-jrpc
+    :response: http-examples/jrpc/sfapi/upnp_rescan_controllers.resp-jrpc
 
 Parameters:
 
@@ -1039,8 +971,8 @@ All the connected clients receive the event with *subject="server"* and *data="r
 Server restart notification is sent automatically to all connected clients when the server is restarting. This API function allows to send server restart notification without actual server restart, which may be useful e.g. for testing, handling frontend restart etc.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/notify_restart.req
-    :response: http-examples/sfapi/notify_restart.resp
+    :request: http-examples/jrpc/sfapi/notify_restart.req-jrpc
+    :response: http-examples/jrpc/sfapi/notify_restart.resp-jrpc
 
 Parameters:
 
@@ -1056,8 +988,8 @@ Sends **reload** event to all connected clients asking them to reload the interf
 All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :ref:`js_framework`, they can catch *server.reload* event.
 
 ..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reload_clients.req
-    :response: http-examples/sfapi/reload_clients.resp
+    :request: http-examples/jrpc/sfapi/reload_clients.req-jrpc
+    :response: http-examples/jrpc/sfapi/reload_clients.resp-jrpc
 
 Parameters:
 
