@@ -13,6 +13,11 @@ API basics
 Standard API (direct method calling)
 --------------------------------------
 
+.. warning::
+
+    Direct method calling is deprecated and scheduled to be removed (not
+    implemented) in EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
 LM API functions are called through URL request
 
     **\http://<ip_address:8817>/lm-api/function**

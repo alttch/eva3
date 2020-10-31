@@ -9,6 +9,11 @@ calls look :doc:`/lm/lm_api`.
 RESTful API basics
 ==================
 
+.. warning::
+
+    RESTful API is deprecated and scheduled to be removed (not implemented) in
+    EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
 Majority EVA ICS API components and items support `REST
 <https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and

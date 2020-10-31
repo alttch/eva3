@@ -24,6 +24,8 @@ Common
     * mailer feature available in all controller types (used by core plugins)
     * "cdata" (custom data) API key field
 
+    * RESTful and direct API marked as deprecated
+
 UC
 --
 
