@@ -664,6 +664,7 @@ class Cycle(eva.item.Item):
                     self.interval = interval
                     self.log_set(prop, val)
                     self.set_modified(save)
+                    self.notify()
                 return True
             else:
                 return False
@@ -684,7 +685,7 @@ class Cycle(eva.item.Item):
             try:
                 autostart = val_to_boolean(val)
                 if autostart is None:
-                    raise ('Invalid val')
+                    raise ValueError('Invalid value')
             except:
                 return False
             if self.autostart != autostart:
