@@ -17,6 +17,7 @@ test-build:
 	make build
 	git commit -a -m 'test build'
 	git push
+	make dmaster
 	jks build get.eva-ics.com
 	make test-release
 
