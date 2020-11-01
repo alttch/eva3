@@ -13,6 +13,13 @@ pub:
 	git push
 	jks build eva-${VERSION}
 
+test-build:
+	make build
+	git commit -a -m 'test build'
+	git push
+	jks build get.eva-ics.com
+	make test-release
+
 d:
 	mkdir -p dist
 	@./dev/make-dist
