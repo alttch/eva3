@@ -1,5 +1,15 @@
 #compdef uc-cmd
 
+_uc-cmd_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
 _uc-cmd_corescript() {
   local cword
   let cword=CURRENT-1
@@ -10,11 +20,11 @@ _uc-cmd_corescript() {
   fi
 }
 
-_uc-cmd_server() {
+_uc-cmd_datapuller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch plugins reload restart start status stop
+    compadd "$@" list restart start stop
   else
     _files
   fi
@@ -194,10 +204,10 @@ _uc-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clone cmd config corescript create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
+    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
   else
     case "${words[2]}" in
-      action|clone|config|corescript|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _uc-cmd_${words[2]}
         ;;
       *)

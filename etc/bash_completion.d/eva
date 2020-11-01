@@ -18,21 +18,21 @@ _eva_iote() {
   fi
 }
 
-_eva_sfa_corescript() {
-  local cur prev words cword
-  _init_completion || return
-  if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
-  else
-    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
-  fi
-}
-
 _eva_sfa_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_sfa_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -185,21 +185,21 @@ _eva_sfa() {
   fi
 }
 
-_eva_lm_corescript() {
-  local cur prev words cword
-  _init_completion || return
-  if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
-  else
-    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
-  fi
-}
-
 _eva_lm_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_lm_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -352,6 +352,16 @@ _eva_lm() {
   fi
 }
 
+_eva_uc_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_uc_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -362,11 +372,11 @@ _eva_uc_corescript() {
   fi
 }
 
-_eva_uc_server() {
+_eva_uc_datapuller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'launch plugins reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'list restart start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -546,10 +556,10 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|clone|config|corescript|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
       *)

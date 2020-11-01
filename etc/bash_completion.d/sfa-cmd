@@ -1,18 +1,18 @@
-_sfa-cmd_corescript() {
-  local cur prev words cword
-  _init_completion || return
-  if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
-  else
-    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
-  fi
-}
-
 _sfa-cmd_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_sfa-cmd_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

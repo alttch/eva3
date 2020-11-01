@@ -1,20 +1,20 @@
 #compdef sfa-cmd
 
-_sfa-cmd_corescript() {
-  local cword
-  let cword=CURRENT-1
-  if [[ $cword -eq 2 ]]; then
-    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
-  else
-    _files
-  fi
-}
-
 _sfa-cmd_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
     compadd "$@" launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi

@@ -1,20 +1,20 @@
 #compdef lm-notifier
 
-_lm-notifier_corescript() {
-  local cword
-  let cword=CURRENT-1
-  if [[ $cword -eq 2 ]]; then
-    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
-  else
-    _files
-  fi
-}
-
 _lm-notifier_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
     compadd "$@" launch plugins restart start status stop
+  else
+    _files
+  fi
+}
+
+_lm-notifier_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi

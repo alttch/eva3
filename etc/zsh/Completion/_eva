@@ -20,21 +20,21 @@ _eva_iote() {
   fi
 }
 
-_eva_sfa_corescript() {
-  local cword
-  let cword=CURRENT-1
-  if [[ $cword -eq 3 ]]; then
-    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
-  else
-    _files
-  fi
-}
-
 _eva_sfa_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
     compadd "$@" launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_sfa_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi
@@ -187,21 +187,21 @@ _eva_sfa() {
   fi
 }
 
-_eva_lm_corescript() {
-  local cword
-  let cword=CURRENT-1
-  if [[ $cword -eq 3 ]]; then
-    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
-  else
-    _files
-  fi
-}
-
 _eva_lm_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
     compadd "$@" launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_lm_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi
@@ -354,6 +354,16 @@ _eva_lm() {
   fi
 }
 
+_eva_uc_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
 _eva_uc_corescript() {
   local cword
   let cword=CURRENT-1
@@ -364,11 +374,11 @@ _eva_uc_corescript() {
   fi
 }
 
-_eva_uc_server() {
+_eva_uc_datapuller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" launch plugins reload restart start status stop
+    compadd "$@" list restart start stop
   else
     _files
   fi
@@ -548,10 +558,10 @@ _eva_uc() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" action clone cmd config corescript create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
+    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
   else
     case "${words[3]}" in
-      action|clone|config|corescript|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _eva_uc_${words[3]}
         ;;
       *)
