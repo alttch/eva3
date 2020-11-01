@@ -24,7 +24,7 @@ The following variables are available in all templates:
 * All :ref:`custom user-defined variables<sfa_cvars>`
 
 * **server** contains a dict with a system and current API key info (equal to
-  SFA API :ref:`test<sfapi_test>` function result) plus an additional key
+  SFA API :ref:`test<sysapi_test>` function result) plus an additional key
   **remote_ip** which contains either request IP address or value of
   *X-Real-IP* variable (if set by frontend server).
 

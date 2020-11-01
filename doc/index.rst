@@ -162,10 +162,8 @@ What you get with EVA
     uc/uc_udp_api
     lm/lm_api
     sfa/sfa_api
-    uc/uc_api_restful
-    lm/lm_api_restful
-    sfa/sfa_api_restful
     api_clients
+    restful
 
 .. toctree::
     :caption:  Extension development
