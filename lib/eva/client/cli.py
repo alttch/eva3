@@ -969,15 +969,15 @@ class GenericCLI(GCLI):
                             self.apikey = d[1 if d[0] == 'k' else 2]
                         except:
                             pass
-                        print('key: %s' % self.apikey
-                              if self.apikey is not None else '<default>')
+                        print('key: %s' % self.apikey if self.
+                              apikey is not None else '<default>')
                     if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apiuri = d[1]
                         except:
                             pass
-                        print('API uri: %s' % self.apiuri
-                              if self.apiuri is not None else '<default>')
+                        print('API uri: %s' % self.apiuri if self.
+                              apiuri is not None else '<default>')
                     if (d[0] == 't' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.timeout = float(d[1 if d[0] == 't' else 3])
@@ -985,12 +985,10 @@ class GenericCLI(GCLI):
                             pass
                         print('timeout: %.2f' % self.timeout)
                     elif d[0] == 'a' and self.remote_api_enabled:
-                        print('API uri: %s' %
-                              (self.apiuri
-                               if self.apiuri is not None else '<default>'))
-                        print('key: %s' %
-                              (self.apikey
-                               if self.apikey is not None else '<default>'))
+                        print('API uri: %s' % (self.apiuri if self.apiuri
+                                               is not None else '<default>'))
+                        print('key: %s' % (self.apikey if self.apikey
+                                           is not None else '<default>'))
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -1519,6 +1517,40 @@ class ControllerCLI(object):
         self.exec_control_script('restart')
         return self.local_func_result_ok
 
+    def cleanup_controller(self, params):
+        DB_CLEANUPS = {
+            'uc': ['delete from state'],
+        }
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        try:
+            db_cleanup_queues = DB_CLEANUPS[self._management_controller_id]
+        except KeyError:
+            self.print_err('not implemented')
+            return self.local_func_result_failed
+        import eva.core
+        import configparser
+        from sqlalchemy import text as sql
+        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
+        cfg.read(f'{self.dir_etc}/{self._management_controller_id}.ini')
+        try:
+            db_file = cfg.get('server', 'db_file')
+        except:
+            db_file = None
+        try:
+            db_uri = cfg.get('server', 'db')
+        except:
+            if db_file:
+                db_uri = db_file
+        db_uri = eva.core.format_db_uri(db_uri)
+        db = eva.core.create_db_engine(db_uri)
+        dbconn = db.connect()
+        for q in db_cleanup_queues:
+            dbconn.execute(sql(q))
+        dbconn.close()
+        return self.local_func_result_ok
+
     def launch_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1641,6 +1673,9 @@ class ControllerCLI(object):
 
         ap_plugins = sp_controller.add_parser('plugins',
                                               help='List loaded core plugins')
+        ap_cleanuo = sp_controller.add_parser(
+            'cleanup',
+            help='Cleanup controller: remove non-critical DB entries etc.')
 
         self.append_api_functions({'server:plugins': 'list_plugins'})
 
@@ -1737,6 +1772,7 @@ class ControllerCLI(object):
         self.append_api_functions({
             'server:start': self.start_controller,
             'server:stop': self.stop_controller,
+            'server:cleanup': self.cleanup_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',
