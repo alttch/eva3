@@ -23,6 +23,7 @@ Common
     * update with pre-downloaded tarballs
     * mailer feature available in all controller types (used by core plugins)
     * "cdata" (custom data) API key field
+    * "file_put" method automatically creates required directories
 
     * RESTful and direct API marked as deprecated
 

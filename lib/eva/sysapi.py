@@ -596,6 +596,14 @@ class FileAPI(object):
         try:
             raw = '' if m is None else m
             eva.core.prepare_save()
+            if '/' in i:
+                path = ''
+                for dirname in i.split('/')[:-1]:
+                    path += '/' + dirname
+                    try:
+                        os.mkdir(eva.core.dir_runtime + path)
+                    except FileExistsError:
+                        pass
             try:
                 with open(eva.core.dir_runtime + '/' + i, 'w') as fd:
                     fd.write(raw)
