@@ -46,6 +46,7 @@ SFA
 ---
 
     * PVT serving as /pvt/path/to/file
+    * "status" and "value" props in deployment files
 
 
 3.3.1 (2020-08-26)

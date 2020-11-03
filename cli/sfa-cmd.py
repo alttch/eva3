@@ -1287,20 +1287,42 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         val = os.path.basename(val[1:])
                     else:
                         file2u = None
+                    prop = prop.replace('-', '_')
                     print('     - {} = {}'.format(prop, val))
-                    code = macall({
-                        'i':
-                            c,
-                        'f':
-                            'set_{}prop'.format((
-                                tpc +
-                                '_') if tp in ['lmacro', 'lcycle'] else ''),
-                        'p': {
-                            'i': i,
-                            'p': prop,
-                            'v': val
-                        }
-                    })[1].get('code')
+                    if prop in ['status', 'value']:
+                        if tp in ['unit', 'sensor']:
+                            fn = 'update'
+                        elif tp in ['lvar']:
+                            fn = 'set'
+                        else:
+                            raise RuntimeError(
+                                f'setting {prop} for {tp} is unsupported')
+                        params = { 'i': i }
+                        if prop == 'status':
+                            params['s'] = val
+                        else:
+                            params['v'] = val
+                        if prop == 'value' and tp == 'sensor':
+                            params['s'] = 1
+                        code = macall({
+                            'i': c,
+                            'f': fn,
+                            'p': params
+                        })[1].get('code')
+                    else:
+                        code = macall({
+                            'i':
+                                c,
+                            'f':
+                                'set_{}prop'.format((
+                                    tpc +
+                                    '_') if tp in ['lmacro', 'lcycle'] else ''),
+                            'p': {
+                                'i': i,
+                                'p': prop,
+                                'v': val
+                            }
+                        })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
                     if file2u:
