@@ -138,7 +138,9 @@ class DataPuller:
             x = args.split(maxsplit=2)
             item = eva.core.controllers[0].get_item(i)
             if item is None:
-                raise ResourceNotFound(i)
+                logging.debug(
+                    f'data puller {self.name} skipping item {i} - not found')
+                return
             if x[0] != 'u':
                 raise MethodNotImplemented(cmd[1])
             status = x[1]
