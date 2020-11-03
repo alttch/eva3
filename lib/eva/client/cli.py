@@ -58,7 +58,7 @@ class ComplGeneric(object):
 class ComplCVAR(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
-        code, data = self.cli.call('cvar all')
+        code, data = self.cli.call('cvar list')
         if code:
             return True
         return data.keys()
@@ -137,7 +137,7 @@ class GenericCLI(GCLI):
         if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
-                'cvar:all': 'get_cvar',
+                'cvar:list': 'get_cvar',
                 'cvar:get': 'get_cvar',
                 'cvar:set': 'set_cvar',
                 'cvar:delete': 'set_cvar',
@@ -689,7 +689,7 @@ class GenericCLI(GCLI):
         sp_cvar = ap_cvar.add_subparsers(dest='_func',
                                          metavar='func',
                                          help='CVAR commands')
-        sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
+        sp_cvar_all = sp_cvar.add_parser('list', help='List all CVARS')
         sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
         sp_cvar_get.add_argument('i', help='CVAR ID',
                                  metavar='ID').completer = ComplCVAR(self)
