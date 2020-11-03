@@ -115,6 +115,12 @@ critical, first letter is enough e.g. *w* for warning).
 Data puller can also print messages to STDERR, they will be automatically
 logged with *error* level.
 
+Environment variables
+---------------------
+
+All :ref:`cvars<uc_cvars>` and other EVA ICS core variables are available in
+the datapuller process system environment.
+
 Pulr
 ====
 
