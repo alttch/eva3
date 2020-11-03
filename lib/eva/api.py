@@ -357,8 +357,9 @@ def restful_api_method(f):
             raise FunctionFailed
         if result is None:
             raise ResourceNotFound
-        if (f.__name__ == 'POST' and 'Location'
-                in cherrypy.serving.response.headers) or f.__name__ == 'PUT':
+        if (f.__name__ == 'POST' and
+                'Location' in cherrypy.serving.response.headers
+           ) or f.__name__ == 'PUT':
             cherrypy.serving.response.status = 201
         if result is True:
             if data == api_result_accepted:
@@ -636,7 +637,8 @@ def cp_jsonrpc_pre():
 
 def cp_nocache():
     headers = cherrypy.serving.response.headers
-    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    headers[
+        'Cache-Control'] = 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0'
     headers['Pragma'] = 'no-cache'
     headers['Expires'] = '0'
 

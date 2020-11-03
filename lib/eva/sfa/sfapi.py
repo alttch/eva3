@@ -61,6 +61,8 @@ from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
 
+from eva.api import cp_nocache
+
 from eva.api import get_aci
 
 from eva.exceptions import FunctionFailed
@@ -1527,7 +1529,95 @@ def _tool_error_response(e, code=500):
     return str(e).encode()
 
 
+def serve_pvt(*args, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
+    if f is None:
+        f = '/'.join(args)
+    _k = cp_client_key(k, from_cookie=True, _aci=True)
+    _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
+    if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
+        raise cp_api_404()
+    if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
+        logging.warning('pvt %s file %s access forbidden' % (_r, f))
+        raise cp_forbidden_key()
+    if f.endswith('.j2'):
+        return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
+    elif f.endswith('.json') or f.endswith('.yml') or f.endswith('.yaml'):
+        return serve_json_yml(f, dts='pvt')
+    _f = eva.core.dir_pvt + '/' + f
+    _f_alt = None
+    if c:
+        fls = [x for x in glob.glob(_f) if os.path.isfile(x)]
+        if not fls:
+            raise cp_api_404()
+        if c == 'newest':
+            _f = max(fls, key=os.path.getmtime)
+            fls.remove(_f)
+            if fls:
+                _f_alt = max(fls, key=os.path.getmtime)
+        elif c == 'oldest':
+            _f = min(fls, key=os.path.getmtime)
+        elif c == 'list':
+            l = []
+            for x in fls:
+                l.append({
+                    'name': os.path.basename(x),
+                    'size': os.path.getsize(x),
+                    'time': {
+                        'c': os.path.getctime(x),
+                        'm': os.path.getmtime(x)
+                    }
+                })
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            if nocache:
+                cp_nocache()
+            logging.info('pvt %s file list %s' % (_r, f))
+            return format_json(sorted(l, key=lambda k: k['name'])).encode()
+        else:
+            raise cp_api_error()
+    if ic:
+        try:
+            icmd, args, fmt = ic.split(':')
+            if icmd == 'resize':
+                x, y, q = args.split('x')
+                x = int(x)
+                y = int(y)
+                q = int(q)
+                if os.path.getsize(_f) > 10000000:
+                    raise
+                from PIL import Image
+                try:
+                    image = Image.open(_f)
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                except:
+                    if not _f_alt or os.path.getsize(_f_alt) > 10000000:
+                        raise
+                    image = Image.open(_f_alt)
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                cherrypy.response.headers['Content-Type'] = 'image/' + fmt
+                if nocache:
+                    cp_nocache()
+                logging.info('pvt %s file access %s' % (_r, f))
+                return result
+            else:
+                raise cp_bad_request()
+        except cherrypy.HTTPError:
+            raise
+        except:
+            eva.core.log_taceback()
+            raise cp_api_error()
+    if nocache:
+        cp_nocache()
+    logging.info('pvt %s file access %s' % (_r, f))
+    return serve_file(_f)
+
+
 def serve_json_yml(fname, dts='ui'):
+    if fname.startswith('/pvt/'):
+        kw = cherrypy.serving.request.params
+        kw['f'] = fname[5:]
+        return serve_pvt(**kw)
     infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
     if not os.path.isfile(infile):
         raise cp_api_404()
@@ -1639,13 +1729,6 @@ class SFA_HTTP_Root:
             q = '?' + q
         raise cherrypy.HTTPRedirect('/ui/' + q)
 
-    def _no_cache(self):
-        cherrypy.serving.response.headers['Expires'] = \
-                'Sun, 19 Nov 1978 05:00:00 GMT'
-        cherrypy.serving.response.headers['Cache-Control'] = \
-            'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
-        cherrypy.serving.response.headers['Pragma'] = 'no-cache'
-
     @cherrypy.expose
     def rpvt(self, k=None, f=None, ic=None, nocache=None):
         _k = cp_client_key(k, from_cookie=True, _aci=True)
@@ -1692,7 +1775,7 @@ class SFA_HTTP_Root:
         if ctype:
             cherrypy.serving.response.headers['Content-Type'] = ctype
         if nocache:
-            self._no_cache()
+            cp_nocache()
         result = r.content
         if ic:
             try:
@@ -1717,86 +1800,8 @@ class SFA_HTTP_Root:
         return BytesIO(result)
 
     @cherrypy.expose
-    def pvt(self, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
-        _k = cp_client_key(k, from_cookie=True, _aci=True)
-        _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
-        if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
-            raise cp_api_404()
-        if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
-            logging.warning('pvt %s file %s access forbidden' % (_r, f))
-            raise cp_forbidden_key()
-        if f.endswith('.j2'):
-            return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
-        elif f.endswith('.json') or f.endswith('.yml') or f.endswith('.yaml'):
-            return serve_json_yml(f, dts='pvt')
-        _f = eva.core.dir_pvt + '/' + f
-        _f_alt = None
-        if c:
-            fls = [x for x in glob.glob(_f) if os.path.isfile(x)]
-            if not fls:
-                raise cp_api_404()
-            if c == 'newest':
-                _f = max(fls, key=os.path.getmtime)
-                fls.remove(_f)
-                if fls:
-                    _f_alt = max(fls, key=os.path.getmtime)
-            elif c == 'oldest':
-                _f = min(fls, key=os.path.getmtime)
-            elif c == 'list':
-                l = []
-                for x in fls:
-                    l.append({
-                        'name': os.path.basename(x),
-                        'size': os.path.getsize(x),
-                        'time': {
-                            'c': os.path.getctime(x),
-                            'm': os.path.getmtime(x)
-                        }
-                    })
-                cherrypy.response.headers['Content-Type'] = 'application/json'
-                if nocache:
-                    self._no_cache()
-                logging.info('pvt %s file list %s' % (_r, f))
-                return format_json(sorted(l, key=lambda k: k['name'])).encode()
-            else:
-                raise cp_api_error()
-        if ic:
-            try:
-                icmd, args, fmt = ic.split(':')
-                if icmd == 'resize':
-                    x, y, q = args.split('x')
-                    x = int(x)
-                    y = int(y)
-                    q = int(q)
-                    if os.path.getsize(_f) > 10000000:
-                        raise
-                    from PIL import Image
-                    try:
-                        image = Image.open(_f)
-                        image.thumbnail((x, y))
-                        result = image.tobytes(fmt, 'RGB', q)
-                    except:
-                        if not _f_alt or os.path.getsize(_f_alt) > 10000000:
-                            raise
-                        image = Image.open(_f_alt)
-                        image.thumbnail((x, y))
-                        result = image.tobytes(fmt, 'RGB', q)
-                    cherrypy.response.headers['Content-Type'] = 'image/' + fmt
-                    if nocache:
-                        self._no_cache()
-                    logging.info('pvt %s file access %s' % (_r, f))
-                    return result
-                else:
-                    raise cp_bad_request()
-            except cherrypy.HTTPError:
-                raise
-            except:
-                eva.core.log_taceback()
-                raise cp_api_error()
-        if nocache:
-            self._no_cache()
-        logging.info('pvt %s file access %s' % (_r, f))
-        return serve_file(_f)
+    def pvt(self, *args, **kwargs):
+        return serve_pvt(*args, **kwargs)
 
 
 def start():
