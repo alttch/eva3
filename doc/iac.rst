@@ -59,6 +59,22 @@ Here is an example, which:
                     config:
                         bose: true
 
+Uploading files
+~~~~~~~~~~~~~~~
+
+Local files can be uploaded into remote controller runtime directory:
+
+.. code:: yaml
+
+    controller:
+        uc/controller1:
+            upload-runtime:
+                - localfile:remotefile
+                - localfile2:path/to/remotefile2
+
+File list: local/remote files, separated with ":". If remote directory doesn't
+exist, it will be created automatically.
+
 After deploy
 ~~~~~~~~~~~~
 
@@ -98,6 +114,7 @@ sections are similar, the format is:
             controller: uc/uc1
             action_enabled: true
             update_interval: 0
+            status: 0 # initial status, optional
             driver:
                 id: vr1.default
                 config:
@@ -123,10 +140,15 @@ The second example shows how to deploy a sensor and logical variable:
                 id: somedriver.default
                 config:
                     port: 1
+                value: 77 # initial value, optional, initial status for sensor
+                          # is not required (automatically set to 1 - enabled)
+
     lvar:
         group1/timer1:
             controller: lm/lm1
             expires: 30
+            status: 0 # initial status, optional
+            value: 77 # initial value, optional
 
 Macros
 ------
