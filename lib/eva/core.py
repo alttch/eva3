@@ -842,6 +842,8 @@ def load_cvars(fname=None):
     cvars.clear()
     env.clear()
     env.update(os.environ.copy())
+    env['EVA_VERSION'] = __version__
+    env['EVA_BUILD'] = str(product.build)
     if not 'PATH' in env:
         env['PATH'] = ''
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
