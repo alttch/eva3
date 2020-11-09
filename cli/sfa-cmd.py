@@ -1031,39 +1031,57 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             print('Starting {}deployment of {}'.format('un' if und else '',
                                                        props['f']))
             # ===== BEFORE TASKS =====
+            import time
             print('Executing commands in before-{}deploy...'.format(
                 'un' if und else ''))
-            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
-                if v:
-                    for a in self.dict_safe_get(
-                            v, 'before-{}deploy'.format('un' if und else ''),
-                        []):
-                        try:
-                            func = a['api']
-                            can_pass_err = a.get('_pass')
-                            params = a.copy()
-                            del params['api']
-                            try:
-                                del params['_pass']
-                            except:
-                                pass
-                        except Exception as e:
-                            raise Exception(
-                                'Controller {}, invalid before-{}deploy, {} {}'.
-                                format(c, 'un' if und else '',
-                                       e.__class__.__name__, e))
-                        print(' -- {} {}'.format(func, params))
-                        code = macall({
-                            'i': c,
-                            'f': func,
-                            'p': params
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            msg = f'API call failed, code {code}'
-                            if can_pass_err:
-                                self.print_warn(msg)
+
+            def execute_custom_tasks(step):
+                for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+                    if v:
+                        for a in self.dict_safe_get(
+                                v, '{}-{}deploy'.format(step, 'un' if und else ''),
+                            []):
+                            if 'api' in a:
+                                try:
+                                    func = a['api']
+                                    can_pass_err = a.get('_pass')
+                                    params = a.copy()
+                                    del params['api']
+                                    try:
+                                        del params['_pass']
+                                    except:
+                                        pass
+                                except Exception as e:
+                                    raise Exception(
+                                        'Controller {}, invalid before-{}deploy, {} {}'
+                                        .format(c, 'un' if und else '',
+                                                e.__class__.__name__, e))
                             else:
-                                raise Exception(msg)
+                                f = a['function']
+                                if f == 'sleep':
+                                    func = time.sleep
+                                else:
+                                    raise RuntimeError(f'function unsupported: {f}')
+                                args = a.get('args', [])
+                                kwargs = a.get('kwargs', {})
+                                params = str(args) + ' ' + str(kwargs)
+                            print(' -- {}: {} {}'.format('' if callable(func) else c,
+                                func.__name__ if callable(func) else func, params))
+                            if callable(func):
+                                func(*args, **kwargs)
+                            else:
+                                code = macall({
+                                    'i': c,
+                                    'f': func,
+                                    'p': params
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    msg = f'API call failed, code {code}'
+                                    if can_pass_err:
+                                        self.print_warn(msg)
+                                    else:
+                                        raise Exception(msg)
+            execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
                 self._perform_deploy(props, cfg, macall, dirname)
@@ -1072,37 +1090,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             # ===== AFTER TASKS =====
             print('Executing commands in after-{}deploy...'.format(
                 'un' if und else ''))
-            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
-                if v:
-                    for a in self.dict_safe_get(
-                            v, 'after-{}deploy'.format('un' if und else ''),
-                        []):
-                        try:
-                            func = a['api']
-                            can_pass_err = a.get('_pass')
-                            params = a.copy()
-                            del params['api']
-                            try:
-                                del params['_pass']
-                            except:
-                                pass
-                        except Exception as e:
-                            raise Exception(
-                                'Controller {}, invalid after-{}deploy, {} {}'.
-                                format(c, 'un' if und else '',
-                                       e.__class__.__name__, e))
-                        print(' -- {} {}'.format(func, params))
-                        code = macall({
-                            'i': c,
-                            'f': func,
-                            'p': params
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            msg = f'API call failed, code {code}'
-                            if can_pass_err:
-                                self.print_warn(msg)
-                            else:
-                                raise Exception(msg)
+            execute_custom_tasks('after')
             if props.get('save'):
                 print('Saving configurations')
                 for c in controllers:
@@ -1297,7 +1285,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         else:
                             raise RuntimeError(
                                 f'setting {prop} for {tp} is unsupported')
-                        params = { 'i': i }
+                        params = {'i': i}
                         if prop == 'status':
                             params['s'] = val
                         else:

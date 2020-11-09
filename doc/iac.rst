@@ -75,8 +75,8 @@ Local files can be uploaded into remote controller runtime directory:
 File list: local/remote files, separated with ":". If remote directory doesn't
 exist, it will be created automatically.
 
-After deploy
-~~~~~~~~~~~~
+Before/After deploy
+~~~~~~~~~~~~~~~~~~~
 
 Controller API calls may be automatically executed after deployment is
 complete:
@@ -85,6 +85,8 @@ complete:
 
     controller:
         lm/lm1:
+            before-deploy:
+                - { api: reset, i: timers/timer1 }
             after-deploy:
                 - { api: clear, i: timers/timer1 }
                 - { api: reload_controller, i: uc/uc1 }
@@ -100,6 +102,18 @@ API call (warning will be printed).
 
     It is usually recommended to call *reload_controller* for :doc:`/lm/lm` to
     let it instantly load newly deployed items from connected UCs.
+
+Delaying execution of the next before/after deploy command. E.g. let's reload
+remote UC and wait 5 seconds until its core is restarted:
+
+.. code:: yaml
+
+    controller:
+      uc/uc1:
+        after-deploy:
+          - api: shutdown_core
+          - function: sleep
+            args: [ 5 ]
 
 Items
 -----
