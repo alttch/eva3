@@ -52,6 +52,7 @@ SFA
     * PVT serving as /pvt/path/to/file
     * cloud deploy: "status" and "value" props in deployment files
     * cloud deploy: module uploads and binary files support
+    * cloud deploy: skip busy drivers/PHIs during undeployment
 
 
 3.3.1 (2020-08-26)
