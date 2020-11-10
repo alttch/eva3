@@ -42,7 +42,7 @@ class GenericX:
         return True
 
     def validate_config_whi(self,
-                            config={},
+                            config=None,
                             config_type='config',
                             allow_extra=False,
                             ignore_private=False,
@@ -66,6 +66,8 @@ class GenericX:
         Raises:
             eva.exceptions.InvalidParameter: if configuration is invalid
         """
+        if config is None:
+            config = {}
 
         def _convert_type(v, type_required):
             if type_required == 'any':
