@@ -330,7 +330,7 @@ class CMDAPI(object):
 
         Optional:
             a: string of command arguments, separated by spaces (passed to the
-                script)
+                script) or array (list)
             w: wait (in seconds) before API call sends a response. This allows
                 to try waiting until command finish
             t: maximum time of command execution. If the command fails to finish
@@ -340,15 +340,19 @@ class CMDAPI(object):
         if cmd[0] == '/' or cmd.find('..') != -1:
             return None
         if args is not None:
-            try:
-                _args = tuple(shlex.split(str(args)))
-            except:
-                _args = tuple(str(args).split(' '))
+            if isinstance(args, list) or isinstance(args, tuple):
+                _args = tuple(args)
+            else:
+                try:
+                    _args = tuple(shlex.split(str(args)))
+                except:
+                    _args = tuple(str(args).split(' '))
         else:
             _args = ()
+        _args = tuple(str(a) for a in _args)
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
-                (cmd, ''.join(list(_args)), timeout))
+                (cmd, ' '.join(_args), timeout))
         eva.core.spawn(_c.run)
         if wait:
             eva.core.wait_for(_c.xc.is_finished, wait)
