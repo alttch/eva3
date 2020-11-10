@@ -900,7 +900,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             result = requests.get(target)
             if not result.ok:
                 raise Exception('http code {}'.format(result.status_code))
-            return result.text
+            return result.text if file_read_mode == 'r' else result.content
         else:
             with open(target, file_read_mode) as fd:
                 return fd.read()
@@ -997,6 +997,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if not und:
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
+                                try:
+                                    self._read_uri(fname, dirname, 'rb')
+                                except:
+                                    raise Exception(
+                                        ('{}: {} unable to open ' +
+                                         'file for upload').format(c, fname))
+                    if 'phi' in v:
+                        for phi, phi_data in self.dict_safe_get(v, 'phi',
+                                                                {}).items():
+                            if 'src' in phi_data:
                                 try:
                                     self._read_uri(fname, dirname, 'rb')
                                 except:
@@ -1188,6 +1198,21 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'phi', {}).items():
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                    if 'src' in vv:
+                        print(' -- {}: {} -> {}'.format(c, vv['src'], i))
+                        mod_source = self._read_uri(vv['src'])
+                        code = macall({
+                            'i': c,
+                            'f': 'put_phi_mod',
+                            'p': {
+                                'm': vv['module'],
+                                'c': mod_source,
+                                'force': True
+                            }
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
                     code = macall({
                         'i': c,
                         'f': 'load_phi',

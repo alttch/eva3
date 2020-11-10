@@ -50,7 +50,8 @@ SFA
 ---
 
     * PVT serving as /pvt/path/to/file
-    * "status" and "value" props in deployment files
+    * cloud deploy: "status" and "value" props in deployment files
+    * cloud deploy: module uploads and binary files support
 
 
 3.3.1 (2020-08-26)

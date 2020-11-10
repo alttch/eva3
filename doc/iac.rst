@@ -49,6 +49,7 @@ Here is an example, which:
             phi:
                 vr1:
                     module: vrtrelay
+                    # src: path/to/module
                 vr2:
                     module: vrtrelay
                     config:
@@ -58,6 +59,9 @@ Here is an example, which:
                     module: multistep
                     config:
                         bose: true
+
+"src" field tells deployment function to get PHI module from file or URL and
+upload it to the target controller.
 
 Uploading files
 ~~~~~~~~~~~~~~~
