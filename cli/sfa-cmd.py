@@ -1039,7 +1039,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                     if v:
                         for a in self.dict_safe_get(
-                                v, '{}-{}deploy'.format(step, 'un' if und else ''),
+                                v, '{}-{}deploy'.format(step,
+                                                        'un' if und else ''),
                             []):
                             if 'api' in a:
                                 try:
@@ -1061,12 +1062,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 if f == 'sleep':
                                     func = time.sleep
                                 else:
-                                    raise RuntimeError(f'function unsupported: {f}')
+                                    raise RuntimeError(
+                                        f'function unsupported: {f}')
                                 args = a.get('args', [])
                                 kwargs = a.get('kwargs', {})
                                 params = str(args) + ' ' + str(kwargs)
-                            print(' -- {}: {} {}'.format('' if callable(func) else c,
-                                func.__name__ if callable(func) else func, params))
+                            print(' -- {}: {} {}'.format(
+                                '' if callable(func) else c,
+                                func.__name__ if callable(func) else func,
+                                params))
                             if callable(func):
                                 func(*args, **kwargs)
                             else:
@@ -1081,6 +1085,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
+
             execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
@@ -1135,9 +1140,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'i': c,
                             'f': 'file_put',
                             'p': {
-                                'i': remote_file,
-                                'm': base64.b64encode(self._read_uri(fname, dirname, 'rb')).decode(),
-                                'b': True
+                                'i':
+                                    remote_file,
+                                'm':
+                                    base64.b64encode(
+                                        self._read_uri(fname, dirname,
+                                                       'rb')).decode(),
+                                'b':
+                                    True
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
