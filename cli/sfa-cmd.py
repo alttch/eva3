@@ -1523,6 +1523,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('Driver {} not found'.format(i))
+                    elif code == apiclient.result_busy:
+                        self.print_warn('Driver {} is in use'.format(i))
                     elif code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         # ===== PHI UNLOAD =====
@@ -1540,6 +1542,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('PHI {} not found'.format(i))
+                    elif code == apiclient.result_busy:
+                        self.print_warn('PHI {} is in use'.format(i))
                     elif code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         # ===== CVARS =====
