@@ -176,6 +176,13 @@ mkdir -p ./xc/extensions || exit 1
 (cd lib/eva/lm && ln -sf ../../../xc/extensions . ) || exit 1
 (cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
 
+if [ ! -d ./runtime/xc/cmd ]; then
+  if [ -d ./xc/cmd ]; then
+    mv -f ./xc/cmd runtime/xc/ || exit 1
+    (cd xc && ln -sf ../runtime/xc/cmd) || exit 1
+  fi
+fi
+
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
 
