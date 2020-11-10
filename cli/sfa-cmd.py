@@ -893,7 +893,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                      del_files=props.get('del_files', False))
 
     @staticmethod
-    def _read_uri(fname, dirname=None):
+    def _read_uri(fname, dirname=None, file_read_mode='r'):
         target = (dirname + '/' + fname) if dirname else fname
         if target.startswith('http://') or target.startswith('https://'):
             import requests
@@ -902,7 +902,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('http code {}'.format(result.status_code))
             return result.text
         else:
-            with open(target) as fd:
+            with open(target, file_read_mode) as fd:
                 return fd.read()
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
@@ -998,7 +998,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
                                 try:
-                                    self._read_uri(fname, dirname)
+                                    self._read_uri(fname, dirname, 'rb')
                                 except:
                                     raise Exception(
                                         ('{}: {} unable to open ' +
@@ -1130,12 +1130,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if remote_file.startswith('/'):
                             remote_file = remote_file[1:]
                         print(' -- {}: {} -> {}'.format(c, fname, remote_file))
+                        import base64
                         code = macall({
                             'i': c,
                             'f': 'file_put',
                             'p': {
                                 'i': remote_file,
-                                'm': self._read_uri(fname, dirname)
+                                'm': base64.b64encode(self._read_uri(fname, dirname, 'rb')).decode(),
+                                'b': True
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
