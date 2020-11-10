@@ -672,7 +672,7 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/cmd',
+               '--exclude=*.md', '--exclude=*.rst', 'runtime',
                'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
@@ -769,7 +769,7 @@ sys.argv = {argv}
 
     def clear_xc(self):
         print('Removing xc')
-        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/* xc/cmd/*'
+        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/*'
         os.system(cmd)
         return True
 
