@@ -7,7 +7,9 @@ Common
 ------
 
     * fix: hosts_allow / hosts_assign in JRPC calls
+    * fix: cmd wait delay
 
+    * cmd API function accepts args as a list
     * install option "--skip-venv". "--skip-check" no longer skips venv building
     * deep code audit and tons of bug fixes
     * Core Plugins API v2, new functions:

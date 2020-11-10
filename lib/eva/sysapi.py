@@ -259,20 +259,13 @@ cmd_status_terminated = 4
 cmd_status_names = ['created', 'running', 'completed', 'failed', 'terminated']
 
 
-class DummyRunner:
-
-    @staticmethod
-    def is_finished():
-        return False
-
-
 class CMD(object):
 
     def __init__(self, cmd, args=None, timeout=None, tki=None):
         self.cmd = fname_remove_unsafe(cmd)
         self.args = args if args else ()
         self.timeout = timeout if timeout else eva.core.config.timeout
-        self.xc = DummyRunner()
+        self.xc = None
         self.status = cmd_status_created
         self.time = {'created': time.time()}
 
@@ -286,6 +279,9 @@ class CMD(object):
         self.status = cmd_status_running
         self.time['running'] = time.time()
         self.xc.run()
+
+    def is_finished(self):
+        return False if self.xc is None else self.xc.is_finished()
 
     def update_status(self):
         if self.status == cmd_status_running:
@@ -355,7 +351,7 @@ class CMDAPI(object):
                 (cmd, ' '.join(_args), timeout))
         eva.core.spawn(_c.run)
         if wait:
-            eva.core.wait_for(_c.xc.is_finished, wait)
+            eva.core.wait_for(_c.is_finished, wait)
         return _c.serialize()
 
 
