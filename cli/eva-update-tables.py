@@ -45,9 +45,13 @@ def append_db_column(table, column, coltype, dbconn):
             table, column, coltype))
         print('OK')
     except sqlalchemy.exc.OperationalError as e:
-        if str(e).lower().find('duplicate') == -1:
+        exc = str(e).lower()
+        if 'duplicate' in exc:
+            print('Already exists')
+        elif 'no such table' in exc:
+            print('table not present')
+        else:
             raise
-        print('Already exists')
 
 
 product_build = -1
@@ -78,9 +82,16 @@ append_db_column('apikeys', 'i_ro', 'VARCHAR(1024)', dbconn)
 append_db_column('apikeys', 'g_ro', 'VARCHAR(1024)', dbconn)
 append_db_column('apikeys', 'cdata', 'VARCHAR(4096)', dbconn)
 
-dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
-dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
-dbconn.execute('update apikeys set cdata = "" where cdata is null')
+try:
+    dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
+    dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
+    dbconn.execute('update apikeys set cdata = "" where cdata is null')
+except sqlalchemy.exc.OperationalError as e:
+    exc = str(e).lower()
+    if 'no such table' in exc:
+        print('table not present')
+    else:
+        raise
 
 eva.core.shutdown()
 print()
