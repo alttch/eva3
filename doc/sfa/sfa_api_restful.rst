@@ -1769,7 +1769,8 @@ Puts a new file into runtime folder. If the file with such name exists, it will 
 Parameters:
 
 * **API Key** API key with *master* permissions
-* **m** file content
+* **m** file content (plain text or base64-encoded)
+* **b** if True - put binary file (decode base64)
 
 
 .. _sfapi_restful_file_set_exec:
@@ -1819,6 +1820,7 @@ get file contents from runtime folder
 Parameters:
 
 * **API Key** API key with *master* permissions
+* **b** if True - force getting binary file (base64-encode content)
 
 
 

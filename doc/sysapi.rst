@@ -943,7 +943,8 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
-* **m** file content
+* **m** file content (plain text or base64-encoded)
+* **b** if True - put binary file (decode base64)
 
 .. _sysapi_file_set_exec:
 
@@ -977,6 +978,7 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
+* **b** if True - force getting binary file (base64-encode content)
 
 .. _sysapi_file_unlink:
 

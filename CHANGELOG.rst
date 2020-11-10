@@ -11,6 +11,7 @@ Common
 
     * cmd API function accepts args as a list
     * xc/cmd moved to runtime
+    * file get/put functions support of binary data
     * install option "--skip-venv". "--skip-check" no longer skips venv building
     * deep code audit and tons of bug fixes
     * Core Plugins API v2, new functions:

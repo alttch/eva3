@@ -561,14 +561,15 @@ class FileAPI(object):
         Args:
             k: .master
             .i: relative path (without first slash)
+            b: if True - force getting binary file (base64-encode content)
         """
-        i = parse_api_params(kwargs, 'i', 'S')
+        i, b = parse_api_params(kwargs, 'ib', 'Sb')
         self._check_file_name(i)
         if not os.path.isfile(eva.core.dir_runtime + '/' + i):
             raise self._file_not_found(i)
         try:
             i = eva.core.dir_runtime + '/' + i
-            with open(i) as fd:
+            with open(i, 'rb') as fd:
                 data = fd.read()
             return data, os.access(i, os.X_OK)
         except:
@@ -589,12 +590,19 @@ class FileAPI(object):
         Args:
             k: .master
             .i: relative path (without first slash)
-            m: file content
+            m: file content (plain text or base64-encoded)
+            b: if True - put binary file (decode base64)
         """
-        i, m = parse_api_params(kwargs, 'im', 'Ss')
+        i, m, b = parse_api_params(kwargs, 'imb', 'Ssb')
         self._check_file_name(i)
         try:
-            raw = '' if m is None else m
+            if m is None:
+                raw = b''
+            elif b:
+                import base64
+                raw = base64.b64decode(m)
+            else:
+                raw = m.encode()
             eva.core.prepare_save()
             if '/' in i:
                 path = ''
@@ -605,7 +613,7 @@ class FileAPI(object):
                     except FileExistsError:
                         pass
             try:
-                with open(eva.core.dir_runtime + '/' + i, 'w') as fd:
+                with open(eva.core.dir_runtime + '/' + i, 'wb') as fd:
                     fd.write(raw)
                 return True
             finally:
@@ -1336,12 +1344,22 @@ class SysHTTP_API_abstract(SysAPI):
         return {kwargs['i']: result} if 'i' in kwargs else result
 
     def file_get(self, **kwargs):
+        i, b = parse_api_params(kwargs, 'ib', 'Sb')
         data, e = super().file_get(**kwargs)
+        try:
+            if b:
+                raise Exception  # force binary
+            data = data.decode()
+            ct = 'text/plain'
+        except:
+            import base64
+            data = base64.b64encode(data).decode()
+            ct = 'application/octet-stream'
         return {
             'file': kwargs.get('i'),
             'data': data,
             'e': e,
-            'content_type': 'text/plain'
+            'content_type': ct
         }
 
     def regenerate_key(self, **kwargs):
