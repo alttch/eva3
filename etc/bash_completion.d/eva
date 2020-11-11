@@ -152,7 +152,7 @@ _eva_sfa_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -319,7 +319,7 @@ _eva_lm_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -536,7 +536,7 @@ _eva_uc_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

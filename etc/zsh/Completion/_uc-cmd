@@ -184,7 +184,7 @@ _uc-cmd_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi

@@ -154,7 +154,7 @@ _eva_sfa_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi
@@ -321,7 +321,7 @@ _eva_lm_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi
@@ -538,7 +538,7 @@ _eva_uc_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi

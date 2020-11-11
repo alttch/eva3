@@ -182,7 +182,7 @@ _uc-cmd_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

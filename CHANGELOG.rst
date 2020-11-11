@@ -53,6 +53,7 @@ SFA
     * cloud deploy: "status" and "value" props in deployment files
     * cloud deploy: module uploads and binary files support
     * cloud deploy: skip busy drivers/PHIs during undeployment
+    * cloud deploy: skip existing items during deployment (optionally)
 
 
 3.3.1 (2020-08-26)

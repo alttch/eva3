@@ -844,6 +844,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                      help='Undeploy old configuration first',
                                      dest='und',
                                      action='store_true')
+        sp_cloud_deploy.add_argument('-s',
+                                     '--skip',
+                                     help='Skip existing items',
+                                     dest='skip',
+                                     action='store_true')
         sp_cloud_deploy.add_argument(
             '-c',
             '--config',
@@ -1064,9 +1069,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         pass
                                 except Exception as e:
                                     raise Exception(
-                                        'Controller {}, invalid before-{}deploy, {} {}'
-                                        .format(c, 'un' if und else '',
-                                                e.__class__.__name__, e))
+                                        ('Controller {}, '
+                                         'invalid before-{}deploy, {} {}'
+                                        ).format(c, 'un' if und else '',
+                                                 e.__class__.__name__, e))
                             else:
                                 f = a['function']
                                 if f == 'sleep':
@@ -1132,6 +1138,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         return self.local_func_result_ok
 
     def _perform_deploy(self, props, cfg, macall, dirname):
+        skip_existing = props.get('skip')
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
@@ -1288,7 +1295,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     }
                 })[1].get('code')
                 if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+                    if code == apiclient.result_already_exists and skip_existing:
+                        print('    [skipped]')
+                    else:
+                        raise Exception('API call failed, code {}'.format(code))
                 if 'driver' in v:
                     print('     - driver {} -> {}'.format(
                         v['driver'].get('id'), i))
@@ -1394,7 +1404,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 }
             })[1].get('code')
             if code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                if code == apiclient.result_already_exists and skip_existing:
+                    print('    [skipped]')
+                else:
+                    raise Exception('API call failed, code {}'.format(code))
         # ===== JOB CREATION =====
         print('Creating scheduled jobs...')
         for i, v in self.dict_safe_get(cfg, 'job', {}).items():
@@ -1412,7 +1425,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 }
             })[1].get('code')
             if code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                if code == apiclient.result_already_exists and skip_existing:
+                    print('    [skipped]')
+                else:
+                    raise Exception('API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
