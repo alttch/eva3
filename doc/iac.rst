@@ -81,8 +81,7 @@ exist, it will be created automatically.
 
 It's possible to use masks for local files, e.g. in the example below, contents
 of "bundle" directory will be uploaded to remote node "runtime/upload",
-directory structure will be duplicated as-is. The paths for file masks should
-always be relative.
+directory structure will be duplicated as-is.
 
 .. code:: yaml
 
@@ -90,6 +89,10 @@ always be relative.
         uc/controller1:
             upload-runtime:
                 - bundle/*:upload/
+
+.. note::
+
+    To upload directory contents recursively, set file mask to \*\*
 
 Before/After deploy
 ~~~~~~~~~~~~~~~~~~~

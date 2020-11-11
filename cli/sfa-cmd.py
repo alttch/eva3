@@ -1010,11 +1010,6 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                             ('{}: {} unable to open ' +
                                              'file for upload').format(
                                                  c, fname))
-                                elif fname.startswith('/') or fname.startswith(
-                                        '..'):
-                                    raise Exception((
-                                        '{}: {} file path should be relative ' +
-                                        'file for upload').format(c, fname))
                     if 'phi' in v:
                         for phi, phi_data in self.dict_safe_get(v, 'phi',
                                                                 {}).items():
@@ -1146,7 +1141,33 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         print('-' * 60)
         return self.local_func_result_ok
 
+    @staticmethod
+    def _get_files(f):
+        result = []
+        fname, remote_file = f.split(':')
+        if '*' in fname:
+            import glob
+            for f in glob.glob(fname, recursive=True):
+                if os.path.islink(f) or os.path.isfile(f):
+                    if not remote_file.endswith('/'):
+                        remote_file += '/'
+                    if remote_file.startswith('/'):
+                        remote_file = remote_file[1:]
+                    if '/' in f:
+                        fremote = f[fname.find('*'):]
+                    else:
+                        fremote = f
+                    result.append((f, remote_file + fremote))
+        else:
+            if not remote_file or remote_file.endswith('/'):
+                remote_file += os.path.basename(fname)
+            if remote_file.startswith('/'):
+                remote_file = remote_file[1:]
+            result.append((fname, remote_file))
+        return result
+
     def _perform_deploy(self, props, cfg, macall, dirname):
+
         skip_existing = props.get('skip')
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
@@ -1155,24 +1176,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 if 'upload-runtime' in v:
                     for f in v['upload-runtime']:
-                        files_to_upload = []
-                        fname, remote_file = f.split(':')
-                        if '*' in fname:
-                            import glob
-                            for f in glob.glob(fname):
-                                if os.path.islink(f) or os.path.isfile(f):
-                                    if not remote_file.endswith('/'):
-                                        remote_file += '/'
-                                    if remote_file.startswith('/'):
-                                        remote_file = remote_file[1:]
-                                    files_to_upload.append((f, remote_file + f))
-                        else:
-                            if not remote_file or remote_file.endswith('/'):
-                                remote_file += os.path.basename(fname)
-                            if remote_file.startswith('/'):
-                                remote_file = remote_file[1:]
-                            files_to_upload.append((fname, remote_file))
-                        for fname, remote_file in files_to_upload:
+                        for fname, remote_file in self._get_files(f):
                             print(' -- {}: {} -> {}'.format(
                                 c, fname, remote_file))
                             import base64
@@ -1611,26 +1615,26 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if v:
                     if 'upload-runtime' in v:
                         for f in v['upload-runtime']:
-                            fname, remote_file = f.split(':')
-                            if not remote_file or remote_file.endswith('/'):
-                                remote_file += os.path.basename(fname)
-                            if remote_file.startswith('/'):
-                                remote_file = remote_file[1:]
-                            print(' -- {}: {}'.format(c, remote_file))
-                            code = macall({
-                                'i': c,
-                                'f': 'file_unlink',
-                                'p': {
-                                    'i': remote_file,
-                                }
-                            })[1].get('code')
-                            if code == apiclient.result_not_found:
-                                self.print_warn(
-                                    'file {} not found'.format(remote_file))
-                            elif code != apiclient.result_ok:
-                                raise Exception(
-                                    'File deletion failed, API code {}'.format(
-                                        code))
+                            for fname, remote_file in self._get_files(f):
+                                if not remote_file or remote_file.endswith('/'):
+                                    remote_file += os.path.basename(fname)
+                                if remote_file.startswith('/'):
+                                    remote_file = remote_file[1:]
+                                print(' -- {}: {}'.format(c, remote_file))
+                                code = macall({
+                                    'i': c,
+                                    'f': 'file_unlink',
+                                    'p': {
+                                        'i': remote_file,
+                                    }
+                                })[1].get('code')
+                                if code == apiclient.result_not_found:
+                                    self.print_warn(
+                                        'file {} not found'.format(remote_file))
+                                elif code != apiclient.result_ok:
+                                    raise Exception(
+                                        'File deletion failed, API code {}'.
+                                        format(code))
 
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
