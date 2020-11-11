@@ -1077,6 +1077,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 f = a['function']
                                 if f == 'sleep':
                                     func = time.sleep
+                                elif f == 'system':
+                                    func = os.system
                                 else:
                                     raise RuntimeError(
                                         f'function unsupported: {f}')

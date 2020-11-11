@@ -107,8 +107,14 @@ API call (warning will be printed).
     It is usually recommended to call *reload_controller* for :doc:`/lm/lm` to
     let it instantly load newly deployed items from connected UCs.
 
-Delaying execution of the next before/after deploy command. E.g. let's reload
-remote UC and wait 5 seconds until its core is restarted:
+Additional deploy functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sleep
+^^^^^
+
+Delays execution of next before/after deploy commands. E.g. let's reload remote
+UC and wait 5 seconds until its core is restarted:
 
 .. code:: yaml
 
@@ -118,6 +124,19 @@ remote UC and wait 5 seconds until its core is restarted:
           - api: shutdown_core
           - function: sleep
             args: [ 5 ]
+
+system
+^^^^^^
+
+Executes (local) system command:
+
+.. code:: yaml
+
+    controller:
+      uc/uc1:
+        after-deploy:
+          - function: system
+            args: [ 'ls' ]
 
 Items
 -----

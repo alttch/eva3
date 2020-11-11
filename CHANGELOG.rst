@@ -54,6 +54,7 @@ SFA
     * cloud deploy: module uploads and binary files support
     * cloud deploy: skip busy drivers/PHIs during undeployment
     * cloud deploy: skip existing items during deployment (optionally)
+    * cloud deploy: local functions ("sleep", "system")
 
 
 3.3.1 (2020-08-26)
