@@ -167,7 +167,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
             v = ''
         else:
             v = str(v)
-        return item.update_set_state(status=s, value=v)
+        item.update_set_state(status=s, value=v)
+        return True
 
     @log_i
     def reset(self, **kwargs):
