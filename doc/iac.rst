@@ -79,6 +79,18 @@ Local files can be uploaded into remote controller runtime directory:
 File list: local/remote files, separated with ":". If remote directory doesn't
 exist, it will be created automatically.
 
+It's possible to use masks for local files, e.g. in the example below, contents
+of "bundle" directory will be uploaded to remote node "runtime/upload",
+directory structure will be duplicated as-is. The paths for file masks should
+always be relative.
+
+.. code:: yaml
+
+    controller:
+        uc/controller1:
+            upload-runtime:
+                - bundle/*:upload/
+
 Before/After deploy
 ~~~~~~~~~~~~~~~~~~~
 

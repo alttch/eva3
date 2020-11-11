@@ -1002,12 +1002,19 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if not und:
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
-                                try:
-                                    self._read_uri(fname, dirname, 'rb')
-                                except:
-                                    raise Exception(
-                                        ('{}: {} unable to open ' +
-                                         'file for upload').format(c, fname))
+                                if '*' not in fname:
+                                    try:
+                                        self._read_uri(fname, dirname, 'rb')
+                                    except:
+                                        raise Exception(
+                                            ('{}: {} unable to open ' +
+                                             'file for upload').format(
+                                                 c, fname))
+                                elif fname.startswith('/') or fname.startswith(
+                                        '..'):
+                                    raise Exception((
+                                        '{}: {} file path should be relative ' +
+                                        'file for upload').format(c, fname))
                     if 'phi' in v:
                         for phi, phi_data in self.dict_safe_get(v, 'phi',
                                                                 {}).items():
@@ -1148,43 +1155,59 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 if 'upload-runtime' in v:
                     for f in v['upload-runtime']:
+                        files_to_upload = []
                         fname, remote_file = f.split(':')
-                        if not remote_file or remote_file.endswith('/'):
-                            remote_file += os.path.basename(fname)
-                        if remote_file.startswith('/'):
-                            remote_file = remote_file[1:]
-                        print(' -- {}: {} -> {}'.format(c, fname, remote_file))
-                        import base64
-                        code = macall({
-                            'i': c,
-                            'f': 'file_put',
-                            'p': {
-                                'i':
-                                    remote_file,
-                                'm':
-                                    base64.b64encode(
-                                        self._read_uri(fname, dirname,
-                                                       'rb')).decode(),
-                                'b':
-                                    True
-                            }
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            raise Exception(
-                                'File upload failed, API code {}'.format(code))
-                        if os.access(fname, os.X_OK):
+                        if '*' in fname:
+                            import glob
+                            for f in glob.glob(fname):
+                                if os.path.islink(f) or os.path.isfile(f):
+                                    if not remote_file.endswith('/'):
+                                        remote_file += '/'
+                                    if remote_file.startswith('/'):
+                                        remote_file = remote_file[1:]
+                                    files_to_upload.append((f, remote_file + f))
+                        else:
+                            if not remote_file or remote_file.endswith('/'):
+                                remote_file += os.path.basename(fname)
+                            if remote_file.startswith('/'):
+                                remote_file = remote_file[1:]
+                            files_to_upload.append((fname, remote_file))
+                        for fname, remote_file in files_to_upload:
+                            print(' -- {}: {} -> {}'.format(
+                                c, fname, remote_file))
+                            import base64
+                            code = 0
                             code = macall({
                                 'i': c,
-                                'f': 'file_set_exec',
+                                'f': 'file_put',
                                 'p': {
-                                    'i': remote_file,
-                                    'e': 1
+                                    'i':
+                                        remote_file,
+                                    'm':
+                                        base64.b64encode(
+                                            self._read_uri(
+                                                fname, dirname, 'rb')).decode(),
+                                    'b':
+                                        True
                                 }
                             })[1].get('code')
                             if code != apiclient.result_ok:
                                 raise Exception(
-                                    'File set exec failed, API code {}'.format(
+                                    'File upload failed, API code {}'.format(
                                         code))
+                            if os.access(fname, os.X_OK):
+                                code = macall({
+                                    'i': c,
+                                    'f': 'file_set_exec',
+                                    'p': {
+                                        'i': remote_file,
+                                        'e': 1
+                                    }
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    raise Exception(
+                                        'File set exec failed, API code {}'.
+                                        format(code))
         # ===== CVARS =====
         print('Creating cvars...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
