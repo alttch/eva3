@@ -1033,8 +1033,8 @@ def create_item(item_id, item_type, group=None, save=False):
         grp = '/'.join(item_id.split('/')[:-1])
     if not grp:
         grp = 'nogroup'
-    if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
-        not re.match("^[A-Za-z0-9_\./-]*$", grp):
+    if not re.match(eva.core.OID_ALLOWED_SYMBOLS, i) or \
+        not re.match(eva.core.OID_ALLOWED_SYMBOLS, grp):
         raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
     i_full = grp + '/' + i

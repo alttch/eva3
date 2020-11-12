@@ -159,6 +159,8 @@ corescript_globals = {
     'CS_EVENT_MQTT': CS_EVENT_MQTT
 }
 
+OID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
+
 
 def critical(log=True, from_driver=False):
     if _flags.ignore_critical:
