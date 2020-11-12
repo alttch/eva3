@@ -1,0 +1,23 @@
+#!/bin/bash
+
+VERSION=`grep "^__version__ = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'| tr -d '"'`
+git branch|grep ^*|grep ${VERSION} > /dev/null 2>&1
+if [ $? -eq 1 ] && [ "$1" != "--test" ]; then
+  echo -n "wrong branch detected: "
+  git branch|grep ^*|awk '{print $2 }'
+  echo "I need ${VERSION}"
+  exit 1
+fi
+BRANCH=${VERSION}
+BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
+
+echo "Releasing EVA distribution ver ${VERSION} build ${BUILD}"
+
+./dev/release.py ${VERSION} ${BUILD} -u $@ || exit 1
+
+if [ "$1" = "--test" ]; then
+  echo "TEST ON" | figlet
+else
+  jks build get.eva-ics.com
+  echo RELEASED! | figlet
+fi

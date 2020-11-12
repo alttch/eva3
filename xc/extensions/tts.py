@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.6"
+__version__ = "1.3.0"
 __description__ = "Text-to-speech via ttsbroker"
-__api__ = 5
+__api__ = 7
 __mods_required__ = ['ttsbroker']
 
 __config_help__ = [{
@@ -17,14 +17,10 @@ __config_help__ = [{
     'type': 'str',
     'required': False
 }, {
-    'name':
-    'sdir',
-    'help':
-    'Directory where audio files are permanently stored',
-    'type':
-    'str',
-    'required':
-    False
+    'name': 'sdir',
+    'help': 'Directory where audio files are permanently stored',
+    'type': 'str',
+    'required': False
 }, {
     'name': 'cdir',
     'help': 'Directory where audio files are cached',
@@ -64,7 +60,7 @@ __functions__ = {
 __iec_functions__ = {
     'say': {
         'description':
-        'say text',
+            'say text',
         'var_in': [{
             'var': 'text',
             'description': 'text to say'
@@ -113,8 +109,10 @@ class LMExt(GenericExt):
                 self.log_error('invalid gain value: %s' % self.cfg.get('g'))
                 raise
             try:
-                if 'd' in self.cfg: device = int(self.cfg.get('d'))
-                else: device = None
+                if 'd' in self.cfg:
+                    device = int(self.cfg.get('d'))
+                else:
+                    device = None
             except:
                 self.log_error('invalid device number: %s' % self.cfg.get('d'))
                 raise
@@ -133,15 +131,14 @@ class LMExt(GenericExt):
                 self.log_error('invalid options file: %s' % self.cfg.get('o'))
                 raise
             try:
-                self.tts = mod.TTSEngine(
-                    storage_dir=self.cfg.get('sdir'),
-                    cache_dir=self.cfg.get('cdir'),
-                    cache_format=self.cfg.get('cf', 'wav'),
-                    device=device,
-                    gain=gain,
-                    provider=self.cfg.get('p'),
-                    provider_options=opts,
-                    cmd=self.cfg.get('cmd'))
+                self.tts = mod.TTSEngine(storage_dir=self.cfg.get('sdir'),
+                                         cache_dir=self.cfg.get('cdir'),
+                                         cache_format=self.cfg.get('cf', 'wav'),
+                                         device=device,
+                                         gain=gain,
+                                         provider=self.cfg.get('p'),
+                                         provider_options=opts,
+                                         cmd=self.cfg.get('cmd'))
             except:
                 self.log_error('unable to init TTS broker')
                 raise
@@ -157,9 +154,15 @@ class LMExt(GenericExt):
             self.ready = False
 
     def say(self, text, **kwargs):
-        if text is None: return False
+        if text is None:
+            return False
         try:
             return self.tts.say(text, **kwargs)
         except:
             log_traceback()
             return False
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 **kwargs)

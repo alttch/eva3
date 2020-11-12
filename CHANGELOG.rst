@@ -1,8 +1,104 @@
 EVA ICS CHANGELOG
 *****************
 
-3.3.0 (2019-02-07)
-===========
+3.3.2 (TBA)
+
+Common
+------
+
+    * fix: hosts_allow / hosts_assign in JRPC calls
+    * fix: cmd wait delay
+
+    * cmd API function accepts args as a list
+    * xc/cmd moved to runtime
+    * file get/put functions support of binary data
+    * install option "--skip-venv". "--skip-check" no longer skips venv building
+    * deep code audit and tons of bug fixes
+    * Core Plugins API v2, new functions:
+        * create_db_engine
+        * format_db_uri
+        * get_thread_local
+        * has_thread_local
+        * set_thread_local
+        * clear_thread_local
+        * sendmail
+    * "set_user_password" SYS API function now allows logged in users to change
+      their passwords
+    * update with pre-downloaded tarballs
+    * mailer feature available in all controller types (used by core plugins)
+    * "cdata" (custom data) API key field
+    * "file_put" method automatically creates required directories
+
+    * RESTful and direct API marked as deprecated
+
+UC
+--
+
+    * fix: Modbus/UDP (server) packet processing
+    * fix: Modbus serial custom byte size
+
+    * data pullers
+    * auto_off unit state processor can be cancelled / modified while running
+    * "server cleanup" CLI command (cleans state db)
+
+LM PLC
+------
+
+    * SSL, TLS and SMTP auth support for mailer
+
+SFA
+---
+
+    * PVT serving as /pvt/path/to/file
+    * cloud deploy: "status" and "value" props in deployment files
+    * cloud deploy: module uploads and binary files support
+    * cloud deploy: skip busy drivers/PHIs during undeployment
+    * cloud deploy: skip existing items during deployment (optionally)
+    * cloud deploy: local functions ("sleep", "system")
+    * cloud deploy: file masks in upload-remote
+
+
+3.3.1 (2020-08-26)
+==================
+
+Common
+------
+
+    * fix: auth tokens are now always correctly destroyed at logout
+    * new generic extension engine: restarting controller after PHI, LPI & LM
+      PLC Ext module updates is no longer necessary (just load the new module)
+    * "interval" notifier property allows to schedule item state telemetry
+      notifications with the specified time interval.
+    * MS Active Directory authentication support
+    * custom primary log formats (e.g. JSON logs)
+    * extended API logging, ACI (API Call Info) core object, "api_log_get" SYS
+      API function
+    * Core plug-ins
+    * JSON notifiers "list" method to send all data in list format
+
+UC
+--
+
+    * Added "enable" flag in API and CLI to enable unit actions / sensor updates
+      right after creation.
+    * Driver API 9: PHI & LPI mods config validation, Ethernet/IP client helper
+
+
+LM PLC
+------
+
+    * Extension API 7: config validation
+
+SFA
+---
+
+    * supervisor features: API lock/unlock, broadcast messages
+    * SFA templates "get_aci" and "import_module" functions
+    * before/after deploy API calls can be skipped in case of failure
+
+
+3.3.0 (2020-02-05)
+==================
 
 Common
 ------

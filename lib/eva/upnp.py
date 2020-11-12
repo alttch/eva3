@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 """
 UPnP services
 
@@ -48,7 +48,8 @@ import eva.core
 
 from eva.tools import parse_host_port
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
+
 from neotasker import background_worker
 
 config = SimpleNamespace(host=None,
@@ -112,6 +113,8 @@ def discover(st,
              discard_headers=['Cache-control', 'Host'],
              timeout=None):
     """
+    discover uPnP equipment
+
     Args:
         st: service type
         ip: multicast ip
@@ -302,12 +305,15 @@ def _t_dispatcher(host, port):
     while _flags.dispatcher_active:
         try:
             data, addr = server_socket.recvfrom(4096)
-            if not _flags.dispatcher_active: return
-            if not data: continue
+            if not _flags.dispatcher_active:
+                return
+            if not data:
+                continue
             address = addr[0]
             logging.debug('UPnP packet from %s' % address)
             data = data.decode('utf-8').strip().replace('\r', '').split('\n')
-            if not data[0].lower().startswith('m-search * http/1'): continue
+            if not data[0].lower().startswith('m-search * http/1'):
+                continue
             headers = {}
             for d in data[1:]:
                 try:

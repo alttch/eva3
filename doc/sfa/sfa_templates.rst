@@ -24,7 +24,7 @@ The following variables are available in all templates:
 * All :ref:`custom user-defined variables<sfa_cvars>`
 
 * **server** contains a dict with a system and current API key info (equal to
-  SFA API :ref:`test<sfapi_test>` function result) plus an additional key
+  SFA API :ref:`test<sysapi_test>` function result) plus an additional key
   **remote_ip** which contains either request IP address or value of
   *X-Real-IP* variable (if set by frontend server).
 
@@ -53,10 +53,10 @@ Get list of item groups
 
 where:
 
-* **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
-
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required
+
+* **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
@@ -79,7 +79,7 @@ where:
 * **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
 
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`), required
+  *LV* for :ref:`lvar<lvar>`), required if ID is not in oid format
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
@@ -113,3 +113,30 @@ Example. Let's warn user when specified UC controller is not connected:
         UC controller is not connected
     {%- endif %}
 
+get_aci
+-------
+
+Get current API call info. Valid params are:
+
+* **id** unique API request ID
+* **u** current user
+* **utp** current user type
+* **key_id** current API key id
+
+Example:
+
+.. code-block:: jinja
+
+    Logged in as: {{ get_aci('u') }}
+
+import_module
+-------------
+
+Import any available Python module (mapped to *importlib.import_module*)
+
+Example:
+
+.. code-block:: jinja
+
+    {% set os=import_module('os') %}
+    Server PID: {{ os.getpid() }}

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+VERSION=`grep "^__version__ = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'| tr -d '"'`
+BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
+
+rst2html5.py CHANGELOG.rst CHANGELOG.html
+
+#scp -P 222 CHANGELOG.html root@d1.altertech.net:/www/download/eva-ics/${VERSION}/nightly/
+#scp -P 222 CHANGELOG.html root@d1.altertech.net:/www/download/test.eva-ics/${VERSION}/nightly/
+
+gsutil cp -a public-read -z html CHANGELOG.html gs://get.eva-ics.com/${VERSION}/nightly/
+
+rm -f CHANGELOG.html

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import os
 import getopt
@@ -29,7 +29,8 @@ Usage: test-uc-xc <xc> [args]
 
 cvars_fname = dir_runtime + '/uc_cvars.json'
 
-if len(sys.argv) < 2: usage()
+if len(sys.argv) < 2:
+    usage()
 print('Reading custom vars from %s' % cvars_fname)
 print()
 
@@ -41,7 +42,8 @@ for x in sorted(cvars.keys()):
     print('%s = "%s"' % (x, cvars[x]))
 
 env = os.environ.copy()
-if not 'PATH' in env: env['PATH'] = ''
+if not 'PATH' in env:
+    env['PATH'] = ''
 env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
 env.update(cvars)
 
@@ -53,11 +55,13 @@ print('stime: %f' % stime)
 
 c = sys.argv[1]
 
-if c[0] != '.' and c[0] != '/': c = './' + c
+if c[0] != '.' and c[0] != '/':
+    c = './' + c
 
 cmd = [c]
 
-if len(sys.argv) > 1: cmd += sys.argv[2:]
+if len(sys.argv) > 1:
+    cmd += sys.argv[2:]
 
 try:
     p = subprocess.Popen(args=cmd,
@@ -79,7 +83,9 @@ print('duration: %f sec  ( %f msec )' % (diff, diff * 1000))
 print("exitcode: %u" % p.returncode)
 print()
 print("---- STDOUT ----")
-if out: print(out.decode())
+if out:
+    print(out.decode())
 print("---- STDERR ----")
-if err: print(err.decode())
+if err:
+    print(err.decode())
 print("----------------")

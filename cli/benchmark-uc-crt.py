@@ -1,5 +1,14 @@
+import argparse
 import sys
 import time
+import neotermcolor
+
+neotermcolor.set_style('debug', color='grey', attrs='bold')
+neotermcolor.set_style('error', color='red', attrs='bold')
+neotermcolor.set_style('warning', color='yellow')
+neotermcolor.set_style('counter', color='yellow', attrs='bold')
+
+cprint = neotermcolor.cprint
 
 from pathlib import Path
 sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
@@ -9,7 +18,17 @@ from eva.client.apiclient import result_ok
 
 c = APIClientLocal('uc')
 
-iterations = 10000
+ap = argparse.ArgumentParser()
+
+ap.add_argument('-n',
+                '--iterations',
+                help='Iterations to execute',
+                type=int,
+                default=10000)
+
+a = ap.parse_args()
+
+iterations = a.iterations
 
 turn_debug = False
 
@@ -17,7 +36,9 @@ turn_debug = False
 def api_call(func, params=None, eoe=True):
     code, result = c.call(func, params)
     if eoe and code != result_ok:
-        print('Function {}({}) failed, API code: {}'.format(func, params, code))
+        cprint(
+            'Function {}({}) failed, API code: {}'.format(func, params, code),
+            '@error')
         sys.exit(1)
     return code, result
 
@@ -25,15 +46,14 @@ def api_call(func, params=None, eoe=True):
 print('EVA ICS UC Core Reaction Time (CRT) benchmark')
 
 print()
-print('Preparing environment...')
+cprint('Preparing environment...', '@debug')
 
 code, result = api_call('test')
 
 if result.get('db_update') == 1:
-    print(
-        'WARNING: db_update is set to "instant"' + \
-                ', this may slow down core benchmark'
-    )
+    cprint(
+        'WARNING: db_update is set to "instant"'
+        ', this may slow down core benchmark', '@warning')
 
 if result.get('debug'):
     print('Disabling debug mode')
@@ -85,7 +105,8 @@ api_call(
 
 params = {}
 
-print('Starting. Please do not perform any API calls during core benchmark')
+cprint('Starting. Please do not perform any API calls during core benchmark',
+       '@warning')
 
 code, result = api_call('test_phi', {
     'i': 'eva_benchmark_vr',
@@ -98,24 +119,24 @@ if result.get('output') != 'OK':
 
 params['i'] = 'eva_benchmark_vs'
 
-print('Executing {} iterations...'.format(iterations))
+print('Executing {} iterations...'.format(
+    neotermcolor.colored(iterations, color='cyan', attrs='bold')))
 
 for a in range(0, iterations):
     params['c'] = '1000=' + str(a + 101)
     p = a / iterations * 100
-    if p and p / 10 == int(p / 10):
-        print('%u%%' % p)
+    if p and p == int(p):
+        cprint(f'\r{p:.0f}%', '@counter', end=' ' * 2, flush=True)
     code, result = api_call('test_phi', params)
     if code != 0:
-        print('FAILED')
+        cprint('FAILED', '@error')
         sys.exit(4)
-    # time.sleep(0.03)
 
-print('100%')
-
-print('Benchmark completed')
+cprint('\r100%', '@counter', end=' ', flush=True)
 
 time.sleep(1)
+
+cprint('\rBenchmark completed', color='green', end=' ' * 20 + '\n')
 
 code, result = api_call('test')
 
@@ -135,9 +156,11 @@ if turn_debug:
 print()
 avg = result.get('benchmark_crt')
 if avg > 0:
-    print('CRT: {:.3f} ms'.format(avg * 1000))
+    print('CRT: ', end='')
+    cprint('{:.3f}'.format(avg * 1000), end='', attrs='normal', color='white')
+    print(' ms')
 else:
-    print('FAILED TO OBTAIN CRT')
+    cprint('FAILED TO OBTAIN CRT', '@error')
     sys.exit(5)
 
 sys.exit(0)

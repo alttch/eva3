@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 version = __version__
 
@@ -33,7 +33,8 @@ class CoreAPIClient(APIClient):
         def data_handler(self, data):
             self.completed.set()
             try:
-                if data[0] != 0: raise ValueError
+                if data[0] != 0:
+                    raise ValueError
                 self.code = data[1]
                 self.body = data[2:]
             except:
@@ -103,11 +104,14 @@ class CoreAPIClient(APIClient):
 
     def set_notifier(self, notifier_id):
         self._notifier_id = notifier_id
-        if self._notifier_id == '': self._notifier_id = None
+        if self._notifier_id == '':
+            self._notifier_id = None
 
     def set_key(self, key, key_id=None):
-        if key is None: return
-        if key_id is None: key_id = eva.core.config.default_cloud_key
+        if key is None:
+            return
+        if key_id is None:
+            key_id = eva.core.config.default_cloud_key
         if key.find(':') != -1:
             (_key_id, _key) = key.split(':', 1)
         else:
@@ -137,7 +141,8 @@ class CoreAPIClient(APIClient):
         """
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
-        if not n: return r
+        if not n:
+            return r
         if rid is None:
             rid = uuid.uuid4().bytes
         else:

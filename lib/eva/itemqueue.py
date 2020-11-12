@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import threading
 from queue import PriorityQueue
@@ -40,8 +40,10 @@ class ActiveItemQueue(object):
         self.action_processor = None
 
     def put_task(self, action, priority=None):
-        if priority: p = priority
-        else: p = self.default_priority
+        if priority:
+            p = priority
+        else:
+            p = self.default_priority
         if self.keep_history:
             self.history_append(action)
         if action.set_pending():
@@ -140,7 +142,8 @@ class ActiveItemQueue(object):
 
 
 async def action_processor(action, **kwargs):
-    if not action.item: return
+    if not action.item:
+        return
     o = kwargs.get('o')
     logging.debug('new action to toss, uuid: %s, priority: %u' % \
             (action.uuid, action.priority))
@@ -192,4 +195,4 @@ async def action_cleaner(**kwargs):
                 logging.warning(
                     '%s action %s too old, status is %s ' % \
                     (o.q_id, a.uuid,
-                        eva.item.ia_status_names[status]))
+                        eva.item.ia_status_names[a.status]))

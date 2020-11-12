@@ -4,7 +4,17 @@ _sfa-cmd_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch reload restart start status stop
+    compadd "$@" cleanup launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi
@@ -24,7 +34,17 @@ _sfa-cmd_controller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" append disable enable list ma-test props reload remove set test
+    compadd "$@" append disable enable list ma-test props reload remove set test upnp-rescan
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_supervisor() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" lock message unlock
   else
     _files
   fi
@@ -44,7 +64,7 @@ _sfa-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" pvt server-config ui
+    compadd "$@" corescript pvt server-config ui
   else
     _files
   fi
@@ -114,7 +134,7 @@ _sfa-cmd_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi
@@ -124,7 +144,7 @@ _sfa-cmd_log() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" critical debug error get info rotate warning
+    compadd "$@" api critical debug error get info warning
   else
     _files
   fi
@@ -134,10 +154,10 @@ _sfa-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clear cloud cmd controller cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state test toggle unlock user
+    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user
   else
     case "${words[2]}" in
-      action|cloud|controller|cvar|cycle|edit|file|key|log|macro|notify|server|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
         _sfa-cmd_${words[2]}
         ;;
       *)

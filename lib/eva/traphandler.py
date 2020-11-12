@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import eva.core
 import threading
@@ -12,7 +12,7 @@ from eva.tools import parse_host_port
 from eva.tools import netacl_match
 
 from netaddr import IPNetwork
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 from neotasker import background_worker
 
 subscribed_items = set()
@@ -94,7 +94,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
 
 
 def start():
-    if not config.host: return False
+    if not config.host:
+        return False
     _port = config.port if config.port else default_port
     _community = config.community if config.community else default_community
     try:

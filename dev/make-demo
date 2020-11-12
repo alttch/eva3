@@ -1,0 +1,13 @@
+#!/bin/sh
+
+ARCH=eva_$1
+
+cd dist || exit 1
+mkdir -p demos
+rm -f demo/${ARCH}.tgz
+cd ../install/demos || exit 1
+tar czvf ../../dist/demos/${ARCH}.tgz ${ARCH} || exit 1
+scp -P 222 ../../dist/demos/${ARCH}.tgz root@d1.altertech.net:/www/download/eva-ics/demos/
+
+gsutil cp -a public-read ../../dist/demos/${ARCH}.tgz gs://get.eva-ics.com/demos/
+

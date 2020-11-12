@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -27,7 +27,8 @@ dir_cwd = os.getcwd()
 
 os.chdir(dir_eva)
 os.environ['EVA_DIR'] = dir_eva
-if not 'PATH' in os.environ: os.environ['PATH'] = ''
+if not 'PATH' in os.environ:
+    os.environ['PATH'] = ''
 os.environ['PATH'] = '{}/xc/shell:'.format(dir_eva) + os.environ['PATH']
 
 exec_before_save = None
@@ -41,6 +42,8 @@ import eva.client.cli
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+from eva.client.cli import ComplUser
+from eva.client.cli import ComplKey
 
 
 class ComplSubshellCmd(ComplGeneric):
@@ -85,7 +88,8 @@ class ComplBackupList(ComplGeneric):
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('backup list')
         result = []
-        if code: return result
+        if code:
+            return result
         for v in data:
             result.append(v['name'])
         return result
@@ -96,7 +100,8 @@ class ComplIOTE(ComplGeneric):
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('iote list')
         result = []
-        if code: return result
+        if code:
+            return result
         for v in data:
             result.append(v['account'])
         return result
@@ -471,7 +476,8 @@ sys.argv = {argv}
             argv=sysargs,
             xp=xp) + c
             os.chdir(dir_cwd)
-            if self.interactive: self.save_readline()
+            if self.interactive:
+                self.save_readline()
             try:
                 eva.client.cli.subshell_exit_code = 0
                 exec(c)
@@ -652,7 +658,8 @@ sys.argv = {argv}
 
     def backup_save(self, params):
         fname = params.get('f')
-        if fname is None: fname = '{}'.format(time.strftime('%Y%m%d%H%M%S'))
+        if fname is None:
+            fname = '{}'.format(time.strftime('%Y%m%d%H%M%S'))
         try:
             os.mkdir(dir_backup)
         except FileExistsError:
@@ -665,7 +672,7 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/cmd',
+               '--exclude=*.md', '--exclude=*.rst', 'runtime',
                'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
@@ -682,13 +689,15 @@ sys.argv = {argv}
         return 0, sorted(result, key=lambda k: k['time'], reverse=True)
 
     def backup_unlink(self, params):
-        if not self.before_save(): return self.local_func_result_failed
+        if not self.before_save():
+            return self.local_func_result_failed
         try:
             os.unlink(dir_backup + '/' + params.get('f') + '.tgz')
         except:
             self.after_save()
             return self.local_func_result_failed
-        if not self.after_save(): return self.local_func_result_failed
+        if not self.after_save():
+            return self.local_func_result_failed
         return self.local_func_result_ok
 
     def backup_restore(self, params):
@@ -696,7 +705,8 @@ sys.argv = {argv}
         if not os.path.isfile(f):
             self.print_err('no such backup')
             return self.local_func_result_failed
-        if not self.before_save(): return self.local_func_result_failed
+        if not self.before_save():
+            return self.local_func_result_failed
         if params.get('file'):
             for i in params.get('file'):
                 try:
@@ -705,7 +715,8 @@ sys.argv = {argv}
                 except:
                     self.after_save()
                     return self.local_func_result_failed
-            if not self.after_save(): return self.local_func_result_failed
+            if not self.after_save():
+                return self.local_func_result_failed
             return self.local_func_result_ok
         if params.get('full'):
             self.clear_runtime(full=True)
@@ -723,7 +734,8 @@ sys.argv = {argv}
             except:
                 self.after_save()
                 return self.local_func_result_failed
-            if not self.after_save(): return self.local_func_result_failed
+            if not self.after_save():
+                return self.local_func_result_failed
             return self.local_func_result_ok
         try:
             if params.get('xc'):
@@ -744,7 +756,8 @@ sys.argv = {argv}
         except:
             self.after_save()
             return self.local_func_result_failed
-        if not self.after_save(): return self.local_func_result_failed
+        if not self.after_save():
+            return self.local_func_result_failed
         return self.local_func_result_ok
 
     def clear_runtime(self, full=False):
@@ -756,7 +769,7 @@ sys.argv = {argv}
 
     def clear_xc(self):
         print('Removing xc')
-        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/* xc/cmd/*'
+        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/*'
         os.system(cmd)
         return True
 
@@ -774,7 +787,8 @@ sys.argv = {argv}
             color='green',
             attrs=[]))
         cmd = ('tar', 'xpf', fname)
-        if json_only: cmd += ('--wildcards', 'runtime/*.json')
+        if json_only:
+            cmd += ('--wildcards', 'runtime/*.json')
         cmd += ('runtime',)
         return False if os.system(' '.join(cmd)) else True
 
@@ -845,7 +859,7 @@ sys.argv = {argv}
         if not params.get('y'):
             if version != new_version:
                 try:
-                    r = requests.get('{}/{}/stable/UPDATE.rst'.format(
+                    r = requests.get('{}/{}/nightly/UPDATE.rst'.format(
                         _update_repo, new_version))
                     if not r.ok:
                         raise Exception('server response code {}'.format(
@@ -865,8 +879,9 @@ sys.argv = {argv}
                 u = ''
             if u != 'YES':
                 return self.local_func_result_empty
-        url = '{}/{}/stable/update.sh'.format(_update_repo, new_version)
-        cmd = ('curl -s ' + url + ' | bash /dev/stdin')
+        url = '{}/{}/nightly/update-{}.sh'.format(_update_repo, new_version,
+                                                  new_build)
+        cmd = ('curl -sL ' + url + ' | bash /dev/stdin')
         if os.system(dir_sbin + '/eva-control stop') or \
             not self.before_save() or \
             os.system(cmd) or \
@@ -886,7 +901,8 @@ sys.argv = {argv}
             except:
                 print()
                 a = ''
-            if a.lower() != 'y': return self.local_func_result_empty
+            if a.lower() != 'y':
+                return self.local_func_result_empty
         print(self.colored('Rebooting...', color='red', attrs=['bold']))
         return self.local_func_result_failed if \
                 os.system('reboot') else self.local_func_result_ok
@@ -898,13 +914,15 @@ sys.argv = {argv}
             except:
                 print()
                 a = ''
-            if a.lower() != 'y': return self.local_func_result_empty
+            if a.lower() != 'y':
+                return self.local_func_result_empty
         print(self.colored('Powering off...', color='red', attrs=['bold']))
         return self.local_func_result_failed if \
                 os.system('poweroff') else self.local_func_result_ok
 
     def add_user_defined_functions(self):
-        if not cmds: return
+        if not cmds:
+            return
         for c in cmds:
             sp = self.sp.add_parser(c['cmd'], help=c['comment'])
 
@@ -913,9 +931,11 @@ sys.argv = {argv}
                 os.system(a) else self.local_func_result_ok
 
     def edit_crontab(self, params):
-        if not self.before_save(): return self.local_func_result_failed
+        if not self.before_save():
+            return self.local_func_result_failed
         c = os.system('crontab -e')
-        if not self.after_save() or c: return self.local_func_result_failed
+        if not self.after_save() or c:
+            return self.local_func_result_failed
         return self.local_func_result_ok
 
     def save(self, params):
@@ -1115,7 +1135,7 @@ banner = """     _______    _____       _______________
   / /___  | |/ / ___ |   _/ // /___ ___/ /
  /_____/  |___/_/  |_|  /___/\____//____/
 
-  www.eva-ics.com (c) 2012-2019 Altertech
+  www.eva-ics.com (c) 2012-2020 Altertech
 """
 if '-I' in sys.argv or '--interactive' in sys.argv:
     print(cli.colored(banner, color='blue'))

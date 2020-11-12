@@ -1,0 +1,75 @@
+#!/bin/bash
+
+VERSION=`grep "^__version__ = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'| tr -d '"'`
+if [ "x$1" = "xmaster" ]; then
+  echo "WARNING. Building from master branch, the build may be very unstable"
+  BRANCH=master
+else
+  git branch|grep ^*|grep -E "${VERSION}|HEAD detached" > /dev/null 2>&1
+  if [ $? -eq 1 ]; then
+    echo -n "wrong branch detected: "
+    git branch|grep ^*|awk '{print $2 }'
+    echo "I need ${VERSION}"
+    exit 1
+  fi
+  BRANCH=${VERSION}
+fi
+BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
+
+echo curl -v https://get.eva-ics.com/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz
+
+( curl -v https://get.eva-ics.com/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz 2>&1|grep "NoSuchKey" ) > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+  echo "Version ${VERSION} build ${BUILD} already exists"
+  exit 2
+fi
+
+echo "Creating EVA distribution ver ${VERSION} build ${BUILD}"
+cd dist || exit 1
+rm -f eva-${VERSION}-${BUILD}.tgz
+rm -rf eva
+#git clone git@localhost:/mnt/git/eva.git || exit 1
+git clone -b ${BRANCH} https://github.com/alttch/eva3|| exit 1
+
+echo "Preparing..."
+
+mv eva3 eva || exit 1
+
+cd eva || exit 1
+rm -rf .git
+rm -rf dev
+rm -f Makefile
+rm -f .gitignore
+rm -f TODO
+rm -f update.sh
+rm -rf install/demos
+
+grep -Rl " ipdb" *
+if [ $? -eq 0 ]; then
+  echo "remove ipdb"
+  exit 1
+fi
+
+../../dev/make-min ${VERSION} ${BUILD} || exit 1
+
+cd ..
+
+echo "Compressing archive"
+
+mv eva eva-${VERSION}
+rm -f eva-${VERSION}-${BUILD}.tgz
+tar --owner=root --group=root -czf eva-${VERSION}-${BUILD}.tgz eva-${VERSION} || exit 1
+rm -rf eva-${VERSION}
+
+echo "Uploading to eva-ics.com"
+#scp -P 222 eva-${VERSION}-${BUILD}.tgz root@d1.altertech.net:/www/download/eva-ics/${VERSION}/nightly/
+#scp -P 222 eva-${VERSION}-${BUILD}.tgz root@d1.altertech.net:/www/download/test.eva-ics/${VERSION}/nightly/
+gsutil cp -a public-read eva-${VERSION}-${BUILD}.tgz gs://get.eva-ics.com/${VERSION}/nightly/
+
+cd ..
+./dev/upload-changelog
+./dev/upload-update
+
+#jks build get.eva-ics.com
+

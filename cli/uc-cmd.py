@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -34,7 +34,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 fld = 'oid'
             if p:
                 code, data = self.cli.call(['state', '-p', p])
-                if code: return True
+                if code:
+                    return True
                 result = set()
                 for v in data:
                     result.add(v[fld])
@@ -55,7 +56,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 return True
             code, data = self.cli.call(
                 ['state', '-p', kwargs.get('parsed_args').p])
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -70,7 +72,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 if p:
                     opts = ['-p', p]
             code, data = self.cli.call(['list'] + opts)
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -80,7 +83,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('unit:'):
@@ -96,7 +100,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -106,7 +111,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('device templates')
-            if code: return True
+            if code:
+                return True
             result = []
             for v in data:
                 result.append(v['name'])
@@ -118,7 +124,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['config', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -132,7 +139,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('modbus list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -142,7 +150,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('owfs list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -156,7 +165,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'] + (':' if self.for_driver else ''))
@@ -166,7 +176,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('driver list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -176,7 +187,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -186,7 +198,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('lpi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -196,7 +209,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -208,7 +222,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['phi', 'test',
                  kwargs.get('parsed_args').i, 'help'])
-            if code or not isinstance(data, dict): return True
+            if code or not isinstance(data, dict):
+                return True
             result = set()
             result.add('self')
             for d in data.keys():
@@ -222,7 +237,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['phi', 'exec',
                  kwargs.get('parsed_args').i, 'help'])
-            if code or not isinstance(data, dict): return True
+            if code or not isinstance(data, dict):
+                return True
             result = set()
             result.add('self')
             for d in data.keys():
@@ -284,7 +300,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         result = []
         for d in data.copy():
             if api_func == 'scan_owfs_bus':
-                if 'attrs' in d: del d['attrs']
+                if 'attrs' in d:
+                    del d['attrs']
             elif itype == 'action':
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(
@@ -355,6 +372,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
         else:
             return super().prepare_result_dict(data, api_func, itype)
 
+    class ComplDataPuller(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('datapuller list')
+            if code:
+                return True
+            result = set()
+            for v in data:
+                result.add(v['name'])
+            return list(result)
+
     def setup_parser(self):
         super().setup_parser()
         self.enable_controller_management_functions('uc')
@@ -370,6 +398,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         self.add_uc_modbus_functions()
         self.add_uc_owfs_functions()
         self.add_uc_driver_functions()
+        self.add_uc_datapuller_functions()
 
     def add_uc_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get item state')
@@ -662,6 +691,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
         ap_create.add_argument(
             'i', help='Item OID (type:group/id)',
             metavar='OID').completer = self.ComplItemOIDType()
+        ap_create.add_argument('-E',
+                               '--enable',
+                               help='Enable item actions/updates',
+                               dest='e',
+                               action='store_true')
         ap_create.add_argument('-y',
                                '--save',
                                help='Save item config after creation',
@@ -1230,6 +1264,23 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
+    def add_uc_datapuller_functions(self):
+        ap_dp = self.sp.add_parser('datapuller', help='Data pullers')
+        sp_dp = ap_dp.add_subparsers(dest='_func',
+                                     metavar='func',
+                                     help='Data puller commands')
+
+        sp_dp_list = sp_dp.add_parser('list', help='List data pullers')
+
+        sp_dp_start = sp_dp.add_parser('start', help='Start data puller')
+        sp_dp_start.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+
+        sp_dp_stop = sp_dp.add_parser('stop', help='Start data puller')
+        sp_dp_stop.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+
+        sp_dp_restart = sp_dp.add_parser('restart', help='Start data puller')
+        sp_dp_restart.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+
     def edit_action(self, props):
         if self.apiuri:
             self.print_local_only()
@@ -1343,7 +1394,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 _me = 'EVA ICS UC CLI version %s' % __version__
 
 prog = os.path.basename(__file__)[:-3]
-if prog == 'eva-shell': prog = 'eva uc'
+if prog == 'eva-shell':
+    prog = 'eva uc'
 
 cli = UC_CLI('uc', _me, prog=prog)
 
@@ -1403,6 +1455,10 @@ _api_functions = {
     'driver:unload': 'unload_driver',
     'driver:assign': 'assign_driver',
     'driver:unassign': 'assign_driver',
+    'datapuller:list': 'list_datapullers',
+    'datapuller:stop': 'stop_datapuller',
+    'datapuller:start': 'start_datapuller',
+    'datapuller:restart': 'restart_datapuller',
     'edit:action': cli.edit_action,
     'edit:update': cli.edit_update,
     'edit:template': cli.edit_tpl
@@ -1436,8 +1492,9 @@ _pd_cols = {
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
     'get_phi_ports': ['port', 'name', 'description'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
-    'modhelp_lpi': ['name', 'type', 'required', 'help'],
-    'modhelp_phi': ['name', 'type', 'required', 'help']
+    'modhelp_lpi': ['name', 'type', 'required', 'default', 'help'],
+    'modhelp_phi': ['name', 'type', 'required', 'default', 'help'],
+    'list_datapullers': ['name', 'active', 'pid', 'cmd'],
 }
 
 _fancy_indentsp = {
@@ -1454,7 +1511,7 @@ cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
-    'driver', 'modbus-slave', 'maintenance'
+    'driver', 'modbus-slave', 'maintenance', 'datapuller'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)

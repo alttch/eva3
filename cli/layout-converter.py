@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -18,7 +18,8 @@ import eva.traphandler
 
 
 def usage(version_only=False):
-    if not version_only: print()
+    if not version_only:
+        print()
     print('%s version %s build %s ' % \
             (
                 'EVA Layout Converter',
@@ -26,7 +27,8 @@ def usage(version_only=False):
                 eva.core.product.build
             )
         )
-    if version_only: return
+    if version_only:
+        return
     print("""Usage: layout-converter <uc|lm>
 
 This tool converts simple item layout to enterprise.
@@ -39,7 +41,8 @@ product_build = -1
 
 try:
     p = sys.argv[1]
-    if p not in ['uc', 'lm']: raise Exception('wrong product selected')
+    if p not in ['uc', 'lm']:
+        raise Exception('wrong product selected')
 except:
     usage()
     sys.exit(99)
@@ -51,7 +54,8 @@ eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'Layout Converter'
 
 cfg = eva.core.load(initial=True, init_log=False)
-if not cfg: sys.exit(2)
+if not cfg:
+    sys.exit(2)
 
 if eva.core.config.enterprise_layout:
     print('\nComponent already has enterprise layout set. Operation aborted')

@@ -1,7 +1,9 @@
+from __future__ import print_function
+
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import argparse
 # to be compatible with argcomplete
@@ -56,8 +58,9 @@ class ComplGeneric(object):
 class ComplCVAR(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
-        code, data = self.cli.call('cvar all')
-        if code: return True
+        code, data = self.cli.call('cvar list')
+        if code:
+            return True
         return data.keys()
 
 
@@ -65,7 +68,8 @@ class ComplKey(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             yield v['key_id']
 
@@ -74,7 +78,8 @@ class ComplKeyDynamic(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             if v.get('dynamic'):
                 yield v['key_id']
@@ -85,7 +90,8 @@ class ComplKeyProp(ComplGeneric):
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call(
             ['key', 'props', kwargs.get('parsed_args').i])
-        if code: return True
+        if code:
+            return True
         result = list(data.keys())
         return result
 
@@ -94,7 +100,8 @@ class ComplUser(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('user list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             yield v['user']
 
@@ -130,7 +137,7 @@ class GenericCLI(GCLI):
         if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
-                'cvar:all': 'get_cvar',
+                'cvar:list': 'get_cvar',
                 'cvar:get': 'get_cvar',
                 'cvar:set': 'set_cvar',
                 'cvar:delete': 'set_cvar',
@@ -138,6 +145,7 @@ class GenericCLI(GCLI):
                 'file:create': 'file_put',
                 'file:upload': 'file_put',
                 'file:mod': 'file_set_exec',
+                'log:api': 'api_log_get',
                 'key:list': 'list_keys',
                 'key:create': 'create_key',
                 'key:props': 'list_key_props',
@@ -157,8 +165,15 @@ class GenericCLI(GCLI):
                 'list_corescript_mqtt_topics': ['topic', 'qos'],
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
+                'api_log_get': [
+                    'time', 'gw', 'ip', 'auth', 'u', 'utp', 'ki', 'status',
+                    'func', 'params'
+                ],
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
+                ],
+                'list_plugins': [
+                    'name', 'version', 'ready', 'author', 'license'
                 ]
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
@@ -176,7 +191,8 @@ class GenericCLI(GCLI):
         self.setup_parser()
 
     def get_prompt(self):
-        if self.prompt: return self.prompt
+        if self.prompt:
+            return self.prompt
         prompt = self.default_prompt
         ppeva = '' if not parent_shell_name else \
                 self.colored(parent_shell_name,
@@ -277,11 +293,16 @@ class GenericCLI(GCLI):
                             pass
                     elif i == '-F' or i == '--client-ini-file':
                         c = self.parse_ini(v)
-                        if 'uri' in c: self.apiuri = c.get('uri')
-                        if 'key' in c: self.apikey = c.get('key')
-                        if 'timeout' in c: self.timeout = c.get('timeout')
-                        if 'debug' in c: self.debug = c.get('debug')
-                        if 'json' in c: self.in_json = c.get('json')
+                        if 'uri' in c:
+                            self.apiuri = c.get('uri')
+                        if 'key' in c:
+                            self.apikey = c.get('key')
+                        if 'timeout' in c:
+                            self.timeout = c.get('timeout')
+                        if 'debug' in c:
+                            self.debug = c.get('debug')
+                        if 'json' in c:
+                            self.in_json = c.get('json')
                         if 'raw' in c:
                             self.always_suppress_colors = c.get('raw')
         except:
@@ -327,10 +348,12 @@ class GenericCLI(GCLI):
         return l if l else level
 
     def get_log_level_code(self, name):
-        if not isinstance(name, str): return name
+        if not isinstance(name, str):
+            return name
         n = str.upper(name)
         for l, v in self.log_levels.items():
-            if n[0] == v[0]: return l
+            if n[0] == v[0]:
+                return l
         return name
 
     def format_log_str(self, r, res):
@@ -406,6 +429,14 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
+        elif api_func == 'api_log_get':
+            from datetime import datetime
+            result = []
+            for d in data:
+                d['time'] = datetime.strftime(
+                    datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
+                result.append(d)
+            return result
         elif api_func == 'list_corescript_mqtt_topics':
             return sorted(data, key=lambda k: k['topic'])
         elif api_func == 'list_corescripts':
@@ -426,7 +457,8 @@ class GenericCLI(GCLI):
                            api_func,
                            itype,
                            indent=0,
-                           print_ok=True):
+                           print_ok=True,
+                           a=None):
         if result and isinstance(result, dict):
             _result = self.prepare_result_dict(result, api_func, itype)
             rprinted = False
@@ -434,9 +466,11 @@ class GenericCLI(GCLI):
             out = None
             err = None
             indentsp = self.fancy_indentsp.get(api_func)
-            if not indentsp: indentsp = 10
+            if not indentsp:
+                indentsp = 10
             for v in sorted(_result.keys()):
-                if v == 'ok' and api_func not in ['test']: continue
+                if v == 'ok' and api_func not in ['test']:
+                    continue
                 if v == 'help':
                     if not indent:
                         h = _result[v]
@@ -456,8 +490,11 @@ class GenericCLI(GCLI):
                                 self.colored(':') +
                                 self.colored('  {}', color='yellow')) %
                                max(map(len, _result))).format(v, ''))
-                        self.fancy_print_result(_result[v], api_func, itype,
-                                                indent + 1)
+                        self.fancy_print_result(_result[v],
+                                                api_func,
+                                                itype,
+                                                indent + 1,
+                                                a=a)
                     else:
                         if indent:
                             print(' ' * (indent * indentsp),
@@ -513,7 +550,8 @@ class GenericCLI(GCLI):
                 header, rows = rapidtables.format_table(
                     table,
                     rapidtables.FORMAT_GENERATOR,
-                    max_column_width=120 if api_func == 'log_get' else None)
+                    max_column_width=120 if api_func == 'log_get' and
+                    (not a or a._full_display is False) else None)
                 print(self.colored(header, color='blue', attrs=[]))
                 print(self.colored('-' * len(header), color='grey', attrs=[]))
                 for r, res in zip(rows, table):
@@ -618,13 +656,40 @@ class GenericCLI(GCLI):
                                 help='Display full log records',
                                 dest='_full_display',
                                 action='store_true')
+        sp_log_get.add_argument('-f',
+                                '--follow',
+                                help='Follow log until C-c',
+                                dest='_follow',
+                                action='store_true')
+
+        sp_log_api = sp_log.add_parser('api', help='Get API call log')
+        sp_log_api.add_argument('-s',
+                                '--time-start',
+                                help='Start time',
+                                metavar='TIME',
+                                dest='s')
+        sp_log_api.add_argument('-e',
+                                '--time-end',
+                                help='End time',
+                                metavar='TIME',
+                                dest='e')
+        sp_log_api.add_argument('-n',
+                                '--limit',
+                                help='Records limit (doesn\'t work with fill)',
+                                metavar='N',
+                                dest='n')
+        sp_log_api.add_argument('-f',
+                                '--filter',
+                                help='Filter (field=value[,field=value...])',
+                                metavar='FILTER',
+                                dest='f')
 
     def _add_cvar_functions(self):
         ap_cvar = self.sp.add_parser('cvar', help='CVAR functions')
         sp_cvar = ap_cvar.add_subparsers(dest='_func',
                                          metavar='func',
                                          help='CVAR commands')
-        sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
+        sp_cvar_all = sp_cvar.add_parser('list', help='List all CVARS')
         sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
         sp_cvar_get.add_argument('i', help='CVAR ID',
                                  metavar='ID').completer = ComplCVAR(self)
@@ -782,7 +847,8 @@ class GenericCLI(GCLI):
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def start_interactive(self, reset_sst=True):
-        if reset_sst: globals()['shell_switch_to'] = None
+        if reset_sst:
+            globals()['shell_switch_to'] = None
         super().start_interactive()
 
     def prepare_run(self, api_func, params, a):
@@ -808,14 +874,16 @@ class GenericCLI(GCLI):
                 else:
                     cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
                 for c in cmds:
-                    print(self.get_prompt() + c)
-                    try:
-                        import shlex
-                        code = self.execute_function(shlex.split(c))
-                        self.suppress_colors = False
-                    except:
-                        code = 90
-                    if code and self.batch_stop_on_err: return code
+                    if c:
+                        print(self.get_prompt() + c)
+                        try:
+                            import shlex
+                            code = self.execute_function(shlex.split(c))
+                            self.suppress_colors = False
+                        except:
+                            code = 90
+                        if code and self.batch_stop_on_err:
+                            return code
             except:
                 print('Unable to open %s' % self.batch_file)
                 return 90
@@ -823,7 +891,7 @@ class GenericCLI(GCLI):
             try:
                 return self.execute_function()
             except Exception as e:
-                raise
+                # raise
                 self.print_err(e)
         else:
             # interactive mode
@@ -844,7 +912,8 @@ class GenericCLI(GCLI):
                         pass
                     except:
                         self.print_err('parse error')
-                    if parsed: break
+                    if parsed:
+                        break
                     self.setup_parser()
                 cmds = [[]]
                 cix = 0
@@ -865,8 +934,10 @@ class GenericCLI(GCLI):
                 repeat_delay = 0
                 for i in range(0, len(cmds)):
                     d = cmds[i]
-                    if i and i < len(cmds): print()
-                    if not d: continue
+                    if i and i < len(cmds):
+                        print()
+                    if not d:
+                        continue
                     if d[0] in ['q', 'quit', 'exit', 'bye'] or \
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
@@ -898,15 +969,15 @@ class GenericCLI(GCLI):
                             self.apikey = d[1 if d[0] == 'k' else 2]
                         except:
                             pass
-                        print('key: %s' % self.apikey
-                              if self.apikey is not None else '<default>')
+                        print('key: %s' % self.apikey if self.
+                              apikey is not None else '<default>')
                     if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apiuri = d[1]
                         except:
                             pass
-                        print('API uri: %s' % self.apiuri
-                              if self.apiuri is not None else '<default>')
+                        print('API uri: %s' % self.apiuri if self.
+                              apiuri is not None else '<default>')
                     if (d[0] == 't' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.timeout = float(d[1 if d[0] == 't' else 3])
@@ -914,12 +985,10 @@ class GenericCLI(GCLI):
                             pass
                         print('timeout: %.2f' % self.timeout)
                     elif d[0] == 'a' and self.remote_api_enabled:
-                        print('API uri: %s' %
-                              (self.apiuri
-                               if self.apiuri is not None else '<default>'))
-                        print('key: %s' %
-                              (self.apikey
-                               if self.apikey is not None else '<default>'))
+                        print('API uri: %s' % (self.apiuri if self.apiuri
+                                               is not None else '<default>'))
+                        print('key: %s' % (self.apikey if self.apikey
+                                           is not None else '<default>'))
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -940,25 +1009,30 @@ class GenericCLI(GCLI):
                     elif d[0] == 'top':
                         try:
                             top = distutils.spawn.find_executable('htop')
-                            if not top: top = 'top'
-                            if os.system(top): raise Exception('exec error')
+                            if not top:
+                                top = 'top'
+                            if os.system(top):
+                                raise Exception('exec error')
                         except:
                             self.print_err('Failed to run system "%s" command' %
                                            top)
                     elif d[0] == 'w':
                         try:
-                            if os.system('w'): raise Exception('exec error')
+                            if os.system('w'):
+                                raise Exception('exec error')
                         except:
                             self.print_err('Failed to run system "w" command')
                     elif d[0] == 'date':
                         try:
-                            if os.system('date'): raise Exception('exec error')
+                            if os.system('date'):
+                                raise Exception('exec error')
                         except:
                             self.print_err(
                                 'Failed to run system "date" command')
                     elif d[0] == 'cls':
                         try:
-                            if os.system('clear'): raise Exception('exec error')
+                            if os.system('clear'):
+                                raise Exception('exec error')
                         except:
                             self.print_err(
                                 'Failed to run system "clear" command')
@@ -967,7 +1041,8 @@ class GenericCLI(GCLI):
                         shell = os.environ.get('SHELL')
                         if shell is None:
                             shell = distutils.spawn.find_executable('bash')
-                            if not shell: shell = 'sh'
+                            if not shell:
+                                shell = 'sh'
                         try:
                             os.system(shell)
                         except:
@@ -1019,7 +1094,8 @@ class GenericCLI(GCLI):
                         except:
                             pass
                         full_cmds.append(opts + d)
-                        if cmd_title: cmd_title += '; '
+                        if cmd_title:
+                            cmd_title += '; '
                         cmd_title += ' '.join(d)
                 try:
                     while True:
@@ -1040,7 +1116,8 @@ class GenericCLI(GCLI):
                                 print()
                         if self.debug:
                             self.print_debug('\nCode: %s' % code)
-                        if not repeat_delay: break
+                        if not repeat_delay:
+                            break
                         time_to_sleep = repeat_delay - \
                                 time.time() + start_time
                         if time_to_sleep > repeat_delay:
@@ -1055,6 +1132,92 @@ class GenericCLI(GCLI):
                     self.print_err(e)
                 self.suppress_colors = False
         return 0
+
+    def log_tail(self, params):
+        try:
+            import websocket, msgpack, threading
+            from eva.types import CT_MSGPACK
+            import eva.client.apiclient
+
+            ping_msg = eva.client.apiclient.pack_msgpack({'s': 'ping'})
+
+            log_level_id = self.get_log_level_code(params['l'])
+
+            if log_level_id is None:
+                log_level_id = 20
+
+            if not isinstance(log_level_id, int):
+                self.print_err(f'Invalid log level: {log_level_id}')
+                raise RuntimeError
+
+            def format_log_msg(msg, full=False):
+                from datetime import datetime
+                msg['level'] = msg['lvl'].upper()
+                s = datetime.strftime(datetime.fromtimestamp(
+                    msg['t']), '%Y-%m-%d %T') + ' ' + msg['h'] + '  ' + msg[
+                        'level'] + ' ' + msg['p'] + ' ' + msg['msg']
+                s = s if full else s[:120].replace('\n', ' ').replace('\r', '')
+                return self.format_log_str(s, msg)
+
+            api = params.get('_api')
+            uri = api._uri
+            apikey = api._key
+            timeout = api._timeout
+
+            n = params.get('n')
+
+            if uri.startswith('https://'):
+                ws_uri = 'wss' + uri[5:]
+            elif uri.startswith('http://'):
+                ws_uri = 'ws' + uri[4:]
+            else:
+                ws_uri = 'ws://' + uri
+
+            ws = websocket.create_connection(
+                f'{ws_uri}/ws?k={apikey}&c={CT_MSGPACK}', timeout=timeout)
+            ws.settimeout(timeout * 2)
+
+            def pinger():
+                import time
+                while True:
+                    try:
+                        ws.send(ping_msg, opcode=0x02)
+                        time.sleep(timeout if timeout < 5 else 5)
+                    except:
+                        break
+
+            threading.Thread(target=pinger, daemon=True).start()
+
+            try:
+                ws.send(eva.client.apiclient.pack_msgpack({
+                    's': 'log',
+                    'l': log_level_id
+                }),
+                        opcode=0x02)
+                code, data = api.call('log_get', {'l': log_level_id, 'n': n})
+                if code != eva.client.apiclient.result_ok:
+                    raise Exception
+                for d in data:
+                    print(
+                        format_log_msg(d,
+                                       full=self.cur_api_func_is_full == '_'))
+                while True:
+                    frame = ws.recv_frame()
+                    if frame:
+                        data = msgpack.loads(frame.data, raw=False)
+                        if data.get('s') == 'log':
+                            for d in data['d']:
+                                print(
+                                    format_log_msg(
+                                        d,
+                                        full=self.cur_api_func_is_full == '_'))
+            finally:
+                ws.close()
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
 
     def call(self, args=None):
         opts = []
@@ -1122,7 +1285,8 @@ class GenericCLI(GCLI):
             debug = c.get('debug')
         else:
             debug = False
-        if getattr(a, '_debug', False): debug = a._debug
+        if getattr(a, '_debug', False):
+            debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
@@ -1131,7 +1295,8 @@ class GenericCLI(GCLI):
             apiuri = c.get('uri')
         else:
             apiuri = None
-        if getattr(a, '_api_uri', None): apiuri = a._api_uri
+        if getattr(a, '_api_uri', None):
+            apiuri = a._api_uri
         if 'key' in c:
             apikey = c.get('key')
         else:
@@ -1146,6 +1311,8 @@ class GenericCLI(GCLI):
                     print(
                         'Can not init API, %s.ini or %s_apikeys.ini missing?' %
                         (self.product, self.product))
+                    import traceback
+                    traceback.print_exc()
                     return 98
             else:
                 api = apiclient.APIClient()
@@ -1157,6 +1324,7 @@ class GenericCLI(GCLI):
         else:
             api = None
         self.cur_api_func_is_full = ''
+        self.cur_api_func_follow = False
         if getattr(a, '_full', False):
             params['full'] = 1
             self.cur_api_func_is_full = '_'
@@ -1164,12 +1332,17 @@ class GenericCLI(GCLI):
             params['has_all'] = 1
         elif getattr(a, '_full_display', False):
             self.cur_api_func_is_full = '_'
+        elif getattr(a, '_full_display', False):
+            self.cur_api_func_is_full = '_'
         if getattr(a, '_save', False):
             params['save'] = 1
         if getattr(a, '_force', False):
             params['force'] = 1
+        if getattr(a, '_follow', False):
+            self.cur_api_func_follow = True
         code = self.prepare_run(api_func, params, a)
-        if code: return code
+        if code:
+            return code
         if 'timeout' in c:
             timeout = c.get('timeout')
         else:
@@ -1189,6 +1362,8 @@ class GenericCLI(GCLI):
             self.print_debug('API func: %s' % api_func)
             self.print_debug('timeout: %.2f' % timeout)
             self.print_debug('params %s' % params)
+        if api_func == 'log_get' and self.cur_api_func_follow:
+            api_func = self.log_tail
         if isinstance(api_func, str) and self.remote_api_enabled:
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
@@ -1199,7 +1374,8 @@ class GenericCLI(GCLI):
             code, result = api_func(params)
         if return_result:
             return code, result
-        if not isinstance(api_func, str): api_func = api_func.__name__
+        if not isinstance(api_func, str):
+            api_func = api_func.__name__
         if code != apiclient.result_ok:
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
@@ -1211,7 +1387,8 @@ class GenericCLI(GCLI):
                     self.print_failed_result(result)
             if code == apiclient.result_func_unknown and not debug:
                 self.ap.print_help()
-            if code > 100: code -= 100
+            if code > 100:
+                code -= 100
             return code
         else:
             if a._output_file and code == apiclient.result_ok:
@@ -1261,7 +1438,8 @@ class GenericCLI(GCLI):
             self.fancy_print_result(result,
                                     api_func,
                                     itype,
-                                    print_ok=code == apiclient.result_ok)
+                                    print_ok=code == apiclient.result_ok,
+                                    a=a)
         return code
 
     def print_tdf(self, result_in, time_field):
@@ -1311,7 +1489,8 @@ class ControllerCLI(object):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(['corescript', 'mqtt-topics'])
-            if code: return True
+            if code:
+                return True
             return sorted([v['topic'] for v in data])
 
     def __init__(self):
@@ -1336,6 +1515,40 @@ class ControllerCLI(object):
             self.print_local_only()
             return self.local_func_result_failed
         self.exec_control_script('restart')
+        return self.local_func_result_ok
+
+    def cleanup_controller(self, params):
+        DB_CLEANUPS = {
+            'uc': ['delete from state'],
+        }
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        try:
+            db_cleanup_queues = DB_CLEANUPS[self._management_controller_id]
+        except KeyError:
+            self.print_err('not implemented')
+            return self.local_func_result_failed
+        import eva.core
+        import configparser
+        from sqlalchemy import text as sql
+        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
+        cfg.read(f'{self.dir_etc}/{self._management_controller_id}.ini')
+        try:
+            db_file = cfg.get('server', 'db_file')
+        except:
+            db_file = None
+        try:
+            db_uri = cfg.get('server', 'db')
+        except:
+            if db_file:
+                db_uri = db_file
+        db_uri = eva.core.format_db_uri(db_uri)
+        db = eva.core.create_db_engine(db_uri)
+        dbconn = db.connect()
+        for q in db_cleanup_queues:
+            dbconn.execute(sql(q))
+        dbconn.close()
         return self.local_func_result_ok
 
     def launch_controller(self, params):
@@ -1380,33 +1593,6 @@ class ControllerCLI(object):
         return result
 
     def add_manager_control_functions(self):
-        ap_controller = self.sp.add_parser(
-            'server', help='Controller server management functions')
-        sp_controller = ap_controller.add_subparsers(dest='_func',
-                                                     metavar='func',
-                                                     help='Management commands')
-
-        ap_start = sp_controller.add_parser('start',
-                                            help='Start controller server')
-        ap_stop = sp_controller.add_parser('stop',
-                                           help='Stop controller server')
-        ap_restart = sp_controller.add_parser('restart',
-                                              help='Restart controller server')
-        if self.remote_api_enabled:
-            ap_reload = sp_controller.add_parser(
-                'reload', help='Reload controller server')
-        ap_status = sp_controller.add_parser(
-            'status', help='Status of the controller server')
-        ap_launch = sp_controller.add_parser(
-            'launch', help='Launch controller server in foreground')
-        ap_launch.add_argument('-n',
-                               '--show-notifier-logs',
-                               help='Show notifier event logs',
-                               action='store_true')
-
-        if 'server' not in self.arg_sections:
-            self.arg_sections.append('server')
-
         ap_corescript = self.sp.add_parser('corescript',
                                            help='Controller core scripts')
         sp_corescript = ap_corescript.add_subparsers(
@@ -1461,6 +1647,41 @@ class ControllerCLI(object):
         if 'corescript' not in self.arg_sections:
             self.arg_sections.append('corescript')
 
+        ap_controller = self.sp.add_parser(
+            'server', help='Controller server management functions')
+        sp_controller = ap_controller.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Management commands')
+
+        ap_start = sp_controller.add_parser('start',
+                                            help='Start controller server')
+        ap_stop = sp_controller.add_parser('stop',
+                                           help='Stop controller server')
+        ap_restart = sp_controller.add_parser('restart',
+                                              help='Restart controller server')
+        if self.remote_api_enabled:
+            ap_reload = sp_controller.add_parser(
+                'reload', help='Reload controller server')
+        ap_status = sp_controller.add_parser(
+            'status', help='Status of the controller server')
+        ap_launch = sp_controller.add_parser(
+            'launch', help='Launch controller server in foreground')
+        ap_launch.add_argument('-n',
+                               '--show-notifier-logs',
+                               help='Show notifier event logs',
+                               action='store_true')
+
+        ap_plugins = sp_controller.add_parser('plugins',
+                                              help='List loaded core plugins')
+        ap_cleanuo = sp_controller.add_parser(
+            'cleanup',
+            help='Cleanup controller: remove non-critical DB entries etc.')
+
+        self.append_api_functions({'server:plugins': 'list_plugins'})
+
+        if 'server' not in self.arg_sections:
+            self.arg_sections.append('server')
+
     def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
@@ -1486,11 +1707,14 @@ class ControllerCLI(object):
             return self.local_func_result_failed
         editor = os.environ.get('EDITOR', 'vi')
         fname = params['i']
-        if fname.endswith('.py'): fname = fname[:-3]
+        if fname.endswith('.py'):
+            fname = fname[:-3]
         fname = '{}/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
         need_reload = not os.path.exists(fname)
         if os.system(f'{editor} {fname}'):
             return self.local_func_result_failed
+        if not os.path.isfile(fname):
+            return self.local_func_result_empty
         try:
             with open(fname) as fd:
                 code = fd.read()
@@ -1508,7 +1732,8 @@ class ControllerCLI(object):
             self.print_local_only()
             return self.local_func_result_failed
         fname = params['i']
-        if fname.endswith('.py'): fname = fname[:-3]
+        if fname.endswith('.py'):
+            fname = fname[:-3]
         fname = '{}/xc/{}/cs/{}.py'.format(
             dir_eva, self.product,
             fname.replace('/', '').replace('..', ''))
@@ -1547,6 +1772,7 @@ class ControllerCLI(object):
         self.append_api_functions({
             'server:start': self.start_controller,
             'server:stop': self.stop_controller,
+            'server:cleanup': self.cleanup_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',

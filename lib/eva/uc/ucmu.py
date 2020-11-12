@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import logging
 import eva.item
@@ -47,7 +47,8 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                 i2u = []
                 for i in val:
                     item = eva.uc.controller.get_item(i)
-                    if not item or item in i2u: return False
+                    if not item or item in i2u:
+                        return False
                     i2u.append(item)
                 self.items_to_update = i2u
                 self.log_set(prop, ','.join(val))
@@ -57,7 +58,8 @@ class UCMultiUpdate(eva.item.MultiUpdate):
             i2u = []
             for i in item_ids:
                 item = eva.uc.controller.get_item(i)
-                if not item or item in i2u: return False
+                if not item or item in i2u:
+                    return False
                 i2u.append(item)
             self.items_to_update = i2u
             self.log_set(prop, val)

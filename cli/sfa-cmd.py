@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -16,6 +16,8 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
+from eva.client.cli import ComplUser
+from eva.client.cli import ComplKey
 
 import eva.client.cli
 
@@ -24,7 +26,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     @staticmethod
     def dict_safe_get(d, key, default):
-        if d is None: return default
+        if d is None:
+            return default
         result = d.get(key)
         return default if result is None else result
 
@@ -40,7 +43,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 fld = 'oid'
             if p:
                 code, data = self.cli.call(['state', '-p', p])
-                if code: return True
+                if code:
+                    return True
                 result = set()
                 for v in data:
                     result.add(v[fld])
@@ -56,7 +60,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 return True
             code, data = self.cli.call(
                 ['state', '-p', kwargs.get('parsed_args').p])
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -66,7 +71,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('unit:'):
@@ -82,7 +88,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -92,7 +99,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p lvar')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('lvar:'):
@@ -112,7 +120,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v[self.field])
@@ -122,7 +131,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -132,7 +142,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('cycle list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -146,7 +157,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('controller list')
-            if code: return True
+            if code:
+                return True
             result = set()
             if self.allow_all:
                 result.add('all')
@@ -160,7 +172,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             code, data = self.cli.call(
                 ['controller', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -174,7 +187,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if p:
                     opts = ['-p', p]
             code, data = self.cli.call(['remote'] + opts)
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -271,6 +285,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         self.add_sfa_edit_functions()
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
+        self.add_sfa_supervisor_functions()
         self.add_sfa_controller_functions()
         self.add_sfa_cloud_functions()
 
@@ -619,6 +634,60 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     'without actual restarting'
         )
 
+    def add_sfa_supervisor_functions(self):
+        ap_supervisor = self.sp.add_parser('supervisor',
+                                           help='Supervisor functions')
+        sp_supervisor = ap_supervisor.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Supervisor commands')
+
+        sp_supervisor_lock = sp_supervisor.add_parser(
+            'lock', help='Set supervisor lock')
+        sp_supervisor_lock.add_argument(
+            '-u', '--user', help='Lock owner user', dest='u',
+            metavar='LOGIN').completer = ComplUser(self)
+        sp_supervisor_lock.add_argument('-p',
+                                        '--user-type',
+                                        help='Lock owner user type (e.g. msad)',
+                                        metavar='TYPE',
+                                        dest='p')
+        sp_supervisor_lock.add_argument('-a',
+                                        '--key-id',
+                                        help='Lock owner API key (ID)',
+                                        metavar='ID',
+                                        dest='a').completer = ComplKey(self)
+        sp_supervisor_lock.add_argument(
+            '-l',
+            '--lock-scope',
+            help='Lock scope (default: all supervisors)',
+            choices=['u', 'k'],
+            metavar='SCOPE',
+            dest='l')
+        sp_supervisor_lock.add_argument(
+            '-c',
+            '--unlock-scope',
+            help='Unlock scope (default: all supervisors)',
+            choices=['u', 'k'],
+            metavar='SCOPE',
+            dest='c')
+
+        sp_supervisor_unlock = sp_supervisor.add_parser(
+            'unlock', help='Clear supervisor lock')
+
+        sp_supervisor_message = sp_supervisor.add_parser(
+            'message', help='Send broadcast message')
+        sp_supervisor_message.add_argument('m',
+                                           help='Message text',
+                                           metavar='Text to send')
+        sp_supervisor_message.add_argument(
+            '-u', '--user', help='Sender user', dest='u',
+            metavar='LOGIN').completer = ComplUser(self)
+        sp_supervisor_message.add_argument('-a',
+                                           '--key-id',
+                                           help='Sender API key',
+                                           metavar='ID',
+                                           dest='a').completer = ComplKey(self)
+
     def add_sfa_controller_functions(self):
         ap_controller = self.sp.add_parser(
             'controller', help='Connected controllers functions')
@@ -775,6 +844,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                      help='Undeploy old configuration first',
                                      dest='und',
                                      action='store_true')
+        sp_cloud_deploy.add_argument('-s',
+                                     '--skip',
+                                     help='Skip existing items',
+                                     dest='skip',
+                                     action='store_true')
         sp_cloud_deploy.add_argument(
             '-c',
             '--config',
@@ -824,16 +898,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                      del_files=props.get('del_files', False))
 
     @staticmethod
-    def _read_uri(fname, dirname=None):
+    def _read_uri(fname, dirname=None, file_read_mode='r'):
         target = (dirname + '/' + fname) if dirname else fname
         if target.startswith('http://') or target.startswith('https://'):
             import requests
             result = requests.get(target)
             if not result.ok:
                 raise Exception('http code {}'.format(result.status_code))
-            return result.text
+            return result.text if file_read_mode == 'r' else result.content
         else:
-            with open(target) as fd:
+            with open(target, file_read_mode) as fd:
                 return fd.read()
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
@@ -849,8 +923,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 from eva.tools import dict_from_str
                 fname = props.get('f')
                 v = props.get('c')
-                if v: v = dict_from_str(v)
-                else: v = {}
+                if v:
+                    v = dict_from_str(v)
+                else:
+                    v = {}
                 dirname = os.path.dirname(fname)
                 tpl = jinja2.Template(self._read_uri(fname))
                 cfg = yaml.load(tpl.render(v))
@@ -926,8 +1002,20 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if not und:
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
+                                if '*' not in fname:
+                                    try:
+                                        self._read_uri(fname, dirname, 'rb')
+                                    except:
+                                        raise Exception(
+                                            ('{}: {} unable to open ' +
+                                             'file for upload').format(
+                                                 c, fname))
+                    if 'phi' in v:
+                        for phi, phi_data in self.dict_safe_get(v, 'phi',
+                                                                {}).items():
+                            if 'src' in phi_data:
                                 try:
-                                    self._read_uri(fname, dirname)
+                                    self._read_uri(fname, dirname, 'rb')
                                 except:
                                     raise Exception(
                                         ('{}: {} unable to open ' +
@@ -960,30 +1048,65 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             print('Starting {}deployment of {}'.format('un' if und else '',
                                                        props['f']))
             # ===== BEFORE TASKS =====
+            import time
             print('Executing commands in before-{}deploy...'.format(
                 'un' if und else ''))
-            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
-                if v:
-                    for a in self.dict_safe_get(
-                            v, 'before-{}deploy'.format('un' if und else ''),
-                        []):
-                        try:
-                            func = a['api']
-                            params = a.copy()
-                            del params['api']
-                        except:
-                            raise Exception(
-                                'Controller {}, invalid before-{}deploy'.format(
-                                    c, 'un' if und else ''))
-                        print(' -- {} {}'.format(func, params))
-                        code = macall({
-                            'i': c,
-                            'f': func,
-                            'p': params
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+
+            def execute_custom_tasks(step):
+                for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+                    if v:
+                        for a in self.dict_safe_get(
+                                v, '{}-{}deploy'.format(step,
+                                                        'un' if und else ''),
+                            []):
+                            if 'api' in a:
+                                try:
+                                    func = a['api']
+                                    can_pass_err = a.get('_pass')
+                                    params = a.copy()
+                                    del params['api']
+                                    try:
+                                        del params['_pass']
+                                    except:
+                                        pass
+                                except Exception as e:
+                                    raise Exception(
+                                        ('Controller {}, '
+                                         'invalid before-{}deploy, {} {}'
+                                        ).format(c, 'un' if und else '',
+                                                 e.__class__.__name__, e))
+                            else:
+                                f = a['function']
+                                if f == 'sleep':
+                                    func = time.sleep
+                                elif f == 'system':
+                                    func = os.system
+                                else:
+                                    raise RuntimeError(
+                                        f'function unsupported: {f}')
+                                args = a.get('args', [])
+                                kwargs = a.get('kwargs', {})
+                                params = str(args) + ' ' + str(kwargs)
+                            print(' -- {}: {} {}'.format(
+                                '' if callable(func) else c,
+                                func.__name__ if callable(func) else func,
+                                params))
+                            if callable(func):
+                                func(*args, **kwargs)
+                            else:
+                                code = macall({
+                                    'i': c,
+                                    'f': func,
+                                    'p': params
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    msg = f'API call failed, code {code}'
+                                    if can_pass_err:
+                                        self.print_warn(msg)
+                                    else:
+                                        raise Exception(msg)
+
+            execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
                 self._perform_deploy(props, cfg, macall, dirname)
@@ -992,28 +1115,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             # ===== AFTER TASKS =====
             print('Executing commands in after-{}deploy...'.format(
                 'un' if und else ''))
-            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
-                if v:
-                    for a in self.dict_safe_get(
-                            v, 'after-{}deploy'.format('un' if und else ''),
-                        []):
-                        try:
-                            func = a['api']
-                            params = a.copy()
-                            del params['api']
-                        except:
-                            raise Exception(
-                                'Controller {}, invalid after-{}deploy'.format(
-                                    c, 'un' if und else ''))
-                        print(' -- {} {}'.format(func, params))
-                        code = macall({
-                            'i': c,
-                            'f': func,
-                            'p': params
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+            execute_custom_tasks('after')
             if props.get('save'):
                 print('Saving configurations')
                 for c in controllers:
@@ -1039,7 +1141,34 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         print('-' * 60)
         return self.local_func_result_ok
 
+    @staticmethod
+    def _get_files(f):
+        result = []
+        fname, remote_file = f.split(':')
+        if '*' in fname:
+            import glob
+            for f in glob.glob(fname, recursive=True):
+                if os.path.islink(f) or os.path.isfile(f):
+                    if not remote_file.endswith('/'):
+                        remote_file += '/'
+                    if remote_file.startswith('/'):
+                        remote_file = remote_file[1:]
+                    if '/' in f:
+                        fremote = f[fname.find('*'):]
+                    else:
+                        fremote = f
+                    result.append((f, remote_file + fremote))
+        else:
+            if not remote_file or remote_file.endswith('/'):
+                remote_file += os.path.basename(fname)
+            if remote_file.startswith('/'):
+                remote_file = remote_file[1:]
+            result.append((fname, remote_file))
+        return result
+
     def _perform_deploy(self, props, cfg, macall, dirname):
+
+        skip_existing = props.get('skip')
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
@@ -1047,36 +1176,42 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 if 'upload-runtime' in v:
                     for f in v['upload-runtime']:
-                        fname, remote_file = f.split(':')
-                        if not remote_file or remote_file.endswith('/'):
-                            remote_file += os.path.basename(fname)
-                        if remote_file.startswith('/'):
-                            remote_file = remote_file[1:]
-                        print(' -- {}: {} -> {}'.format(c, fname, remote_file))
-                        code = macall({
-                            'i': c,
-                            'f': 'file_put',
-                            'p': {
-                                'i': remote_file,
-                                'm': self._read_uri(fname, dirname)
-                            }
-                        })[1].get('code')
-                        if code != apiclient.result_ok:
-                            raise Exception(
-                                'File upload failed, API code {}'.format(code))
-                        if os.access(fname, os.X_OK):
+                        for fname, remote_file in self._get_files(f):
+                            print(' -- {}: {} -> {}'.format(
+                                c, fname, remote_file))
+                            import base64
+                            code = 0
                             code = macall({
                                 'i': c,
-                                'f': 'file_set_exec',
+                                'f': 'file_put',
                                 'p': {
-                                    'i': remote_file,
-                                    'e': 1
+                                    'i':
+                                        remote_file,
+                                    'm':
+                                        base64.b64encode(
+                                            self._read_uri(
+                                                fname, dirname, 'rb')).decode(),
+                                    'b':
+                                        True
                                 }
                             })[1].get('code')
                             if code != apiclient.result_ok:
                                 raise Exception(
-                                    'File set exec failed, API code {}'.format(
+                                    'File upload failed, API code {}'.format(
                                         code))
+                            if os.access(fname, os.X_OK):
+                                code = macall({
+                                    'i': c,
+                                    'f': 'file_set_exec',
+                                    'p': {
+                                        'i': remote_file,
+                                        'e': 1
+                                    }
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    raise Exception(
+                                        'File set exec failed, API code {}'.
+                                        format(code))
         # ===== CVARS =====
         print('Creating cvars...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1099,6 +1234,21 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'phi', {}).items():
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                    if 'src' in vv:
+                        print(' -- {}: {} -> {}'.format(c, vv['src'], i))
+                        mod_source = self._read_uri(vv['src'])
+                        code = macall({
+                            'i': c,
+                            'f': 'put_phi_mod',
+                            'p': {
+                                'm': vv['module'],
+                                'c': mod_source,
+                                'force': True
+                            }
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
                     code = macall({
                         'i': c,
                         'f': 'load_phi',
@@ -1174,7 +1324,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     }
                 })[1].get('code')
                 if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+                    if code == apiclient.result_already_exists and skip_existing:
+                        print('    [skipped]')
+                    else:
+                        raise Exception('API call failed, code {}'.format(code))
                 if 'driver' in v:
                     print('     - driver {} -> {}'.format(
                         v['driver'].get('id'), i))
@@ -1198,20 +1351,42 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         val = os.path.basename(val[1:])
                     else:
                         file2u = None
+                    prop = prop.replace('-', '_')
                     print('     - {} = {}'.format(prop, val))
-                    code = macall({
-                        'i':
-                            c,
-                        'f':
-                            'set_{}prop'.format((
-                                tpc +
-                                '_') if tp in ['lmacro', 'lcycle'] else ''),
-                        'p': {
-                            'i': i,
-                            'p': prop,
-                            'v': val
-                        }
-                    })[1].get('code')
+                    if prop in ['status', 'value']:
+                        if tp in ['unit', 'sensor']:
+                            fn = 'update'
+                        elif tp in ['lvar']:
+                            fn = 'set'
+                        else:
+                            raise RuntimeError(
+                                f'setting {prop} for {tp} is unsupported')
+                        params = {'i': i}
+                        if prop == 'status':
+                            params['s'] = val
+                        else:
+                            params['v'] = val
+                        if prop == 'value' and tp == 'sensor':
+                            params['s'] = 1
+                        code = macall({
+                            'i': c,
+                            'f': fn,
+                            'p': params
+                        })[1].get('code')
+                    else:
+                        code = macall({
+                            'i':
+                                c,
+                            'f':
+                                'set_{}prop'.format((
+                                    tpc +
+                                    '_') if tp in ['lmacro', 'lcycle'] else ''),
+                            'p': {
+                                'i': i,
+                                'p': prop,
+                                'v': val
+                            }
+                        })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
                     if file2u:
@@ -1258,7 +1433,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 }
             })[1].get('code')
             if code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                if code == apiclient.result_already_exists and skip_existing:
+                    print('    [skipped]')
+                else:
+                    raise Exception('API call failed, code {}'.format(code))
         # ===== JOB CREATION =====
         print('Creating scheduled jobs...')
         for i, v in self.dict_safe_get(cfg, 'job', {}).items():
@@ -1276,7 +1454,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 }
             })[1].get('code')
             if code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                if code == apiclient.result_already_exists and skip_existing:
+                    print('    [skipped]')
+                else:
+                    raise Exception('API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
@@ -1387,6 +1568,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('Driver {} not found'.format(i))
+                    elif code == apiclient.result_busy:
+                        self.print_warn('Driver {} is in use'.format(i))
                     elif code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         # ===== PHI UNLOAD =====
@@ -1404,6 +1587,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('PHI {} not found'.format(i))
+                    elif code == apiclient.result_busy:
+                        self.print_warn('PHI {} is in use'.format(i))
                     elif code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         # ===== CVARS =====
@@ -1430,32 +1615,33 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if v:
                     if 'upload-runtime' in v:
                         for f in v['upload-runtime']:
-                            fname, remote_file = f.split(':')
-                            if not remote_file or remote_file.endswith('/'):
-                                remote_file += os.path.basename(fname)
-                            if remote_file.startswith('/'):
-                                remote_file = remote_file[1:]
-                            print(' -- {}: {}'.format(c, remote_file))
-                            code = macall({
-                                'i': c,
-                                'f': 'file_unlink',
-                                'p': {
-                                    'i': remote_file,
-                                }
-                            })[1].get('code')
-                            if code == apiclient.result_not_found:
-                                self.print_warn(
-                                    'file {} not found'.format(remote_file))
-                            elif code != apiclient.result_ok:
-                                raise Exception(
-                                    'File deletion failed, API code {}'.format(
-                                        code))
+                            for fname, remote_file in self._get_files(f):
+                                if not remote_file or remote_file.endswith('/'):
+                                    remote_file += os.path.basename(fname)
+                                if remote_file.startswith('/'):
+                                    remote_file = remote_file[1:]
+                                print(' -- {}: {}'.format(c, remote_file))
+                                code = macall({
+                                    'i': c,
+                                    'f': 'file_unlink',
+                                    'p': {
+                                        'i': remote_file,
+                                    }
+                                })[1].get('code')
+                                if code == apiclient.result_not_found:
+                                    self.print_warn(
+                                        'file {} not found'.format(remote_file))
+                                elif code != apiclient.result_ok:
+                                    raise Exception(
+                                        'File deletion failed, API code {}'.
+                                        format(code))
 
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
 
 prog = os.path.basename(__file__)[:-3]
-if prog == 'eva-shell': prog = 'eva sfa'
+if prog == 'eva-shell':
+    prog = 'eva sfa'
 
 cli = SFA_CLI('sfa', _me, prog=prog)
 
@@ -1526,7 +1712,7 @@ _always_json = []
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'run', 'cmd']
 cli.arg_sections += [
-    'action', 'macro', 'cycle', 'notify', 'controller', 'cloud'
+    'action', 'macro', 'cycle', 'notify', 'controller', 'cloud', 'supervisor'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)

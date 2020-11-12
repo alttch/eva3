@@ -4,7 +4,17 @@ _sfa-notifier_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch restart start status stop
+    compadd "$@" cleanup launch plugins restart start status stop
+  else
+    _files
+  fi
+}
+
+_sfa-notifier_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
   else
     _files
   fi
@@ -14,10 +24,10 @@ _sfa-notifier() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" config create destroy disable enable list props server set subscribe test unsubscribe
+    compadd "$@" config corescript create destroy disable enable list props server set subscribe test unsubscribe
   else
     case "${words[2]}" in
-      server)
+      corescript|server)
         _sfa-notifier_${words[2]}
         ;;
       *)

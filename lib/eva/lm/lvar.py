@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import eva.core
 import eva.item
@@ -67,8 +67,10 @@ class LVar(eva.item.VariableItem):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False):
-        if not self.status and status != 1: return False
+                         force_notify=False,
+                         timestamp=None):
+        if not self.status and status != 1:
+            return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
             eva.core.critical()
@@ -80,7 +82,8 @@ class LVar(eva.item.VariableItem):
             if super().update_set_state(status=status,
                                         value=value,
                                         from_mqtt=from_mqtt,
-                                        force_notify=force_notify):
+                                        force_notify=force_notify,
+                                        timestamp=timestamp):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status
@@ -93,7 +96,8 @@ class LVar(eva.item.VariableItem):
 
     def set_prop(self, prop, val=None, save=False):
         if super().set_prop(prop=prop, val=val, save=save):
-            if prop == 'expires': self.notify()
+            if prop == 'expires':
+                self.notify()
             return True
         return False
 

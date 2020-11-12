@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import glob
 import os
@@ -27,7 +27,7 @@ from eva.exceptions import ResourceAlreadyExists
 
 from eva.exceptions import InvalidParameter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 remote_ucs = {}
 remote_lms = {}
@@ -63,7 +63,8 @@ def get_item(i):
         gi = eva.sfa.controller.lm_pool.lvars
     else:
         return None
-    if not _i in gi: return None
+    if not _i in gi:
+        return None
     return gi[_i]
 
 
@@ -94,7 +95,8 @@ def get_controller(controller_id):
 def get_uc(controller_id):
     controller_lock.acquire()
     try:
-        if not controller_id: return None
+        if not controller_id:
+            return None
         if controller_id.find('/') > -1:
             return get_controller(controller_id)
         else:
@@ -107,7 +109,8 @@ def get_uc(controller_id):
 def get_lm(controller_id):
     controller_lock.acquire()
     try:
-        if not controller_id: return None
+        if not controller_id:
+            return None
         if controller_id.find('/') > -1:
             return get_controller(controller_id)
         else:
@@ -267,7 +270,8 @@ def append_uc(uri,
               static=True):
     api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('uc')
-    if key is not None: api.set_key(eva.apikey.format_key(key))
+    if key is not None:
+        api.set_key(eva.apikey.format_key(key))
     if timeout is not None:
         try:
             t = float(timeout)
@@ -285,20 +289,24 @@ def append_uc(uri,
             uport = ':8812'
     api.set_uri(uri + uport)
     mqu = mqtt_update
-    if mqu is None: mqu = eva.core.config.mqtt_update_default
+    if mqu is None:
+        mqu = eva.core.config.mqtt_update_default
     u = eva.client.remote_controller.RemoteUC(None,
                                               api=api,
                                               mqtt_update=mqu,
                                               static=static)
     u._key = key
-    if makey: u.set_prop('masterkey', makey)
-    if not uc_pool.append(u): return False
+    if makey:
+        u.set_prop('masterkey', makey)
+    if not uc_pool.append(u):
+        return False
     controller_lock.acquire()
     try:
         remote_ucs[u.item_id] = u
     finally:
         controller_lock.release()
-    if save: u.save()
+    if save:
+        u.save()
     logging.info('controller %s added to pool' % u.full_id)
     return u
 
@@ -339,7 +347,8 @@ def append_lm(uri,
               static=True):
     api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('lm')
-    if key is not None: api.set_key(eva.apikey.format_key(key))
+    if key is not None:
+        api.set_key(eva.apikey.format_key(key))
     if timeout is not None:
         try:
             t = float(timeout)
@@ -357,20 +366,24 @@ def append_lm(uri,
             uport = ':8817'
     api.set_uri(uri + uport)
     mqu = mqtt_update
-    if mqu is None: mqu = eva.core.config.mqtt_update_default
+    if mqu is None:
+        mqu = eva.core.config.mqtt_update_default
     u = eva.client.remote_controller.RemoteLM(None,
                                               api=api,
                                               mqtt_update=mqu,
                                               static=static)
     u._key = key
-    if makey: u.set_prop('masterkey', makey)
-    if not lm_pool.append(u): return False
+    if makey:
+        u.set_prop('masterkey', makey)
+    if not lm_pool.append(u):
+        return False
     controller_lock.acquire()
     try:
         remote_lms[u.item_id] = u
     finally:
         controller_lock.release()
-    if save: u.save()
+    if save:
+        u.save()
     logging.info('controller %s added to pool' % u.full_id)
     return u
 
@@ -403,7 +416,8 @@ def remove_lm(controller_id):
 
 def remove_controller(controller_id):
     c = get_controller(controller_id)
-    if not c: raise ResourceNotFound
+    if not c:
+        raise ResourceNotFound
     if c.item_type == 'remote_uc':
         return remove_uc(c.item_id)
     elif c.item_type == 'remote_lm':
@@ -418,12 +432,14 @@ def serialize():
 
 
 def start():
+    eva.core.plugins_exec('before_start')
     uc_pool.start()
     for i, v in remote_ucs.items():
         eva.core.spawn(connect_remote_controller, uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
         eva.core.spawn(connect_remote_controller, lm_pool, v)
+    eva.core.plugins_exec('start')
 
 
 def connect_remote_controller(pool, v):
@@ -437,12 +453,15 @@ def connect_remote_controller(pool, v):
 
 @eva.core.stop
 def stop():
+    eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.config.db_update == 1: save()
+    if eva.core.config.db_update == 1:
+        save()
     if uc_pool:
         uc_pool.stop()
     if lm_pool:
         lm_pool.stop()
+    eva.core.plugins_exec('stop')
 
 
 @eva.core.dump

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import logging
 import uuid
@@ -48,7 +48,8 @@ class DecisionMatrix(object):
         with self.rules_locker:
             rules = self.rules.copy()
         for rule in rules:
-            if not rule.enabled: continue
+            if not rule.enabled:
+                continue
             with rule.processing_lock:
                 if rule.for_item_type and rule.for_item_type != '#' and \
                         rule.for_item_type != item.item_type:
@@ -237,7 +238,8 @@ class DecisionMatrix(object):
                     ' %s for event %s' % (rule.macro, event_code))
 
     def append_rule(self, d_rule, do_sort=True):
-        if d_rule in self.rules: return False
+        if d_rule in self.rules:
+            return False
         r = self.rules.copy()
         r.append(d_rule)
         if do_sort:
@@ -255,7 +257,8 @@ class DecisionMatrix(object):
         return r
 
     def remove_rule(self, d_rule):
-        if not d_rule in self.rules: return False
+        if not d_rule in self.rules:
+            return False
         self.rules.remove(d_rule)
 
 
@@ -299,7 +302,8 @@ class DecisionRule(eva.item.Item):
         d = {}
         if info or full:
             c = self.chillout_time + self.last_matched - time.time()
-            if c < 0: c = 0
+            if c < 0:
+                c = 0
             d['chillout_ends_in'] = c
         d['enabled'] = self.enabled
         d['priority'] = self.priority
@@ -331,8 +335,10 @@ class DecisionRule(eva.item.Item):
             if self.in_range_min is not None:
                 if isinstance(self.in_range_min, float):
                     try:
-                        if self.for_prop == 'status': m = int(self.in_range_min)
-                        else: m = self.in_range_min
+                        if self.for_prop == 'status':
+                            m = int(self.in_range_min)
+                        else:
+                            m = self.in_range_min
                     except:
                         m = self.in_range_min
                     if self.in_range_min == self.in_range_max and \
@@ -342,7 +348,8 @@ class DecisionRule(eva.item.Item):
                         condition = 'x == %s' % m
                     else:
                         condition = str(m) + ' <'
-                        if self.in_range_min_eq: condition += '='
+                        if self.in_range_min_eq:
+                            condition += '='
                         condition += ' x'
                 else:
                     condition = 'x == \'%s\'' % self.in_range_min
@@ -353,11 +360,15 @@ class DecisionRule(eva.item.Item):
                     not cond_eq and \
                     self.in_range_max is not None and \
                     isinstance(self.in_range_max, float):
-                if not condition: condition = 'x'
+                if not condition:
+                    condition = 'x'
                 condition += ' <'
-                if self.in_range_max_eq: condition += '='
-                if self.for_prop == 'status': m = int(self.in_range_max)
-                else: m = self.in_range_max
+                if self.in_range_max_eq:
+                    condition += '='
+                if self.for_prop == 'status':
+                    m = int(self.in_range_max)
+                else:
+                    m = self.in_range_max
                 condition += ' ' + str(m)
             d['condition'] = condition
         d.update(super().serialize(full=full,
@@ -365,8 +376,12 @@ class DecisionRule(eva.item.Item):
                                    info=info,
                                    props=props,
                                    notify=notify))
-        if 'group' in d: del d['group']
-        if 'full_id' in d: del d['full_id']
+        if 'group' in d:
+            del d['group']
+        if 'full_id' in d:
+            del d['full_id']
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def update_config(self, data):
@@ -540,7 +555,8 @@ class DecisionRule(eva.item.Item):
         elif prop == 'priority':
             try:
                 v = int(val)
-                if v <= 0: return False
+                if v <= 0:
+                    return False
             except:
                 return False
             if self.priority != v:
@@ -550,10 +566,14 @@ class DecisionRule(eva.item.Item):
             return True
         elif prop == 'for_item_type':
             if val is not None:
-                if val == 'U': v = 'unit'
-                elif val == 'S': v = 'sensor'
-                elif val == 'LV': v = 'lvar'
-                else: v = val
+                if val == 'U':
+                    v = 'unit'
+                elif val == 'S':
+                    v = 'sensor'
+                elif val == 'LV':
+                    v = 'lvar'
+                else:
+                    v = val
                 if not v in ['#', 'unit', 'sensor', 'lvar']:
                     return False
             else:
@@ -576,7 +596,8 @@ class DecisionRule(eva.item.Item):
                 self.set_modified(save)
             return True
         elif prop == 'for_prop':
-            if val not in ['status', 'value', 'nstatus', 'nvalue']: return False
+            if val not in ['status', 'value', 'nstatus', 'nvalue']:
+                return False
             if self.for_prop != val:
                 self.for_prop = val
                 self.log_set(prop, val)
@@ -599,7 +620,8 @@ class DecisionRule(eva.item.Item):
                 try:
                     v = float(val)
                 except:
-                    if self.for_prop == 'status': return False
+                    if self.for_prop == 'status':
+                        return False
                     v = val
             else:
                 v = None
@@ -613,7 +635,8 @@ class DecisionRule(eva.item.Item):
                 try:
                     v = float(val)
                 except:
-                    if self.for_prop == 'status': return False
+                    if self.for_prop == 'status':
+                        return False
                     v = val
             else:
                 v = None

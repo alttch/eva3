@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import logging
 import eva.core
@@ -13,7 +13,7 @@ import pyaltt2.logs
 
 from eva.exceptions import InvalidParameter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from functools import partial
 
@@ -44,26 +44,29 @@ def get_log_level_by_id(l):
         if lv in log_levels_by_name:
             return lv
     else:
-        level = log_levels_by_id(l)
-    if not level:
-        raise InvalidParameter('Invalid log level specified: {}'.format(l))
+        level = log_levels_by_id.get(l, logging.getLevelName(l))
     return level
 
 
 def handle_append(rd, **kwargs):
     import eva.notify
+    rd['lvl'] = get_log_level_by_id(rd['l'])
     eva.notify.notify('log', [rd], **kwargs)
 
 
 def init():
-    formatter = logging.Formatter(('%(asctime)s ' + \
-            eva.core.config.system_name + \
-        ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
-        'l:%(lineno)d th:%(threadName)s :: %(message)s') if \
-            eva.core.config.development else \
-            ('%(asctime)s ' + eva.core.config.system_name + \
-            '  %(levelname)s ' + eva.core.product.code + \
-            ' %(threadName)s: %(message)s'))
+    if eva.core.config.log_format:
+        log_format = eva.core.config.log_format
+    else:
+        log_format = ('%(asctime)s ' + \
+                eva.core.config.system_name + \
+            ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
+            'l:%(lineno)d th:%(threadName)s :: %(message)s') if \
+                eva.core.config.development else \
+                ('%(asctime)s ' + eva.core.config.system_name + \
+                '  %(levelname)s ' + eva.core.product.code + \
+                ' %(threadName)s: %(message)s')
+    formatter = logging.Formatter(log_format)
     pyaltt2.logs.handle_append = handle_append
     pyaltt2.logs.init(
         name=eva.core.product.code,
@@ -85,7 +88,7 @@ def init():
 
 
 def start():
-    pyaltt2.logs.start()
+    pyaltt2.logs.start(loop='cleaners')
 
 
 @eva.core.stop

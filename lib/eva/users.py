@@ -1,13 +1,17 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import hashlib
 import eva.core
 import logging
+import rapidjson
 import sqlalchemy as sa
 import subprocess
+import time
+import dateutil
+from datetime import datetime
 
 from eva import apikey
 from eva.core import userdb
@@ -18,6 +22,66 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceAlreadyExists
+
+from neotasker import background_worker
+
+from pyaltt2.db import format_condition as format_sql_condition
+
+from eva.tools import SimpleNamespace
+
+from eva.tools import fmt_time
+
+_d = SimpleNamespace(msad=None, msad_ou='EVA', msad_key_prefix='')
+
+api_log_clean_delay = 60
+
+
+def msad_init(host, domain, ca=None, key_prefix=None, ou=None):
+    try:
+        from easyad import EasyAD
+    except:
+        logging.error('unable to import easyad module')
+        return
+    ad_config = dict(AD_SERVER=host, AD_DOMAIN=domain, CA_CERT_FILE=ca)
+    _d.msad = EasyAD(ad_config)
+    _d.msad_key_prefix = key_prefix if key_prefix else ''
+    if ou is not None:
+        _d.msad_ou = ou
+
+
+def msad_authenticate(username, password):
+    try:
+        if not _d.msad:
+            return None
+        user = _d.msad.authenticate_user(username, password, json_safe=True)
+
+        if not user:
+            logging.warning(f'user {username} active directory access denied')
+            return None
+
+        for grp in _d.msad.get_all_user_groups(user=user,
+                                               credentials=dict(
+                                                   username=username,
+                                                   password=password)):
+            cn = None
+            ou = None
+            for el in grp.split(','):
+                try:
+                    name, value = el.split('=')
+                    if name == 'CN':
+                        cn = value
+                    elif name == 'OU':
+                        ou = value
+                    if cn and ou:
+                        break
+                except:
+                    pass
+            if ou == _d.msad_ou and cn:
+                return _d.msad_key_prefix + cn
+    except:
+        logging.error('Unable to access active directory')
+        eva.core.log_traceback()
+    return None
 
 
 def crypt_password(password):
@@ -34,9 +98,162 @@ def authenticate(user=None, password=None):
                            p=crypt_password(password)).fetchone()
     except:
         eva.core.report_userdb_error()
-    if not r:
-        raise AccessDenied('Authentication failure')
-    return r.k
+    if r:
+        return r.k, None
+    else:
+        k = msad_authenticate(user, password)
+        if k is None:
+            raise AccessDenied('Authentication failure')
+        else:
+            logging.debug(
+                f'user {user} authenticated via active directory, key id: {k}')
+            return k, 'msad'
+
+
+def api_log_insert(call_id,
+                   gw=None,
+                   ip=None,
+                   auth=None,
+                   u=None,
+                   utp=None,
+                   ki=None,
+                   func=None,
+                   params=None):
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(sql(
+            'insert into api_log(id, t, gw, ip, auth, u, utp, ki, func, params)'
+            ' values (:i, :t, :gw, :ip, :auth, :u, :utp, :ki, :func, :params)'),
+                       i=call_id,
+                       t=time.time(),
+                       gw=gw,
+                       ip=ip,
+                       auth=auth,
+                       u=u,
+                       utp=utp,
+                       ki=ki,
+                       func=func,
+                       params=rapidjson.dumps(params)[:512])
+        dbt.commit()
+    except:
+        dbt.rollback()
+        logging.error('Unable to insert API call info into DB')
+        eva.core.log_traceback()
+
+
+def api_log_set_status(call_id, status=None):
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(
+            sql('update api_log set tf=:tf, status=:status where id=:i'),
+            i=call_id,
+            tf=time.time(),
+            status=status)
+        dbt.commit()
+    except:
+        dbt.rollback()
+        logging.error('Unable to update API call info in DB')
+        eva.core.log_traceback()
+
+
+def api_log_update(call_id, **kwargs):
+    # unsafe, make sure kwargs keys are not coming from outside
+    cond = ''
+    qkw = {'i': call_id}
+    for k, v in kwargs.items():
+        if cond:
+            cond += ','
+        cond += f'{k}=:{k}'
+        qkw[k] = v
+    if cond:
+        dbconn = userdb()
+        dbt = dbconn.begin()
+        try:
+            dbconn.execute(sql(f'update api_log set {cond} where id=:i'), **qkw)
+            dbt.commit()
+        except:
+            dbt.rollback()
+            logging.error('Unable to update API call info in DB')
+            eva.core.log_traceback()
+
+
+def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
+    t_start = fmt_time(t_start)
+    t_end = fmt_time(t_end)
+    qkw = {}
+    if t_start or t_end:
+        cond = 'where ('
+        if t_start is not None:
+            try:
+                t_start = float(t_start)
+            except:
+                try:
+                    t_start = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    raise ValueError('start time format is uknown')
+            cond += 't >= :t_start'
+            qkw['t_start'] = t_start
+        if t_end is not None:
+            try:
+                t_end = float(t_end)
+            except:
+                try:
+                    t_end = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    raise ValueError('end time format is uknown')
+            if t_start is not None:
+                cond += ' and '
+            cond += 't <= :t_end'
+            qkw['t_end'] = t_end
+        cond += ')'
+    else:
+        cond = ''
+    if f:
+        # make sure some empty fields are null
+        for z in ('u', 'utp', 'status'):
+            if z in f and f[z] == '':
+                f[z] = None
+    if 'params' in f:
+        condp = 'params like :params'
+        qkw['params'] = f'%{f["params"]}%'
+        del f['params']
+    else:
+        condp = None
+    try:
+        cond, qkw = format_sql_condition(f,
+                                         qkw,
+                                         fields=('gw', 'ip', 'auth', 'u', 'utp',
+                                                 'ki', 'func', 'status'),
+                                         cond=cond)
+    except ValueError as e:
+        raise ValueError(f'Invalid filter: {e}')
+    if condp:
+        if cond:
+            cond += ' and '
+        else:
+            cond = 'where '
+        cond += condp
+    if limit is None:
+        cond += ' order by t asc'
+    else:
+        cond += f' order by t desc limit {limit}'
+    result = [
+        dict(r) for r in userdb().execute(
+            sql('select id, t, tf, gw, ip, auth, u, utp, ki,'
+                f' func, params, status from api_log {cond}'), **
+            qkw).fetchall()
+    ]
+    if limit is not None:
+        result = sorted(result, key=lambda k: k['t'])
+    if time_format == 'iso':
+        import pytz
+        tz = pytz.timezone(time.tzname[0])
+        for r in result:
+            r['t'] = datetime.fromtimestamp(r['t'], tz).isoformat()
+            r['tf'] = datetime.fromtimestamp(r['tf'], tz).isoformat()
+    return result
 
 
 def list_users():
@@ -46,7 +263,8 @@ def list_users():
         r = dbconn.execute(sql('select u, k from users order by u'))
         while 1:
             row = r.fetchone()
-            if not row: break
+            if not row:
+                break
             u = {}
             u['user'] = row.u
             u['key_id'] = row.k
@@ -57,7 +275,8 @@ def list_users():
 
 
 def get_user(user=None):
-    if not user: return None
+    if not user:
+        return None
     try:
         dbconn = userdb()
         result = []
@@ -65,12 +284,14 @@ def get_user(user=None):
                              u=user).fetchone()
     except:
         eva.core.report_userdb_error()
-    if not row: raise ResourceNotFound
+    if not row:
+        raise ResourceNotFound
     return {'user': row.u, 'key_id': row.k}
 
 
 def create_user(user=None, password=None, key=None):
-    if user is None or password is None or key is None: return False
+    if user is None or password is None or key is None:
+        return False
     if key not in apikey.keys_by_id:
         raise ResourceNotFound('API key')
     try:
@@ -155,11 +376,53 @@ def init():
                        sa.Column('u', sa.String(64), primary_key=True),
                        sa.Column('p', sa.String(64)),
                        sa.Column('k', sa.String(64)))
+    t_api_log = sa.Table('api_log', meta,
+                         sa.Column('id', sa.String(36), primary_key=True),
+                         sa.Column('t', sa.Numeric(20, 8), nullable=False),
+                         sa.Column('tf', sa.Numeric(20, 8)),
+                         sa.Column('gw', sa.String(128)),
+                         sa.Column('ip', sa.String(45)),
+                         sa.Column('auth', sa.String(128)),
+                         sa.Column('u', sa.String(128)),
+                         sa.Column('utp', sa.String(32)),
+                         sa.Column('ki', sa.String(128)),
+                         sa.Column('func', sa.String(128)),
+                         sa.Column('params', sa.String(512)),
+                         sa.Column('status', sa.String(32)))
     try:
         meta.create_all(dbconn)
     except:
         eva.core.log_traceback()
         logging.critical('unable to create apikeys table in db')
+
+
+def update_config(cfg):
+    try:
+        host = cfg.get('msad', 'host')
+    except:
+        return
+    logging.debug(f'msad.host = {host}')
+    try:
+        domain = cfg.get('msad', 'domain')
+    except:
+        domain = ''
+    logging.debug(f'msad.domain = {domain}')
+    try:
+        ca = cfg.get('msad', 'ca')
+    except:
+        ca = None
+    logging.debug(f'msad.ca = {ca}')
+    try:
+        key_prefix = cfg.get('msad', 'key_prefix')
+    except:
+        key_prefix = None
+    logging.debug(f'msad.key_prefix = {key_prefix}')
+    try:
+        ou = cfg.get('msad', 'ou')
+    except:
+        ou = _d.msad_ou
+    logging.debug(f'msad.ou = {ou}')
+    msad_init(host, domain, ca, key_prefix, ou)
 
 
 def run_hook(cmd, u, password=None):
@@ -176,3 +439,31 @@ def run_hook(cmd, u, password=None):
     if exitcode:
         raise FunctionFailed('user hook exited with code {}'.format(exitcode))
     return True
+
+
+def start():
+    if eva.core.config.keep_api_log:
+        api_log_cleaner.start()
+
+
+@eva.core.stop
+def stop():
+    if eva.core.config.keep_api_log:
+        api_log_cleaner.stop()
+
+
+@background_worker(delay=api_log_clean_delay,
+                   name='users:api_log_cleaner',
+                   loop='cleaners',
+                   on_error=eva.core.log_traceback)
+def api_log_cleaner(**kwargs):
+    logging.debug('cleaning API log')
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(sql('delete from api_log where t < :t'),
+                       t=time.time() - eva.core.config.keep_api_log)
+        dbt.commit()
+    except:
+        dbt.rollback()
+        raise

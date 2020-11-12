@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -28,7 +28,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p lvar')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('lvar:'):
@@ -49,7 +50,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p lvar')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -61,7 +63,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['config', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -73,7 +76,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -86,7 +90,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('cycle list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -97,7 +102,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -107,7 +113,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('cycle list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -119,7 +126,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['macro', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -129,7 +137,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['cycle', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -137,7 +146,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('ext list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -147,7 +157,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('ext mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -161,7 +172,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('controller list')
-            if code: return True
+            if code:
+                return True
             result = set()
             if self.allow_all:
                 result.add('all')
@@ -176,7 +188,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['controller', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -190,7 +203,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 if p:
                     opts = ['-p', p]
             code, data = self.cli.call(['remote'] + opts)
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -200,7 +214,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('rule list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -211,7 +226,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(
                 ['rule', 'props', kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             result.append('oid')
             return result
@@ -241,7 +257,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
                     code, data = self.cli.call('state -p lvar')
                 else:
                     code, data = self.cli.call('remote')
-                if code: return True
+                if code:
+                    return True
                 result = []
                 for d in data:
                     result.append(d['oid'] + '.status')
@@ -253,7 +270,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('job list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -264,7 +282,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(
                 ['job', 'props', kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -1249,7 +1268,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 _me = 'EVA ICS LM CLI version %s' % __version__
 
 prog = os.path.basename(__file__)[:-3]
-if prog == 'eva-shell': prog = 'eva lm'
+if prog == 'eva-shell':
+    prog = 'eva lm'
 
 cli = LM_CLI('lm', _me, prog=prog)
 

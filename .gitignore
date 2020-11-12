@@ -1,5 +1,4 @@
 __pycache__
-Makefile
 TODO*
 common.txt
 doc/_build
@@ -7,7 +6,8 @@ bin/eva-shell
 etc/eva_servers
 etc/watchdog
 etc/*.ini
-dev
+etc/venv
+keys
 dist
 lib/ei/css/ei.min.css
 lib/ei/js/lm.min.js
@@ -19,6 +19,7 @@ log
 runtime
 xc/uc
 xc/lm
+xc/sfa
 var
 backup
 etc/easy_setup
@@ -40,3 +41,4 @@ sbin/get-setup-options
 sbin/layout-converter
 sbin/eva-update-tables
 tests/benchmark-uc-crt
+lib/eva/plugins

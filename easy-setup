@@ -73,7 +73,7 @@ function usage {
     echo " --supervisor             Use supervisord (should be installed)"
     echo " -u USER                  set up all controllers to run under specified user"
     echo
-    echo " --link                   link all controllers statically (requires --mqtt)"
+    echo " --link                   link all controllers statically"
     echo "                          WARNING: it's not possible to change controller id"
     echo "                          after linking. IDs of all controllers are automatically"
     echo "                          set to the current host name. If you want to use different"
@@ -517,6 +517,10 @@ do
             SKIP_CHECK=1
             shift
         ;;
+        --skip-venv)
+            SKIP_VENV=1
+            shift
+        ;;
         -h|--help)
             usage
             exit 0
@@ -662,7 +666,7 @@ fi
 
 # check mods, build venv
 
-if [ -z $SKIP_CHECK ]; then
+if [ -z $SKIP_VENV ]; then
     echo "Building VENV"
     ./install/build-venv || exit 1
     echo

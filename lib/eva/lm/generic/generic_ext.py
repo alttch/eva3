@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 __description__ = "Generic macro extension, don't use"
-__api__ = 6
+__api__ = 7
 __mods_required__ = []
 
 __id__ = 'generic'
@@ -27,8 +27,10 @@ from eva.lm.extapi import load_data
 from eva.lm.extapi import save_data
 from eva.lm.extapi import log_traceback
 
+from eva.x import GenericX
 
-class LMExt(object):
+
+class LMExt(GenericX):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config
@@ -40,7 +42,8 @@ class LMExt(object):
             self.cfg = cfg
         else:
             self.cfg = {}
-        mod = sys.modules[self.__module__]
+        mod = kwargs.get('_xmod')
+        self.__xmod__ = mod
         self.mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
@@ -48,7 +51,7 @@ class LMExt(object):
         self.__version = mod.__version__
         self.__mods_required = mod.__mods_required__
         self.__api_version = mod.__api__
-        self.__config_help = mod.__config_help__
+        self._config_help = mod.__config_help__
         self.__functions = mod.__functions__
         self.__help = mod.__help__
         try:
@@ -56,7 +59,10 @@ class LMExt(object):
         except:
             self.__iec_functions = {}
         self.ext_id = None  # set by extapi on load
-        if kwargs.get('info_only'): return
+        if kwargs.get('info_only'):
+            return
+        if not kwargs.get('config_validated'):
+            self.validate_config(self.cfg, config_type='config')
         self.data = {}
         self.data_lock = threading.RLock()
         self.data_modified = True
@@ -90,7 +96,7 @@ class LMExt(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help
+                d = self._config_help
             elif helpinfo == 'functions':
                 d = self.__functions
             else:

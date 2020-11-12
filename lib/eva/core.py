@@ -1,7 +1,9 @@
+from __future__ import print_function
+
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import platform
@@ -15,17 +17,25 @@ import rapidjson
 import signal
 import psutil
 import threading
-import inspect
 import sqlalchemy as sa
 import faulthandler
 import gzip
 import timeouter
 import uuid
 import glob
+import importlib
+import yaml
+
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
+from eva.tools import get_caller
+from eva.tools import SimpleNamespace
 
 from eva.tools import Locker as GenericLocker
 
@@ -35,8 +45,6 @@ from eva.exceptions import TimeoutException
 from neotasker import g, FunctionCollection, task_supervisor
 
 import pyaltt2.logs
-
-from types import SimpleNamespace
 
 version = __version__
 
@@ -49,7 +57,9 @@ dir_eva_default = '/opt/eva'
 env = {}
 cvars = {}
 
-controllers = set()
+controllers = []
+
+plugin_modules = {}
 
 spawn = task_supervisor.spawn
 
@@ -68,6 +78,7 @@ config = SimpleNamespace(pid_file=None,
                          log_file=None,
                          db_uri=None,
                          userdb_uri=None,
+                         keep_api_log=0,
                          debug=False,
                          system_name=platform.node(),
                          controller_name=None,
@@ -90,12 +101,14 @@ config = SimpleNamespace(pid_file=None,
                          exec_after_save=None,
                          mqtt_update_default=None,
                          enterprise_layout=True,
+                         log_format=None,
                          syslog=None,
                          syslog_format=None,
                          reactor_thread_pool=15,
                          pool_min_size='max',
                          pool_max_size=None,
-                         user_hook=None)
+                         user_hook=None,
+                         plugins=[])
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
@@ -103,7 +116,7 @@ log_engine = SimpleNamespace(logger=None,
                              log_file_handler=None,
                              syslog_handler=None)
 
-db_pool_size = 15
+db_pool_size = 15  # changed to thread count when WEB API is initialized
 
 sleep_step = 0.1
 
@@ -111,7 +124,9 @@ _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
 db_update_codes = ['manual', 'instant', 'on_exit']
-
+"""
+main EVA ICS directory
+"""
 dir_eva = os.environ['EVA_DIR'] if 'EVA_DIR' in os.environ \
                                             else dir_eva_default
 dir_var = dir_eva + '/var'
@@ -146,14 +161,16 @@ corescript_globals = {
 
 
 def critical(log=True, from_driver=False):
-    if _flags.ignore_critical: return
+    if _flags.ignore_critical:
+        return
     try:
-        caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
+        caller = get_caller()
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
                                     caller.function)
     except:
         caller_info = ''
-    if log: log_traceback(force=True)
+    if log:
+        log_traceback(force=True)
     if config.dump_on_critical:
         _flags.ignore_critical = True
         logging.critical('critical exception. dump file: %s' %
@@ -199,7 +216,14 @@ stop = FunctionCollection(on_error=log_traceback)
 
 
 def format_db_uri(db_uri):
-    if not db_uri: return None
+    """
+    Formats short database URL to SQLAlchemy URI
+
+    - if no DB engine specified, SQLite is used
+    - if relative SQLite db path is used, it's created under EVA dir
+    """
+    if not db_uri:
+        return None
     _db_uri = db_uri
     if _db_uri.startswith('sqlite:///'):
         _db_uri = _db_uri[10:]
@@ -215,7 +239,15 @@ def format_db_uri(db_uri):
 
 
 def create_db_engine(db_uri, timeout=None):
-    if not db_uri: return None
+    """
+    Create SQLAlchemy database Engine
+
+    - database timeout is set to core timeout, if not specified
+    - database pool size is auto-configured
+    - for all engines, except SQLite, "READ UNCOMMITED" isolation level is used
+    """
+    if not db_uri:
+        return None
     if db_uri.startswith('sqlite:///'):
         return sa.create_engine(
             db_uri,
@@ -240,7 +272,8 @@ def suicide(**kwargs):
 
 
 def sighandler_term(signum=None, frame=None):
-    if _flags.sigterm_sent: return
+    if _flags.sigterm_sent:
+        return
     _flags.sigterm_sent = True
     threading.Thread(target=suicide, daemon=True).start()
     logging.info('got TERM signal, exiting')
@@ -259,7 +292,8 @@ def sighandler_int(signum, frame):
 
 
 def prepare_save():
-    if not config.exec_before_save: return True
+    if not config.exec_before_save:
+        return True
     logging.debug('executing before save command "%s"' % \
         config.exec_before_save)
     code = os.system(config.exec_before_save)
@@ -271,7 +305,8 @@ def prepare_save():
 
 
 def finish_save():
-    if not config.exec_after_save: return True
+    if not config.exec_after_save:
+        return True
     logging.debug('executing after save command "%s"' % \
         config.exec_after_save)
     code = os.system(config.exec_after_save)
@@ -318,10 +353,33 @@ def core_shutdown():
     task_supervisor.stop(wait=True)
 
 
+def serialize_plugin(plugin_name, plugin_module):
+    result = {
+        'name': plugin_name,
+        'author': getattr(plugin_module, '__author__', None),
+        'version': getattr(plugin_module, '__version__', None),
+        'license': getattr(plugin_module, '__license__', None)
+    }
+    try:
+        result['ready'] = plugin_module.flags.ready
+    except:
+        result['ready'] = None
+    return result
+
+
+def serialize_plugins():
+    return [serialize_plugin(p, v) for p, v in plugin_modules.items()]
+
+
 def create_dump(e='request', msg=''):
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
+        result['plugin_modules'] = serialize_plugins()
+        result['plugins'] = {
+            p: exec_plugin_func(p, v, 'dump')
+            for p, v in plugin_modules.items()
+        }
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
         dmp = format_json(result,
@@ -353,6 +411,7 @@ def serialize():
     d['product_code'] = product.code
     d['product_build'] = product.build
     d['keep_logmem'] = config.keep_logmem
+    d['keep_api_log'] = config.keep_api_log
     d['keep_action_history'] = config.keep_action_history
     d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
@@ -403,6 +462,9 @@ def set_db(db_uri=None, userdb_uri=None):
 
 
 def db():
+    """
+    get SQLAlchemy connection to primary DB
+    """
     with _db_lock:
         if not g.has('db'):
             if config.db_update == 1:
@@ -422,6 +484,9 @@ def db():
 
 
 def userdb():
+    """
+    get SQLAlchemy connection to user DB
+    """
     with _userdb_lock:
         if not g.has('userdb'):
             if config.db_update == 1:
@@ -461,7 +526,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             try:
-                if not check_pid: raise Exception('no check required')
+                if not check_pid:
+                    raise Exception('no check required')
                 with open(config.pid_file) as fd:
                     pid = int(fd.readline().strip())
                 p = psutil.Process(pid)
@@ -485,6 +551,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             try:
+                config.log_format = cfg.get('server', 'log_format')
+            except:
+                pass
+            try:
                 config.syslog_format = cfg.get('server', 'syslog_format')
             except:
                 pass
@@ -498,7 +568,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                        log_level.upper())
             except:
                 pass
-            if init_log: init_logs()
+            if init_log:
+                init_logs()
             try:
                 config.development = (cfg.get('server', 'development') == 'yes')
             except:
@@ -522,13 +593,16 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                         config.show_traceback = True
                     else:
                         config.debug = (cfg.get('server', 'debug') == 'yes')
-                    if config.debug: debug_on()
+                    if config.debug:
+                        debug_on()
                 except:
                     pass
                 if not config.debug:
                     logging.basicConfig(level=config.default_log_level)
                     if log_engine.logger:
                         log_engine.logger.setLevel(config.default_log_level)
+            if config.show_traceback:
+                pyaltt2.logs.config.tracebacks = True
             try:
                 config.system_name = cfg.get('server', 'name')
                 update_controller_name()
@@ -572,7 +646,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             try:
                 db_uri = cfg.get('server', 'db')
             except:
-                if db_file: db_uri = db_file
+                if db_file:
+                    db_uri = db_file
             config.db_uri = format_db_uri(db_uri)
             logging.debug('server.db = %s' % config.db_uri)
             try:
@@ -584,8 +659,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             try:
                 userdb_uri = cfg.get('server', 'userdb')
             except:
-                if userdb_file: userdb_uri = userdb_file
-                else: userdb_uri = None
+                if userdb_file:
+                    userdb_uri = userdb_file
+                else:
+                    userdb_uri = None
             if userdb_uri:
                 config.userdb_uri = format_db_uri(userdb_uri)
             else:
@@ -615,7 +692,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             config.timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
-        if not config.polldelay: config.polldelay = 0.01
+        if not config.polldelay:
+            config.polldelay = 0.01
         logging.debug('server.timeout = %s' % config.timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                             (config.polldelay, int(config.polldelay * 1000)))
@@ -667,6 +745,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             pass
         logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
         try:
+            config.keep_api_log = int(cfg.get('server', 'keep_api_log'))
+        except:
+            pass
+        logging.debug('server.keep_api_log = %s sec' % config.keep_api_log)
+        try:
             config.exec_before_save = cfg.get('server', 'exec_before_save')
         except:
             pass
@@ -684,15 +767,69 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug('server.mqtt_update_default = %s' %
                       config.mqtt_update_default)
         try:
+            config.plugins = [
+                x.strip() for x in cfg.get('server', 'plugins').split(',')
+            ]
+        except:
+            pass
+        logging.debug('server.plugins = %s' % ', '.join(config.plugins))
+        try:
             config.default_cloud_key = cfg.get('cloud', 'default_key')
         except:
             pass
         logging.debug('cloud.default_key = %s' % config.default_cloud_key)
+        # init plugins
+        for p in config.plugins:
+            fname = f'{dir_eva}/plugins/{p}.py'
+            if os.path.isfile(fname):
+                try:
+                    plugin_modules[p] = importlib.import_module(
+                        f'eva.plugins.{p}')
+                except:
+                    logging.error(f'unable to load plugin {p} ({fname})')
+                    log_traceback()
+                    continue
+            else:
+                try:
+                    modname = f'evacontrib.{p}'
+                    plugin_modules[p] = importlib.import_module(modname)
+                except:
+                    logging.error(f'unable to load plugin {p} ({modname})')
+                    log_traceback()
+                    continue
+            logging.info(f'+ plugin {p}')
+        load_plugin_config(cfg)
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)
         log_traceback(display=True)
     return False
+
+
+def load_plugin_config(cfg):
+    c = dict(cfg)
+    for p, v in plugin_modules.items():
+        plugin_config = dict(c.get(f'plugin.{p}', {}))
+        exec_plugin_func(p, v, 'init', plugin_config)
+
+
+def plugins_exec(method, *args, **kwargs):
+    for p, v in plugin_modules.items():
+        exec_plugin_func(p, v, method, *args, **kwargs)
+
+
+def exec_plugin_func(pname, plugin, func, *args, **kwargs):
+    try:
+        m = getattr(plugin, func)
+    except:
+        return None
+    try:
+        logging.debug(f'Executing plugin func {pname}.{func}')
+        return m(*args, **kwargs)
+    except:
+        logging.error(f'Unable to exec plugin func {pname}.{func}')
+        log_traceback()
+        return None
 
 
 @cvars_lock
@@ -705,7 +842,10 @@ def load_cvars(fname=None):
     cvars.clear()
     env.clear()
     env.update(os.environ.copy())
-    if not 'PATH' in env: env['PATH'] = ''
+    env['EVA_VERSION'] = __version__
+    env['EVA_BUILD'] = str(product.build)
+    if not 'PATH' in env:
+        env['PATH'] = ''
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
     logging.info('Loading custom vars from %s' % fname_full)
     try:
@@ -747,12 +887,12 @@ def save_cvars(fname=None):
     try:
         with open(fname_full, 'w') as fd:
             fd.write(format_json(cvars, minimal=False))
+        _flags.cvars_modified = False
         return True
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
         return False
-    _flags.cvars_modified = False
 
 
 @corescript_lock
@@ -763,12 +903,12 @@ def save_cs(fname=None):
         with open(fname_full, 'w') as fd:
             fd.write(format_json({'mqtt-topics': cs_data.topics},
                                  minimal=False))
+        _flags.cs_modified = False
         return True
     except:
         logging.error('can not save corescript config to %s' % fname_full)
         log_traceback()
         return False
-    _flags.cs_modified = False
 
 
 @cvars_lock
@@ -781,7 +921,8 @@ def get_cvar(var=None):
 
 @cvars_lock
 def set_cvar(var, value=None):
-    if not var: return False
+    if not var:
+        return False
     if value is not None:
         cvars[str(var)] = str(value)
     elif var not in cvars:
@@ -791,8 +932,10 @@ def set_cvar(var, value=None):
             del cvars[str(var)]
         except:
             return False
-    if config.db_update == 1: save_cvars()
-    else: _flags.cvars_modified = True
+    if config.db_update == 1:
+        save_cvars()
+    else:
+        _flags.cvars_modified = True
     return True
 
 
@@ -854,10 +997,14 @@ def unlink_pid_file():
 
 
 def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
-    if wait_timeout: t = wait_timeout
-    else: t = config.timeout
-    if delay: p = delay
-    else: p = config.polldelay
+    if wait_timeout:
+        t = wait_timeout
+    else:
+        t = config.timeout
+    if delay:
+        p = delay
+    else:
+        p = config.polldelay
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 
@@ -871,21 +1018,29 @@ def format_xc_fname(item=None,
         path += '/' + subdir
     if fname:
         return fname if fname[0] == '/' else path + '/' + fname
-    if not item: return None
+    if not item:
+        return None
     fname = item.item_id
-    if update: fname += '_update'
-    if xc_type: fname += '.' + xc_type
+    if update:
+        fname += '_update'
+    if xc_type:
+        fname += '.' + xc_type
     return path + '/' + fname
 
 
 def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
-    if path: _path = path
+    if path:
+        _path = path
     else:
-        if runtime: _path = dir_runtime
-        else: _path = dir_etc
+        if runtime:
+            _path = dir_runtime
+        else:
+            _path = dir_etc
     if not fname:
-        if cfg: sfx = '_' + cfg
-        else: sfx = ''
+        if cfg:
+            sfx = '_' + cfg
+        else:
+            sfx = ''
         if product.code:
             return '%s/%s%s.%s' % (_path, product.code, sfx, ext)
         else:
@@ -977,7 +1132,7 @@ def register_corescript_topics():
                 n = eva.notify.get_notifier(get_default=True)
                 topic = t
             if not n:
-                raise LookupError(f('Notifier {notifier_id}'))
+                raise LookupError(f'Notifier {notifier_id}')
             n.handler_append(topic, handle_corescript_mqtt_event, qos)
         except:
             logging.error(f'Unable to register corescript topic {t}')
@@ -987,7 +1142,8 @@ def register_corescript_topics():
 @corescript_lock
 def corescript_mqtt_subscribe(topic, qos=None):
     import eva.notify
-    if qos is None: qos = 1
+    if qos is None:
+        qos = 1
     for t in cs_data.topics:
         if topic == t['topic']:
             logging.error(f'Core script mqtt topic already subscribed: {topic}')
@@ -1059,7 +1215,8 @@ def update_corescript_globals(data):
 
 
 def exec_corescripts(event=None, env_globals={}):
-    spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
+    if cs_data.corescripts:
+        spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
 
 
 def _t_exec_corescripts(event=None, env_globals={}):
@@ -1072,8 +1229,25 @@ def _t_exec_corescripts(event=None, env_globals={}):
         eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run()
 
 
+def plugins_event_state(source, data):
+    for p, v in plugin_modules.items():
+        try:
+            f = getattr(v, 'handle_state_event')
+            spawn(_t_handle_state_event, p, f, source, data)
+        except AttributeError:
+            pass
+
+
+def _t_handle_state_event(p, f, source, data):
+    try:
+        f(source, data)
+    except:
+        logging.error(f'Error executing {p}.handle_state_event method')
+        log_traceback()
+
+
 def register_controller(controller):
-    controllers.add(controller)
+    controllers.append(controller)
 
 
 timeouter.set_default_exception_class(TimeoutException)

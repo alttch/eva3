@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import cherrypy
 import os
@@ -55,6 +55,8 @@ import eva.uc.controller
 import eva.uc.driverapi
 import eva.uc.modbus
 import eva.uc.owfs
+import eva.datapuller
+
 import eva.ei
 import jinja2
 import rapidjson
@@ -112,7 +114,8 @@ class UC_API(GenericAPI):
                 if os.path.isfile(fname):
                     break
                 fname = None
-            if not fname: raise ResourceNotFound
+            if not fname:
+                raise ResourceNotFound
             with open(fname) as fd:
                 tpl = jinja2.Template(fd.read())
             cfg = tpl_decoder.get(ext)(tpl.render(tpl_config))
@@ -196,7 +199,8 @@ class UC_API(GenericAPI):
                 raise ResourceNotFound
             if is_oid(i):
                 t, iid = parse_oid(i)
-                if not item or item.item_type != t: raise ResourceNotFound
+                if not item or item.item_type != t:
+                    raise ResourceNotFound
             return item.serialize(full=full)
         elif tp or is_oid(group):
             if not tp:
@@ -245,10 +249,13 @@ class UC_API(GenericAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
-        if v is not None: v = str(v)
+        if v is not None:
+            v = str(v)
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         if s == 'toggle':
             s = 0 if item.status else 1
         return self._process_action_result(
@@ -283,8 +290,10 @@ class UC_API(GenericAPI):
         """
         k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         s = 0 if item.status else 1
         return self._process_action_result(
             eva.uc.controller.exec_unit_action(unit=item,
@@ -307,8 +316,10 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         return item.disable_actions()
 
     @log_i
@@ -324,8 +335,10 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         return item.enable_actions()
 
     @log_i
@@ -343,7 +356,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 's')
         item = eva.uc.controller.get_item(i)
-        if not item: raise ResourceNotFound
+        if not item:
+            raise ResourceNotFound
         return item.start_maintenance_mode()
 
     @log_i
@@ -358,7 +372,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 's')
         item = eva.uc.controller.get_item(i)
-        if not item: raise ResourceNotFound
+        if not item:
+            raise ResourceNotFound
         return item.stop_maintenance_mode()
 
     @log_i
@@ -409,10 +424,13 @@ class UC_API(GenericAPI):
             v: item value
         """
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
-        if v is not None: v = str(v)
+        if v is not None:
+            v = str(v)
         item = eva.uc.controller.get_item(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
         else:
@@ -436,8 +454,10 @@ class UC_API(GenericAPI):
         """
         k, i, p = parse_function_params(kwargs, 'kip', '.sR')
         phi = eva.uc.driverapi.get_phi(i)
-        if not phi: raise ResourceNotFound
-        elif not apikey.check(k, phi): raise AccessDenied
+        if not phi:
+            raise ResourceNotFound
+        elif not apikey.check(k, phi):
+            raise AccessDenied
         return phi.push_state(payload=p)
 
     @log_w
@@ -459,10 +479,13 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         result = item.kill()
-        if not result: raise FunctionFailed
+        if not result:
+            raise FunctionFailed
         return True, api_result_accepted if item.action_allow_termination else {
             'pt': 'denied'
         }
@@ -480,8 +503,10 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item: raise ResourceNotFound
-        elif not apikey.check(k, item): raise AccessDenied
+        if not item:
+            raise ResourceNotFound
+        elif not apikey.check(k, item):
+            raise AccessDenied
         return item.q_clean()
 
     @log_w
@@ -505,13 +530,17 @@ class UC_API(GenericAPI):
         k, u, i = parse_function_params(kwargs, 'kui', '.ss')
         if u:
             a = eva.uc.controller.Q.history_get(u)
-            if not a: raise ResourceNotFound
-            elif not apikey.check(k, a.item): raise AccessDenied
+            if not a:
+                raise ResourceNotFound
+            elif not apikey.check(k, a.item):
+                raise AccessDenied
             return a.kill(), api_result_accepted
         elif i:
             item = eva.uc.controller.get_unit(i)
-            if not item: raise ResourceNotFound
-            elif not apikey.check(k, item): raise AccessDenied
+            if not item:
+                raise ResourceNotFound
+            elif not apikey.check(k, item):
+                raise AccessDenied
             return item.terminate(), api_result_accepted
         raise InvalidParameter('Either "u" or "i" must be specified')
 
@@ -678,11 +707,13 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: unit group
+            .e: enabled actions
             save: save unit configuration immediately
         """
-        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        i, g, e, save = parse_api_params(kwargs, 'igeS', 'Ssbb')
         return eva.uc.controller.create_unit(unit_id=oid_to_id(i, 'unit'),
                                              group=g,
+                                             enabled=e,
                                              save=save).serialize()
 
     @log_i
@@ -699,11 +730,13 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: sensor group
+            .e: enabled updates
             save: save sensor configuration immediately
         """
-        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        i, g, e, save = parse_api_params(kwargs, 'igeS', 'Ssbb')
         return eva.uc.controller.create_sensor(sensor_id=oid_to_id(i, 'sensor'),
                                                group=g,
+                                               enabled=e,
                                                save=save).serialize()
 
     @log_i
@@ -741,14 +774,15 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: item group
+            .e: enabled actions/updates
             save: save multi-update configuration immediately
         """
-        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Osb')
+        k, i, g, e, save = parse_function_params(kwargs, 'kigeS', '.Osbb')
         t, i = parse_oid(i)
         if t == 'unit':
-            return self.create_unit(k=k, i=i, save=save)
+            return self.create_unit(k=k, i=i, e=e, save=save)
         elif t == 'sensor':
-            return self.create_sensor(k=k, i=i, save=save)
+            return self.create_sensor(k=k, i=i, e=e, save=save)
         elif t == 'mu':
             return self.create_mu(k=k, i=i, save=save)
         raise InvalidParameter('oid type unknown')
@@ -857,7 +891,7 @@ class UC_API(GenericAPI):
 
         Args:
             k: .allow=device
-            t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
+            .t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
                 extension)
 
         Optional:
@@ -870,7 +904,8 @@ class UC_API(GenericAPI):
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
-        if cfg is None: raise ResourceNotFound
+        if cfg is None:
+            raise ResourceNotFound
         units = cfg.get('units')
         if units:
             for u in units:
@@ -997,13 +1032,14 @@ class UC_API(GenericAPI):
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
-        if cfg is None: raise ResourceNotFound
+        if cfg is None:
+            raise ResourceNotFound
         mu = cfg.get('mu')
         if mu:
             for m in mu:
                 try:
                     i = m['id']
-                    g = u['group']
+                    g = m['group']
                 except:
                     raise InvalidParameter('no id field for unit')
                 try:
@@ -1092,7 +1128,8 @@ class UC_API(GenericAPI):
                                                   timeout=t,
                                                   delay=d,
                                                   retries=r)
-        if save: eva.uc.modbus.save()
+        if save:
+            eva.uc.modbus.save()
         return True
 
     @log_w
@@ -1109,7 +1146,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.modbus.destroy_modbus_port(i)
-        if result and eva.core.config.db_update == 1: eva.uc.modbus.save()
+        if result and eva.core.config.db_update == 1:
+            eva.uc.modbus.save()
         return result
 
     @log_d
@@ -1158,10 +1196,14 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         port = eva.uc.modbus.get_port(i)
-        if port: port.release()
-        if port is None: raise ResourceNotFound
-        elif port is False: raise FunctionFailed('Test failed')
-        elif port == 0: raise ResourceBusy
+        if port:
+            port.release()
+        if port is None:
+            raise ResourceNotFound
+        elif port is False:
+            raise FunctionFailed('Test failed')
+        elif port == 0:
+            raise ResourceBusy
         return True
 
     @log_d
@@ -1267,7 +1309,8 @@ class UC_API(GenericAPI):
                         })
                         addr += 1
                         cc += 1
-                        if cc > count: break
+                        if cc > count:
+                            break
             return sorted(result, key=lambda k: k['addr'])
         finally:
             mb.release()
@@ -1441,7 +1484,8 @@ class UC_API(GenericAPI):
         """
         i, n, l, t, d, r, save = parse_api_params(kwargs, 'inltdrS', 'SSbnnib')
         eva.uc.owfs.create_owfs_bus(i, n, lock=l, timeout=t, delay=d, retries=r)
-        if save: eva.uc.owfs.save()
+        if save:
+            eva.uc.owfs.save()
         return True
 
     @log_w
@@ -1464,7 +1508,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.owfs.destroy_owfs_bus(i)
-        if result and eva.core.config.db_update == 1: eva.uc.owfs.save()
+        if result and eva.core.config.db_update == 1:
+            eva.uc.owfs.save()
         return result
 
     @log_d
@@ -1506,10 +1551,14 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         bus = eva.uc.owfs.get_bus(i)
-        if bus: bus.release()
-        if bus is None: raise ResourceNotFound
-        elif bus is False: raise FunctionFailed('Test failed')
-        elif bus == 0: raise ResourceBusy
+        if bus:
+            bus.release()
+        if bus is None:
+            raise ResourceNotFound
+        elif bus is False:
+            raise FunctionFailed('Test failed')
+        elif bus == 0:
+            raise ResourceBusy
         return True
 
     @log_i
@@ -1556,11 +1605,15 @@ class UC_API(GenericAPI):
         except:
             raise InvalidParameter('Unable to parse attributes')
         bus = eva.uc.owfs.get_bus(i)
-        if bus: bus.release()
-        elif bus is None: raise ResourceNotFound
-        else: raise FunctionFailed('Unable to acquire bus')
+        if bus:
+            bus.release()
+        elif bus is None:
+            raise ResourceNotFound
+        else:
+            raise FunctionFailed('Unable to acquire bus')
         kwargs = {}
-        if p: kwargs['sensor_type'] = p
+        if p:
+            kwargs['sensor_type'] = p
         if a:
             kwargs['has_' + ('all' if has_all else 'one')] = a
         if n:
@@ -1579,6 +1632,96 @@ class UC_API(GenericAPI):
             result.append(s)
         return sorted(sorted(result, key=lambda k: k['path']),
                       key=lambda k: k['type'])
+
+    # master functions for data pullers
+
+    @log_d
+    @api_need_master
+    def list_datapullers(self, **kwargs):
+        """
+        List data pullers
+
+        Args:
+            k: .master
+
+        Returns:
+            List of all configured data pullers
+        """
+        return eva.datapuller.serialize()
+
+    @log_d
+    @api_need_master
+    def get_datapuller(self, **kwargs):
+        """
+        Get data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+
+        Returns:
+            Data puller info
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        return dp.serialize()
+
+    @log_i
+    @api_need_master
+    def start_datapuller(self, **kwargs):
+        """
+        Start data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.start()
+        return True
+
+    @log_w
+    @api_need_master
+    def stop_datapuller(self, **kwargs):
+        """
+        Stop data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.stop()
+        return True
+
+    @log_w
+    @api_need_master
+    def restart_datapuller(self, **kwargs):
+        """
+        Restart data puller
+
+        Args:
+            k: .master
+            .i: data puller name
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            dp = eva.datapuller.datapullers[i]
+        except KeyError:
+            raise ResourceNotFound
+        dp.restart()
+        return True
 
     # master functions for PHI configuration
 
@@ -1606,7 +1749,8 @@ class UC_API(GenericAPI):
             except:
                 raise InvalidParameter('Unable to parse config')
         if eva.uc.driverapi.load_phi(i, m, c):
-            if save: eva.uc.driverapi.save()
+            if save:
+                eva.uc.driverapi.save()
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
     @log_d
@@ -1645,7 +1789,8 @@ class UC_API(GenericAPI):
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
         eva.uc.driverapi.set_phi_prop(i, p, v)
-        if save: eva.uc.driverapi.save()
+        if save:
+            eva.uc.driverapi.save()
         return True
 
     @log_d
@@ -1673,13 +1818,14 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            .m: PHI id
+            .i: PHI id
             .c: test command
         """
         i, c = parse_api_params(kwargs, 'ic', 'SS')
         phi = eva.uc.driverapi.get_phi(i)
-        if not phi: raise ResourceNotFound
-        result = phi.test(c)
+        if not phi:
+            raise ResourceNotFound
+        result = phi._test(c)
         if result is None or result is False:
             raise FunctionFailed('test failed')
         if isinstance(result, dict):
@@ -1704,8 +1850,13 @@ class UC_API(GenericAPI):
         """
         i, c, a = parse_api_params(kwargs, 'ica', 'SS.')
         phi = eva.uc.driverapi.get_phi(i)
-        if not phi: raise ResourceNotFound
-        result = phi.exec(c, a)
+        if not phi:
+            raise ResourceNotFound
+        try:
+            xfunc = getattr(phi, 'exec')
+        except AttributeError:
+            return {'output': 'not implemented'}
+        result = xfunc(c, a)
         if result is None or result is False:
             raise FunctionFailed('exec failed')
         if isinstance(result, dict):
@@ -1725,8 +1876,10 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         phi = eva.uc.driverapi.get_phi(i)
-        if not phi: raise ResourceNotFound
-        if not hasattr(phi, 'get_ports'): raise MethodNotImplemented
+        if not phi:
+            raise ResourceNotFound
+        if not hasattr(phi, 'get_ports'):
+            raise MethodNotImplemented
         return phi.get_ports()
 
     @log_w
@@ -1748,7 +1901,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_phi(i)
-        if eva.core.config.db_update == 1: eva.uc.driverapi.save()
+        if eva.core.config.db_update == 1:
+            eva.uc.driverapi.save()
         return True
 
     @log_w
@@ -1879,7 +2033,8 @@ class UC_API(GenericAPI):
             except:
                 raise InvalidParameter('Unable to parse config')
         if eva.uc.driverapi.load_driver(i, m, p, c):
-            if save: eva.uc.driverapi.save()
+            if save:
+                eva.uc.driverapi.save()
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
                 full=True, config=True)
 
@@ -1897,7 +2052,8 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_driver(i)
-        if eva.core.config.db_update == 1: eva.uc.driverapi.save()
+        if eva.core.config.db_update == 1:
+            eva.uc.driverapi.save()
         return True
 
     @log_d
@@ -1925,7 +2081,8 @@ class UC_API(GenericAPI):
             .i: PHI ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
-        if not i: return None
+        if not i:
+            return None
         lpi = eva.uc.driverapi.get_driver(i)
         if lpi:
             return lpi.serialize(full=True, config=True)
@@ -1953,7 +2110,8 @@ class UC_API(GenericAPI):
         if i.split('.')[-1] == 'default':
             raise ResourceBusy('Properties for default drivers can not be set')
         eva.uc.driverapi.set_driver_prop(i, p, v)
-        if save: eva.uc.driverapi.save()
+        if save:
+            eva.uc.driverapi.save()
         return True
 
     @log_d
@@ -2025,7 +2183,20 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound('item')
-        drv_p = '|' + d if d else None
+        if d:
+            drv_p = '|' + d
+            driver = eva.uc.driverapi.get_driver(d)
+            if driver is None:
+                raise ResourceNotFound(f'driver {d}')
+        else:
+            drv_p = None
+            driver = None
+        if c and not isinstance(c, dict):
+            c = dict_from_str(c)
+        if driver:
+            driver.validate_config(c, config_type='state')
+            if item.item_type == 'unit':
+                driver.validate_config(c, config_type='action')
         props = {'update_driver_config': c, 'update_exec': drv_p}
         if item.item_type == 'unit':
             props['action_driver_config'] = c
@@ -2092,6 +2263,11 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, p=rtp, i=ii, **props)
         elif rtp == 'action':
             return self.result(k=k, u=ii, **props)
+        elif rtp == 'datapuller':
+            if ii:
+                return self.get_datapuller(k=k, i=ii)
+            else:
+                return self.list_datapullers(k=k)
         elif rtp == 'driver':
             if ii:
                 return self.get_driver(k=k, i=ii)
@@ -2162,7 +2338,8 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'action':
             if not ii:
                 a = self.action(k=k, **props)
-                if not a: raise FunctionFailed
+                if not a:
+                    raise FunctionFailed
                 set_restful_response_location(a['uuid'], rtp)
                 return a
             else:
@@ -2191,6 +2368,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         return result
                 elif method == 'update' or not method:
                     return self.update(k=k, i=ii, **props)
+        elif rtp == 'datapuller':
+            cmd = props.get('cmd')
+            if cmd == 'start':
+                return self.start_datapuller(k=k, i=ii)
+            elif cmd == 'stop':
+                return self.stop_datapuller(k=k, i=ii)
+            elif cmd == 'restart':
+                return self.restart_datapuller(k=k, i=ii)
+            else:
+                raise MethodNotImplemented
         elif rtp == 'phi':
             if ii:
                 if '/' in ii:
@@ -2232,7 +2419,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             if ii:
                 return self.action(k=k, u=ii, **props)
         elif rtp in ['unit', 'sensor', 'mu']:
-            self.create(k=k, i=rtp + ':' + ii, save=save)
+            self.create(k=k, i=rtp + ':' + ii, save=save, **props)
             self.set_prop(k=k, i=ii, v=props, save=save)
             return self.state(k=k, i=ii, p=rtp, full=True)
         elif rtp == 'driver':

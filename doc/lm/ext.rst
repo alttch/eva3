@@ -99,7 +99,7 @@ Required variables in a header
 * **__license__**       module license
 * **__version__**       module version
 * **__description__**   module description (keep it short)
-* **__api__**           module API (integer number), current is **5**
+* **__api__**           module API (integer number), current is **7**
 * **__mods_required__** required python modules (included neither in standard
   Python install nor in EVA ICS)
 * **__config__help__**  module configuration help (on load)
@@ -118,6 +118,7 @@ containing dictionaries with the following context:
 * **help** property description (help)
 * **type** property type
 * **required** *True* if property is required, *False* if it's optional
+* **default** default value (for required only)
 
 Property **type** may be:
 
@@ -249,6 +250,14 @@ Exceptions
 There's no standard way to handle exceptions, however if any of exported
 functions raise them, this should be specified in extension help and readme
 file.
+
+Config validation
+-----------------
+
+Optional method *validate_config* can be implemented to automatically validate
+module configuration.
+
+.. include:: ../pydoc/pydoc_validateconfig.rst
 
 Testing
 -------

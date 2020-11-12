@@ -22,7 +22,17 @@ _eva_sfa_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'launch reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_sfa_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -42,7 +52,17 @@ _eva_sfa_controller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test upnp-rescan' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_sfa_supervisor() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'lock message unlock' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -62,7 +82,7 @@ _eva_sfa_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'pvt server-config ui' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript pvt server-config ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -132,7 +152,7 @@ _eva_sfa_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -142,7 +162,7 @@ _eva_sfa_log() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'api critical debug error get info warning' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -152,10 +172,10 @@ _eva_sfa() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|cloud|controller|cvar|cycle|edit|file|key|log|macro|notify|server|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
         _eva_sfa_${words[2]}
         ;;
       *)
@@ -169,7 +189,17 @@ _eva_lm_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'launch reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_lm_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -179,7 +209,7 @@ _eva_lm_controller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'append disable enable get list props reload remove set test' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'append disable enable get list props reload remove set test upnp-rescan' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -219,7 +249,7 @@ _eva_lm_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'macro server-config' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript macro server-config' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -289,7 +319,7 @@ _eva_lm_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -299,7 +329,7 @@ _eva_lm_log() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'api critical debug error get info warning' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -309,10 +339,10 @@ _eva_lm() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
   else
     case "${words[2]}" in
-      config|controller|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
         _eva_lm_${words[2]}
         ;;
       *)
@@ -326,7 +356,27 @@ _eva_uc_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'launch reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_uc_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_uc_datapuller() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list restart start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -436,7 +486,7 @@ _eva_uc_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'action server-config template update' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action corescript server-config template update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -486,7 +536,7 @@ _eva_uc_cvar() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'delete get list set' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -496,7 +546,7 @@ _eva_uc_log() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'api critical debug error get info warning' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -506,10 +556,10 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
       *)

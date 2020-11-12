@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import eva.core
 import eva.item
@@ -14,6 +14,7 @@ import threading
 import time
 import os
 import re
+import shlex
 import logging
 import rapidjson
 
@@ -23,7 +24,7 @@ from eva.tools import parse_func_str
 
 from eva.exceptions import FunctionFailed
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 macro_functions = {}
 macro_function_codes = {}
@@ -201,7 +202,8 @@ def append_macro_function(file_name, rebuild=True):
                 })
         macro_functions[fname] = result
         macro_function_codes[fname] = src_code
-        if rebuild: rebuild_mfcode()
+        if rebuild:
+            rebuild_mfcode()
         return True
     except Exception as e:
         raise FunctionFailed(e)
@@ -213,7 +215,8 @@ def remove_macro_function(file_name, rebuild=True):
     if fname in macro_functions:
         del macro_functions[fname]
         del macro_function_codes[fname]
-        if rebuild: rebuild_mfcode()
+        if rebuild:
+            rebuild_mfcode()
         return True
     else:
         return False
@@ -449,7 +452,9 @@ class Macro(eva.item.ActiveItem):
                 return False
         return super().set_prop(prop, val, save)
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False,
+    def notify(self,
+               retain=None,
+               skip_subscribed_mqtt=False,
                for_destroy=False):
         pass
 
@@ -659,6 +664,7 @@ class Cycle(eva.item.Item):
                     self.interval = interval
                     self.log_set(prop, val)
                     self.set_modified(save)
+                    self.notify()
                 return True
             else:
                 return False
@@ -678,7 +684,8 @@ class Cycle(eva.item.Item):
         elif prop == 'autostart':
             try:
                 autostart = val_to_boolean(val)
-                if autostart is None: raise ('Invalid val')
+                if autostart is None:
+                    raise ValueError('Invalid value')
             except:
                 return False
             if self.autostart != autostart:
@@ -806,7 +813,7 @@ class Cycle(eva.item.Item):
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
-            if d['macro'].startswith('@func/'):
+            if d['macro'] and d['macro'].startswith('@func/'):
                 d['macro'] = '@' + d['macro'][6:]
             d['on_error'] = self.on_error.full_id if self.on_error else None
             d['macro_args'] = self.macro_args

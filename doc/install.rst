@@ -22,7 +22,7 @@ System Requirements
     identify node controllers. Changing host name later will require manually
     removing/appending all static links between EVA ICS controllers.
 
-* Python version 3 (3.6+)
+* Python version 3 (3.7+)
 
 * Python virtual environment modules (python3-virtualenv)
 
@@ -317,7 +317,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.3.0/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.3.1/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -349,7 +349,7 @@ Using system shell
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #e.g.
-    #curl -s https://get.eva-ics.com/3.3.0/stable/update.sh | bash /dev/stdin
+    #curl -s https://get.eva-ics.com/3.3.1/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
@@ -358,6 +358,29 @@ Using system shell
 .. note::
 
     The system downgrade is officially not supported and not recommended.
+
+With a pre-downloaded tarball
+-----------------------------
+
+Put *update.sh* and the new version tarball to EVA ICS root directory
+(/opt/eva). Run the update:
+
+.. code-block:: bash
+
+    ./update.sh
+
+The script will use tarball located in EVA ICS directory. If the required
+version tarball file doesn't exists, it will be downloaded.
+
+To prepare Python venv and explore new version files (e.g. may be required for
+the offline updating), run
+
+.. code-block:: bash
+
+    env CHECK_ONLY=1 bash update-xxxxxxx.sh
+
+The script will exit after preparing the virtual environment. The new version
+files will be kept in *_update* directory.
 
 Intermediate versions
 ---------------------
@@ -493,9 +516,6 @@ Our final config for all of this should look like:
         ssl_certificate /opt/eva/etc/eva.crt;
         ssl_certificate_key /opt/eva/etc/eva.key;
         ssl_session_timeout  1m;
-        ssl_protocols  SSLv3 TLSv1;
-        ssl_ciphers  HIGH:!aNULL:!MD5;  
-        ssl_prefer_server_ciphers   on; 
 
         # proxy for HTTP
         location / {

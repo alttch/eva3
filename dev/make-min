@@ -1,0 +1,29 @@
+#!/bin/sh
+
+VERSION=$1
+BUILD=$2
+
+[ -d lib/ei ] || exit 1
+
+echo "Compressing Javascript"
+
+uglifyjs -c -m -- lib/ei/js/cookie.js lib/ei/js/log.js lib/ei/js/popup.js lib/ei/js/toolmenu.js lib/ei/js/tools.js lib/ei/js/uc.js > uc.min.js || exit 1
+uglifyjs -c -m -- lib/ei/js/cookie.js lib/ei/js/log.js lib/ei/js/popup.js lib/ei/js/toolmenu.js lib/ei/js/tools.js lib/ei/js/lm.js > lm.min.js || exit 1
+
+mv -f uc.min.js lib/ei/js/
+mv -f lm.min.js lib/ei/js/
+
+#echo "// ${VERSION} ${BUILD}" > ui/js/eva_sfa.min.js
+#uglifyjs -c -m -- ui/js/eva_sfa.js >> ui/js/eva_sfa.min.js || exit 1
+
+echo "Compressing CSS"
+
+rm -f tmp.css tmp1.css
+
+cat lib/ei/css/ei.css lib/ei/css/popup.css > tmp1.css
+
+yui-compressor tmp1.css > ei.min.css || exit 1
+
+mv -f ei.min.css lib/ei/css/ || exit 1
+
+rm -f tmp1.css

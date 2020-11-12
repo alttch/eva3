@@ -1,24 +1,28 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
-import smtplib
 import platform
 import logging
 
-from email.mime.text import MIMEText
 import eva.core
 
 from eva.tools import parse_host_port
 
 from eva.exceptions import FunctionFailed
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
+
+from pyaltt2.mail import SMTP
 
 config = SimpleNamespace(sender='eva@' + platform.node(),
                          smtp_host='localhost',
                          smtp_port=25,
+                         tls=False,
+                         ssl=False,
+                         login=None,
+                         password=None,
                          default_rcp=['root'])
 
 default_port = 25
@@ -45,6 +49,26 @@ def update_config(cfg):
     except:
         config.default_rcp = ['root']
     logging.debug('mailer.default_rcp = %s' % ', '.join(config.default_rcp))
+    try:
+        config.ssl = (cfg.get('mailer', 'ssl') == 'yes')
+    except:
+        config.ssl = False
+    logging.debug(f'mailer.ssl = {config.ssl}')
+    try:
+        config.tls = (cfg.get('mailer', 'tls') == 'yes')
+    except:
+        config.tls = False
+    logging.debug(f'mailer.tls = {config.tls}')
+    try:
+        config.login = cfg.get('mailer', 'login')
+    except:
+        config.login = None
+    logging.debug(f'mailer.login = {config.login}')
+    try:
+        config.password = cfg.get('mailer', 'password')
+    except:
+        config.password = None
+    logging.debug(f'mailer.password = {"*" if config.password else None}')
     return True
 
 
@@ -65,11 +89,15 @@ def send(subject=None, text=None, rcp=None):
         FunctionFailed: mail is not sent
     """
 
-    if subject is None: s = ''
-    else: s = subject
+    if subject is None:
+        s = ''
+    else:
+        s = subject
 
-    if text is None: t = s
-    else: t = text
+    if text is None:
+        t = s
+    else:
+        t = text
 
     if not rcp:
         if not config.default_rcp:
@@ -78,22 +106,20 @@ def send(subject=None, text=None, rcp=None):
         else:
             _rcp = config.default_rcp
     else:
-        if isinstance(_rcp, str): _rcp = [rcp]
-        else: _rcp = rcp
-
+        _rcp = rcp
+    if isinstance(_rcp, list) and len(_rcp) == 1:
+        _rcp = _rcp[0]
     try:
-        msg = MIMEText(t)
-
-        msg['Subject'] = s
-        msg['From'] = config.sender
-
-        if len(_rcp) == 1:
-            msg['To'] = _rcp[0]
-        sm = smtplib.SMTP(config.smtp_host, config.smtp_port)
-        sm.sendmail(config.sender, _rcp, msg.as_string())
-        logging.debug('sending mail to %s, subject "%s"' % (', '.join(_rcp), s))
-        sm.quit()
+        smtp = SMTP(host=config.smtp_host,
+                    port=config.smtp_port,
+                    tls=config.tls,
+                    ssl=config.ssl,
+                    login=config.login,
+                    password=config.password)
+        logging.debug(f'sending mail to {_rcp}')
+        smtp.sendmail(config.sender, _rcp, subject=s, text=t)
         return True
     except Exception as e:
         eva.core.log_traceback()
         raise FunctionFailed(e)
+    return True

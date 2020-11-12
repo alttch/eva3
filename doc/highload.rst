@@ -42,6 +42,10 @@ To use EVA ICS in high-load environments, remember the following:
   still low, try increasing value of *reactor_thread_pool* option in [server]
   section.
 
+* If item states should be collected from the equipment which doesn't send
+  events (e.g. Ethernet/IP, Modbus slaves, SNMP without traps), it's
+  recommended to use :doc:`data pullers<datapullers>`.
+
 Hardware
 ========
 

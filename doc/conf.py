@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 # -*- coding: utf-8 -*-
 #
@@ -83,7 +83,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', 'pydoc']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

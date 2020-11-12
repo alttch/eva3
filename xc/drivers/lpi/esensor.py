@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __description__ = "Enhanced sensor LPI"
-__api__ = 5
+__api__ = 9
 
 __logic__ = 'single and group polling'
 
@@ -91,13 +91,15 @@ class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         # we don't handle events
-        if state_in: return self.state_result_error(_uuid)
+        if state_in:
+            return self.state_result_error(_uuid)
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi._is_required.aao_get:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeouter.get())
-            if not _state_in: return self.state_result_error(_uuid)
+            if not _state_in:
+                return self.state_result_error(_uuid)
         else:
             _state_in = {}
         skip_err = val_to_boolean(cfg.get('skip_err')) if \
@@ -216,3 +218,9 @@ class LPI(GenericLPI):
         else:
             self.set_result(_uuid, (1, st))
         return
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 ignore_private=True,
+                                 **kwargs)

@@ -9,6 +9,11 @@ calls look :doc:`/sfa/sfa_api`.
 RESTful API basics
 ==================
 
+.. warning::
+
+    RESTful API is deprecated and scheduled to be removed (not implemented) in
+    EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
 Majority EVA ICS API components and items support `REST
 <https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
@@ -152,9 +157,29 @@ Parameters:
 
 Optionally:
 
-* **a** string of command arguments, separated by spaces (passed to the script)
+* **a** string of command arguments, separated by spaces (passed to the script) or array (list)
 * **w** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
+
+
+.. _sfapi_restful_list_plugins:
+
+get list of loaded core plugins
+-------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_plugins.rest
+    :response: http-examples/sysapi/list_plugins.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+list with plugin module information
 
 
 .. _sfapi_restful_shutdown_core:
@@ -401,7 +426,7 @@ Optionally:
 * **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
-* **t** time format("iso" or "raw" for unix timestamp, default is "raw")
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
 * **g** output format ("list", "dict" or "chart", default is "list")
 * **c** options for chart (dict or comma separated)
@@ -530,6 +555,38 @@ Parameters:
 * **API Key** valid API key
 
 
+.. _sfapi_restful_decrement:
+
+decrement lvar value
+--------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/decrement.rest
+    :response: http-examples/sfapi/decrement.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _sfapi_restful_increment:
+
+increment lvar value
+--------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/increment.rest
+    :response: http-examples/sfapi/increment.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
 .. _sfapi_restful_reset:
 
 reset lvar state
@@ -565,46 +622,6 @@ Optionally:
 
 * **s** lvar status
 * **v** lvar value
-
-
-
-.. _sfapi_restful_cat_lvar:
-
-LVar functions
-==============
-
-
-
-.. _sfapi_restful_decrement:
-
-decrement lvar value
---------------------
-
-Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/decrement.rest
-    :response: http-examples/sfapi/decrement.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-
-.. _sfapi_restful_increment:
-
-increment lvar value
---------------------
-
-Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/increment.rest
-    :response: http-examples/sfapi/increment.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
 
 
 
@@ -737,6 +754,91 @@ Parameters:
 Optionally:
 
 * **i** filter by controller
+
+
+
+.. _sfapi_restful_cat_supervisor:
+
+Supervisor functions
+====================
+
+
+
+.. _sfapi_restful_supervisor_lock:
+
+set supervisor API lock
+-----------------------
+
+When supervisor lock is set, SFA API functions become read-only for all users, except users in the lock scope.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_lock.rest
+    :response: http-examples/sfapi/supervisor_lock.resp-rest
+
+Parameters:
+
+* **API Key** API key with *allow=supervisor* permissions
+
+Notes:
+
+supervisor_lock should be a dictionary. If the dictionary is empty, default lock is set.
+
+* attribute "l" = "<k|u>" sets lock scope (key / user)
+
+* attribute "c" = "<k|u>" set unlock/override scope
+
+attribute "o" overrides lock owner (master key is required) with sub-attributes:
+
+* "u" = user
+
+* "utp" = user type (null for local, "msad" for Active Directory etc.)
+
+* "key_id" = API key ID
+
+
+.. _sfapi_restful_supervisor_unlock:
+
+clear supervisor API lock
+-------------------------
+
+API key should have permission to clear existing supervisor lock
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_unlock.rest
+    :response: http-examples/sfapi/supervisor_unlock.resp-rest
+
+Parameters:
+
+* **API Key** API key with *allow=supervisor* permissions
+
+Returns:
+
+Successful result is returned if lock is either cleared or not set
+
+
+.. _sfapi_restful_supervisor_message:
+
+send broadcast message
+----------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_message.rest
+    :response: http-examples/sfapi/supervisor_message.resp-rest
+
+Parameters:
+
+* **API Key** API key with *allow=supervisor* permissions
+* **m** message text
+
+Notes:
+
+If master key is used, sender can be overriden with "sender" argument, which should be a dictionary and contain:
+
+* u = message sender user
+
+* key_id = message sender API key ID
 
 
 
@@ -1271,7 +1373,7 @@ Optionally:
 rotate log file
 ---------------
 
-Deprecated, not required since 3.2.6
+Deprecated, not required since 3.3.0
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest
@@ -1280,6 +1382,60 @@ Deprecated, not required since 3.2.6
 Parameters:
 
 * **API Key** API key with *sysfunc=yes* permissions
+
+
+.. _sfapi_restful_api_log_get:
+
+get API call log
+----------------
+
+* API call with master permission returns all records requested
+
+* API call with other API key returns records for the specified key   only
+
+* API call with an authentication token returns records for the   current authorized user
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/api_log_get.rest
+    :response: http-examples/sysapi/api_log_get.resp-rest
+
+Parameters:
+
+* **API Key** any valid API key
+
+Optionally:
+
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
+* **n** records limit
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
+* **f** record filter (requires API key with master permission)
+
+Returns:
+
+List of API calls
+
+Note: API call params are returned as string and can be invalid JSON data as they're always truncated to 512 symbols in log database
+
+Record filter should be specified either as string (k1=val1,k2=val2) or as a dict. Valid fields are:
+
+* gw: filter by API gateway
+
+* ip: filter by caller IP
+
+* auth: filter by authentication type
+
+* u: filter by user
+
+* utp: filter by user type
+
+* ki: filter by API key ID
+
+* func: filter by API function
+
+* params: filter by API call params (matches if field contains value)
+
+* status: filter by API call status
 
 
 
@@ -1503,7 +1659,7 @@ Parameters:
 set user password
 -----------------
 
-
+Either master key and user login must be specified or a user must be logged in and a session token used
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/set_user_password.rest
@@ -1511,7 +1667,7 @@ set user password
 
 Parameters:
 
-* **API Key** API key with *master* permissions
+* **API Key** master key or token
 * **p** new password
 
 
@@ -1613,7 +1769,8 @@ Puts a new file into runtime folder. If the file with such name exists, it will 
 Parameters:
 
 * **API Key** API key with *master* permissions
-* **m** file content
+* **m** file content (plain text or base64-encoded)
+* **b** if True - put binary file (decode base64)
 
 
 .. _sfapi_restful_file_set_exec:
@@ -1663,6 +1820,7 @@ get file contents from runtime folder
 Parameters:
 
 * **API Key** API key with *master* permissions
+* **b** if True - force getting binary file (base64-encode content)
 
 
 
@@ -1721,7 +1879,7 @@ Parameters:
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are supported)
 * **q** MQTT topic QoS
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 
 .. _sfapi_restful_unsubscribe_corescripts_mqtt:
@@ -1739,6 +1897,6 @@ Parameters:
 
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are allowed)
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 

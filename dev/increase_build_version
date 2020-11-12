@@ -1,0 +1,29 @@
+#!/bin/sh
+
+FILES="sbin/ucserv.py sbin/lmserv.py sbin/sfaserv.py"
+
+BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
+BUILD_DATE=`echo $BUILD| cut -c1-8`
+BUILD_NUMBER=`echo $BUILD| cut -c9-`
+
+NEW_BUILD_DATE=`date +"%Y%m%d"`
+
+if [ $NEW_BUILD_DATE != $BUILD_DATE ]; then
+    NEW_BUILD=${NEW_BUILD_DATE}01
+else
+    NEW_BUILD_NUMBER=`expr $BUILD_NUMBER + 1`
+    NEW_BUILD_NUMBER=`printf "%02d" ${NEW_BUILD_NUMBER}`
+    if [ ${NEW_BUILD_NUMBER} -gt 99 ]; then
+        echo "Build number will be greater than 99, exiting"
+        exit 2
+    fi
+    NEW_BUILD=${NEW_BUILD_DATE}${NEW_BUILD_NUMBER}
+fi
+
+for f in $FILES; do
+    echo "$f $BUILD -> $NEW_BUILD"
+    sed -i "s/^product_build = .*/product_build = ${NEW_BUILD}/g" $f
+done
+
+sed -i "s/^BUILD=.*/BUILD=${NEW_BUILD}/g" update.sh
+#sed -i "s/^eva_sfa_framework_build = .*/eva_sfa_framework_build = ${NEW_BUILD};/g" ui/js/eva_sfa.js

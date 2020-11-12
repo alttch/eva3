@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -33,7 +33,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -43,7 +44,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(['props', kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -72,7 +74,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p',
                                help=textwrap.dedent('''
         Notifier properties:
-            json:http(s)://[key]@uri[#jsonrpc]
+            json:http(s)://[key]@uri[#jsonrpc|#list]
             mqtt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
@@ -242,10 +244,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         p = params['p'].split(':')
         space = params.get('s')
         timeout = params.get('t')
-        if len(p) < 2: return self.local_func_result_failed
+        if len(p) < 2:
+            return self.local_func_result_failed
         if p[0] == 'json':
             u = (':'.join(p[1:])).split('/')
-            if len(u) < 3: return self.local_func_result_failed
+            if len(u) < 3:
+                return self.local_func_result_failed
             if u[2].find('@') != -1:
                 try:
                     notify_key, u[2] = u[2].split('@')
@@ -266,7 +270,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                              timeout=timeout)
         elif p[0] == 'influxdb':
             u = (':'.join(p[1:])).split('/')
-            if len(u) < 3: return self.local_func_result_failed
+            if len(u) < 3:
+                return self.local_func_result_failed
             uri = '/'.join(u)
             if uri.find('#') != -1:
                 uri, db = uri.split('#', 1)
@@ -419,11 +424,14 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         n = self.get_notifier(params['i'])
         prop = params.get('p')
         value = params.get('v')
+        if not value and '=' in prop:
+            prop, value = prop.split('=', 1)
         if not n or not n.set_prop(prop, value):
             return self.local_func_result_failed
         eva.notify.append_notifier(n)
         c = n.serialize(props=True)
-        if prop.find('.') == -1: v = c[prop]
+        if prop.find('.') == -1:
+            v = c[prop]
         else:
             try:
                 a, b = prop.split('.')
@@ -441,7 +449,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def subscribe_notifier_log(self, params):
         level = params.get('l')
-        if not level: level = 20
+        if not level:
+            level = 20
         else:
             try:
                 level = int(level)

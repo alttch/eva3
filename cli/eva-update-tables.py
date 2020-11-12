@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -19,7 +19,8 @@ import eva.traphandler
 
 
 def usage(version_only=False):
-    if not version_only: print()
+    if not version_only:
+        print()
     print('%s version %s build %s ' % \
             (
                 'EVA table update',
@@ -27,7 +28,8 @@ def usage(version_only=False):
                 eva.core.product.build
             )
         )
-    if version_only: return
+    if version_only:
+        return
     print("""Usage: update-tables <uc|lm>
 
 Updates EVA ICS database tables.
@@ -43,16 +45,21 @@ def append_db_column(table, column, coltype, dbconn):
             table, column, coltype))
         print('OK')
     except sqlalchemy.exc.OperationalError as e:
-        if str(e).lower().find('duplicate') == -1:
+        exc = str(e).lower()
+        if 'duplicate' in exc:
+            print('Already exists')
+        elif 'no such table' in exc:
+            print('table not present')
+        else:
             raise
-        print('Already exists')
 
 
 product_build = -1
 
 try:
     p = sys.argv[1]
-    if p not in ['uc', 'lm', 'sfa']: raise Exception('wrong product selected')
+    if p not in ['uc', 'lm', 'sfa']:
+        raise Exception('wrong product selected')
 except:
     usage()
     sys.exit(99)
@@ -64,7 +71,8 @@ eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'table update'
 
 cfg = eva.core.load(initial=True, init_log=False)
-if not cfg: sys.exit(2)
+if not cfg:
+    sys.exit(2)
 eva.core.start()
 dbconn = eva.core.userdb()
 
@@ -72,9 +80,18 @@ print('Creating missing table columns')
 
 append_db_column('apikeys', 'i_ro', 'VARCHAR(1024)', dbconn)
 append_db_column('apikeys', 'g_ro', 'VARCHAR(1024)', dbconn)
+append_db_column('apikeys', 'cdata', 'VARCHAR(4096)', dbconn)
 
-dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
-dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
+try:
+    dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
+    dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
+    dbconn.execute('update apikeys set cdata = "" where cdata is null')
+except sqlalchemy.exc.OperationalError as e:
+    exc = str(e).lower()
+    if 'no such table' in exc:
+        print('table not present')
+    else:
+        raise
 
 eva.core.shutdown()
 print()

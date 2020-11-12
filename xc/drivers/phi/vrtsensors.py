@@ -1,11 +1,11 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 __description__ = "Emulates virtual sensors"
 
 __equipment__ = 'virtual'
-__api__ = 8
+__api__ = 9
 __required__ = ['port_get', 'value']
 __mods_required__ = []
 __lpi_default__ = 'sensor'
@@ -75,6 +75,14 @@ class PHI(GenericPHI):
                     log_traceback()
                     return False
             return True
+
+    def validate_config(self, config={}, config_type='config'):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 xparams=[{
+                                     'name': 'event_on_test_set',
+                                     'type': 'bool'
+                                 }])
 
     def test(self, cmd=None):
         if cmd == 'self':

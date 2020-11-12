@@ -77,9 +77,11 @@ What you get with EVA
     What's new <changelog>
     security
     notifiers
-    corescript
+    datapullers
     cli
     tutorial/tutorial
+    auth
+    iac
     faq
     highload
 
@@ -120,6 +122,8 @@ What you get with EVA
     sfa/sfa_templates
     sfa/sfa_pvt
     api_tokens
+    sfa/supervisor
+    Active Directory support <msad>
     evahi
     EVA JS Framework <https://github.com/alttch/eva-js-framework>
 
@@ -135,6 +139,7 @@ What you get with EVA
     integrations/cctv
     integrations/denkovi
     integrations/energenie
+    integrations/ethernetip
     integrations/gcp
     integrations/grafana
     integrations/hue
@@ -149,7 +154,7 @@ What you get with EVA
     integrations/yeelight
 
 .. toctree::
-    :caption:  Extension development
+    :caption:  API
     :maxdepth: 1
 
     sysapi
@@ -157,9 +162,15 @@ What you get with EVA
     uc/uc_udp_api
     lm/lm_api
     sfa/sfa_api
-    uc/uc_api_restful
-    lm/lm_api_restful
-    sfa/sfa_api_restful
     api_clients
+    restful
+
+.. toctree::
+    :caption:  Extension development
+    :maxdepth: 1
+
+    extensions
+    corescript
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>
+    plugins

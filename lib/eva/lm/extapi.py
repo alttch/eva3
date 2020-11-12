@@ -1,10 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
-__api__ = 6
+__version__ = "3.3.2"
+__api__ = 7
 
-import importlib
 import logging
 import rapidjson
 import re
@@ -14,7 +13,9 @@ import os
 import eva.core
 from eva.tools import format_json
 
-from functools import wraps
+from eva.x import import_x
+from eva.x import serialize_x
+from eva.x import get_x_iobj
 
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
@@ -22,12 +23,17 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
 
+from functools import wraps
+from eva.tools import SimpleNamespace
+
 exts = {}
 env = {}
 
 iec_functions = {}
 
 with_exts_lock = eva.core.RLocker('lm/extapi')
+
+_d = SimpleNamespace(modified=False)
 
 # extension functions
 
@@ -80,6 +86,10 @@ def save_data(ext):
 # internal functions
 
 
+def _get_ext_module_fname(mod):
+    return f'{eva.core.dir_xc}/extensions/{mod}.py'
+
+
 @with_exts_lock
 def get_ext(ext_id):
     return exts.get(ext_id)
@@ -114,13 +124,21 @@ def rebuild_env():
     iec_functions = _iec_functions
 
 
-def modinfo(mod):
-    code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
-            ' s=LMExt(info_only=True).serialize(full=True)'
+def modhelp(mod, context):
     try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
+        result = serialize_x(_get_ext_module_fname(mod),
+                             'LMExt',
+                             helpinfo=context)
+    except Exception as e:
+        raise FunctionFailed(e)
+    if result is None:
+        raise ResourceNotFound('Help context')
+    return result
+
+
+def modinfo(mod):
+    try:
+        result = serialize_x(_get_ext_module_fname(mod), 'LMExt', full=True)
         if result:
             try:
                 del result['id']
@@ -131,33 +149,16 @@ def modinfo(mod):
         raise FunctionFailed(e)
 
 
-def modhelp(mod, context):
-    code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
-            ' s=LMExt(info_only=True).serialize(helpinfo=\'%s\')' % context
-    try:
-        d = {}
-        exec(code, d)
-        result = d.get('s')
-    except Exception as e:
-        raise FunctionFailed(e)
-    if result is None:
-        raise ResourceNotFound('Help context not found')
-    return result
-
-
 def list_mods():
     result = []
-    mods = glob.glob(eva.core.dir_lib + '/eva/lm/extensions/*.py')
+    mods = glob.glob(_get_ext_module_fname('*'))
     for p in mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
-            code = 'from eva.lm.extensions.%s import LMExt;' % f + \
-                    ' s=LMExt(info_only=True).serialize(full=True);' + \
-                    'f=LMExt(info_only=True).get_functions()'
             try:
-                d = {}
-                exec(code, d)
-                result.append(d['s'])
+                d = serialize_x(p, 'LMExt', full=True)
+                if d['id'] != 'generic':
+                    result.append(d)
             except:
                 eva.core.log_traceback()
                 pass
@@ -165,51 +166,68 @@ def list_mods():
 
 
 @with_exts_lock
-def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
-    if not ext_id: raise InvalidParameter('ext id not specified')
+def load_ext(ext_id,
+             ext_mod_id,
+             cfg=None,
+             start=True,
+             rebuild=True,
+             config_validated=False,
+             _o=None):
+    if not ext_id:
+        raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
         raise InvalidParameter('ext %s id contains forbidden symbols' % ext_id)
-    try:
-        ext_mod = importlib.import_module('eva.lm.extensions.' + ext_mod_id)
-        importlib.reload(ext_mod)
-        _api = ext_mod.__api__
-        _author = ext_mod.__author__
-        _version = ext_mod.__version__
-        _description = ext_mod.__description__
-        _license = ext_mod.__license__
-        _functions = ext_mod.__functions__
-        logging.info('Extension loaded %s v%s, author: %s, license: %s' %
-                     (ext_mod_id, _version, _author, _license))
-        logging.debug('%s: %s' % (ext_mod_id, _description))
-        if _api > __api__:
-            logging.error(
-                'Unable to activate extension %s: ' % ext_mod_id + \
-                'controller extension API version is %s, ' % __api__ + \
-                'extension API version is %s' % _api)
-            raise FunctionFailed('unsupported ext API version')
-    except Exception as e:
-        raise FunctionFailed('unable to load ext mod {}: {}'.format(
-            ext_mod_id, e))
-    ext = ext_mod.LMExt(cfg=cfg)
+    if _o is None:
+        # import module
+        try:
+            ext_mod = import_x(_get_ext_module_fname(ext_mod_id))
+            _api = ext_mod.__api__
+            _author = ext_mod.__author__
+            _version = ext_mod.__version__
+            _description = ext_mod.__description__
+            _license = ext_mod.__license__
+            _functions = ext_mod.__functions__
+            logging.info('Extension loaded %s v%s, author: %s, license: %s' %
+                         (ext_mod_id, _version, _author, _license))
+            logging.debug('%s: %s' % (ext_mod_id, _description))
+            if _api > __api__:
+                logging.error(
+                    'Unable to activate extension %s: ' % ext_mod_id + \
+                    'controller extension API version is %s, ' % __api__ + \
+                    'extension API version is %s' % _api)
+                raise FunctionFailed('unsupported ext API version')
+        except Exception as e:
+            raise FunctionFailed('unable to load ext mod {}: {}'.format(
+                ext_mod_id, e))
+    else:
+        ext_mod = _o.__xmod__
+    ext = ext_mod.LMExt(cfg=cfg,
+                        config_validated=config_validated,
+                        _xmod=ext_mod)
     if not ext.ready:
         raise FunctionFailed('unable to init ext mod %s' % ext_mod_id)
     ext.ext_id = ext_id
     if ext_id in exts:
         exts[ext_id].stop()
     exts[ext_id] = ext
+    set_modified()
     ext.load()
-    if start: ext.start()
-    if rebuild: rebuild_env()
+    if start:
+        ext.start()
+    if rebuild:
+        rebuild_env()
     return ext
 
 
 @with_exts_lock
 def unload_ext(ext_id, remove_data=False):
     ext = get_ext(ext_id)
-    if ext is None: raise ResourceNotFound
+    if ext is None:
+        raise ResourceNotFound
     try:
         ext.stop()
         del exts[ext_id]
+        set_modified()
         rebuild_env()
         if remove_data:
             datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext_id}.json'
@@ -239,17 +257,19 @@ def set_ext_prop(ext_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
     ext = get_ext(ext_id)
-    if not ext: raise ResourceNotFound
-    cfg = ext.cfg
+    if not ext:
+        raise ResourceNotFound
+    cfg = ext.cfg.copy()
     mod_id = ext.mod_id
     if p and not isinstance(v, dict):
         cfg[p] = v
     else:
         cfg.update(v)
-    if v is None: del cfg[p]
-    ext = load_ext(ext_id, mod_id, cfg)
+    if v is None:
+        del cfg[p]
+    ext.validate_config(cfg, config_type='config')
+    ext = load_ext(ext_id, mod_id, cfg, config_validated=True, _o=ext)
     if ext:
-        exts[ext_id] = ext
         return True
 
 
@@ -272,10 +292,11 @@ def load():
             except Exception as e:
                 logging.error(e)
                 eva.core.log_traceback()
+        _d.modified = False
         rebuild_env()
         return True
     except Exception as e:
-        logging.error('unable to load uc_drivers.json: {}'.format(e))
+        logging.error('unable to load lm_extensions.json: {}'.format(e))
         eva.core.log_traceback()
         return False
 
@@ -283,19 +304,21 @@ def load():
 @eva.core.save
 @with_exts_lock
 def save():
-    try:
-        with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
-            fd.write(format_json(serialize(config=True), minimal=False))
-        for k, p in exts.items():
-            try:
-                p.save()
-            except:
-                logging.error(f'unable to save ext data for {p.ext_id}')
-                log_traceback()
-        return True
-    except Exception as e:
-        logging.error('unable to save ext config: {}'.format(e))
-        eva.core.log_traceback()
+    if _d.modified:
+        try:
+            with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
+                fd.write(format_json(serialize(config=True), minimal=False))
+            _d.modified = False
+            for k, p in exts.items():
+                try:
+                    p.save()
+                except:
+                    logging.error(f'unable to save ext data for {p.ext_id}')
+                    log_traceback()
+            return True
+        except Exception as e:
+            logging.error('unable to save ext config: {}'.format(e))
+            eva.core.log_traceback()
         return False
 
 
@@ -320,3 +343,7 @@ def stop():
             eva.core.log_traceback()
     if eva.core.config.db_update != 0:
         save()
+
+
+def set_modified():
+    _d.modified = True

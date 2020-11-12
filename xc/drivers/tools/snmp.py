@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 # SNMP get/set module. Supports SNMPv1 and 2
 
@@ -81,6 +81,20 @@ def set(oid,
         timeout=0,
         retries=0,
         snmp_ver=2):
+    """
+    Args:
+        oid: SNMP OID or MIB name
+        value: value to set
+        host: target host
+        port: target port (default: 161)
+        community: SNMP community (default: public)
+        timeout: max SNMP timeout
+        retries: max retry count (default: 0)
+        snmp_ver: SNMP version (default: 2)
+
+    Returns:
+        True if value is set, False if not
+    """
     try:
         for (err_i, err_st, err_idx, vals) in snmp_engine.setCmd(
                 snmp_engine.SnmpEngine(),

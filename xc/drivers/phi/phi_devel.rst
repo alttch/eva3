@@ -26,7 +26,7 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **7**
+* **__api__**           module API (integer number), current is **9**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
@@ -87,6 +87,7 @@ following context:
 * **help** property description (help)
 * **type** property type
 * **required** *True* if property is required, *False* if it's optional
+* **default** default value (for required only)
 
 Property **type** may be:
 
@@ -99,6 +100,7 @@ Property **type** may be:
 * **bin** binary number
 * **float** float number
 * **ufloat** unsigned float (greater or equal to 0)
+* **any** any type
 * **list:type** list of variables with type specified
 * **enum:type:a,b,c** list of the permitted specified type values
 
@@ -367,6 +369,14 @@ special record:
 must be present as first in a result. A special column *'!load'* in a
 column list is not required.
 
+Config validation
+=================
+
+Optional method *validate_config* can be implemented to automatically validate
+module configuration.
+
+.. include:: pydoc/pydoc_validateconfig.rst
+
 Working with unit values
 ========================
 
@@ -525,6 +535,7 @@ by itself. To perform this, PHI should support **aao_get** feature and be
 loaded with *update=N* config param. Updates, intervals as well as the whole
 update process are handled by parent class.
 
+
 Working with I2C/SMBus
 ======================
 
@@ -563,6 +574,7 @@ below:
 
 All I2C/SMBus exceptions, timeouts and retries should be handled by the code of
 your PHI.
+
 
 Working with Modbus
 ===================
@@ -627,6 +639,65 @@ The variable **client_type** of the port object (*mb.client_type*) holds the
 port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
+
+
+Working with Ethernet/IP
+========================
+
+The standard way to work with Ethernet/IP devices in EVA ICS is `cpppo
+<https://github.com/pjkundert/cpppo/>`_ Python module. The module isn't
+installed by default. Set *EXTRA="cpppo"* in */opt/eva/etc/venv* and rebuild
+EVA ICS venv (*/opt/eva/install/build-venv*).
+
+Here is helper usage example:
+
+.. code-block:: python
+
+    # ........
+    from eva.uc.driverapi import log_traceback
+
+    class PHI(GenericPHI):
+
+        def get(self, port=None, cfg=None, timeout=0):
+            # do not import anything in the main module code as cpppo module
+            # isn't included by default
+            from eva.uc.drivers.tools.cpppo_enip import operate
+            try:
+                result, failures = operate(
+                    host=self.phi_cfg['host'],
+                    port=self.phi_cfg['port'],
+                    tags=[port])
+                if failures:
+                    raise RuntimeError
+                else:
+                    # the module example returns unit status (int)
+                    return int(result[0][0])
+            except:
+                log_traceback()
+                return None
+
+        def set(self, port=None, data=None, cfg=None, timeout=0):
+            from eva.uc.drivers.tools.cpppo_enip import operate
+            try:
+                _, failures = operate(
+                    host=self.phi_cfg['host'],
+                    port=self.phi_cfg['port'],
+                    tags=[f'{port}={data}'])
+                if failures:
+                    raise RuntimeError
+                else:
+                    return True
+            except:
+                log_traceback()
+                return False
+
+The helper function arguments are similar to *cpppo.server.enip.client* command
+line arguments. Refer to function pydoc or CLI help for more details.
+
+The above method is simple but it isn't recommended for the high load
+environments, as "operate" functions creates new connector for each request. To
+reuse connections, it's recommended to use **SafeProxy** class. Refer to
+*eva.uc.drivers.tools.cpppo_enip pydoc* for more info.
 
 
 Working with Modbus slave memory space
@@ -789,6 +860,7 @@ need to use SNMP MIBs and dotted number SNMP OIDs are used instead.
 If you plan to use SNMP MIBs, you should warn user to download them and place
 to the proper location or include MIB directly into PHI code to generate it on
 the flow.
+
 
 Working with MQTT
 =================

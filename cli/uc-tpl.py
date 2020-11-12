@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import getopt
@@ -86,7 +86,8 @@ def c_replace(s, rep):
         for x in s:
             result.append(c_replace(x, rep))
         return result
-    if not isinstance(s, str): return s
+    if not isinstance(s, str):
+        return s
     result = s
     for i, v in rep.items():
         result = result.replace(i, '{{ %s }}' % v)
@@ -94,9 +95,12 @@ def c_replace(s, rep):
 
 
 def print_debug(o1=None, o2=None, end='\n'):
-    if not debug: return
-    if o1: print(o1, end='')
-    if o2: print('', o2, end='')
+    if not debug:
+        return
+    if o1:
+        print(o1, end='')
+    if o2:
+        print('', o2, end='')
     print(end=end)
 
 
@@ -159,7 +163,8 @@ for i, v in o:
             sys.exit(99)
     elif i == '-U':
         apiuri = v
-        if apiuri[-1] == '/': apiuri = apiuri[:-1]
+        if apiuri[-1] == '/':
+            apiuri = apiuri[:-1]
     elif i == '-K':
         apikey = v
     elif i == '-D':
@@ -200,6 +205,8 @@ elif func == 'generate':
             api = apiclient.APIClientLocal('uc')
         except:
             print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+            import traceback
+            traceback.print_exc()
             sys.exit(98)
     else:
         api = apiclient.APIClient()
@@ -222,7 +229,8 @@ elif func == 'generate':
             sys.exit(1)
         v = r[cvar]
         print_debug(' = %s' % v)
-        if not 'cvars' in tpl: tpl['cvars'] = {}
+        if not 'cvars' in tpl:
+            tpl['cvars'] = {}
         tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
     for group in groups:
         c, r = api.call('list', {'g': group}, _debug=debug)
@@ -254,7 +262,8 @@ elif func == 'generate':
             ic['props'][p] = c_replace(v, config_rev)
         if not section in tpl:
             tpl[section] = []
-        if 'props' in ic and not ic['props']: del ic['props']
+        if 'props' in ic and not ic['props']:
+            del ic['props']
         tpl[section].append(ic)
         print_debug(' - OK')
     if (tpl_file):

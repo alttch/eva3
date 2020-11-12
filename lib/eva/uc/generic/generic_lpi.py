@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 __description__ = "Generic LPI, don't use"
-__api__ = 4
+__api__ = 9
 
 __logic__ = 'abstract'
 
@@ -34,8 +34,10 @@ from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_phi
 from eva.uc.driverapi import get_timeout
 
+from eva.x import GenericX
 
-class LPI(object):
+
+class LPI(GenericX):
 
     connections = {'port': 'primary'}
     """
@@ -80,19 +82,20 @@ class LPI(object):
 
     def get_item_cmap(self, cfg):
         port = cfg.get(self.io_label)
-        if not isinstance(port, list): port = [port]
+        if not isinstance(port, list):
+            port = [port]
         return {'port': port}
 
     def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help.copy()
+                d = self._config_help.copy()
                 return d
             elif helpinfo == 'action':
-                d = self.__action_help.copy()
+                d = self._action_help.copy()
             elif helpinfo == 'update':
-                d = self.__state_help.copy()
+                d = self._state_help.copy()
             else:
                 d = None
             return d
@@ -131,7 +134,8 @@ class LPI(object):
     """
 
     def need_invert(self, port):
-        if not isinstance(port, str) or port[:2] != 'i:': return port, False
+        if not isinstance(port, str) or port[:2] != 'i:':
+            return port, False
         return port[2:], True
 
     """
@@ -164,7 +168,8 @@ class LPI(object):
     def delay(self, _uuid, sec):
         t_end = time.perf_counter() + sec
         while time.perf_counter() < t_end:
-            if self.need_terminate(_uuid): return False
+            if self.need_terminate(_uuid):
+                return False
             time.sleep(get_polldelay())
         return not self.need_terminate(_uuid)
 
@@ -243,7 +248,8 @@ class LPI(object):
         self.__terminate_lock = threading.Lock()
         self.__results_lock = threading.Lock()
 
-        mod = sys.modules[self.__module__]
+        mod = kwargs.get('_xmod')
+        self.__xmod__ = mod
         self.lpi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
@@ -252,13 +258,26 @@ class LPI(object):
         self.__api_version = mod.__api__
         self.__logic = mod.__logic__
         self.__features = mod.__features__
-        self.__config_help = mod.__config_help__
-        self.__action_help = mod.__action_help__
-        self.__state_help = mod.__state_help__
+        self._config_help = mod.__config_help__
+        self._action_help = mod.__action_help__
+        self._state_help = mod.__state_help__
         self.__help = mod.__help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
-        if kwargs.get('info_only'): return
+        if self.io_label != 'port':
+            for l in self._action_help, self._state_help:
+                for v in l:
+                    if v['name'] == 'port':
+                        v['name'] = self.io_label
+        if kwargs.get('info_only'):
+            return
+        if not kwargs.get('config_validated'):
+            self.validate_config(self.lpi_cfg,
+                                 config_type='config',
+                                 xparams=[{
+                                     'name': 'io_label',
+                                     'type': 'str'
+                                 }])
         self.ready = True
 
     """
@@ -275,7 +294,8 @@ class LPI(object):
             _tki = tki
         else:
             _tki = get_timeout() - self.default_tki_diff
-            if _tki < 0: _tki = 0
+            if _tki < 0:
+                _tki = 0
         if not self.phi:
             self.log_error('no PHI assigned')
             return None
@@ -297,7 +317,8 @@ class LPI(object):
             _tki = tki
         else:
             _tki = get_timeout() - self.default_tki_diff
-            if _tki < 0: _tki = 0
+            if _tki < 0:
+                _tki = 0
         if not self.phi:
             self.log_error('no PHI assigned')
             return None

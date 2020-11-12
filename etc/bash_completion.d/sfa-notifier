@@ -2,7 +2,17 @@ _sfa-notifier_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'launch restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch plugins restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_sfa-notifier_corescript() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -12,10 +22,10 @@ _sfa-notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'config create destroy disable enable list props server set subscribe test unsubscribe' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'config corescript create destroy disable enable list props server set subscribe test unsubscribe' -- "$cur" ))
   else
     case "${words[1]}" in
-      server)
+      corescript|server)
         _sfa-notifier_${words[1]}
         ;;
       *)

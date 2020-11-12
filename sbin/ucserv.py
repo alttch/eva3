@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import sys
 import os
@@ -20,14 +20,15 @@ import eva.api
 import eva.apikey
 import eva.users
 import eva.uc.controller
-import eva.uc.ucapi
 import eva.logs
 import eva.uc.modbus
 import eva.wsapi
+import eva.mailer
 
 
 def usage(version_only=False):
-    if not version_only: print()
+    if not version_only:
+        print()
     print('%s version %s build %s ' % \
             (
                 eva.core.product.name,
@@ -35,7 +36,8 @@ def usage(version_only=False):
                 eva.core.product.build
             )
         )
-    if version_only: return
+    if version_only:
+        return
     print("""Usage: ucserv.py [-f config_file ] [-d]
 
  -f config_file     start with an alternative config file
@@ -45,7 +47,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2020013101
+product_build = 2020111104
 
 product_code = 'uc'
 
@@ -66,8 +68,10 @@ except:
     sys.exit(99)
 
 for o, a in optlist:
-    if o == '-d': _fork = True
-    if o == '-f': _eva_ini = a
+    if o == '-d':
+        _fork = True
+    if o == '-f':
+        _eva_ini = a
     if o == '-V':
         usage(version_only=True)
         sys.exit()
@@ -76,9 +80,11 @@ for o, a in optlist:
         sys.exit()
 
 cfg = eva.core.load(fname=_eva_ini, initial=True)
-if not cfg: sys.exit(2)
+if not cfg:
+    sys.exit(2)
 
-if _fork: eva.core.fork()
+if _fork:
+    eva.core.fork()
 eva.core.write_pid_file()
 
 eva.core.start_supervisor()
@@ -90,7 +96,9 @@ eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
 eva.sysapi.update_config(cfg)
+eva.mailer.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
+eva.datapuller.update_config(cfg)
 
 eva.core.start()
 eva.core.register_controller(eva.uc.controller)
@@ -102,6 +110,7 @@ eva.apikey.init()
 eva.apikey.load()
 
 eva.users.init()
+eva.users.update_config(cfg)
 
 eva.notify.init()
 eva.notify.load()
@@ -119,12 +128,14 @@ eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
 eva.upnp.start()
+import eva.uc.ucapi
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 
 if eva.core.config.notify_on_start:
     eva.uc.controller.notify_all()
 
+eva.users.start()
 eva.tokens.start()
 eva.api.start()
 eva.core.block()

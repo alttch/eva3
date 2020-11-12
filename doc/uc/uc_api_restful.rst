@@ -9,6 +9,11 @@ calls look :doc:`/uc/uc_api`.
 RESTful API basics
 ==================
 
+.. warning::
+
+    RESTful API is deprecated and scheduled to be removed (not implemented) in
+    EVA ICS v4. Use JSON RPC API, whenever it is possible.
+
 Majority EVA ICS API components and items support `REST
 <https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
@@ -152,9 +157,29 @@ Parameters:
 
 Optionally:
 
-* **a** string of command arguments, separated by spaces (passed to the script)
+* **a** string of command arguments, separated by spaces (passed to the script) or array (list)
 * **w** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
+
+
+.. _ucapi_restful_list_plugins:
+
+get list of loaded core plugins
+-------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_plugins.rest
+    :response: http-examples/sysapi/list_plugins.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+list with plugin module information
 
 
 .. _ucapi_restful_shutdown_core:
@@ -373,7 +398,7 @@ Optionally:
 * **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
-* **t** time format("iso" or "raw" for unix timestamp, default is "raw")
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
 * **g** output format ("list", "dict" or "chart", default is "list")
 * **c** options for chart (dict or comma separated)
@@ -603,26 +628,6 @@ Optionally:
 * **save** save multi-update configuration immediately
 
 
-.. _ucapi_restful_create:
-
-create new item
----------------
-
-Creates new :doc:`item</items>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/create.rest
-    :response: http-examples/ucapi/create.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-Optionally:
-
-* **save** save multi-update configuration immediately
-
-
 .. _ucapi_restful_create_sensor:
 
 create new sensor
@@ -661,22 +666,6 @@ Parameters:
 Optionally:
 
 * **save** save unit configuration immediately
-
-
-.. _ucapi_restful_destroy:
-
-delete item or group
---------------------
-
-Deletes the :doc:`item</items>` or the group (and all the items in it) from the system.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/destroy.rest
-    :response: http-examples/ucapi/destroy.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
 
 
 .. _ucapi_restful_get_config:
@@ -1236,6 +1225,22 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _ucapi_restful_get_phi:
+
+get loaded PHI information
+--------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi.rest
+    :response: http-examples/ucapi/get_phi.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _ucapi_restful_list_phi:
 
 list loaded PHIs
@@ -1542,6 +1547,102 @@ Parameters:
 
 
 
+.. _ucapi_restful_cat_datapuller:
+
+Data pullers
+============
+
+
+
+.. _ucapi_restful_get_datapuller:
+
+Get data puller
+---------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_datapuller.rest
+    :response: http-examples/ucapi/get_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+Data puller info
+
+
+.. _ucapi_restful_list_datapullers:
+
+List data pullers
+-----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_datapullers.rest
+    :response: http-examples/ucapi/list_datapullers.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Returns:
+
+List of all configured data pullers
+
+
+.. _ucapi_restful_restart_datapuller:
+
+Restart data puller
+-------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/restart_datapuller.rest
+    :response: http-examples/ucapi/restart_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_start_datapuller:
+
+Start data puller
+-----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_datapuller.rest
+    :response: http-examples/ucapi/start_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_stop_datapuller:
+
+Stop data puller
+----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_datapuller.rest
+    :response: http-examples/ucapi/stop_datapuller.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+
 .. _ucapi_restful_cat_device:
 
 Devices
@@ -1588,7 +1689,6 @@ Deploys the :ref:`device<device>` from the specified template.
 Parameters:
 
 * **API Key** API key with *allow=device* permissions
-* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
 
 Optionally:
 
@@ -1877,7 +1977,7 @@ Optionally:
 rotate log file
 ---------------
 
-Deprecated, not required since 3.2.6
+Deprecated, not required since 3.3.0
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest
@@ -1886,6 +1986,60 @@ Deprecated, not required since 3.2.6
 Parameters:
 
 * **API Key** API key with *sysfunc=yes* permissions
+
+
+.. _ucapi_restful_api_log_get:
+
+get API call log
+----------------
+
+* API call with master permission returns all records requested
+
+* API call with other API key returns records for the specified key   only
+
+* API call with an authentication token returns records for the   current authorized user
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/api_log_get.rest
+    :response: http-examples/sysapi/api_log_get.resp-rest
+
+Parameters:
+
+* **API Key** any valid API key
+
+Optionally:
+
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
+* **n** records limit
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
+* **f** record filter (requires API key with master permission)
+
+Returns:
+
+List of API calls
+
+Note: API call params are returned as string and can be invalid JSON data as they're always truncated to 512 symbols in log database
+
+Record filter should be specified either as string (k1=val1,k2=val2) or as a dict. Valid fields are:
+
+* gw: filter by API gateway
+
+* ip: filter by caller IP
+
+* auth: filter by authentication type
+
+* u: filter by user
+
+* utp: filter by user type
+
+* ki: filter by API key ID
+
+* func: filter by API function
+
+* params: filter by API call params (matches if field contains value)
+
+* status: filter by API call status
 
 
 
@@ -2109,7 +2263,7 @@ Parameters:
 set user password
 -----------------
 
-
+Either master key and user login must be specified or a user must be logged in and a session token used
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/set_user_password.rest
@@ -2117,7 +2271,7 @@ set user password
 
 Parameters:
 
-* **API Key** API key with *master* permissions
+* **API Key** master key or token
 * **p** new password
 
 
@@ -2219,7 +2373,8 @@ Puts a new file into runtime folder. If the file with such name exists, it will 
 Parameters:
 
 * **API Key** API key with *master* permissions
-* **m** file content
+* **m** file content (plain text or base64-encoded)
+* **b** if True - put binary file (decode base64)
 
 
 .. _ucapi_restful_file_set_exec:
@@ -2269,6 +2424,7 @@ get file contents from runtime folder
 Parameters:
 
 * **API Key** API key with *master* permissions
+* **b** if True - force getting binary file (base64-encode content)
 
 
 
@@ -2327,7 +2483,7 @@ Parameters:
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are supported)
 * **q** MQTT topic QoS
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 
 .. _ucapi_restful_unsubscribe_corescripts_mqtt:
@@ -2345,6 +2501,6 @@ Parameters:
 
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are allowed)
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 

@@ -4,7 +4,27 @@ _uc-cmd_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch reload restart start status stop
+    compadd "$@" cleanup launch plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_uc-cmd_corescript() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload
+  else
+    _files
+  fi
+}
+
+_uc-cmd_datapuller() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list restart start stop
   else
     _files
   fi
@@ -114,7 +134,7 @@ _uc-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" action server-config template update
+    compadd "$@" action corescript server-config template update
   else
     _files
   fi
@@ -164,7 +184,7 @@ _uc-cmd_cvar() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" all delete get set
+    compadd "$@" delete get list set
   else
     _files
   fi
@@ -174,7 +194,7 @@ _uc-cmd_log() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" critical debug error get info rotate warning
+    compadd "$@" api critical debug error get info warning
   else
     _files
   fi
@@ -184,10 +204,10 @@ _uc-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
+    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
   else
     case "${words[2]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _uc-cmd_${words[2]}
         ;;
       *)

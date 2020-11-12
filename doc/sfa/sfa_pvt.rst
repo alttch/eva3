@@ -47,6 +47,10 @@ The file can be loaded with the following request:
 
     http(s)://<IP_address_SFA:Port>/pvt?k=APIKEY&f=FILE
 
+    or
+
+    http(s)://<IP_address_SFA:Port>/pvt/FILE?k=APIKEY
+
 where
 
 * **k** valid API key
@@ -198,25 +202,6 @@ value:
 if you use this parameter for requests, web browser will not cache a file (if
 random value is used). Besides, the server will set **Cache-Control**,
 **Expires** and **Pragma** headers to the values which prohibit any caching.
-
-Using frontend
-==============
-
-If you work via frontend, you can use the pvt folder as a usual one (in case
-the authentication succeeded) by accessing files by their path without **f**
-parameter. Example for `NGINX <https://www.nginx.com/>`_:
-
-.. code-block:: nginx
-
-    location / {
-        rewrite ^/pvt/(.+)$ /pvt?f=$1 last;
-    }
-
-The additional commands will keep working:
-
-.. code-block:: bash
-
-    GET "http://eva.sfa.domain/pvt/data/cam3/*.jp*?c=newest&ic=resize:320x200x50:jpeg&nocache=1508070344872"
 
 .. _sfa_rpvt:
 

@@ -1,11 +1,11 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
-__api__ = 8
+__api__ = 9
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
@@ -24,6 +24,7 @@ import logging
 import threading
 import sys
 import rapidjson
+import timeouter as to
 
 import eva.core
 
@@ -34,16 +35,18 @@ from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import get_shared_namespace
 
+from eva.x import GenericX
+
 from time import time
 from time import sleep
 from time import perf_counter
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 from neotasker import BackgroundEventWorker, task_supervisor
 
 
-class PHI(object):
+class PHI(GenericX):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config
@@ -57,7 +60,8 @@ class PHI(object):
             self.phi_cfg = phi_cfg
         else:
             self.phi_cfg = {}
-        mod = sys.modules[self.__module__]
+        mod = kwargs.get('_xmod')
+        self.__xmod__ = mod
         self.phi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
@@ -69,9 +73,9 @@ class PHI(object):
         self.__required = mod.__required__
         self.__mods_required = mod.__mods_required__
         self.__lpi_default = mod.__lpi_default__
-        self.__config_help = mod.__config_help__
-        self.__get_help = mod.__get_help__
-        self.__set_help = mod.__set_help__
+        self._config_help = mod.__config_help__
+        self._get_help = mod.__get_help__
+        self._set_help = mod.__set_help__
         self.__help = mod.__help__
         if hasattr(mod, '__ports_help__'):
             self.__ports_help = mod.__ports_help__
@@ -90,9 +94,9 @@ class PHI(object):
         if self.__discover and not isinstance(self.__discover, list):
             self.__discover = [self.__discover]
         if hasattr(mod, '__discover_help__'):
-            self.__discover_help = mod.__discover_help__
+            self._discover_help = mod.__discover_help__
         else:
-            self.__discover_help = ''
+            self._discover_help = ''
         if isinstance(self.__features, str):
             self.__features = [self.__features]
         else:
@@ -131,8 +135,32 @@ class PHI(object):
                 setattr(self._has_feature, f, True)
             except:
                 self.log_error('feature unknown: {}'.format(f))
+        if 'cache' in self.__features:
+            for v in self._config_help:
+                if v['name'] == 'cache':
+                    break
+            else:
+                self._config_help.append({
+                    'name': 'cache',
+                    'help': 'caches state for N sec',
+                    'type': 'float',
+                    'required': False
+                })
+        if 'aao_get' in self.__features:
+            for v in self._config_help:
+                if v['name'] == 'update':
+                    break
+            else:
+                self._config_help.append({
+                    'name': 'update',
+                    'help': 'send updates to items every N sec',
+                    'type': 'float',
+                    'required': False
+                })
         if kwargs.get('info_only'):
             return
+        if not kwargs.get('config_validated'):
+            self.validate_config(self.phi_cfg, config_type='config')
         self.ready = True
         # cache time, useful for aao_get devices
         self._cache_set = 0
@@ -153,6 +181,7 @@ class PHI(object):
         self._last_update_state = None
         # benchmarking
         self.__update_count = 0
+        self.__update_active = False
         self.__last_update_reset = 0
         self.__benchmark = self.phi_cfg.get('benchmark', False)
 
@@ -201,29 +230,15 @@ class PHI(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help.copy()
-                if 'cache' in self.__features:
-                    d.append({
-                        'name': 'cache',
-                        'help': 'caches state for N sec',
-                        'type': 'float',
-                        'required': False
-                    })
-                if 'aao_get' in self.__features:
-                    d.append({
-                        'name': 'update',
-                        'help': 'send updates to items every N sec',
-                        'type': 'float',
-                        'required': False
-                    })
+                d = self._config_help.copy()
             elif helpinfo == 'get':
-                d = self.__get_help.copy()
+                d = self._get_help.copy()
             elif helpinfo == 'set':
-                d = self.__set_help.copy()
+                d = self._set_help.copy()
             elif helpinfo == 'ports':
                 d = self.__ports_help
             elif helpinfo == 'discover':
-                d = self.__discover_help
+                d = self._discover_help
             else:
                 d = None
             return d
@@ -253,9 +268,6 @@ class PHI(object):
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
         return d
-
-    def exec(self, cmd=None, args=None):
-        return 'not implemented'
 
     def push_state(self, payload=None):
         self.log_warning('push_state not implemented')
@@ -316,6 +328,9 @@ class PHI(object):
         return result
 
     def _start(self):
+        return self.start()
+
+    def _start_processors(self):
         if self._update_interval and 'aao_get' in self.__features:
             self._update_processor.set_name('phi_update_processor:{}'.format(
                 self.oid))
@@ -323,13 +338,14 @@ class PHI(object):
             self._update_scheduler = task_supervisor.create_async_job(
                 target=self._job_update_scheduler,
                 interval=self._update_interval)
-        return self.start()
 
-    def _stop(self):
+    def _stop_processors(self):
         if self._update_scheduler:
             self._update_scheduler.cancel()
             self._update_scheduler = None
         self._update_processor.stop()
+
+    def _stop(self):
         return self.stop()
 
     async def _job_update_scheduler(self):
@@ -337,7 +353,11 @@ class PHI(object):
         await self._update_processor.trigger()
 
     async def _run_update_processor(self, **kwargs):
-        eva.core.spawn(self._launch_update)
+        if not self.__update_active:
+            self.__update_active = True
+            eva.core.spawn(self._launch_update)
+        else:
+            self.log_warning('update is already in progress. skipping')
 
     def _launch_update(self):
         try:
@@ -345,9 +365,12 @@ class PHI(object):
         except:
             self.log_error('update error')
             eva.core.log_traceback()
+        finally:
+            self.__update_active = False
 
     def _perform_update(self):
         self.log_debug('performing update')
+        to.init(timeout=get_timeout())
         state = self.get(timeout=get_timeout())
         if not state:
             return
@@ -372,3 +395,7 @@ class PHI(object):
                       (time() - self.__last_update_reset))))
             self.__update_count = 0
             self.__last_update_reset = time()
+
+    def _test(self, cmd=None):
+        to.init(timeout=get_timeout())
+        return self.test(cmd=cmd)

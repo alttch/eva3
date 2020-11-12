@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __description__ = "Single port sensor LPI"
-__api__ = 5
+__api__ = 9
 
 __logic__ = 'single port'
 
@@ -34,14 +34,15 @@ class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         _state_in = state_in
-        if _state_in: evh = True
-        else: evh = False
+        if _state_in:
+            evh = True
+        else:
+            evh = False
         phi_cfg = self.prepare_phi_cfg(cfg)
         if _state_in:
             value = _state_in.get(list(_state_in)[0])
         else:
-            value = self.phi.get(
-                cfg=phi_cfg, timeout=timeouter.get())
+            value = self.phi.get(cfg=phi_cfg, timeout=timeouter.get())
             if isinstance(value, dict):
                 value = value.get(list(value)[0])
         if value is None and evh:
@@ -50,3 +51,9 @@ class LPI(GenericLPI):
             return self.state_result_error(_uuid)
         self.set_result(_uuid, (1, str(value)))
         return
+
+    def validate_config(self, config={}, config_type='config', **kwargs):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 ignore_private=True,
+                                 **kwargs)

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 
 def AND(args):
@@ -10,7 +10,8 @@ def AND(args):
     @var_in args input arguments
     """
     for a in args:
-        if not a: return False
+        if not a:
+            return False
     return True
 
 
@@ -20,7 +21,8 @@ def OR(args):
     @var_in args input arguments
     """
     for a in args:
-        if a: return True
+        if a:
+            return True
     return False
 
 
@@ -181,8 +183,10 @@ def LIMIT(IN, MIN, MX):
     @var_in MIN minimal value
     @var_in MX maximal value
     """
-    if IN < MIN: return MIN
-    if IN > MX: return MX
+    if IN < MIN:
+        return MIN
+    if IN > MX:
+        return MX
     return IN
 
 

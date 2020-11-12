@@ -1,11 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import eva.core
 import eva.item
 import eva.tools
+
+import logging
+import threading
 
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
@@ -23,8 +26,11 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.value = state.get('value')
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
+        self.remote_update_lock = threading.RLock()
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False,
+    def notify(self,
+               retain=None,
+               skip_subscribed_mqtt=False,
                for_destroy=False):
         super().notify(skip_subscribed_mqtt=True, for_destroy=for_destroy)
 
@@ -67,31 +73,33 @@ class RemoteLVar(RemoteUpdatableItem):
         self.expires = state.get('expires')
         self.set_time = state.get('set_time')
 
-    def set_state_from_serialized(self, data, from_mqtt=False):
-        need_notify = False
-        try:
-            if 'expires' in data:
-                try:
-                    expires = float(data['expires'])
-                    if self.expires != expires:
-                        self.expires = expires
-                        need_notify = True
-                    need_notify = True
-                except:
-                    pass
-            if 'set_time' in data:
-                try:
-                    set_time = float(data['set_time'])
-                    if self.set_time != set_time:
-                        self.set_time = set_time
-                        need_notify = True
-                except:
-                    pass
-            super().set_state_from_serialized(data,
-                                              from_mqtt=from_mqtt,
-                                              force_notify=need_notify)
-        except:
-            eva.core.log_traceback()
+    def set_state_from_serialized(self, data, from_mqtt=False, timestamp=None):
+        with self.remote_update_lock:
+            need_notify = False
+            try:
+                if super().set_state_from_serialized(data,
+                                                     from_mqtt=from_mqtt,
+                                                     force_notify=need_notify,
+                                                     timestamp=timestamp):
+                    if 'expires' in data:
+                        try:
+                            expires = float(data['expires'])
+                            if self.expires != expires:
+                                self.expires = expires
+                                need_notify = True
+                            need_notify = True
+                        except:
+                            pass
+                    if 'set_time' in data:
+                        try:
+                            set_time = float(data['set_time'])
+                            if self.set_time != set_time:
+                                self.set_time = set_time
+                                need_notify = True
+                        except:
+                            pass
+            except:
+                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -139,8 +147,10 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                 eva.core.log_traceback()
                 return False
         if nvalue is not None:
-            if nvalue == '': nv = ''
-            else: nv = nvalue
+            if nvalue == '':
+                nv = ''
+            else:
+                nv = nvalue
             if self.nvalue != nv:
                 self.nvalue = nv
                 need_notify = True

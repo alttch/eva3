@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-VERSION=3.3.0
-BUILD=2020013101
+VERSION=3.3.2
+BUILD=2020111104
 
 PYTHON3_MIN=6
 PYTHON_MINOR=$(./python3/bin/python3 --version|cut -d. -f2)
@@ -61,7 +61,12 @@ echo "- Downloading new version tarball"
 
 cd _update || exit 1
 
-curl ${EVA_REPOSITORY_URL}/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz -o eva-${VERSION}-${BUILD}.tgz || exit 1
+if [ -f ../eva-${VERSION}-${BUILD}.tgz ]; then
+  cp ../eva-${VERSION}-${BUILD}.tgz .
+else
+  curl -L ${EVA_REPOSITORY_URL}/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz \
+    -o eva-${VERSION}-${BUILD}.tgz || exit 1
+fi
 
 echo "- Extracting"
 
@@ -76,6 +81,12 @@ echo "- Stopping everything"
 echo "- Installing missing modules"
 
 ./_update/eva-${VERSION}/install/build-venv . || exit 2
+
+if [ "$CHECK_ONLY" = 1 ]; then
+  echo
+  echo "Checks passed, venv updated. New version files can be explored in the _update dir"
+  exit 0
+fi
 
 echo "- Removing obsolete files and folders"
 
@@ -148,6 +159,8 @@ fi
 
 echo "- Installing new files"
 
+(cd ./lib/eva && ln -sf ../../plugins) || exit 1
+
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh
 
@@ -162,6 +175,15 @@ mkdir -p ./xc/extensions || exit 1
 (cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py . ) || exit 1
 (cd lib/eva/lm && ln -sf ../../../xc/extensions . ) || exit 1
 (cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
+(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
+
+
+if [ ! -d ./runtime/xc/cmd ]; then
+  if [ -d ./xc/cmd ]; then
+    mv -f ./xc/cmd runtime/xc/ || exit 1
+    (cd xc && ln -sf ../runtime/xc/cmd) || exit 1
+  fi
+fi
 
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
@@ -180,8 +202,6 @@ fi
 if [ -f ./etc/sfa.ini ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
-
-(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
 
 echo "- Cleaning up"
 

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import eva.core
 import eva.runner
@@ -100,7 +100,8 @@ class UCItem(eva.item.Item):
             if val:
                 try:
                     v = float(val)
-                    if v < 0: raise Exception
+                    if v < 0:
+                        raise Exception
                 except:
                     return False
             else:
@@ -144,7 +145,8 @@ class UCItem(eva.item.Item):
                 self.set_modified(save)
                 return True
         elif prop == 'modbus_value':
-            if self.modbus_value == val: return True
+            if self.modbus_value == val:
+                return True
             if val is None:
                 self.unregister_modbus_value_updates()
                 self.modbus_value = None
@@ -182,7 +184,8 @@ class UCItem(eva.item.Item):
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
                     del self.snmp_trap['ident_vars']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    if not self.snmp_trap:
+                        self.unsubscribe_snmp_traps()
                     self.log_set('snmp_trap.ident_vars', None)
                     self.set_modified(save)
                 return True
@@ -194,7 +197,8 @@ class UCItem(eva.item.Item):
                         ivars[k] = v
                 except:
                     return False
-                if not self.snmp_trap: self.snmp_trap = {}
+                if not self.snmp_trap:
+                    self.snmp_trap = {}
                 self.snmp_trap['ident_vars'] = ivars
                 self.subscribe_snmp_traps()
                 self.log_set('snmp_trap.ident_vars', val)
@@ -204,7 +208,8 @@ class UCItem(eva.item.Item):
             if val is None:
                 if self.snmp_trap and 'set_down' in self.snmp_trap:
                     del self.snmp_trap['set_down']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    if not self.snmp_trap:
+                        self.unsubscribe_snmp_traps()
                     self.log_set('snmp_trap.set_down', None)
                     self.set_modified(save)
                 return True
@@ -216,7 +221,8 @@ class UCItem(eva.item.Item):
                         ivars[k] = v
                 except:
                     return False
-                if not self.snmp_trap: self.snmp_trap = {}
+                if not self.snmp_trap:
+                    self.snmp_trap = {}
                 self.snmp_trap['set_down'] = ivars
                 self.log_set('snmp_trap.set_down', val)
                 self.subscribe_snmp_traps()
@@ -226,12 +232,14 @@ class UCItem(eva.item.Item):
             if val is None:
                 if self.snmp_trap and 'set_status' in self.snmp_trap:
                     del self.snmp_trap['set_status']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    if not self.snmp_trap:
+                        self.unsubscribe_snmp_traps()
                     self.log_set('snmp_trap.set_status', None)
                     self.set_modified(save)
                 return True
             else:
-                if not self.snmp_trap: self.snmp_trap = {}
+                if not self.snmp_trap:
+                    self.snmp_trap = {}
                 self.snmp_trap['set_status'] = val
                 self.subscribe_snmp_traps()
                 self.log_set('snmp_trap.set_status', val)
@@ -241,12 +249,14 @@ class UCItem(eva.item.Item):
             if val is None:
                 if self.snmp_trap and 'set_value' in self.snmp_trap:
                     del self.snmp_trap['set_value']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    if not self.snmp_trap:
+                        self.unsubscribe_snmp_traps()
                     self.log_set('snmp_trap.set_value', None)
                     self.set_modified(save)
                 return True
             else:
-                if not self.snmp_trap: self.snmp_trap = {}
+                if not self.snmp_trap:
+                    self.snmp_trap = {}
                 self.snmp_trap['set_value'] = val
                 self.subscribe_snmp_traps()
                 self.log_set('snmp_trap.set_value', val)
@@ -258,7 +268,8 @@ class UCItem(eva.item.Item):
                     del self.snmp_trap['set_if']
                     self.log_set('snmp_trap.set_if', None)
                     self.set_modified(save)
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    if not self.snmp_trap:
+                        self.unsubscribe_snmp_traps()
                 return True
             try:
                 state, iv = val.split(':')
@@ -267,7 +278,8 @@ class UCItem(eva.item.Item):
                 for x in iv.split(','):
                     k, v = x.split('=')
                     ivars[k] = v
-                if not self.snmp_trap: self.snmp_trap = {}
+                if not self.snmp_trap:
+                    self.snmp_trap = {}
                 if not 'set_if' in self.snmp_trap:
                     self.snmp_trap['set_if'] = []
                 r = {'vars': ivars}
@@ -360,8 +372,10 @@ class UCItem(eva.item.Item):
 
     def modbus_update_value(self, addr, values):
         v = values[0]
-        if v is True: v = 1
-        elif v is False: v = 0
+        if v is True:
+            v = 1
+        elif v is False:
+            v = 0
         if self.modbus_value_signed and v > 32767:
             v = v - 65536
         self.update_set_state(value=v * self.modbus_value_multiplier)
@@ -382,7 +396,8 @@ class UCItem(eva.item.Item):
         eva.traphandler.unsubscribe(self)
 
     def process_snmp_trap(self, host, data):
-        if not self.snmp_trap: return
+        if not self.snmp_trap:
+            return
         try:
             if 'ident_vars' in self.snmp_trap:
                 for i, v in self.snmp_trap['ident_vars'].items():
@@ -483,8 +498,8 @@ class UCItem(eva.item.Item):
                             m = self.value_in_range_min
                         except:
                             m = self.value_in_range_min
-                        if self.value_in_range_min == self.value_in_range_max and \
-                                self.value_in_range_min_eq and \
+                        if self.value_in_range_min == self.value_in_range_max \
+                                and self.value_in_range_min_eq and \
                                 self.value_in_range_max_eq:
                             cond_eq = True
                             value_condition = 'x == %s' % m
@@ -494,7 +509,8 @@ class UCItem(eva.item.Item):
                                 value_condition += '='
                             value_condition += ' x'
                     else:
-                        value_condition = 'x == \'%s\'' % self.value_in_range_min
+                        value_condition = 'x == \'%s\'' % \
+                                self.value_in_range_min
                         cond_eq = True
                 if (self.value_in_range_min is not None and \
                         isinstance(self.value_in_range_min, float) or \
@@ -502,9 +518,11 @@ class UCItem(eva.item.Item):
                         not cond_eq and \
                         self.value_in_range_max is not None and \
                         isinstance(self.value_in_range_max, float):
-                    if not value_condition: value_condition = 'x'
+                    if not value_condition:
+                        value_condition = 'x'
                     value_condition += ' <'
-                    if self.value_in_range_max_eq: value_condition += '='
+                    if self.value_in_range_max_eq:
+                        value_condition += '='
                     m = self.value_in_range_max
                     value_condition += ' ' + str(m)
                 d['value_condition'] = value_condition
@@ -537,7 +555,8 @@ class UCItem(eva.item.Item):
             return 0
 
     def is_value_valid(self, value):
-        if value is None: return True
+        if value is None:
+            return True
         try:
             val = float(value)
         except:
@@ -615,8 +634,8 @@ class UCItem(eva.item.Item):
             'value_in_range_max_eq': r_ixiq
         }
 
-        def is_expired(self):
-            if not self.expires or \
-                    self.maintenance_end + self.expires >= time.time():
-                return False
-            return time.time() - self.set_time > self.expires
+    def is_expired(self):
+        if not self.expires or \
+                self.maintenance_end + self.expires >= time.time():
+            return False
+        return time.time() - self.set_time > self.expires

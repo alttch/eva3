@@ -64,7 +64,8 @@ When the system or you add record to the logs, the notification system sends
      "msg": "<message body>",
      "mod": "<MODULE>",
      "th": "<MODULE_THREAD>",
-     "t": <TIME(UNIX_TIMESTAMP)>
+     "t": <TIME(UNIX_TIMESTAMP)>,
+     "dt": <TIME RFC3339>
     }
 
 * **SYSTEM_NAME** the name specified in the configuration file of controller
@@ -155,12 +156,14 @@ controller.
 
 Except for endpoint configuration, notifiers have some additional params:
 
-* **skip_test** if "true", the endpoint won't be tested at the controller start
-  (the controller keeps the notifier active but puts error into the log)
-* **notify_key** notification key for custom http endpoints
 * **collect_logs** this should be set to "true" for :doc:`/sfa/sfa`
   :ref:`MQTT<mqtt_>` notifiers if you want to collect the logs of other
   controllers and have the records available locally in SFA.
+* **interval** when set, notifier will send subscribed item states with the
+  specified interval
+* **notify_key** notification key for custom http endpoints
+* **skip_test** if "true", the endpoint won't be tested at the controller start
+  (the controller keeps the notifier active but puts error into the log)
 
 Subscribing the notifier to events
 ----------------------------------
@@ -490,6 +493,11 @@ After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
 to select metrics from *daily* retention policy, specifying additional
 parameter *o={ "rp": "daily" }*.
 
+.. note::
+
+    It's recommended to set notifier interval property, to properly handle
+    states for the rarely updated items.
+
 .. _prometheus_:
 
 Prometheus
@@ -605,6 +613,8 @@ Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
     # set API key if you plan to execute commands
     # you may use use $key_id to specify key id instead of API key itself
     set gcpiot apikey $default
+    # enable notifier
+    enable gcpiot
     # restart controller
     server restart
 
@@ -645,12 +655,15 @@ third-party or your own web applications.
 
 JSON notifier send POST request to specified URI with data:
 
-* **k** notification key the remote app may use to authorize the sender
+* **k** notification key the remote app may use to authorize the sender (if
+  set)
+* **space** notification space (if set)
 * **subject** event subject
 * **data** event data array
 
 Your application must respond with JSON if the event has been processed
-successfully:
+successfully (if empty response body is received, request is considered as
+successful):
 
 .. code-block:: json
 
@@ -686,6 +699,17 @@ Example of custom notification processing server with Python and `Flask
         # process notification request
         return jsonify({'ok': True})
 
+NDJSON
+------
+
+If notification endpoint accepts only list (ndjson) data, set *method=list* in
+JSON notifier properties. In this case, all above fields are included in each
+notification data row.
+
+This allows to send, process and collect EVA ICS logs, state telemetry and
+other data as HTTP `NDJSON <http://ndjson.org/>`_ (Newline Delimited JSON)
+stream, which is compatible with various data collectors, processors and
+aggregators.
 
 JSON RPC
 --------

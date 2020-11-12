@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import hashlib
 import os
@@ -24,13 +24,13 @@ from eva.core import userdb
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
 from eva.tools import gen_random_str
+from eva.tools import SimpleNamespace
 
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 
 from functools import partial
-from types import SimpleNamespace
 
 config = SimpleNamespace(masterkey=None)
 
@@ -38,7 +38,7 @@ keys = {}
 keys_by_id = {}
 
 allows = []
-all_allows = ['cmd', 'lock', 'device']
+all_allows = ['cmd', 'lock', 'device', 'supervisor']
 
 keys_to_delete = set()
 
@@ -49,6 +49,7 @@ class APIKey(object):
         self.key_id = key_id
         self.master = False
         self.sysfunc = False
+        self.cdata = ''
         self.item_ids = []
         self.groups = []
         self.item_ids_ro = []
@@ -69,6 +70,7 @@ class APIKey(object):
             'master': self.master,
             'key': self.key,
             'sysfunc': self.sysfunc,
+            'cdata': self.cdata,
             'items': self.item_ids,
             'groups': self.groups,
             'items_ro': self.item_ids_ro,
@@ -101,9 +103,12 @@ class APIKey(object):
                 regenerate_key(self.key_id, k=value, save=False)
                 self.set_modified(save)
             return True
+        elif prop == 'dynamic':
+            return False
         elif prop == 'sysfunc':
             val = val_to_boolean(value)
-            if val is None: return False
+            if val is None:
+                return False
             if self.sysfunc != val:
                 self.sysfunc = val
                 self.set_modified(save)
@@ -221,6 +226,12 @@ class APIKey(object):
                 self.rpvt_uris = val
                 self.set_modified(save)
             return True
+        elif prop == 'cdata':
+            val = '' if value is None else value
+            if self.cdata != val:
+                self.cdata = val
+                self.set_modified(save)
+            return True
         raise ResourceNotFound('property ' + prop)
 
     def set_modified(self, save):
@@ -245,42 +256,44 @@ class APIKey(object):
                 # still be present in the database
                 dbconn.execute(sql('delete from apikeys where k_id=:k_id'),
                                k_id=data['id'])
-                dbconn.execute(
-                    sql('insert into apikeys(k_id, k, m, s, i,' +
-                        ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
-                        '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, ' +
-                        ':hal, :has, :pvt, :rpvt)'),
-                    k_id=data['id'],
-                    k=data['key'],
-                    m=1 if data['master'] else 0,
-                    s=1 if data['sysfunc'] else 0,
-                    i=data['items'],
-                    g=data['groups'],
-                    i_ro=data['items_ro'],
-                    g_ro=data['groups_ro'],
-                    a=data['allow'],
-                    hal=data['hosts_allow'],
-                    has=data['hosts_assign'],
-                    pvt=data['pvt'],
-                    rpvt=data['rpvt'])
+                dbconn.execute(sql(
+                    'insert into apikeys(k_id, k, m, s, i,'
+                    ' g, i_ro, g_ro, a,hal, has, pvt, rpvt, cdata) values '
+                    '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, '
+                    ':hal, :has, :pvt, :rpvt, :cdata)'),
+                               k_id=data['id'],
+                               k=data['key'],
+                               m=1 if data['master'] else 0,
+                               s=1 if data['sysfunc'] else 0,
+                               i=data['items'],
+                               g=data['groups'],
+                               i_ro=data['items_ro'],
+                               g_ro=data['groups_ro'],
+                               a=data['allow'],
+                               hal=data['hosts_allow'],
+                               has=data['hosts_assign'],
+                               pvt=data['pvt'],
+                               rpvt=data['rpvt'],
+                               cdata=data['cdata'])
             else:
-                dbconn.execute(
-                    sql('update apikeys set k=:k, s=:s, i=:i, g=:g, ' +
-                        'i_ro=:i_ro, g_ro=:g_ro, a=:a, ' +
-                        'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt where ' +
-                        'k_id=:k_id'),
-                    k=self.key,
-                    s=1 if data['sysfunc'] else 0,
-                    i=data['items'],
-                    g=data['groups'],
-                    i_ro=data['items_ro'],
-                    g_ro=data['groups_ro'],
-                    a=data['allow'],
-                    hal=data['hosts_allow'],
-                    has=data['hosts_assign'],
-                    pvt=data['pvt'],
-                    rpvt=data['rpvt'],
-                    k_id=data['id'])
+                dbconn.execute(sql(
+                    'update apikeys set k=:k, s=:s, i=:i, g=:g, '
+                    'i_ro=:i_ro, g_ro=:g_ro, a=:a, '
+                    'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt, cdata=:cdata '
+                    'where k_id=:k_id'),
+                               k=self.key,
+                               s=1 if data['sysfunc'] else 0,
+                               i=data['items'],
+                               g=data['groups'],
+                               i_ro=data['items_ro'],
+                               g_ro=data['groups_ro'],
+                               a=data['allow'],
+                               hal=data['hosts_allow'],
+                               has=data['hosts_assign'],
+                               pvt=data['pvt'],
+                               rpvt=data['rpvt'],
+                               cdata=data['cdata'],
+                               k_id=data['id'])
         except:
             eva.core.report_userdb_error()
         self.in_db = True
@@ -294,8 +307,8 @@ def load(fname=None, load_from_db=True):
     logging.info('Loading API keys')
     fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
     if not fname_full:
-        logging.warning('No file or product specified ' + \
-                                'skipping loading custom variables')
+        logging.warning('No file or product specified '
+                        'skipping loading API keys')
         return False
     try:
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -304,9 +317,7 @@ def load(fname=None, load_from_db=True):
             try:
                 k = cfg.get(ks, 'key')
                 if k in keys.keys():
-                    logging.warning(
-                            'duplicate key %s, problems might occur' % \
-                                    k)
+                    logging.warning(f'duplicate key {k}, problems might occur')
                 key = APIKey(k, ks)
                 try:
                     key.master = (cfg.get(ks, 'master') == 'yes')
@@ -327,7 +338,7 @@ def load(fname=None, load_from_db=True):
                         key.hosts_allow = \
                                 [ IPNetwork(h) for h in _hosts_allow ]
                     except:
-                        logging.error('key %s bad host acl!, skipping' % ks)
+                        logging.error(f'key {ks} invalid host acl!, skipping')
                         eva.core.log_traceback()
                         continue
                 try:
@@ -341,7 +352,7 @@ def load(fname=None, load_from_db=True):
                         key.hosts_assign = \
                                 [ IPNetwork(h) for h in _hosts_assign ]
                     except:
-                        logging.warning('key %s bad hosts_assign' % ks)
+                        logging.warning(f'key {ks} invalid hosts_assign')
                         eva.core.log_traceback()
                 try:
                     key.item_ids = list(
@@ -392,6 +403,10 @@ def load(fname=None, load_from_db=True):
                         ]))
                 except:
                     pass
+                try:
+                    key.cdata = cfg.get(ks, 'cdata')
+                except:
+                    pass
                 keys[k] = key
                 keys_by_id[ks] = key
                 if key.master and not config.masterkey:
@@ -404,7 +419,7 @@ def load(fname=None, load_from_db=True):
             keys.update(_keys_from_db)
             keys_by_id.update(_keys_from_db_by_id)
         if not config.masterkey:
-            logging.warning('no masterkey in this configuration')
+            logging.warning('no masterkey specified')
         eva.core.update_corescript_globals({'masterkey': config.masterkey})
         return True
     except:
@@ -414,6 +429,12 @@ def load(fname=None, load_from_db=True):
 
 
 def key_by_id(key_id):
+    """
+    get API key by API key ID
+
+    Returns:
+        API key
+    """
     return None if not key_id or not key_id in keys_by_id else \
         keys_by_id[key_id].key
 
@@ -434,18 +455,26 @@ def key_private512(key_id):
 
 
 def key_id(k):
+    """
+    get key ID by API key
+
+    Returns:
+        API key ID
+    """
     return 'unknown' if not k or not k in keys else keys[k].key_id
 
 
 def key_by_ip_address(ip=None):
-    if not ip: return None
+    if not ip:
+        return None
     for k, key in keys.copy().items():
         if netacl_match(ip, key.hosts_assign):
             return k
 
 
 def format_key(k):
-    if not k: return None
+    if not k:
+        return None
     return key_by_id(k[1:]) if k[0] == '$' else k
 
 
@@ -458,14 +487,32 @@ def check(k,
           master=False,
           sysfunc=False,
           ro_op=False):
+    """
+    check API key access
+
+    Arguments are ACL which can be combined
+
+    Args:
+        items: item objects
+        allow: check allows
+        pvt_file: access to pvt resource
+        pvt_file: access to rpvt resource
+        ip: caller IP
+        master: is master access required
+        sysfunc: is sysfunc required
+        ro_op: is item operation read-only
+    """
     if eva.core.is_setup_mode():
         return True
-    if not k or not k in keys or (master and not keys[k].master): return False
+    if not k or not k in keys or (master and not keys[k].master):
+        return False
     _k = keys[k]
     if ip and not netacl_match(ip, _k.hosts_allow):
         return False
-    if _k.master: return True
-    if sysfunc and not _k.sysfunc: return False
+    if _k.master:
+        return True
+    if sysfunc and not _k.sysfunc:
+        return False
     if item:
         # check access to PHI
         try:
@@ -487,12 +534,15 @@ def check(k,
                     return False
     if allow:
         for a in allow:
-            if not a in _k.allow: return False
+            if not a in _k.allow:
+                return False
     if pvt_file:
-        if '#' in _k.pvt_files or pvt_file in _k.pvt_files: return True
+        if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
+            return True
         for d in _k.pvt_files:
             p = d.find('#')
-            if p > -1 and d[:p] == pvt_file[:p]: return True
+            if p > -1 and d[:p] == pvt_file[:p]:
+                return True
             if d.find('+') > -1:
                 g1 = d.split('/')
                 g2 = pvt_file.split('/')
@@ -502,17 +552,20 @@ def check(k,
                         if g1[i] != '+' and g1[i] != g2[i]:
                             match = False
                             break
-                    if match: return True
+                    if match:
+                        return True
         return False
     if rpvt_uri:
         if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
             r = rpvt_uri.split('//', 1)[1]
         else:
             r = rpvt_uri
-        if '#' in _k.rpvt_uris or r in _k.rpvt_uris: return True
+        if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
+            return True
         for d in _k.rpvt_uris:
             p = d.find('#')
-            if p > -1 and d[:p] == r[:p]: return True
+            if p > -1 and d[:p] == r[:p]:
+                return True
             if d.find('+') > -1:
                 g1 = d.split('/')
                 g2 = r.split('/')
@@ -522,16 +575,26 @@ def check(k,
                         if g1[i] != '+' and g1[i] != g2[i]:
                             match = False
                             break
-                    if match: return True
+                    if match:
+                        return True
         return False
     return True
 
 
 def check_master(k):
+    """
+    check is given key a masterkey
+    """
     return check(k, master=True)
 
 
 def get_masterkey():
+    """
+    get master API key
+
+    Returns:
+        master API key
+    """
     return config.masterkey
 
 
@@ -543,14 +606,18 @@ def serialized_acl(k):
     _k = keys[k]
     r['key_id'] = _k.key_id
     r['master'] = _k.master or setup_on
-    if _k.master or setup_on: return r
+    r['cdata'] = _k.cdata
+    if _k.master or setup_on:
+        return r
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
     r['items_ro'] = _k.item_ids_ro
     r['groups_ro'] = _k.groups_ro
-    if _k.pvt_files: r['pvt'] = _k.pvt_files
-    if _k.rpvt_uris: r['rpvt'] = _k.rpvt_uris
+    if _k.pvt_files:
+        r['pvt'] = _k.pvt_files
+    if _k.rpvt_uris:
+        r['rpvt'] = _k.rpvt_uris
     r['allow'] = {}
     for a in allows:
         r['allow'][a] = True if a in _k.allow else False
@@ -558,8 +625,10 @@ def serialized_acl(k):
 
 
 def add_api_key(key_id=None, save=False):
-    if key_id is None: raise FunctionFailed
-    if key_id in keys_by_id: raise ResourceAlreadyExists
+    if key_id is None:
+        raise FunctionFailed
+    if key_id in keys_by_id:
+        raise ResourceAlreadyExists
     key_value = gen_random_str(length=64)
     key = APIKey(key_value, key_id)
     key.master = False
@@ -622,7 +691,8 @@ def load_keys_from_db():
                          sa.Column('hal', sa.String(1024)),
                          sa.Column('has', sa.String(1024)),
                          sa.Column('pvt', sa.String(1024)),
-                         sa.Column('rpvt', sa.String(1024)))
+                         sa.Column('rpvt', sa.String(1024)),
+                         sa.Column('cdata', sa.String(4096)))
     try:
         meta.create_all(dbconn)
     except:
@@ -632,9 +702,11 @@ def load_keys_from_db():
         result = dbconn.execute(sql('select * from apikeys'))
         while True:
             r = result.fetchone()
-            if not r: break
+            if not r:
+                break
             key = APIKey(r.k, r.k_id)
             key.sysfunc = True if val_to_boolean(r.s) else False
+            key.cdata = r.cdata
             for i, v in {
                     'item_ids': 'i',
                     'groups': 'g',

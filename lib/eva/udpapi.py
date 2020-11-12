@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 """
 Simple UDP API for controlling and updating
 
@@ -48,7 +48,7 @@ from eva import apikey
 
 from netaddr import IPNetwork
 from cryptography.fernet import Fernet
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 config = SimpleNamespace(host=None,
                          port=None,
@@ -141,7 +141,8 @@ def update_config(cfg):
 
 
 def start():
-    if not config.host: return False
+    if not config.host:
+        return False
     _port = config.port if config.port else default_port
     logging.info('Starting UDP API, listening at %s:%u' % (config.host, _port))
     eva.core.stop.append(stop)
@@ -173,8 +174,10 @@ def _t_dispatcher(host, port):
     while _flags.dispatcher_active:
         try:
             data, address = server_socket.recvfrom(4096)
-            if not _flags.dispatcher_active: return
-            if not data: continue
+            if not _flags.dispatcher_active:
+                return
+            if not data:
+                continue
             address = address[0]
             logging.debug('UDP API cmd from %s' % address)
             if not check_access(address, data):
@@ -227,7 +230,8 @@ def _t_dispatcher(host, port):
                 api_key = None
             for _data in data.split('\n'):
                 try:
-                    if not _data: continue
+                    if not _data:
+                        continue
                     cmd = _data.split(' ')
                     item_id = cmd[0]
                     status = None
@@ -245,8 +249,10 @@ def _t_dispatcher(host, port):
                             value = cmd[2]
                         if len(cmd) > 3:
                             priority = cmd[3]
-                    if status == 'None': status = None
-                    if value == 'None': value = None
+                    if status == 'None':
+                        status = None
+                    if value == 'None':
+                        value = None
                     if api_key_id is not None:
                         logging.debug('udp cmd data api_key = %s' % api_key_id)
                     logging.debug('udp cmd data item_id = %s' % item_id)
@@ -255,8 +261,10 @@ def _t_dispatcher(host, port):
                     logging.debug('udp cmd data value = "%s"' % value)
                     logging.debug('udp cmd data priority = "%s"' % priority)
                     item = None
-                    if status: status = int(status)
-                    if priority: priority = int(priority)
+                    if status:
+                        status = int(status)
+                    if priority:
+                        priority = int(priority)
                     item = eva.uc.controller.get_item(item_id)
                     if not item or \
                             (api_key is not None and \

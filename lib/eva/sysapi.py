@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.3.0"
+__version__ = "3.3.2"
 
 import threading
 import cherrypy
@@ -34,6 +34,7 @@ from eva.api import api_result_accepted
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -44,7 +45,7 @@ from eva.tools import parse_function_params
 
 from neotasker import task_supervisor
 
-from types import SimpleNamespace
+from eva.tools import SimpleNamespace
 
 import eva.apikey
 
@@ -61,6 +62,9 @@ lock_expire_jobs = {}
 
 
 def api_need_file_management(f):
+    """
+    API method decorator to pass if file management is allowed in server config
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -72,6 +76,9 @@ def api_need_file_management(f):
 
 
 def api_need_rpvt(f):
+    """
+    API method decorator to pass if rpvt is allowed in server config
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -83,6 +90,9 @@ def api_need_rpvt(f):
 
 
 def api_need_cmd(f):
+    """
+    API method decorator to pass if API key has "cmd" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -94,6 +104,9 @@ def api_need_cmd(f):
 
 
 def api_need_sysfunc(f):
+    """
+    API method decorator to pass if API key has "sysfunc" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -105,6 +118,9 @@ def api_need_sysfunc(f):
 
 
 def api_need_lock(f):
+    """
+    API method decorator to pass if API key has "lock" allowed
+    """
 
     @wraps(f)
     def do(*args, **kwargs):
@@ -203,7 +219,6 @@ class LockAPI(object):
         except KeyError:
             raise ResourceNotFound
         except Exception as e:
-            raise
             raise FunctionFailed(e)
 
     @log_i
@@ -265,6 +280,9 @@ class CMD(object):
         self.time['running'] = time.time()
         self.xc.run()
 
+    def is_finished(self):
+        return False if self.xc is None else self.xc.is_finished()
+
     def update_status(self):
         if self.status == cmd_status_running:
             if self.xc.is_finished():
@@ -308,7 +326,7 @@ class CMDAPI(object):
 
         Optional:
             a: string of command arguments, separated by spaces (passed to the
-                script)
+                script) or array (list)
             w: wait (in seconds) before API call sends a response. This allows
                 to try waiting until command finish
             t: maximum time of command execution. If the command fails to finish
@@ -318,18 +336,22 @@ class CMDAPI(object):
         if cmd[0] == '/' or cmd.find('..') != -1:
             return None
         if args is not None:
-            try:
-                _args = tuple(shlex.split(str(args)))
-            except:
-                _args = tuple(str(args).split(' '))
+            if isinstance(args, list) or isinstance(args, tuple):
+                _args = tuple(args)
+            else:
+                try:
+                    _args = tuple(shlex.split(str(args)))
+                except:
+                    _args = tuple(str(args).split(' '))
         else:
             _args = ()
+        _args = tuple(str(a) for a in _args)
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
-                (cmd, ''.join(list(_args)), timeout))
+                (cmd, ' '.join(_args), timeout))
         eva.core.spawn(_c.run)
         if wait:
-            eva.core.wait_for(_c.xc.is_finished, wait)
+            eva.core.wait_for(_c.is_finished, wait)
         return _c.serialize()
 
 
@@ -363,7 +385,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.debug(m)
+        if m:
+            logging.debug(m)
         return True
 
     @log_d
@@ -380,7 +403,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.info(m)
+        if m:
+            logging.info(m)
         return True
 
     @log_d
@@ -397,7 +421,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.warning(m)
+        if m:
+            logging.warning(m)
         return True
 
     @log_d
@@ -414,7 +439,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.error(m)
+        if m:
+            logging.error(m)
         return True
 
     @log_d
@@ -431,7 +457,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.critical(m)
+        if m:
+            logging.critical(m)
         return True
 
     @log_d
@@ -455,7 +482,8 @@ class LogAPI(object):
         import pyaltt2.logs
         import eva.logs
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
-        if not l: l = 'i'
+        if not l:
+            l = 'i'
         try:
             l = int(l)
         except:
@@ -533,14 +561,15 @@ class FileAPI(object):
         Args:
             k: .master
             .i: relative path (without first slash)
+            b: if True - force getting binary file (base64-encode content)
         """
-        i = parse_api_params(kwargs, 'i', 'S')
+        i, b = parse_api_params(kwargs, 'ib', 'Sb')
         self._check_file_name(i)
         if not os.path.isfile(eva.core.dir_runtime + '/' + i):
             raise self._file_not_found(i)
         try:
             i = eva.core.dir_runtime + '/' + i
-            with open(i) as fd:
+            with open(i, 'rb') as fd:
                 data = fd.read()
             return data, os.access(i, os.X_OK)
         except:
@@ -561,15 +590,30 @@ class FileAPI(object):
         Args:
             k: .master
             .i: relative path (without first slash)
-            m: file content
+            m: file content (plain text or base64-encoded)
+            b: if True - put binary file (decode base64)
         """
-        i, m = parse_api_params(kwargs, 'im', 'Ss')
+        i, m, b = parse_api_params(kwargs, 'imb', 'Ssb')
         self._check_file_name(i)
         try:
-            raw = '' if m is None else m
+            if m is None:
+                raw = b''
+            elif b:
+                import base64
+                raw = base64.b64decode(m)
+            else:
+                raw = m.encode()
             eva.core.prepare_save()
+            if '/' in i:
+                path = ''
+                for dirname in i.split('/')[:-1]:
+                    path += '/' + dirname
+                    try:
+                        os.mkdir(eva.core.dir_runtime + path)
+                    except FileExistsError:
+                        pass
             try:
-                with open(eva.core.dir_runtime + '/' + i, 'w') as fd:
+                with open(eva.core.dir_runtime + '/' + i, 'wb') as fd:
                     fd.write(raw)
                 return True
             finally:
@@ -595,8 +639,10 @@ class FileAPI(object):
         if not os.path.isfile(eva.core.dir_runtime + '/' + i):
             raise self._file_not_found(i)
         try:
-            if e: perm = 0o755
-            else: perm = 0o644
+            if e:
+                perm = 0o755
+            else:
+                perm = 0o644
             eva.core.prepare_save()
             try:
                 os.chmod(eva.core.dir_runtime + '/' + i, perm)
@@ -651,7 +697,8 @@ class CSAPI(object):
             save: save core script config after modification
         """
         t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
-        if q is None: q = 1
+        if q is None:
+            q = 1
         elif q < 0 or q > 2:
             raise InvalidParameter('q should be 0..2')
         return eva.core.corescript_mqtt_subscribe(
@@ -674,6 +721,84 @@ class CSAPI(object):
 
 
 class UserAPI(object):
+
+    @log_d
+    def api_log_get(self, **kwargs):
+        """
+        get API call log
+
+        * API call with master permission returns all records requested
+
+        * API call with other API key returns records for the specified key
+          only
+
+        * API call with an authentication token returns records for the
+          current authorized user
+
+        Args:
+            k: any valid API key
+
+        Optional:
+            s: start time (timestamp or ISO or e.g. 1D for -1 day)
+            e: end time (timestamp or ISO or e.g. 1D for -1 day)
+            n: records limit
+            t: time format ("iso" or "raw" for unix timestamp, default is "raw")
+            f: record filter (requires API key with master permission)
+
+        Returns:
+            List of API calls
+
+        Note: API call params are returned as string and can be invalid JSON
+        data as they're always truncated to 512 symbols in log database
+
+        Record filter should be specified either as string (k1=val1,k2=val2) or
+        as a dict. Valid fields are:
+
+        * gw: filter by API gateway
+
+        * ip: filter by caller IP
+
+        * auth: filter by authentication type
+
+        * u: filter by user
+
+        * utp: filter by user type
+
+        * ki: filter by API key ID
+
+        * func: filter by API function
+
+        * params: filter by API call params (matches if field contains value)
+
+        * status: filter by API call status
+        """
+        k, s, e, n, t, f = parse_function_params(kwargs, 'ksentf', 'S..i..')
+        if f is not None:
+            if isinstance(f, str):
+                try:
+                    f = dict_from_str(f)
+                except:
+                    raise InvalidParameter('Unable to parse filter')
+            elif not isinstance(f, dict):
+                raise InvalidParameter('f should be dict or str')
+        else:
+            f = {}
+        # force record filter if not master
+        if not eva.apikey.check(k, master=True):
+            from eva.api import get_aci
+            u = get_aci('u')
+            if u is not None:
+                f['u'] = u
+                f['utp'] = get_aci('utp')
+            f['ki'] = eva.apikey.key_id(k)
+        try:
+            return eva.users.api_log_get(t_start=s,
+                                         t_end=e,
+                                         limit=n,
+                                         time_format=t,
+                                         f=f)
+        except Exception as e:
+            raise FunctionFailed(e)
 
     @log_w
     @api_need_master
@@ -708,28 +833,43 @@ class UserAPI(object):
             p: property (password or key)
             v: value
         """
-        u, p, v = parse_api_params(kwargs, 'upv', 'SSS')
+        k, u, p, v = parse_function_params(kwargs, 'upv', 'SSS')
         tokens.remove_token(user=u)
         if p == 'password':
-            return eva.users.set_user_password(u, v)
+            return eva.users.set_user_password(k, u, v)
         elif p == 'key':
             return eva.users.set_user_key(u, v)
         else:
             raise InvalidParameter('Property unknown: {}'.format(p))
 
     @log_w
-    @api_need_master
     def set_user_password(self, **kwargs):
         """
         set user password
 
+        Either master key and user login must be specified or a user must be
+        logged in and a session token used
+
         Args:
-            k: .master
+            k: master key or token
             .u: user login
             p: new password
         """
-        u, p = parse_api_params(kwargs, 'up', 'SS')
-        tokens.remove_token(user=u)
+        k, u, p = parse_function_params(kwargs, 'kup', '.sS')
+        if u:
+            if not eva.apikey.check(k, master=True):
+                raise AccessDenied('master key is required for "u" param')
+            else:
+                tokens.remove_token(user=u)
+        else:
+            from eva.api import get_aci
+            if get_aci('utp'):
+                raise FunctionFailed(
+                    'unable to change password for a non-local user')
+            u = get_aci('u')
+        if not u:
+            raise InvalidParameter(
+                'user should be either specified in "u" param or logged in')
         return eva.users.set_user_password(u, p)
 
     @log_w
@@ -865,7 +1005,8 @@ class UserAPI(object):
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'SS.b')
         tokens.remove_token(key_id=i)
         key = eva.apikey.keys_by_id.get(i)
-        if not key: raise ResourceNotFound
+        if not key:
+            raise ResourceNotFound
         return key.set_prop(p, v, save)
 
     @log_w
@@ -920,8 +1061,10 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             raise AccessDenied
         try:
             import requests
-            if f.find('//') == -1: _f = 'http://' + f
-            else: _f = f
+            if f.find('//') == -1:
+                _f = 'http://' + f
+            else:
+                _f = f
             r = requests.get(_f, timeout=eva.core.config.timeout)
         except:
             eva.core.log_traceback()
@@ -978,6 +1121,20 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     def dump(self, **kwargs):
         parse_api_params(kwargs)
         return eva.core.create_dump()
+
+    @log_d
+    @api_need_master
+    def list_plugins(self, **kwargs):
+        """
+        get list of loaded core plugins
+
+        Args:
+            k: .master
+
+        Returns:
+            list with plugin module information
+        """
+        return eva.core.serialize_plugins()
 
     @log_d
     @api_need_master
@@ -1178,7 +1335,8 @@ class SysHTTP_API_abstract(SysAPI):
 
     def dump(self, **kwargs):
         fname = super().dump(**kwargs)
-        if not fname: raise FunctionFailed
+        if not fname:
+            raise FunctionFailed
         return {'file': fname}
 
     def get_cvar(self, **kwargs):
@@ -1186,12 +1344,22 @@ class SysHTTP_API_abstract(SysAPI):
         return {kwargs['i']: result} if 'i' in kwargs else result
 
     def file_get(self, **kwargs):
+        i, b = parse_api_params(kwargs, 'ib', 'Sb')
         data, e = super().file_get(**kwargs)
+        try:
+            if b:
+                raise Exception  # force binary
+            data = data.decode()
+            ct = 'text/plain'
+        except:
+            import base64
+            data = base64.b64encode(data).decode()
+            ct = 'application/octet-stream'
         return {
             'file': kwargs.get('i'),
             'data': data,
             'e': e,
-            'content_type': 'text/plain'
+            'content_type': ct
         }
 
     def regenerate_key(self, **kwargs):
@@ -1213,6 +1381,10 @@ class SysHTTP_API_REST_abstract:
     def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
+        if rtp == 'plugin':
+            return self.list_plugins(k=k)
+        elif rtp == 'core@apilog':
+            return self.api_log_get(k=k, **props)
         elif rtp == 'cvar':
             return self.get_cvar(k=k, i=ii)
         elif rtp == 'lock':
@@ -1284,7 +1456,8 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'log':
             return self.log(k=k, l=ii, **props)
         elif rtp == 'cmd':
-            if not ii: raise ResourceNotFound
+            if not ii:
+                raise ResourceNotFound
             return self.cmd(k=k, c=ii, **props)
         raise MethodNotFound
 
@@ -1326,8 +1499,10 @@ class SysHTTP_API_REST_abstract:
                 if not self.setup_mode(k=k, setup=props['setup']):
                     raise FunctionFailed
                 success = True
-            if success: return True
-            else: raise ResourceNotFound
+            if success:
+                return True
+            else:
+                raise ResourceNotFound
         elif rtp == 'key':
             for i, v in props.items():
                 if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,

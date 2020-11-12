@@ -31,7 +31,7 @@ def need_tokens_enabled(f):
 
 @need_tokens_enabled
 @tokens_lock
-def append_token(key_id, user=None):
+def append_token(key_id, user=None, utp=None):
     i = 0
     while True:
         token = 'token:' + gen_random_str()
@@ -40,7 +40,7 @@ def append_token(key_id, user=None):
         i += 1
         if i > 3:
             return False
-    tokens[token] = {'u': user, 'ki': key_id, 't': time.time()}
+    tokens[token] = {'u': user, 'ki': key_id, 'utp': utp, 't': time.time()}
     logging.debug('{} added. user: {}, key id: {}'.format(
         token[:12], user, key_id))
     return token
@@ -65,6 +65,7 @@ def remove_token(token=None, user=None, key_id=None):
                     remove_token(token)
         return True
     except:
+        eva.core.log_traceback()
         return False
 
 

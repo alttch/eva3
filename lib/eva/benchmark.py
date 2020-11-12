@@ -7,7 +7,8 @@ enabled = False
 
 
 def report(s, i, end=False):
-    if not enabled: return False
+    if not enabled:
+        return False
     ctime = time.time()
     if end:
         intervals.setdefault(i, {})['e'] = ctime

@@ -1,11 +1,11 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.3.3"
+__version__ = "1.4.0"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
-__api__ = 8
+__api__ = 9
 __required__ = ['port_get', 'port_set', 'action']
 __mods_required__ = []
 __lpi_default__ = 'basic'
@@ -47,7 +47,8 @@ class PHI(GenericPHI):
         if self.phi_cfg.get('state_full'):
             self._has_feature.value = True
             self._is_required.value = True
-        if d is None: d = 0
+        if d is None:
+            d = 0
         else:
             try:
                 d = int(d)
@@ -63,7 +64,8 @@ class PHI(GenericPHI):
                                        description='virtual relay port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
-        if not port: return self.data.copy()
+        if not port:
+            return self.data.copy()
         try:
             if self.simulate_timeout:
                 self._make_timeout()
@@ -126,6 +128,20 @@ class PHI(GenericPHI):
                     return False
             return True
 
+    def validate_config(self, config={}, config_type='config'):
+        self.validate_config_whi(config=config,
+                                 config_type=config_type,
+                                 xparams=[{
+                                     'name': 'simulate_timeout',
+                                     'type': 'ufloat'
+                                 }, {
+                                     'name': 'event_on_set',
+                                     'type': 'bool'
+                                 }, {
+                                     'name': 'event_on_test_set',
+                                     'type': 'bool'
+                                 }])
+
     def test(self, cmd=None):
         if cmd == 'self':
             return 'OK'
@@ -156,7 +172,8 @@ class PHI(GenericPHI):
                 state = val, value
             else:
                 state = val
-            if port < 1 or port > 16 or val < -1 or val > 1: return None
+            if port < 1 or port > 16 or val < -1 or val > 1:
+                return None
             self.set(port=str(port), data=state)
             self.log_debug('test set port %s=%s' % (port, state))
             if self.phi_cfg.get('event_on_test_set'):
