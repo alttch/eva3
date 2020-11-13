@@ -452,7 +452,7 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
     if not grp:
         grp = 'nogroup'
     if not re.match(eva.core.OID_ALLOWED_SYMBOLS, i) or \
-        not re.match(eva.core.OID_ALLOWED_SYMBOLS, grp):
+        not re.match(eva.core.GROUP_ALLOWED_SYMBOLS, grp):
         raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
     i_full = grp + '/' + i

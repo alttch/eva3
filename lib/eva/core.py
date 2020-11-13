@@ -160,6 +160,7 @@ corescript_globals = {
 }
 
 OID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
+GROUP_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\./\(\)\[\]-]*$'
 
 
 def critical(log=True, from_driver=False):
