@@ -1304,13 +1304,23 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         Controller process will be exited and then (should be) restarted by
         watchdog. This allows to restart controller remotely.
 
+        For MQTT API calls a small shutdown delay usually should be specified
+        to let the core send the correct API response.
+
         Args:
             k: .master
+            t: shutdown delay (seconds)
         """
-        parse_api_params(kwargs)
-        os.system('touch {}/{}_reload'.format(eva.core.dir_var,
-                                              eva.core.product.code))
-        threading.Thread(target=eva.core.sighandler_term).run()
+
+        def delayed_shutdown(delay):
+            os.system('touch {}/{}_reload'.format(eva.core.dir_var,
+                                                  eva.core.product.code))
+            if delay:
+                time.sleep(delay)
+            eva.core.sighandler_term()
+
+        t = parse_api_params(kwargs, 't', 'n')
+        threading.Thread(target=delayed_shutdown, args=(t,)).start()
         return True, api_result_accepted
 
     @log_w

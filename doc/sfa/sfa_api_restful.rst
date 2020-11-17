@@ -189,6 +189,8 @@ shutdown the controller
 
 Controller process will be exited and then (should be) restarted by watchdog. This allows to restart controller remotely.
 
+For MQTT API calls a small shutdown delay usually should be specified to let the core send the correct API response.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/shutdown_core.rest
     :response: http-examples/sysapi/shutdown_core.resp-rest
@@ -196,6 +198,7 @@ Controller process will be exited and then (should be) restarted by watchdog. Th
 Parameters:
 
 * **API Key** API key with *master* permissions
+* **t** shutdown delay (seconds)
 
 
 .. _sfapi_restful_set_debug:

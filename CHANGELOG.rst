@@ -28,6 +28,8 @@ Common
     * mailer feature available in all controller types (used by core plugins)
     * "cdata" (custom data) API key field
     * "file_put" method automatically creates required directories
+    * "shutdown_core" method now executes background shutdown, plus has got an
+      extra option "t" to specify shutdown delay (useful for MQTT API call)
 
     * RESTful and direct API marked as deprecated
 

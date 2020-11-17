@@ -245,6 +245,8 @@ shutdown_core - shutdown the controller
 
 Controller process will be exited and then (should be) restarted by watchdog. This allows to restart controller remotely.
 
+For MQTT API calls a small shutdown delay usually should be specified to let the core send the correct API response.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/sysapi/shutdown_core.req-jrpc
     :response: http-examples/jrpc/sysapi/shutdown_core.resp-jrpc
@@ -252,6 +254,7 @@ Controller process will be exited and then (should be) restarted by watchdog. Th
 Parameters:
 
 * **k** API key with *master* permissions
+* **t** shutdown delay (seconds)
 
 .. _sysapi_login:
 
