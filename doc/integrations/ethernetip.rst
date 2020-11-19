@@ -76,6 +76,9 @@ If setting tags is planned (working with *enip_xvunit*), it's highly recommended
 Valid types are: *REAL, SINT, USINT, INT, UINT, DINT, UDINT, BOOL, WORD, DWORD, IPADDR, STRING,
 SSTRING*.
 
+Another way is to specify "_type" driver configuration variable, while
+assigning the driver to items.
+
 Configuring
 -----------
 
