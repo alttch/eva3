@@ -471,6 +471,10 @@ You may use lvar as a
 Multi-updates
 =============
 
+.. warning::
+
+    Starting from EVA ICS 3.3.2, multi-updates are deprecated
+
 Multi-updates allow :doc:`/uc/uc` updating the state of several items with the
 use of one :doc:`script</item_scripts>`. This could be reasonable in case all
 items are placed on the same bus or external controller and queried by a single
