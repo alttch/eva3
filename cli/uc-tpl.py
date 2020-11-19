@@ -131,6 +131,7 @@ cvars = []
 c = []
 config = {}
 config_rev = {}
+tpl_cvars = {}
 
 try:
     func = sys.argv[1]
@@ -219,7 +220,6 @@ elif func == 'generate':
     print_debug('Generating new template')
     print_debug('items:', items)
     print_debug('groups:', groups)
-    print_debug('cvars:', cvars)
     print_debug()
     for cvar in cvars:
         print_debug('cvar %s' % cvar, end='')
@@ -229,9 +229,12 @@ elif func == 'generate':
             sys.exit(1)
         v = r[cvar]
         print_debug(' = %s' % v)
-        if not 'cvars' in tpl:
-            tpl['cvars'] = {}
-        tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
+        tpl_cvars[c_replace(cvar, config_rev)] = c_replace(v, config_rev)
+    c, r = api.call('test', _debug=debug)
+    if c:
+        print('\nAPI call failed, code %u' % c)
+        sys.exit(1)
+    controller_id = r['controller']
     for group in groups:
         c, r = api.call('list', {'g': group}, _debug=debug)
         if c:
@@ -245,27 +248,42 @@ elif func == 'generate':
         if c:
             print('\nAPI call failed, code %u' % c)
             sys.exit(1)
-        if r.get('type') not in ['unit', 'sensor', 'mu']:
+        if r.get('type') not in ['unit', 'sensor']:
             print_debug(' - type not supported: %s' % r, get('type'))
-        section = r.get('type') + 's' if r.get('type') in ['unit', 'sensor'
-                                                          ] else r.get('type')
-        ic = {}
-        ic['id'] = c_replace(r.get('id'), config_rev)
-        ic['group'] = c_replace(r.get('group'), config_rev)
-        ic['props'] = {}
-        for f in ['full_id', 'oid', 'id', 'group', 'type']:
+        section = r.get('type')
+        full_id = c_replace(r.get('full_id'), config_rev)
+        for f in ['full_id', 'oid', 'id', 'group', 'type', 'value_condition']:
             try:
                 del r[f]
             except:
                 pass
         for p, v in r.items():
-            ic['props'][p] = c_replace(v, config_rev)
+            r[p] = c_replace(v, config_rev)
         if not section in tpl:
-            tpl[section] = []
-        if 'props' in ic and not ic['props']:
-            del ic['props']
-        tpl[section].append(ic)
+            tpl[section] = {}
+        update_exec = r.get('update_exec')
+        if update_exec and update_exec.startswith('|'):
+            if section == 'sensor' or \
+                    (section == 'unit' and \
+                        update_exec == r.get('action_exec') and \
+                        r.get('update_driver_config') ==
+                            r.get('action_driver_config')):
+                driver_config = {'id': update_exec[1:]}
+                driver_config['config'] = r.get('update_driver_config')
+                for p in [
+                        'update_exec', 'action_exec', 'action_driver_config',
+                        'update_driver_config'
+                ]:
+                    try:
+                        del r[p]
+                    except KeyError:
+                        pass
+                r['driver'] = driver_config
+        r['controller'] = controller_id
+        tpl[section][full_id] = r
         print_debug(' - OK')
+    if tpl_cvars:
+        tpl.setdefault('controller',{})[controller_id] = { 'cvar': tpl_cvars }
     if (tpl_file):
         try:
             with open(tpl_file, 'w') as fd:

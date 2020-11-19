@@ -471,12 +471,12 @@ You may use lvar as a
 Multi-updates
 =============
 
-Multiupdates allow :doc:`/uc/uc` updating the state of several items with the
+Multi-updates allow :doc:`/uc/uc` updating the state of several items with the
 use of one :doc:`script</item_scripts>`. This could be reasonable in case all
 items are placed on the same bus or external controller and queried by a single
 command.
 
-Multiupdate is an independent item in the system with its own configuration
+Multi-update is an independent item in the system with its own configuration
 and without status and value. In turn, it updates statuses of the included
 items.
 
@@ -512,8 +512,8 @@ Multi-updates have the same parameters as :ref:`sensors<sensor>`, except that
 Device
 ======
 
-Multiple CVARs, units, sensors and multi-updates can be merged in logical groups
-called **devices**. It's completely up to you how to merge items into device,
+Multiple CVARs, units and sensors can be merged in logical groups called
+**devices**. It's completely up to you how to merge items into device,
 but it's recommended to keep them in one or several separate item groups.
 
 Device templates are stored in *runtime/tpl* folder in YAML (default) or JSON
@@ -525,6 +525,11 @@ management<ucapi_deploy_device>` UC API functions to create, update and destroy
 devices.
 
 Device management requires master key or a key with *allow=device* permission.
+
+.. note::
+
+    Starting from EVA ICS 3.3.2, device template format is equal to :doc:`/iac`
+    files. The old format is deprecated.
 
 Device example
 --------------

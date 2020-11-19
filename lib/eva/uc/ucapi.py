@@ -933,6 +933,13 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter('no id field for mu')
                 self.create_mu(k=_k, i=i, g=g, save=save)
+        # common format
+        for item_type in ['unit', 'sensor']:
+            items = cfg.get(item_type)
+            if items:
+                for oid in items:
+                    oid = f'{item_type}:{oid}'
+                    self.create(k=_k, i=oid)
         return self._do_update_device(cfg=cfg, save=save)
 
     @log_i
@@ -969,6 +976,7 @@ class UC_API(GenericAPI):
         if cfg is None:
             cfg = self._load_device_config(tpl_config=tpl_config,
                                            device_tpl=device_tpl)
+        # old format
         cvars = cfg.get('cvars')
         if cvars:
             for i, v in cvars.items():
@@ -1004,6 +1012,53 @@ class UC_API(GenericAPI):
                     raise InvalidParameter('no fields for mu')
                 self._device_set_props(_k, 'mu:{}/{}'.format(g, i),
                                        u.get('props'), save)
+        # common format
+        controllers = cfg.get('controller')
+        if controllers:
+            c = controllers.get(eva.core.config.controller_name)
+            if c:
+                cvars = c.get('cvar')
+                if cvars:
+                    for i, v in cvars.items():
+                        if not eva.sysapi.api.set_cvar(k=_k, i=i, v=v):
+                            raise FunctionFailed
+        for item_type in ['unit', 'sensor']:
+            items = cfg.get(item_type)
+            if items:
+                for oid, item in items.items():
+                    if item:
+                        oid = f'{item_type}:{oid}'
+                        props = item.copy()
+                        for p in ['controller', 'status', 'value']:
+                            try:
+                                del props[p]
+                            except KeyError:
+                                pass
+                        for i in props.copy():
+                            if i.startswith('__'):
+                                del props[i]
+                        if 'driver' in props:
+                            driver_config = props.get('driver')
+                            del props['driver']
+                        else:
+                            driver_config = None
+                        self._device_set_props(_k, oid, props, save, True)
+                        if driver_config:
+                            try:
+                                driver_id = driver_config['id']
+                            except:
+                                raise InvalidParameter(
+                                    f'no driver id for {oid}')
+                            self.assign_driver(k=_k,
+                                               i=oid,
+                                               d=driver_id,
+                                               c=driver_config.get('config'))
+                        status = item.get('status')
+                        if item_type == 'sensor' and 'value' in item:
+                            status = 1
+                        value = item.get('value')
+                        if status is not None or value is not None:
+                            self.update(k=_k, i=oid, s=status, v=value)
         return True
 
     @log_w
@@ -1077,6 +1132,27 @@ class UC_API(GenericAPI):
                     eva.sysapi.api.set_cvar(k=_k, i=cvar)
                 except:
                     pass
+        # common format
+        for item_type in ['unit', 'sensor']:
+            items = cfg.get(item_type)
+            if items:
+                for oid in items:
+                    oid = f'{item_type}:{oid}'
+                    try:
+                        self.destroy(k=_k, i=oid)
+                    except:
+                        pass
+        controllers = cfg.get('controller')
+        if controllers:
+            c = controllers.get(eva.core.config.controller_name)
+            if c:
+                cvars = c.get('cvar')
+                if cvars:
+                    for cvar in cvars:
+                        try:
+                            eva.sysapi.api.set_cvar(k=_k, i=cvar)
+                        except:
+                            pass
         return True
 
     # master functions for modbus port management

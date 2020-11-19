@@ -42,6 +42,7 @@ UC
     * data pullers
     * auto_off unit state processor can be cancelled / modified while running
     * "server cleanup" CLI command (cleans state db)
+    * new device template format (equal to IaC deploy). Old format is deprecated
 
 LM PLC
 ------

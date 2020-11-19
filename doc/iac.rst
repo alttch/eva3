@@ -33,6 +33,19 @@ Section *controller* contains:
 * :doc:`Driver</drivers>` setup for :doc:`/uc/uc`
 * Commands, executed after configuration deployment
 
+Common variables setup
+~~~~~~~~~~~~~~~~~~~~~~
+
+Here's an example to set two cvar values:
+
+.. code:: yaml
+
+    controller:
+        uc/controller1:
+            cvar:
+                var1: value1
+                var2: value2
+
 Driver setup
 ~~~~~~~~~~~~
 
@@ -323,3 +336,13 @@ docker-compose file:
     eva-scada:
         environment:
             - after_install=/deploy/deploy.sh
+
+Devices
+-------
+
+Starting from EVA ICS 3.3.2, :ref:`device<device>` template format is equal to
+IaC files.
+
+For cvar deployment, a proper "controller" property should be present in the
+device template. In "unit" and "sensor" sections, "controller" property is not
+required and ignored if present.
