@@ -474,7 +474,10 @@ class UCItem(eva.item.Item):
                               props=props,
                               notify=notify)
         if config or props:
-            d['maintenance_duration'] = self.maintenance_duration
+            if self.maintenance_duration:
+                d['maintenance_duration'] = self.maintenance_duration
+            elif props:
+                d['maintenance_duration'] = 0
             if self.update_driver_config:
                 d['update_driver_config'] = self.update_driver_config
             elif props:
@@ -485,10 +488,22 @@ class UCItem(eva.item.Item):
                 d['snmp_trap'] = None
             if not config or self.modbus_value:
                 d['modbus_value'] = self.modbus_value
-            d['value_in_range_min'] = self.value_in_range_min
-            d['value_in_range_max'] = self.value_in_range_max
-            d['value_in_range_min_eq'] = self.value_in_range_min_eq
-            d['value_in_range_max_eq'] = self.value_in_range_max_eq
+            if self.value_in_range_min:
+                d['value_in_range_min'] = self.value_in_range_min
+            elif props:
+                d['value_in_range_min'] = None
+            if self.value_in_range_max:
+                d['value_in_range_max'] = self.value_in_range_max
+            elif props:
+                d['value_in_range_max'] = None
+            if self.value_in_range_min_eq:
+                d['value_in_range_min_eq'] = self.value_in_range_min_eq
+            elif props:
+                d['value_in_range_min_eq'] = None
+            if self.value_in_range_max:
+                d['value_in_range_max_eq'] = self.value_in_range_max_eq
+            elif props:
+                d['value_in_range_max_eq'] = None
             if not config:
                 value_condition = ''
                 cond_eq = False

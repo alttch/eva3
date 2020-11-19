@@ -156,8 +156,8 @@ class Item(object):
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
         if config or props:
-            d['notify_events'] = self.notify_events
-        if full or config or info or props:
+            if self.notify_events != 2 or props:
+                d['notify_events'] = self.notify_events
             if not config or self.description != '':
                 d['description'] = self.description
         if full:
