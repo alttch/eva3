@@ -269,16 +269,19 @@ class CMD(object):
         self.status = cmd_status_created
         self.time = {'created': time.time()}
 
-    def run(self):
-        import eva.runner
-        self.xc = eva.runner.ExternalProcess(
-            eva.core.dir_xc + '/cmd/' + self.cmd,
-            args=self.args,
-            timeout=self.timeout,
-        )
-        self.status = cmd_status_running
-        self.time['running'] = time.time()
-        self.xc.run()
+    def run(self, input_data=None):
+        try:
+            import eva.runner
+            self.xc = eva.runner.ExternalProcess(
+                eva.core.dir_xc + '/cmd/' + self.cmd,
+                args=self.args,
+                timeout=self.timeout,
+            )
+            self.status = cmd_status_running
+            self.time['running'] = time.time()
+            self.xc.run(input_data=input_data)
+        except:
+            eva.core.log_traceback()
 
     def is_finished(self):
         return False if self.xc is None else self.xc.is_finished()
@@ -331,8 +334,10 @@ class CMDAPI(object):
                 to try waiting until command finish
             t: maximum time of command execution. If the command fails to finish
                 within the specified time (in sec), it will be terminated
+            s: STDIN data
         """
-        cmd, args, wait, timeout = parse_api_params(kwargs, 'cawt', 'S.nn')
+        cmd, args, wait, timeout, input_data = parse_api_params(
+            kwargs, 'cawts', 'S.nn.')
         if cmd[0] == '/' or cmd.find('..') != -1:
             return None
         if args is not None:
@@ -349,7 +354,7 @@ class CMDAPI(object):
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
                 (cmd, ' '.join(_args), timeout))
-        eva.core.spawn(_c.run)
+        eva.core.spawn(_c.run, input_data)
         if wait:
             eva.core.wait_for(_c.is_finished, wait)
         return _c.serialize()
@@ -1048,6 +1053,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         self._nofp_log('create_user', 'p')
         self._nofp_log('set_user_password', 'p')
         self._nofp_log('file_put', 'm')
+        self._nofp_log('cmd', 's')
 
     @log_d
     @api_need_rpvt

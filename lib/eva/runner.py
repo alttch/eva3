@@ -217,18 +217,32 @@ class ExternalProcess(GenericRunner):
             t = eva.core.config.timeout
         return self.finished.wait(t)
 
-    def run(self):
-        if self.launch():
+    def run(self, input_data=None):
+        if self.launch(input_data=input_data):
             eva.core.wait_for(self.xc_finished, self.timeout)
             self.finish()
 
-    def launch(self):
+    def write_input(self, pipe, data, close=True):
+        try:
+            pipe.write(data if isinstance(data, bytes) else str(data).encode())
+            pipe.flush()
+            if close:
+                pipe.close()
+        except:
+            logging.error(f'external process data input error {self.xc_name}')
+            eva.core.log_traceback()
+
+    def launch(self, input_data=None):
         try:
             self.term = eva.core.spawn(self._t_term)
-            self.xc = subprocess.Popen(args=(self.xc_fname,) + self.args,
-                                       env=self.env,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+            self.xc = subprocess.Popen(
+                args=(self.xc_fname,) + self.args,
+                env=self.env,
+                stdin=subprocess.PIPE if input_data else None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            if input_data:
+                eva.core.spawn(self.write_input, self.xc.stdin, input_data)
             return True
         except:
             self.terminate()
@@ -239,10 +253,19 @@ class ExternalProcess(GenericRunner):
 
     def finish(self):
         self.terminate()
-        out, err = self.xc.communicate()
-        self.out = out.decode()
-        self.err = err.decode()
+        try:
+            self.out = self.xc.stdout.read().decode()
+        except:
+            self.out = None
+            eva.core.log_traceback()
+        try:
+            self.err = self.xc.stderr.read().decode()
+        except:
+            self.err = None
+            eva.core.log_traceback()
         self.exitcode = self.xc.returncode
+        if self.exitcode is None:
+            self.exitcode = -15
         self.finished.set()
 
     def terminate(self):

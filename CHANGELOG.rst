@@ -10,6 +10,7 @@ Common
     * fix: cmd wait delay
 
     * cmd API function accepts args as a list
+    * cmd API function accepts STDIN data
     * xc/cmd moved to runtime
     * file get/put functions support of binary data
     * install option "--skip-venv". "--skip-check" no longer skips venv building

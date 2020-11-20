@@ -160,6 +160,7 @@ Optionally:
 * **a** string of command arguments, separated by spaces (passed to the script) or array (list)
 * **w** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
+* **s** STDIN data
 
 
 .. _lmapi_restful_list_plugins:
