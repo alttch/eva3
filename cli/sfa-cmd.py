@@ -1310,6 +1310,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     del item_props['controller']
                 if 'driver' in item_props:
                     del item_props['driver']
+                for p in item_props.copy():
+                    if p.startswith('__'):
+                        del item_props[p]
                 if tp == 'lmacro':
                     tpc = 'macro'
                 elif tp == 'lcycle':
@@ -1324,7 +1327,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     }
                 })[1].get('code')
                 if code != apiclient.result_ok:
-                    if code == apiclient.result_already_exists and skip_existing:
+                    if code == apiclient.result_already_exists and \
+                            skip_existing:
                         print('    [skipped]')
                     else:
                         raise Exception('API call failed, code {}'.format(code))
