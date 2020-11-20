@@ -47,7 +47,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2020111701
+product_build = 2020112001
 
 product_code = 'uc'
 
