@@ -31,6 +31,7 @@ Common
     * "file_put" method automatically creates required directories
     * "shutdown_core" method now executes background shutdown, plus has got an
       extra option "t" to specify shutdown delay (useful for MQTT API call)
+    * "import_module" function in cloud deployment and device template files
 
     * RESTful and direct API marked as deprecated
 

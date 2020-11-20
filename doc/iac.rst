@@ -166,6 +166,26 @@ Executes (local) system command:
           - function: system
             args: [ 'ls' ]
 
+Loops, conditions and variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deployment files are pre-processed as `Jinja2
+<https://jinja.palletsprojects.com/>`_ templates and may contain any valid
+Jinja2 tags and variables.
+
+It's also possible to import any external Python module with "import_module"
+function:
+
+.. code:: jinja
+
+    {%- set io=import_module('io') %}
+    {%- set units=io.open('units.list').readlines() %}
+    unit:
+      {%- for u in units %}
+      {{ u.strip() }}:
+        controller: uc/uc1
+      {%- endfor %}
+
 Items
 -----
 

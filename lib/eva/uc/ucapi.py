@@ -59,6 +59,7 @@ import eva.datapuller
 
 import eva.ei
 import jinja2
+import importlib
 import rapidjson
 import logging
 
@@ -118,6 +119,7 @@ class UC_API(GenericAPI):
                 raise ResourceNotFound
             with open(fname) as fd:
                 tpl = jinja2.Template(fd.read())
+            tpl.globals['import_module'] = importlib.import_module
             cfg = tpl_decoder.get(ext)(tpl.render(tpl_config))
             return cfg
         except ResourceNotFound:

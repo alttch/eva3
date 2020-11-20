@@ -856,6 +856,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             metavar='VARS',
             dest='c',
         )
+        sp_cloud_deploy.add_argument(
+            '-T',
+            '--test',
+            help='Test configuration without deployment',
+            dest='test',
+            action='store_true')
 
         sp_cloud_undeploy = sp_cloud.add_parser(
             'undeploy', help='Undeploy items and configuration from file')
@@ -917,9 +923,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         except:
             pass
         from eva.client import apiclient
+        test_mode = props.get('test')
         try:
             try:
                 import jinja2
+                import importlib
                 from eva.tools import dict_from_str
                 fname = props.get('f')
                 v = props.get('c')
@@ -929,7 +937,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     v = {}
                 dirname = os.path.dirname(fname)
                 tpl = jinja2.Template(self._read_uri(fname))
-                cfg = yaml.load(tpl.render(v))
+                tpl.globals['import_module'] = importlib.import_module
+                ys = tpl.render(v)
+                if test_mode:
+                    self.print_debug(ys)
+                cfg = yaml.load(ys)
             except Exception as e:
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
@@ -947,7 +959,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception(
                     'SFA is not Cloud Manager. Enable feature in sfa.ini first')
             print('Checking deployment config...')
-            for c in cfg.keys():
+            for c in cfg.keys() if cfg else []:
                 if c not in [
                         'controller', 'unit', 'sensor', 'lvar', 'lmacro',
                         'lcycle', 'dmatrix_rule', 'job'
@@ -1044,6 +1056,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     raise Exception(
                         'Controller {} file management API is disabled'.format(
                             c))
+            if test_mode:
+                print('PASSED')
+                return self.local_func_result_ok
             # ===== START =====
             print('Starting {}deployment of {}'.format('un' if und else '',
                                                        props['f']))
