@@ -940,7 +940,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 tpl.globals['import_module'] = importlib.import_module
                 ys = tpl.render(v)
                 if test_mode:
+                    self.print_debug('-' * 3)
                     self.print_debug(ys)
+                    self.print_debug('-' * 3)
                 cfg = yaml.load(ys)
             except Exception as e:
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
