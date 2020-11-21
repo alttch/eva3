@@ -107,6 +107,25 @@ directory structure will be duplicated as-is.
 
     To upload directory contents recursively, set file mask to \*\*
 
+It's possible to keep content in the deployment file as well. In this case, use
+"file_put" API function to create the remote file:
+
+.. code:: yaml
+
+    controller:
+      uc/controller1:
+        before-deploy:
+          - api: file_put
+            i: upload/test.yml
+            m: |
+              test: true
+              test2: false
+              tags:
+                - valid: true
+                  x: 2
+                - valid: true
+                  x: 3
+
 Before/After deploy
 ~~~~~~~~~~~~~~~~~~~
 
