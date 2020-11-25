@@ -143,10 +143,10 @@ cs_data = SimpleNamespace(corescripts=[], topics=[])
 
 cs_shared_namespace = SimpleNamespace()
 
+CS_EVENT_SYSTEM = 0
 CS_EVENT_STATE = 1
 CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
-CS_EVENT_SYSTEM = 4
 
 logger = logging.getLogger('eva.core')
 
