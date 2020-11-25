@@ -296,6 +296,8 @@ Rule example:
           condition: x = 1
           break_after_exec: true
           macro: stop_lamp
+          macro_kwargs:
+            lamp_id: 1
 
 All child fields specify item properties, except:
 
@@ -303,6 +305,22 @@ All child fields specify item properties, except:
 
 Rule UUID should be pre-generated with any UUID generator, e.g. with *uuidgen*
 Linux console command.
+
+Scheduled jobs
+--------------
+
+Jobs can be deployed the similar way as rules:
+
+.. code:: yaml
+
+    job:
+      e407f61c-a251-455b-92bc-9eee9adcb93b:
+        controller: lm/lab-ws2
+        description: "scheduled job 1"
+        enabled: true
+        macro: do_scheduled_task
+        macro_args: [ 'task1' ]
+        every: "wednesday at 12:00"
 
 How to deploy configuration
 ===========================
