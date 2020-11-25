@@ -147,7 +147,7 @@ Triggered on system events
 Logging
 =======
 
-Core script globals contain pre-defined "logger" variable, which contains
+Core script globals contain pre-defined "logger" variable, which points to
 *eva.core* logger object.
 
 .. code-block:: python
