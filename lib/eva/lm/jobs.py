@@ -132,6 +132,8 @@ class Job(eva.item.Item):
             del d['full_id']
         if full or info:
             d['last'] = self.last_action
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def update_config(self, data):

@@ -488,6 +488,8 @@ class Macro(eva.item.ActiveItem):
             del d['mqtt_control']
         if 'term_kill_interval' in d:
             del d['term_kill_interval']
+        if 'notify_events' in d:
+            del d['notify_events']
         if props:
             d['src'] = ''
         return d
@@ -820,6 +822,8 @@ class Cycle(eva.item.Item):
             d['macro_kwargs'] = self.macro_kwargs
         if config or props:
             d['autostart'] = self.autostart
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def destroy(self):
