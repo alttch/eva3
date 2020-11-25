@@ -146,6 +146,9 @@ cs_shared_namespace = SimpleNamespace()
 CS_EVENT_STATE = 1
 CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
+CS_EVENT_SYSTEM = 4
+
+logger = logging.getLogger('eva.core')
 
 corescript_globals = {
     'print': logging.info,
@@ -153,10 +156,12 @@ corescript_globals = {
     'json': rapidjson,
     'time': time,
     'spawn': spawn,
+    'logger': logger,
     'g': cs_shared_namespace,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API,
-    'CS_EVENT_MQTT': CS_EVENT_MQTT
+    'CS_EVENT_MQTT': CS_EVENT_MQTT,
+    'CS_EVENT_SYSTEM': CS_EVENT_SYSTEM
 }
 
 OID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
@@ -331,6 +336,8 @@ def do_save():
 
 def block():
     _flags.started.set()
+    exec_corescripts(
+        event=SimpleNamespace(type=CS_EVENT_SYSTEM, topic='startup'))
     if _flags.use_reactor:
         from twisted.internet import reactor
         reactor.run(installSignalHandlers=False)
@@ -348,6 +355,8 @@ def is_started():
 
 def core_shutdown():
     _flags.shutdown_requested = True
+    _t_exec_corescripts(
+        event=SimpleNamespace(type=CS_EVENT_SYSTEM, topic='shutdown'))
     shutdown()
     stop()
     if _flags.use_reactor:

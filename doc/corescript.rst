@@ -124,6 +124,36 @@ MQTT masks are supported).
 * **event.qos** MQTT message QoS
 * **event.retain** is MQTT topic retained (1) or regular (0)
 
+System event
+------------
+
+Triggered on system events
+
+.. code-block:: python
+
+  event.type == CS_EVENT_SYSTEM
+
+* **event.topic** event topic:
+
+  * **startup** triggered after controller startup
+  * **shutdown** triggered before controller shutdown
+
+.. note::
+
+    'shutdown' event blocks controller shutdown process until all core scripts
+    are completed. The script chain must finish in 30 seconds, otherwise the
+    controller suicides itself and kills own process with SIGKILL signal.
+
+Logging
+=======
+
+Core script globals contain pre-defined "logger" variable, which contains
+*eva.core* logger object.
+
+.. code-block:: python
+
+    logger.warning('This is core script')
+
 Creating and managing core script files
 ========================================
 

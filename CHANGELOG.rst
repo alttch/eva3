@@ -15,6 +15,9 @@ Common
     * file get/put functions support of binary data
     * install option "--skip-venv". "--skip-check" no longer skips venv building
     * deep code audit and tons of bug fixes
+    * Core scripts:
+        * new event CS_EVENT_SYSTEM (invoked on startup / shutdown)
+        * logger object
     * Core Plugins API v2, new functions:
         * create_db_engine
         * format_db_uri
