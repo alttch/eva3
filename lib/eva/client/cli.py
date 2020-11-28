@@ -1442,10 +1442,27 @@ class GenericCLI(GCLI):
                                     a=a)
         return code
 
-    def print_tdf(self, result_in, time_field):
+    def print_tdf(self, result_in, time_field, plot=False, plot_field='value'):
         if not result_in.get(time_field):
             return
         result = result_in.copy()
+        if plot:
+            # convert list to plot data
+            res = []
+            for i in range(len(result[time_field])):
+                k = result.get(time_field)
+                t = None
+                v = None
+                for k in result.keys():
+                    if k == time_field:
+                        from datetime import datetime
+                        t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
+                                              '%Y-%m-%d %T,%f')[:-3]
+                    elif k == plot_field:
+                        v = result[k][i]
+                res.append((t, v))
+            self.plot_bar_chart(res)
+            return
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):

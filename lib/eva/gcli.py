@@ -137,6 +137,65 @@ class GCLI(object):
                     if not minimal else \
                     rapidjson.dumps(obj)
 
+    @staticmethod
+    def safe_print(val, extra=0):
+        width, height = os.get_terminal_size(0)
+        print(val[:width + extra])
+
+    def plot_bar_chart(self, data):
+        BAR = '❚'
+        TICK = '▏'
+
+        width, height = os.get_terminal_size(0)
+        spaces = 8
+        extra = 20 if self.can_colorize() else 0
+        max_label_length = 0
+        max_value_label_length = 0
+        min_value = None
+        max_value = None
+        for label, value in data:
+            if value is not None:
+                if len(label) > max_label_length:
+                    max_label_length = len(label)
+                if len(str(value)) > max_value_label_length:
+                    max_value_label_length = len(str(value))
+                if min_value is None or value < min_value:
+                    min_value = value
+                if max_value is None or value > max_value:
+                    max_value = value
+        plot_width = width - spaces - max_label_length - max_value_label_length
+        max_bar_len = max_value - min_value
+        zoom = plot_width / max_bar_len if max_bar_len else 1
+        for label, value in data:
+            if value is None:
+                line = self.colored('NaN', color='magenta')
+            else:
+                if min_value >= 0:
+                    if value == min_value:
+                        line = f'{TICK if value else " "}{value}'
+                    else:
+                        line = BAR * int(
+                            (value - min_value) * zoom) + f' {value}'
+                    line = self.colored(line,
+                                        color='green' if value else 'grey')
+                else:
+                    if value >= 0:
+                        line = BAR * int(value * zoom) + f' {value}'
+                        line = self.colored(line,
+                                            color='green' if value else 'grey')
+                        line = ' ' * (1 + int(
+                            abs(min_value) * zoom + len(str(min_value)))) + line
+                    else:
+                        bar = BAR * int(abs(value) * zoom)
+                        line = f'{value} ' + bar
+                        line = line.rjust(
+                            1 +
+                            int(abs(min_value) * zoom + len(str(min_value))))
+                        line = self.colored(line, color='yellow')
+            self.safe_print(
+                f'{self.colored(label.rjust(max_label_length), color="cyan")}'
+                f' {line}', extra)
+
     def print_err(self, *args):
         for s in args:
             print(self.colored(s, color='red', attrs=[]), file=sys.stderr)

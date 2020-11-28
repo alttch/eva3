@@ -458,7 +458,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
     def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
                 isinstance(result, dict):
-            self.print_tdf(result, 't')
+            self.print_tdf(result,
+                           't',
+                           plot=a._bars,
+                           plot_field=a.x if a.x else 'value')
             return 0
         if api_func == 'create_rule' and result and result.get(
                 'result') == 'OK':
@@ -559,9 +562,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='w')
         sp_history.add_argument('-c',
                                 '--chart-options',
-                                help='Chart options',
+                                help='Chart options (generate image)',
                                 metavar='OPTS',
                                 dest='c')
+        sp_history.add_argument('-B',
+                                '--bar-chart',
+                                help='Generate ascii bar chart',
+                                action='store_true',
+                                dest='_bars')
 
         sp_set = self.sp.add_parser('set', help='Set LVar state')
         sp_set.add_argument('i', help='LVar ID',

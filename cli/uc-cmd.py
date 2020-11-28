@@ -326,7 +326,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
                 isinstance(result, dict):
-            self.print_tdf(result, 't')
+            self.print_tdf(result,
+                           't',
+                           plot=a._bars,
+                           plot_field=a.x if a.x else 'value')
             return 0
         else:
             return super().process_result(result, code, api_func, itype, a)
@@ -465,9 +468,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='w')
         sp_history.add_argument('-c',
                                 '--chart-options',
-                                help='Chart options',
+                                help='Chart options (generate image)',
                                 metavar='OPTS',
                                 dest='c')
+        sp_history.add_argument('-B',
+                                '--bar-chart',
+                                help='Generate ascii bar chart',
+                                action='store_true',
+                                dest='_bars')
 
         sp_update = self.sp.add_parser('update', help='Update item state')
         sp_update.add_argument('i', help='Item ID',
@@ -1273,13 +1281,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_dp_list = sp_dp.add_parser('list', help='List data pullers')
 
         sp_dp_start = sp_dp.add_parser('start', help='Start data puller')
-        sp_dp_start.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+        sp_dp_start.add_argument(
+            'i', help='Data puller name',
+            metavar='NAME').completer = self.ComplDataPuller(self)
 
         sp_dp_stop = sp_dp.add_parser('stop', help='Start data puller')
-        sp_dp_stop.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+        sp_dp_stop.add_argument(
+            'i', help='Data puller name',
+            metavar='NAME').completer = self.ComplDataPuller(self)
 
         sp_dp_restart = sp_dp.add_parser('restart', help='Start data puller')
-        sp_dp_restart.add_argument('i', help='Data puller name', metavar='NAME').completer=self.ComplDataPuller(self)
+        sp_dp_restart.add_argument(
+            'i', help='Data puller name',
+            metavar='NAME').completer = self.ComplDataPuller(self)
 
     def edit_action(self, props):
         if self.apiuri:

@@ -37,6 +37,7 @@ Common
     * "shutdown_core" method now executes background shutdown, plus has got an
       extra option "t" to specify shutdown delay (useful for MQTT API call)
     * "import_module" function in cloud deployment and device template files
+    * "history" CLI command bar charts output
 
 UC
 --
