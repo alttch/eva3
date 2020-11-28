@@ -615,11 +615,6 @@ and IEEE 754 floats).
             return
 
     def get(self, port=None, cfg=None, timeout=0):
-        # modbus.get_port(port_id) function returns:
-        # False - if port failed to connect,
-        # None - if port doesn't exist or may exceed the timeout,
-        # 0 - if port is locked and busy,
-        # or the port object itself
         try:
             modbus_port = modbus.get_port(self.modbus_port_id, timeout)
         except Exception as e:
@@ -630,7 +625,11 @@ and IEEE 754 floats).
         # (https://pymodbus.readthedocs.io) and supports all pymodbus functions.
         # All the functions are wrapped with EVA modbus module which handles
         # all errors and retry attempts. The ports PHI gets are always in the
-        # connected state.
+        # connected state. The port methods can be used for bulk or complicated
+        # requests
+
+        # For single values of standard data types, modbus tool module is
+        # recommended
 
         # read 16 coils, starting from 0
         try:
@@ -781,7 +780,8 @@ Working with 1-Wire via OWFS
 ============================
 
 As EVA ICS has virtual OWFS buses, you don't need to initialize OWFS by
-yourself.
+yourself. Import **eva.uc.drivers.tools.owfs** module to get an access to all
+defined virtual OWFS buses.
 
 Methods available:
 
@@ -793,10 +793,16 @@ Methods available:
 * **bus.release()** Release bus. As bus may be locked for others, the method
   should be always called immediately after the work with bus is finished.
 
+.. note::
+
+    Direct import of eva.uc.owfs is deprecated since EVA ICS 3.3.2 (DriverAPI
+    v10)
+
 .. code-block:: python
 
     # everything you need is just import module
-    import eva.uc.owfs as owfs
+    import eva.uc.drivers.tools.owfs as owfs
+    from eva.uc.driverapi import log_traceback
 
     @phi_constructor
     def __init__(self, **kwargs):
@@ -817,8 +823,12 @@ Methods available:
             return
 
     def get(self, port=None, cfg=None, timeout=0):
-        bus = owfs.get_bus(self.owfs_bus)
-        if not bus: return None
+        try:
+            bus = owfs.get_bus(self.owfs_bus)
+        except Exceptions as e:
+            self.log_error(e)
+            log_traceback()
+            return None
         try:
             value = bus.read(path, 'temperature')
             if not value:

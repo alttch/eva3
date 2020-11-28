@@ -47,9 +47,10 @@ UC
     * deprecated: old format of device templates
     * deprecated: multi-update scripts
     * deprecated: direct eva.uc.modbus import in Modbus PHIs
+    * deprecated: direct eva.uc.owfs import in OWFS PHIs
 
     * data pullers
-    * DriverAPI v10: Modbus helper tool
+    * DriverAPI v10: Modbus and OWFS helper tools
     * auto_off unit state processor can be cancelled / modified while running
     * "server cleanup" CLI command (cleans state db)
     * new device template format (equal to IaC deploy)
