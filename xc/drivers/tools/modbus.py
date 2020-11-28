@@ -32,7 +32,7 @@ from eva.uc.modbus import get_port as _get_port
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceBusy
 
-import struct
+import numpy as np
 
 
 def _parse_reg(reg):
@@ -393,10 +393,12 @@ def read_f32(port, reg, count=1, **kwargs):
         data = []
         for i in range(0, len(result.registers), 2):
             data.append(
-                struct.unpack(
-                    'f',
-                    struct.pack('H', result.registers[i]) +
-                    struct.pack('H', result.registers[i + 1]))[0])
+                np.array([
+                    x for x in
+                    result.registers[0].to_bytes(2, byteorder='little') +
+                    result.registers[1].to_bytes(2, byteorder='little')
+                ],
+                         dtype=np.uint8).view(dtype=np.float32)[0])
         return data
 
 
@@ -409,9 +411,9 @@ def write_f32(port, reg, values, **kwargs):
         values = [values]
     data = []
     for v in values:
-        x = struct.pack('f', float(v))
-        data.append(struct.unpack('H', x[:2])[0])
-        data.append(struct.unpack('H', x[2:])[0])
+        x = np.array([v], dtype=np.float32).tobytes()
+        data.append(int.from_bytes(x[:2], byteorder='little'))
+        data.append(int.from_bytes(x[2:], byteorder='little'))
     if reg_type == 'h':
         result = port.write_registers(addr, data, **kwargs)
     else:
