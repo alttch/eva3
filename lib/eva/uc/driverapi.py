@@ -63,16 +63,16 @@ def get_timeout():
     return eva.core.config.timeout
 
 
-def transform_value(value, multiply=None, divide=None, round=None):
+def transform_value(value, multiply=None, divide=None, round_to=None):
     """
     Generic value transformer
     """
     if multiply is not None:
         value = value * multiply
     if divide is not None:
-        value = value * divide
+        value = value / divide
     if round is not None:
-        value = round(value, round)
+        value = round(value, round_to)
     return value
 
 
