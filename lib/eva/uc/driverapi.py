@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.2"
-__api__ = 9
+__api__ = 10
 
 import logging
 import rapidjson
@@ -61,6 +61,19 @@ def get_sleep_step():
 
 def get_timeout():
     return eva.core.config.timeout
+
+
+def transform_value(value, multiply=None, divide=None, round=None):
+    """
+    Generic value transformer
+    """
+    if multiply is not None:
+        value = value * multiply
+    if divide is not None:
+        value = value * divide
+    if round is not None:
+        value = round(value, round)
+    return value
 
 
 def critical():

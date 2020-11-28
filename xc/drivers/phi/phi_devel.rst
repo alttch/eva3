@@ -26,7 +26,7 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **9**
+* **__api__**           module API (integer number), current is **10**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
@@ -580,13 +580,20 @@ Working with Modbus
 ===================
 
 Working with Modbus is pretty easy. PHIs don't need to care about the Modbus
-connection and data exchange at all, everything is managed by **eva.uc.modbus**
-module.
+connection and data exchange at all, everything is managed by
+**eva.uc.drivers.tools.modbus** module. The module provides methods for reading
+all popular data types (booleans, 16-, 32- and 64-bit signed/unsigned integers
+and IEEE 754 floats).
+
+.. note::
+
+    Direct import of eva.uc.modbus is deprecated since EVA ICS 3.3.2 (DriverAPI
+    v10)
 
 .. code-block:: python
 
     # everything you need is just import module
-    import eva.uc.modbus as modbus
+    import eva.uc.drivers.tools.modbus as modbus
 
     @phi_constructor
     def __init__(self, **kwargs):
@@ -612,33 +619,38 @@ module.
         # None - if port doesn't exist or may exceed the timeout,
         # 0 - if port is locked and busy,
         # or the port object itself
-        mb = modbus.get_port(self.modbus_port, timeout)
-        if not mb: return None
+        modbus_port = modbus.get_port(self.modbus_port, timeout)
+        if not modbus_port: return None
         # The port object is a regular pymodbus object
         # (https://pymodbus.readthedocs.io) and supports all pymodbus functions.
         # All the functions are wrapped with EVA modbus module which handles
         # all errors and retry attempts. The ports PHI gets are always in the
         # connected state.
-        r = mb.read_coils(0, 16, unit=self.unit_id)
-        # Release modbus port as soon as possible to let other components work
-        # with it while your PHI is processing the data
-        mb.release()
-        # result is a regular pymodbus result
-        if rr.isError(): return None
-        # let's convert 16 coils to 16 port states
+
+        # read 16 coils, starting from 0
+        try:
+            coils = modbus.read_bool(modbus_port, 'c0', 16, unit=self.unit_id)
+        except:
+            return None
+        finally:
+            # Release modbus port as soon as possible to let other components
+            # work with it while your PHI is processing the data
+            modbus_port.release()
+
+        # let's convert 16 booleans to 16 port states
         result = {}
         try:
             for i in range(16):
-                result[str(i + 1)] = 1 if rr.bits[i] else 0
+                result[str(i + 1)] = 1 if coils[i] else 0
         except:
             result = None
         return result
 
 
-The variable **client_type** of the port object (*mb.client_type*) holds the
-port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
-work with the equipment of the same type which uses e.g. different registers
-for different connection types.
+The variable **client_type** of the port object (*modbus_port.client_type*)
+holds the port type (tcp, udp, rtu, ascii or binary). This can be used to make
+PHI work with the equipment of the same type which uses e.g. different
+registers for different connection types.
 
 
 Working with Ethernet/IP
