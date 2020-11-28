@@ -71,7 +71,7 @@ def transform_value(value, multiply=None, divide=None, round_to=None):
         value = value * multiply
     if divide is not None:
         value = value / divide
-    if round is not None:
+    if round_to is not None:
         value = round(value, round_to)
     return value
 
