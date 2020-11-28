@@ -357,9 +357,8 @@ def restful_api_method(f):
             raise FunctionFailed
         if result is None:
             raise ResourceNotFound
-        if (f.__name__ == 'POST' and
-                'Location' in cherrypy.serving.response.headers
-           ) or f.__name__ == 'PUT':
+        if (f.__name__ == 'POST' and 'Location'
+                in cherrypy.serving.response.headers) or f.__name__ == 'PUT':
             cherrypy.serving.response.status = 201
         if result is True:
             if data == api_result_accepted:
@@ -1332,22 +1331,26 @@ def jsonify(value):
 
 
 def cp_jsonrpc_handler(*args, **kwargs):
-    response = cherrypy.serving.response
-    if response.status == 401:
-        return
-    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
-    if value is None:
-        cherrypy.serving.response.status = 202
-        return
-    else:
-        fmt = g.get('ct_format')
-        if fmt == CT_MSGPACK:
-            response.headers['Content-Type'] = 'application/msgpack'
-            return apiclient.pack_msgpack(value)
-        elif fmt == CT_JSON:
-            response.headers['Content-Type'] = 'application/json'
-        return format_json(
-            value, minimal=not eva.core.config.development).encode('utf-8')
+    try:
+        response = cherrypy.serving.response
+        if response.status == 401:
+            return
+        value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+        if value is None:
+            cherrypy.serving.response.status = 202
+            return
+        else:
+            fmt = g.get('ct_format')
+            if fmt == CT_MSGPACK:
+                response.headers['Content-Type'] = 'application/msgpack'
+                return apiclient.pack_msgpack(value)
+            elif fmt == CT_JSON:
+                response.headers['Content-Type'] = 'application/json'
+            return format_json(
+                value, minimal=not eva.core.config.development).encode('utf-8')
+    except:
+        eva.core.log_traceback()
+        raise
 
 
 def _http_client_key(_k=None, from_cookie=False):
