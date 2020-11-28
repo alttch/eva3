@@ -377,6 +377,11 @@ def read_f32(port, reg, count=1, **kwargs):
     """
     Read IEEE 754 f32 values
 
+    Warning:
+        return values are numpy.float32 numbers and should be converted to a
+        standard Python type (string or float) before serializing with standard
+        methods
+
     Returns:
         list of f32
     """
