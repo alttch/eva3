@@ -9,6 +9,8 @@ Common
     * fix: hosts_allow / hosts_assign in JRPC calls
     * fix: cmd wait delay
 
+    * deprecated: RESTful and direct API
+
     * cmd API function accepts args as a list
     * cmd API function accepts STDIN data
     * xc/cmd moved to runtime
@@ -36,19 +38,21 @@ Common
       extra option "t" to specify shutdown delay (useful for MQTT API call)
     * "import_module" function in cloud deployment and device template files
 
-    * RESTful and direct API marked as deprecated
-
 UC
 --
 
     * fix: Modbus/UDP (server) packet processing
     * fix: Modbus serial custom byte size
 
+    * deprecated: old format of device templates
+    * deprecated: multi-update scripts
+    * deprecated: direct eva.uc.modbus import in Modbus PHIs
+
     * data pullers
+    * DriverAPI v10: Modbus helper tool
     * auto_off unit state processor can be cancelled / modified while running
     * "server cleanup" CLI command (cleans state db)
-    * new device template format (equal to IaC deploy). Old format is deprecated
-    * multi-update scripts are now deprecated
+    * new device template format (equal to IaC deploy)
 
 LM PLC
 ------
