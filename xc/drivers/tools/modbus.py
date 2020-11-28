@@ -26,8 +26,11 @@ __version__ = "3.3.2"
 
 from eva.tools import safe_int
 from eva.tools import val_to_boolean
-from eva.uc.modbus import get_port
 from eva.uc.modbus import is_port
+from eva.uc.modbus import get_port as _get_port
+
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceBusy
 
 import struct
 
@@ -38,6 +41,30 @@ def _parse_reg(reg):
     if reg_type not in ['c', 'd', 'i', 'h']:
         raise ValueError(f'Invalid register type: {reg_type}')
     return reg_type, addr
+
+
+def get_port(port_id, timeout=None):
+    """
+    Get Modbus virtual port
+
+    Returns:
+        Modbus virtual port object
+
+    Raises:
+        eva.exceptions.ResourceNotFound: if the port doesn't exist
+        eva.exceptions.ResourceBusy: if the port is busy (unable to get within
+                                     core timeout)
+        RuntimeError: if connection error has been occured
+        """
+    port = _get_port(port_id, timeout)
+    if port:
+        return port
+    elif port is None:
+        raise ResourceNotFound(f'Modbus port {port_id} not defined')
+    elif port is False:
+        raise RuntimeError(f'Modbus port {port_id} connection error')
+    elif port == 0:
+        raise ResourceBusy(f'Modbus port {port_id} is locked')
 
 
 def read_bool(port, reg, count=1, **kwargs):

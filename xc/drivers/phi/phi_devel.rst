@@ -594,15 +594,16 @@ and IEEE 754 floats).
 
     # everything you need is just import module
     import eva.uc.drivers.tools.modbus as modbus
+    from eva.uc.driverapi import log_traceback
 
     @phi_constructor
     def __init__(self, **kwargs):
         # ....
         # it's recommended to force aao_get in Modbus PHI to let it read states
         # with one modbus request
-        self.modbus_port = self.phi_cfg.get('port')
+        self.modbus_port_id = self.phi_cfg.get('port')
         # check in constructor if the specified modbus port is defined
-        if not modbus.is_port(self.modbus_port):
+        if not modbus.is_port(self.modbus_port_id):
             self.log_error('modbus port ID not specified or invalid')
             self.ready = False
             return
@@ -619,8 +620,12 @@ and IEEE 754 floats).
         # None - if port doesn't exist or may exceed the timeout,
         # 0 - if port is locked and busy,
         # or the port object itself
-        modbus_port = modbus.get_port(self.modbus_port, timeout)
-        if not modbus_port: return None
+        try:
+            modbus_port = modbus.get_port(self.modbus_port_id, timeout)
+        except Exception as e:
+            self.log_error(e)
+            log_traceback()
+            return None
         # The port object is a regular pymodbus object
         # (https://pymodbus.readthedocs.io) and supports all pymodbus functions.
         # All the functions are wrapped with EVA modbus module which handles
