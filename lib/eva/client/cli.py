@@ -1521,8 +1521,8 @@ class GenericCLI(GCLI):
                 else:
                     _append(label, v, width)
                     max_value_width = 0
-                    for v in vals:
-                        i = len(str(v))
+                    for z in vals:
+                        i = len(str(z))
                         if i > max_value_width:
                             max_value_width = i
                     while len(vals) > width - max_value_width - 4:
