@@ -22,8 +22,8 @@ upgrading to 3.7+.
 Added / updated 3rd party modules
 ---------------------------------
 
-The following modules are installed / updated automatically in EVA venv. If
-your setup has no Internet connection, install them manually before applying
+The following Python modules are installed / updated automatically in EVA venv.
+If your setup has no Internet connection, install them manually before applying
 the update.
 
 .. code-block::
