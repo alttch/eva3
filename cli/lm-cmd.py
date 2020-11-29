@@ -557,7 +557,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_history.add_argument(
             '-w',
             '--fill',
-            help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
+            help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time, '
+            'value precision can be specified as e.g. 1T:2 for 2 digits'
+            ' after comma',
             metavar='INTERVAL',
             dest='w')
         sp_history.add_argument('-c',
