@@ -25,7 +25,7 @@ Changed / updated 3rd party modules
 The following modules are updated automatically in EVA venv. If your setup has
 no Internet connection, install them manually before applying the update.
 
-```
-cachetools==4.1.1
-asciichartpy==1.5.3
-```
+.. code-block::
+
+    cachetools==4.1.1
+    asciichartpy==1.5.3
