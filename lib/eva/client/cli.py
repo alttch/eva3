@@ -1456,10 +1456,19 @@ class GenericCLI(GCLI):
                 for k in result.keys():
                     if k == time_field:
                         from datetime import datetime
-                        t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
-                                              '%Y-%m-%d %T,%f')[:-3]
+                        t = datetime.strftime(
+                            datetime.fromtimestamp(result[k][i]),
+                            '%Y-%m-%d %T,%f')[:-3]
                     elif k == plot_field:
                         v = result[k][i]
+                        if isinstance(v, str):
+                            try:
+                                v = int(result[k][i])
+                            except:
+                                try:
+                                    v = float(result[k][i])
+                                except:
+                                    v = None
                 res.append((t, v))
             self.plot_bar_chart(res)
             return
