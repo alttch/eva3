@@ -39,3 +39,4 @@ websocket-client==0.56.0
 jsonschema==3.2.0
 testresources==2.0.1
 cachetools==4.1.1
+asciichartpy==1.5.3

@@ -18,3 +18,14 @@ Update instructions
 
 Note for Python 3.6 users: support of Python 3.6 is very limited, consider
 upgrading to 3.7+.
+
+Changed / updated 3rd party modules
+-----------------------------------
+
+The following modules are updated automatically in EVA venv. If your setup has
+no Internet connection, install them manually before applying the update.
+
+```
+cachetools==4.1.1
+asciichartpy==1.5.3
+```
