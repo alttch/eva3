@@ -594,9 +594,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
                               '--prop',
                               help='State prop to use (default: value)',
                               choices=['status', 'value'],
-                              metavar='NUM',
+                              metavar='PROP',
                               default='value',
                               dest='x')
+        sp_watch.add_argument('-p',
+                              '--chart-type',
+                              help='Chart type',
+                              choices=['bar', 'line'],
+                              default='bar')
 
         sp_set = self.sp.add_parser('set', help='Set LVar state')
         sp_set.add_argument('i', help='LVar ID',
@@ -1303,7 +1308,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         self.watch_item(props['i'],
                         interval=props['r'],
                         rows=props['n'],
-                        prop=props['x'])
+                        prop=props['x'],
+                        chart_type=props['chart_type'])
         return self.local_func_result_empty
 
 

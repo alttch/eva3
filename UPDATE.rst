@@ -29,4 +29,3 @@ the update.
 .. code-block::
 
     cachetools==4.1.1
-    asciichartpy==1.5.3

@@ -891,7 +891,7 @@ class GenericCLI(GCLI):
             try:
                 return self.execute_function()
             except Exception as e:
-                # raise
+                raise
                 self.print_err(e)
         else:
             # interactive mode
@@ -1442,7 +1442,7 @@ class GenericCLI(GCLI):
                                     a=a)
         return code
 
-    def watch_item(self, oid, interval, rows, prop):
+    def watch_item(self, oid, interval, rows, prop, chart_type='bar'):
 
         import time
         import datetime
@@ -1457,30 +1457,52 @@ class GenericCLI(GCLI):
 
         limit_auto_set = rows is None
 
-        def _append(label, value):
-            vals.append((label, value))
+        def _append(label, value, limit):
+            if chart_type == 'bar':
+                vals.append((label, value))
+            else:
+                if isinstance(value, float):
+                    vals.append(value)
+                else:
+                    try:
+                        v = float(value)
+                    except:
+                        v = 0
+                    vals.append(v)
             while len(vals) > limit:
                 vals.pop(0)
 
         next_step = time.monotonic() + interval
         try:
             while True:
-                label = datetime.datetime.now().strftime('%T.%f')[:-5]
+                if chart_type == 'bar':
+                    label = datetime.datetime.now().strftime('%T.%f')[:-5]
+                else:
+                    label = datetime.datetime.now().isoformat()
                 width, height = os.get_terminal_size(0)
                 if limit is None:
-                    limit = height - 2
+                    if chart_type == 'bar':
+                        limit = height - 2
+                    else:
+                        limit = width - 12
                 if width != old_width or height != old_height:
                     os.system('clear')
-                    print(self.colored(oid, color='yellow'))
+                    if chart_type == 'bar':
+                        print(self.colored(oid, color='yellow'))
                     old_width, old_height = width, height
                     if limit_auto_set:
-                        limit = height - 2
-                else:
+                        if chart_type == 'bar':
+                            limit = height - 2
+                        else:
+                            rows = height - 6
+                elif chart_type == 'bar':
                     for t in range(to_clear):
                         sys.stdout.write('\033[F\033[K')
+                elif chart_type == 'line':
+                    os.system('clear')
                 code, data = self.call(['state', '-i', oid])
                 if code:
-                    self.print_err(data.get('error', 'Error'))
+                    self.print_err(data.get('error', ''))
                     return self.local_func_result_failed
                 else:
                     v = data.get(prop)
@@ -1492,9 +1514,29 @@ class GenericCLI(GCLI):
                                 v = float(v)
                             except:
                                 v = None
-                _append(label, v)
-                self.plot_bar_chart(vals)
-                to_clear = len(vals)
+                if chart_type == 'bar':
+                    _append(label, v, limit)
+                    self.plot_bar_chart(vals)
+                    to_clear = len(vals)
+                else:
+                    _append(label, v, width)
+                    max_value_width = 0
+                    for v in vals:
+                        i = len(str(v))
+                        if i > max_value_width:
+                            max_value_width = i
+                    while len(vals) > width - max_value_width - 4:
+                        vals.pop(0)
+                    max_value_width += 2
+                    print(
+                        f'{self.colored(oid, color="yellow")} '
+                        f'{self.colored(label, color="cyan")}: ',
+                        end='')
+                    if v is None:
+                        print(self.colored('NaN', color='magenta'))
+                    else:
+                        print(self.colored(v, color='green', attrs='bold'))
+                    self.plot_line_chart(vals, rows, max_value_width)
                 t = time.perf_counter()
                 sleep_to = next_step - t
                 if sleep_to > 0:
