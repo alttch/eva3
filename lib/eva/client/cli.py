@@ -1442,6 +1442,69 @@ class GenericCLI(GCLI):
                                     a=a)
         return code
 
+    def watch_item(self, oid, interval, rows, prop):
+
+        import time
+        import datetime
+
+        vals = []
+        to_clear = 0
+
+        old_width = 0
+        old_height = 0
+
+        limit = rows
+
+        limit_auto_set = rows is None
+
+        def _append(label, value):
+            vals.append((label, value))
+            while len(vals) > limit:
+                vals.pop(0)
+
+        next_step = time.monotonic() + interval
+        try:
+            while True:
+                label = datetime.datetime.now().strftime('%T.%f')[:-5]
+                width, height = os.get_terminal_size(0)
+                if limit is None:
+                    limit = height - 2
+                if width != old_width or height != old_height:
+                    os.system('clear')
+                    print(self.colored(oid, color='yellow'))
+                    old_width, old_height = width, height
+                    if limit_auto_set:
+                        limit = height - 2
+                else:
+                    for t in range(to_clear):
+                        sys.stdout.write('\033[F\033[K')
+                code, data = self.call(['state', '-i', oid])
+                if code:
+                    self.print_err(data.get('error', 'Error'))
+                    return self.local_func_result_failed
+                else:
+                    v = data.get(prop)
+                    if isinstance(v, str):
+                        try:
+                            v = int(v)
+                        except:
+                            try:
+                                v = float(v)
+                            except:
+                                v = None
+                _append(label, v)
+                self.plot_bar_chart(vals)
+                to_clear = len(vals)
+                t = time.perf_counter()
+                sleep_to = next_step - t
+                if sleep_to > 0:
+                    time.sleep(sleep_to)
+                    next_step += interval
+                else:
+                    next_step = t
+        except KeyboardInterrupt:
+            return
+
     def print_tdf(self, result_in, time_field, plot=False, plot_field='value'):
         if not result_in.get(time_field):
             return

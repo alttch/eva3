@@ -163,21 +163,38 @@ class GCLI(object):
                     min_value = value
                 if max_value is None or value > max_value:
                     max_value = value
+        if max_value is None:
+            max_value = 0
+        if min_value is None:
+            min_value = 0
         plot_width = width - spaces - max_label_length - max_value_label_length
-        max_bar_len = max_value - min_value
+        if max_value > 0:
+            max_bar_len = max_value - min_value
+        else:
+            max_bar_len = abs(min_value - max_value)
         zoom = plot_width / max_bar_len if max_bar_len else 1
         for label, value in data:
             if value is None:
                 line = self.colored('NaN', color='magenta')
             else:
                 if min_value >= 0:
-                    if value == min_value:
+                    line = BAR * int((value - min_value) * zoom)
+                    if not line:
                         line = f'{TICK if value else " "}{value}'
                     else:
-                        line = BAR * int(
-                            (value - min_value) * zoom) + f' {value}'
+                        line += f' {value}'
                     line = self.colored(line,
                                         color='green' if value else 'grey')
+                elif max_value < 0:
+                    line = BAR * int((abs(max_value - value)) * zoom)
+                    if not line:
+                        line = f'{value} {(TICK) if value else ""}'
+                        line = line.rjust(plot_width + spaces + 1)
+                    else:
+                        line = f'{value} ' + line
+                        line = line.rjust(plot_width + spaces)
+                    line = self.colored(line,
+                                        color='yellow' if value else 'grey')
                 else:
                     if value >= 0:
                         line = BAR * int(value * zoom) + f' {value}'
@@ -187,6 +204,8 @@ class GCLI(object):
                             abs(min_value) * zoom + len(str(min_value)))) + line
                     else:
                         bar = BAR * int(abs(value) * zoom)
+                        if not bar:
+                            bar = TICK
                         line = f'{value} ' + bar
                         line = line.rjust(
                             1 +

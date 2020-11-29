@@ -172,7 +172,7 @@ _eva_sfa() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[2]}" in
       action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
@@ -339,7 +339,7 @@ _eva_lm() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[2]}" in
       config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
@@ -556,7 +556,7 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user watch' -- "$cur" ))
   else
     case "${words[2]}" in
       action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)

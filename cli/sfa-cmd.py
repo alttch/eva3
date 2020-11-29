@@ -369,6 +369,31 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 action='store_true',
                                 dest='_bars')
 
+        sp_watch = self.sp.add_parser('watch', help='Watch item state')
+        sp_watch.add_argument('i',
+                              help='Item ID (specify either ID or item type)',
+                              metavar='ID').completer = self.ComplItemOID(self)
+        sp_watch.add_argument('-r',
+                              '--interval',
+                              help='Watch interval (default: 1s)',
+                              metavar='SEC',
+                              default=1,
+                              type=float,
+                              dest='r')
+        sp_watch.add_argument('-n',
+                              '--rows',
+                              help='Rows to plot',
+                              metavar='NUM',
+                              type=int,
+                              dest='n')
+        sp_watch.add_argument('-x',
+                              '--prop',
+                              help='State prop to use (default: value)',
+                              choices=['status', 'value'],
+                              metavar='NUM',
+                              default='value',
+                              dest='x')
+
     def add_sfa_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit commands')
 
@@ -1667,6 +1692,13 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         'File deletion failed, API code {}'.
                                         format(code))
 
+    def watch(self, props):
+        self.watch_item(props['i'],
+                        interval=props['r'],
+                        rows=props['n'],
+                        prop=props['x'])
+        return self.local_func_result_empty
+
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
 
@@ -1677,6 +1709,7 @@ if prog == 'eva-shell':
 cli = SFA_CLI('sfa', _me, prog=prog)
 
 _api_functions = {
+    'watch': cli.watch,
     'history': 'state_history',
     'action:exec': 'action',
     'action:result': 'result',

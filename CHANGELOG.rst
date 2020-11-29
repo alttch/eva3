@@ -38,6 +38,7 @@ Common
       extra option "t" to specify shutdown delay (useful for MQTT API call)
     * "import_module" function in cloud deployment and device template files
     * "history" CLI command bar charts output
+    * "watch" CLI command
 
 UC
 --

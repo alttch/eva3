@@ -154,7 +154,7 @@ _sfa-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user
+    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user watch
   else
     case "${words[2]}" in
       action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)

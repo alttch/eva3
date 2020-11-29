@@ -152,7 +152,7 @@ _lm-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[1]}" in
       config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
