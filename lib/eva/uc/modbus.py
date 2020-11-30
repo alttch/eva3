@@ -128,6 +128,10 @@ def is_port(port_id):
 
 
 @with_ports_lock
+def _get_port(port_id):
+    return ports.get(port_id)
+
+
 def get_port(port_id, timeout=None):
     """Get modbus port with the choosen ID
 
@@ -144,7 +148,7 @@ def get_port(port_id, timeout=None):
     Don't forget to call port.release() after the work is over, otherwise the
     port stays locked!
     """
-    port = ports.get(port_id)
+    port = _get_port(port_id)
     if timeout and timeout < port.timeout * port.tries:
         logging.warning(
             'unable to acquire modbus port {}, '.format(port_id) + \

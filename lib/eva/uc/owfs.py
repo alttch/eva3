@@ -36,6 +36,10 @@ def is_bus(bus_id):
 
 
 @with_ports_lock
+def _get_bus(bus_id):
+    return owbus.get(bus_id)
+
+
 def get_bus(bus_id, timeout=None):
     """Get OWFS bus with the choosen ID
 
@@ -50,7 +54,7 @@ def get_bus(bus_id, timeout=None):
     Don't forget to call bus.release() after the work is over, otherwise the
     port stays locked!
     """
-    bus = owbus.get(bus_id)
+    bus = _get_bus(bus_id)
     if timeout and timeout < bus.timeout * bus.tries:
         logging.warning(
             'unable to acquire owfs bus {}, '.format(bus_id) + \
