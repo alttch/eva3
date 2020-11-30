@@ -216,6 +216,8 @@ call.
         #specified in features, PHI should deal with both single port and list
         #of ports
         #
+        #on bulk requests, both port and data are lists
+        #
         #if unit PHI has "value" feature, the data contains either single or
         #multiple (status, value) tuples
 
