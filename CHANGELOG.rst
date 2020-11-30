@@ -56,6 +56,7 @@ UC
     * auto_off unit state processor can be cancelled / modified while running
     * "server cleanup" CLI command (cleans state db)
     * new device template format (equal to IaC deploy)
+    * default timeout for Modbus / OWFS reduced to 1s to avoid critical events
 
 LM PLC
 ------
