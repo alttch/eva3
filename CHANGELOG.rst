@@ -73,6 +73,7 @@ SFA
     * cloud deploy: skip existing items during deployment (optionally)
     * cloud deploy: local functions ("sleep", "system")
     * cloud deploy: file masks in upload-remote
+    * cloud deploy: accepts deployment YAML from STDIN
 
 
 3.3.1 (2020-08-26)

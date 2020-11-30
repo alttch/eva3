@@ -870,7 +870,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         sp_cloud_deploy = sp_cloud.add_parser(
             'deploy', help='Deploy items and configuration from file')
-        sp_cloud_deploy.add_argument('f', help='Deploy file',
+        sp_cloud_deploy.add_argument('f',
+                                     help='Deploy file ("-" for STDIN)',
                                      metavar='FILE').completer = self.ComplGlob(
                                          ['*.yml', '*.yaml'])
         sp_cloud_deploy.add_argument(
@@ -906,7 +907,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_cloud_undeploy = sp_cloud.add_parser(
             'undeploy', help='Undeploy items and configuration from file')
         sp_cloud_undeploy.add_argument(
-            'f', help='Deploy file',
+            'f', help='Deploy file ("-" for STDIN)',
             metavar='FILE').completer = self.ComplGlob(['*.yml', '*.yaml'])
         sp_cloud_undeploy.add_argument('-d',
                                        '--delete-files',
@@ -975,8 +976,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     v = dict_from_str(v)
                 else:
                     v = {}
-                dirname = os.path.dirname(fname)
-                tpl = jinja2.Template(self._read_uri(fname))
+                if fname == '-':
+                    dirname = '.'
+                    tplc = sys.stdin.read()
+                    print(tplc)
+                else:
+                    dirname = os.path.dirname(fname)
+                    tplc = self._read_uri(fname)
+                tpl = jinja2.Template(tplc)
                 tpl.globals['import_module'] = importlib.import_module
                 ys = tpl.render(v)
                 if test_mode:
@@ -1199,8 +1206,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             self.print_err(e)
             return self.local_func_result_failed
         print()
-        print('{}eployment completed for {}'.format('Und' if und else 'D',
-                                                    props['f']))
+        print('{}eployment completed for {}'.format(
+            'Und' if und else 'D',
+            'STDIN' if props['f'] == '-' else props['f']))
         print('-' * 60)
         return self.local_func_result_ok
 
