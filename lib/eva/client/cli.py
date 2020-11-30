@@ -1525,7 +1525,8 @@ class GenericCLI(GCLI):
                         i = len(str(z))
                         if i > max_value_width:
                             max_value_width = i
-                    while len(vals) > width - max_value_width - 4:
+                    while len(vals) > width - (max_value_width if
+                                               max_value_width > 7 else 7) - 5:
                         vals.pop(0)
                     max_value_width += 2
                     print(
