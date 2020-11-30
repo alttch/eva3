@@ -1134,10 +1134,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                                  e.__class__.__name__, e))
                             else:
                                 f = a['function']
+                                expect_result = None
                                 if f == 'sleep':
                                     func = time.sleep
                                 elif f == 'system':
                                     func = os.system
+                                    expect_result = 0
                                 else:
                                     raise RuntimeError(
                                         f'function unsupported: {f}')
@@ -1149,7 +1151,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 func.__name__ if callable(func) else func,
                                 params))
                             if callable(func):
-                                func(*args, **kwargs)
+                                result = func(*args, **kwargs)
+                                if expect_result is not None and \
+                                        result != expect_result:
+                                    raise RuntimeError(
+                                        f'function failed: {result: {result}}')
                             else:
                                 code = macall({
                                     'i': c,
