@@ -140,3 +140,6 @@ configuration, here are few remarks how to use it:
 * *set-id* must end with either *.status* or *.value* to set the proper
   :doc:`EVA ICS items<items>` state fields. If no ending is specified, item
   state value is updated.
+
+Pulr supports SNMP (v2), Modbus (TCP/UDP) and Ethernet/IP (Allen-Bradley
+compatible) field buses.
