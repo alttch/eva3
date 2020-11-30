@@ -194,13 +194,17 @@ call.
     # if PHI can read data from the equipment
     def get(self, port=None, cfg=None, timeout=0):
         #<your code>
-        #should return a single state value or a dict { 'port': value }
-        #port should always be a string
+        #should return a single state value or a dict { 'port': value } (for
+        # bulk or ssp/usp), port should always be a string
         #
         #should return None if failed, integer for status, string for values
         #
         #if PHI supports aao_get feature, it should return all port states when
         #no port is specified in request.
+        #
+        # for unit status, "value" should be integer. if unit PHI has "value"
+        # feature, it should return either (status, value) tuple or a dict
+        # {'port':(status,value}
     
     # if PHI can write data to the equipment
     def set(self, port=None, data=None, cfg=None, timeout=0):
@@ -211,6 +215,9 @@ call.
         #if no - with a single port only. If both port_set and aao_set are
         #specified in features, PHI should deal with both single port and list
         #of ports
+        #
+        #if unit PHI has "value" feature, the data contains either single or
+        #multiple (status, value) tuples
 
 .. note::
 
