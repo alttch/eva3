@@ -35,12 +35,11 @@ Remote
 ------
 
 :doc:`/uc/uc` talks with UniPi via :doc:`/modbus`. To let UniPi Modbus daemon
-answer remote requests, add "--listen" option (file
-*/etc/default/unipi-modbus-tools*):
+answer remote requests, change LISTEN_IP in */etc/default/unipitcp*:
 
 .. code:: shell
 
-  DAEMON_OPTS="--listen=0.0.0.0 -a 255"
+    LISTEN_IP=0.0.0.0
 
 then restart UniPi Modbus daemon:
 
