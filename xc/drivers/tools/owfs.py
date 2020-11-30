@@ -31,7 +31,7 @@ def get_bus(bus_id, timeout=None):
     if bus:
         return bus
     elif bus is None:
-        raise ResourceNotFound(f'OWFS bus {bus_id}')
+        raise ResourceNotFound(f'OWFS bus {bus_id} not available or')
     elif bus is False:
         raise RuntimeError(f'OWFS bus {bus_id} connection error')
     elif bus == 0:

@@ -187,10 +187,8 @@ class OWFSBus(object):
             self.timeout = float(kwargs.get('timeout'))
             self._timeout = self.timeout
         except:
-            self.timeout = eva.core.config.timeout - 1
+            self.timeout = 1
             self._timeout = None
-            if self.timeout < 1:
-                self.timeout = 1
         try:
             self.delay = float(kwargs.get('delay'))
         except:

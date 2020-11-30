@@ -60,7 +60,7 @@ def get_port(port_id, timeout=None):
     if port:
         return port
     elif port is None:
-        raise ResourceNotFound(f'Modbus port {port_id}')
+        raise ResourceNotFound(f'Modbus port {port_id} not available or')
     elif port is False:
         raise RuntimeError(f'Modbus port {port_id} connection error')
     elif port == 0:
