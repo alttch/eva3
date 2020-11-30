@@ -79,6 +79,10 @@ modifications.
 * **unipi_axon_s115_din** digital inputs
 * **unipi_axon_s115_dout** digital outputs
 
+It is also possible to use :ref:`generic Modbus drivers<modbus_generic>` for
+any UniPi model. Refer to UniPi documentation for the register mapping
+and register types.
+
 Consider, UniPi has IP address 192.168.1.100 and EVA ICS :doc:`/uc/uc` is
 installed on remote host (for local installation use "localhost" or
 "127.0.0.1" for Modbus virtual port configuration). If your UniPi has RS485

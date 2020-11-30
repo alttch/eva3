@@ -12,6 +12,8 @@ should be defined as virtual ports. After that, defined virtual ports and
 Modbus unit IDs should be set in corresponding :doc:`PHI modules</drivers>`
 load configurations.
 
+.. contents::
+
 Defining Modbus virtual port
 ============================
 
@@ -117,6 +119,8 @@ To delete Modbus virtual port, execute the command:
 
 Note that controller doesn't check if the port is in use or not, so double
 check this manually before deleting it.
+
+.. _modbus_generic:
 
 Generic Modbus drivers
 ======================
