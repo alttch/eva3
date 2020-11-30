@@ -118,6 +118,74 @@ To delete Modbus virtual port, execute the command:
 Note that controller doesn't check if the port is in use or not, so double
 check this manually before deleting it.
 
+Generic Modbus drivers
+======================
+
+If equipment has no dedicated :doc:`PHI</drivers>`, generic Modbus PHIs can be
+used.
+
+.. note::
+
+    The generic Modbus drivers don't support bulk get/set requests and are not
+    recommended for heavy production setups.
+
+    But for the most cases it's possible to use the generic drivers for
+    equipment monitoring and control only, fetching real-time data with
+    external high-speed :doc:`data pullers </datapullers>`.
+
+The modules are called:
+
+* **modbus_sensor** generic module for Modbus sensors
+* **modbus_xvunit** generic module for Modbus units
+
+Both modules support widely-used Modbus data types, starting from simple coils
+and 16-bit unsigned integers and up to signed / unsigned 64-bit integers (4 x
+16-bit registers) and 32-bit floats (2x 16-bit registers, IEEE 754-encoded).
+Refer to module help for more details.
+
+**modbus_xvunit** supports both standard and "always-on" units, the last ones
+are used for complicated equipment, where only unit value is used, while the
+unit status is always 1.
+
+Example: let's create a :ref:`sensor<sensor>` and bind IEEE 754-float to it,
+stored in the equipment holding registers 5 and 6. Consider Modbus virtual port
+"p1" is already defined.
+
+.. code-block:: bash
+
+    # download PHI module if not downloaded yet
+    eva uc phi download https://get.eva-ics.com/phi/modbus/modbus_sensor.py
+    # load PHI, if not loaded yet
+    # here port = Modbus virtual port
+    eva uc phi load ms1 modbus_sensor -c port=p1,unit=1 -y 
+    eva uc create sensor:tests/s1 -yE
+    # and here port = register number
+    # don't forget that extra PHI params (type, multiplier etc.) should be
+    # prefixed with an underscore
+    eva uc driver assign sensor:tests/s1 ms1.default -c port=h5,_type=f32 -y
+    # update the sensor state every 500 milliseconds
+    eva uc config set sensor:tests/s1 update_interval 0.5 -y
+
+Another example: let's create a :ref:`unit<unit>` with status 0/1 (OFF/ON)
+stored as 5th bit of holding register 1000:
+
+.. code-block:: bash
+
+    # download PHI module if not downloaded yet
+    eva uc phi download https://get.eva-ics.com/phi/modbus/modbus_xvunit.py
+    # load PHI, if not loaded yet
+    # here port = Modbus virtual port
+    eva uc phi load m1 modbus_xvunit -c port=p1,unit=1 -y 
+    eva uc create unit:tests/u1 -yE
+    # and here port = register number
+    eva uc driver assign unit:tests/u1 m1.default -c port=h1000/5 -y
+    # update the unit state every 5 seconds
+    eva uc config set unit:tests/u1 update_interval 5 -y
+    # update unit state after each action to make sure the state is properly set
+    eva uc config set unit:tests/u1 update_exec_after_action 1 -y
+    # execute test action
+    eva uc action toggle unit:tests/u1 -w 5
+
 .. _modbus_slave:
 
 Modbus slave
