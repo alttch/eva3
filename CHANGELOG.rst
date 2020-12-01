@@ -74,6 +74,7 @@ SFA
     * cloud deploy: local functions ("sleep", "system")
     * cloud deploy: file masks in upload-remote
     * cloud deploy: accepts deployment YAML from STDIN
+    * cloud deploy: custom before/after deploy timeouts
 
 
 3.3.1 (2020-08-26)

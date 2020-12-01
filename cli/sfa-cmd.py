@@ -898,7 +898,6 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             dest='c',
         )
         sp_cloud_deploy.add_argument(
-            '-T',
             '--test',
             help='Test configuration without deployment',
             dest='test',
@@ -946,7 +945,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     @staticmethod
     def _read_uri(fname, dirname=None, file_read_mode='r'):
-        target = (dirname + '/' + fname) if dirname else fname
+        if fname.startswith('/') or fname.startswith('./'):
+            target = fname
+        else:
+            target = (dirname + '/' + fname) if dirname else fname
         if target.startswith('http://') or target.startswith('https://'):
             import requests
             result = requests.get(target)
@@ -1127,12 +1129,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 try:
                                     func = a['api']
                                     can_pass_err = a.get('_pass')
+                                    custom_timeout = a.get('_timeout')
                                     params = a.copy()
                                     del params['api']
-                                    try:
-                                        del params['_pass']
-                                    except:
-                                        pass
+                                    for p in ['_pass', '_timeout']:
+                                        try:
+                                            del params[p]
+                                        except:
+                                            pass
                                 except Exception as e:
                                     raise Exception(
                                         ('Controller {}, '
@@ -1167,7 +1171,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 code = macall({
                                     'i': c,
                                     'f': func,
-                                    'p': params
+                                    'p': params,
+                                    't': custom_timeout
                                 })[1].get('code')
                                 if code != apiclient.result_ok:
                                     msg = f'API call failed, code {code}'

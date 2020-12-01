@@ -126,6 +126,15 @@ It's possible to keep content in the deployment file as well. In this case, use
                 - valid: true
                   x: 3
 
+File paths:
+
+* if the file path starts with *http:* or *https:*, it's processed as URI
+* if the file path starts with "/", it's considered as absolute
+* if the file path starts with "./" it's relative to the current
+  directory
+* otherwise, the file path is relative to the directory where the deployment
+  file is located
+
 Before/After deploy
 ~~~~~~~~~~~~~~~~~~~
 
@@ -148,6 +157,8 @@ API calls are always executed in the specified order, one-by-one, *api:* field
 contains API function to execute, others specify function parameters. The
 special parameter *_pass* in the last call allows deployment to ignore failed
 API call (warning will be printed).
+
+Custom API call timeout can be defined with special parameter *_timeout*.
 
 .. note::
 
