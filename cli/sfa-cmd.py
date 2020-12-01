@@ -1168,14 +1168,24 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     raise RuntimeError(
                                         f'function failed: {result: {result}}')
                             else:
-                                code = macall({
+                                result = macall({
                                     'i': c,
                                     'f': func,
                                     'p': params,
                                     't': custom_timeout
-                                })[1].get('code')
+                                })[1]
+                                code = result.get('code')
+                                data = result.get('data', {})
                                 if code != apiclient.result_ok:
                                     msg = f'API call failed, code {code}'
+                                    if can_pass_err:
+                                        self.print_warn(msg)
+                                    else:
+                                        raise Exception(msg)
+                                elif func == 'cmd' and data.get(
+                                        'status') == 'failed':
+                                    msg = (f'cmd call failed, '
+                                           f'stderr:\n{data.get("err")}')
                                     if can_pass_err:
                                         self.print_warn(msg)
                                     else:
