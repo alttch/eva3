@@ -1478,7 +1478,7 @@ Parameters:
 
 Optionally:
 
-* **save** save unit configuration immediately
+* **save** save job configuration immediately
 
 
 .. _lmapi_restful_destroy_job:

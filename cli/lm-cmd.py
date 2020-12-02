@@ -949,6 +949,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                     help=textwrap.dedent('''
                 Rule condition and action, example:
                 if sensor:env/temp.value > 25 then macro1(1, 2, x=3)'''))
+        sp_rule_create.add_argument('-E',
+                               '--enable',
+                               help='Enable rule',
+                               dest='e',
+                               action='store_true')
         sp_rule_create.add_argument('-y',
                                     '--save',
                                     help='Save rule config after set',
@@ -1026,6 +1031,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                    help='Job UUID (generated if not specified)',
                                    dest='u',
                                    metavar='UUID')
+        sp_job_create.add_argument('-E',
+                               '--enable',
+                               help='Enable job',
+                               dest='e',
+                               action='store_true')
         sp_job_create.add_argument('-y',
                                    '--save',
                                    help='Save job config after set',

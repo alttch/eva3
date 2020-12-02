@@ -534,6 +534,7 @@ Optionally:
 
 * **u** rule UUID to set
 * **v** rule properties (dict) or human-readable input
+* **e** enable rule after creation
 * **save** save rule configuration immediately
 
 .. _lmapi_destroy_rule:
@@ -1400,7 +1401,8 @@ Optionally:
 
 * **u** job UUID to set
 * **v** job properties (dict) or human-readable input
-* **save** save unit configuration immediately
+* **e** enable job after creation
+* **save** save job configuration immediately
 
 .. _lmapi_destroy_job:
 

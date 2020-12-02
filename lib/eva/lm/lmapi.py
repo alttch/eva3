@@ -369,10 +369,15 @@ class LM_API(GenericAPI, GenericCloudAPI):
         Optional:
             .u: rule UUID to set
             .v: rule properties (dict) or human-readable input
+            .e: enable rule after creation
             save: save rule configuration immediately
         """
-        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
-        rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
+        u, v, e, save = parse_api_params(kwargs, 'uveS', 's.bb')
+        rule = eva.lm.controller.create_dm_rule(save=False, rule_uuid=u)
+        if e:
+            rule.set_prop('enabled', True)
+        if save:
+            rule.save()
         try:
             if v:
                 if isinstance(v, dict):
@@ -540,10 +545,15 @@ class LM_API(GenericAPI, GenericCloudAPI):
         Optional:
             .u: job UUID to set
             .v: job properties (dict) or human-readable input
-            save: save unit configuration immediately
+            .e: enable job after creation
+            save: save job configuration immediately
         """
-        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
-        job = eva.lm.controller.create_job(save=save, job_uuid=u)
+        u, v, e, save = parse_api_params(kwargs, 'uveS', 's.bb')
+        job = eva.lm.controller.create_job(save=False, job_uuid=u)
+        if e:
+            job.set_prop('enabled', True)
+        if save:
+            job.save()
         try:
             if v:
                 if isinstance(v, dict):
