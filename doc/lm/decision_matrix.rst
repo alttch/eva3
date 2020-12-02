@@ -83,6 +83,12 @@ than 25 but less than 35:
 
     rule create if 35 > lvar:tests/lvar1.value > 25 then macro1()
 
+Check only 3rd bit of value:
+
+.. code:: bash
+
+    rule create if sensor:env/plc_state.b3 == 1 then macro1()
+
 .. note::
 
     New rule is always created as "disabled" and you must enable it with "rule
@@ -132,6 +138,9 @@ Modifiable Parameters:
 * **for_prop** the state property of the item (**status** or **value**) the
   rule is checking. For :ref:`unit<unit>` state, **nstatus** and **nvalue**
   properties may be additionally used.
+
+* **for_prop_bit** if set to a number (0-X), only state Xth bit is compared.
+  Obviously, the compassion condition should be set either == 0 or == 1.
 
 * **in_range_max** matches when *x < value*
 

@@ -63,6 +63,7 @@ LM PLC
 
     * SSL, TLS and SMTP auth support for mailer
     * macro function "cmd": new argument "stdin_data"
+    * decision rules prop "for_prop_bit" to check individual bits
 
 SFA
 ---

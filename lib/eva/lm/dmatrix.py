@@ -114,6 +114,13 @@ class DecisionMatrix(object):
                 else:
                     continue
                 rule.chillout_event = None
+                if rule.for_prop_bit is not None:
+                    if isinstance(pv, float):
+                        pv = float(int(pv) >> rule.for_prop_bit & 1)
+                    if isinstance(v, float):
+                        v = float(int(v) >> rule.for_prop_bit & 1)
+                    if pv == v:
+                        continue
                 if (pv is None and rule.for_initial == 'skip') or \
                         (pv is not None and \
                             rule.for_initial == 'only') or \
@@ -280,6 +287,7 @@ class DecisionRule(eva.item.Item):
         self.in_range_max = None
         self.in_range_min_eq = False
         self.in_range_max_eq = False
+        self.for_prop_bit = None
         self.macro = None
         self.macro_args = []
         self.macro_kwargs = {}
@@ -316,6 +324,7 @@ class DecisionRule(eva.item.Item):
         d['in_range_max'] = self.in_range_max
         d['in_range_min_eq'] = self.in_range_min_eq
         d['in_range_max_eq'] = self.in_range_max_eq
+        d['for_prop_bit'] = self.for_prop_bit
         d['macro'] = self.macro
         d['macro_args'] = self.macro_args
         d['macro_kwargs'] = self.macro_kwargs
@@ -329,6 +338,8 @@ class DecisionRule(eva.item.Item):
             for_oid += self.for_item_id if self.for_item_id else '#'
             for_oid += '.'
             for_oid += self.for_prop if self.for_prop else '#'
+            if self.for_prop_bit is not None:
+                for_oid += f'.b{self.for_prop_bit}'
             d['for_oid'] = for_oid
             condition = ''
             cond_eq = False
@@ -407,6 +418,8 @@ class DecisionRule(eva.item.Item):
             self.in_range_min_eq = data['in_range_min_eq']
         if 'in_range_max_eq' in data:
             self.in_range_max_eq = data['in_range_max_eq']
+        if 'for_prop_bit' in data:
+            self.for_prop_bit = data['for_prop_bit']
         if 'macro' in data:
             self.macro = data['macro']
         if 'macro_args' in data:
@@ -665,6 +678,22 @@ class DecisionRule(eva.item.Item):
                 return True
             else:
                 return False
+        elif prop == 'for_prop_bit':
+            try:
+                if val is None or val == '':
+                    v = None
+                else:
+                    v = int(val)
+                    if v < 0:
+                        raise ValueError('bit number can not be negative')
+                if self.for_prop_bit != v:
+                    self.for_prop_bit = v
+                    self.log_set(prop, v)
+                    self.set_modified(save)
+                return True
+            except:
+                eva.core.log_traceback()
+                return False
         elif prop == 'macro':
             if self.macro != val:
                 self.macro = val
@@ -792,6 +821,11 @@ class DecisionRule(eva.item.Item):
             group = '/'.join(i[:-2])
         if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
             raise Exception('invalid type')
+        if '.b' in prop:
+            prop, prop_bit = prop.split('.b')
+            prop_bit = int(prop_bit)
+        else:
+            prop_bit = None
         if prop not in ['status', 'value', 'nstatus', 'nvalue']:
             if prop.find('.') == -1:
                 raise Exception('invalid state prop')
@@ -804,5 +838,6 @@ class DecisionRule(eva.item.Item):
             'for_item_group': group,
             'for_item_type': tp,
             'for_prop': prop,
+            'for_prop_bit': prop_bit,
             'for_item_id': item_id
         }
