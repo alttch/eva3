@@ -2,7 +2,28 @@ Extending HOWTO
 ***************
 
 There are several different ways to extend EVA ICS functionality, each one is
-preferred for the certain tasks.
+preferred for certain tasks.
+
+Tips and tricks
+===============
+
+* put *development = yes* in *[server]* section of *etc/<controller>.ini*. This
+  option automatically enables traceback logging and debug mode (don't use on
+  production!)
+
+* instead of e.g. *eva uc server start*, run *eva uc server launch* to output
+  everything to the system console.
+
+* use debuggers and profilers. We use and recommend *ipdb* and `ppTOP
+  <https://pptop.io/>`_.
+
+* don't be surprised that the system performance is much slower, when debug
+  mode is enabled.
+
+* EVA ICS uses asyncio only for the internal code. All user scripts and
+  extensions are executed in separate threads. So keep your code thread-safe.
+
+* Invent own bus connections only if there is no virtual bus provided.
 
 I/O
 ===
