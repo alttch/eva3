@@ -62,6 +62,7 @@ LM PLC
 ------
 
     * SSL, TLS and SMTP auth support for mailer
+    * macro function "cmd": new argument "stdin_data"
 
 SFA
 ---

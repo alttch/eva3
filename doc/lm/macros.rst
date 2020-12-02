@@ -245,6 +245,7 @@ Optionally:
 * **args** string of command arguments, separated by spaces (passed to the script)
 * **wait** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
 * **timeout** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
+* **stdin_data** data to be passed to script STDIN
 
 Returns:
 
@@ -501,10 +502,6 @@ ping - ping remote host
 -----------------------
 
 Requires fping tool
-
-.. code-block:: python
-
-    ping('8.8.8.8')
 
 Parameters:
 

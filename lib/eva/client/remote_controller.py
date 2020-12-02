@@ -754,7 +754,13 @@ class RemoteControllerPool(object):
             loop='cleaners',
             delay=eva.core.config.action_cleaner_interval)
 
-    def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
+    def cmd(self,
+            controller_id,
+            command,
+            args=None,
+            wait=None,
+            timeout=None,
+            stdin_data=None):
         if controller_id not in self.controllers:
             return eva.client.apiclient.result_not_found, None
         c = self.controllers[controller_id]
@@ -765,6 +771,8 @@ class RemoteControllerPool(object):
             p['w'] = wait
         if timeout is not None:
             p['t'] = timeout
+        if stdin_data is not None:
+            p['s'] = stdin_data
         return c.api_call('cmd', p)
 
     def append(self, controller, need_type=None):
@@ -1346,7 +1354,13 @@ class RemoteUCPool(RemoteControllerPool):
             self.item_management_lock.release()
         return True
 
-    def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
+    def cmd(self,
+            controller_id,
+            command,
+            args=None,
+            wait=None,
+            timeout=None,
+            stdin_data=None):
         if controller_id.find('/') == -1:
             _controller_id = controller_id
         else:
@@ -1360,7 +1374,8 @@ class RemoteUCPool(RemoteControllerPool):
                            command=command,
                            args=args,
                            wait=wait,
-                           timeout=timeout)
+                           timeout=timeout,
+                           stdin_data=stdin_data)
 
     def manage_device(self,
                       controller_id,

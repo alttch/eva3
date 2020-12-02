@@ -581,7 +581,7 @@ class MacroAPI(object):
             lvar_id: lvar id
 
         Returns:
-            True, if timer is expired
+            True, if timer has expired
 
         Raises:
             ResourceNotFound: lvar is not found
@@ -1227,7 +1227,13 @@ class MacroAPI(object):
         else:
             return a.serialize()
 
-    def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
+    def cmd(self,
+            controller_id,
+            command,
+            args=None,
+            wait=None,
+            timeout=None,
+            stdin_data=None):
         """
         execute a remote system command
 
@@ -1245,6 +1251,7 @@ class MacroAPI(object):
                 allows to try waiting until command finish
             timeout: maximum time of command execution. If the command fails to
                 finish within the specified time (in sec), it will be terminated
+            stdin_data: data to be passed to script STDIN
 
         Returns:
             Serialized command action object (dict)
@@ -1260,7 +1267,8 @@ class MacroAPI(object):
                                           command=command,
                                           args=args,
                                           wait=wait,
-                                          timeout=timeout))
+                                          timeout=timeout,
+                                          stdin_data=stdin_data))
 
     def date(self):
         """
