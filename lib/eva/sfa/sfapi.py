@@ -57,6 +57,8 @@ from eva.api import set_restful_response_location
 from eva.api import generic_web_api_method
 from eva.api import MethodNotFound
 
+from eva.api import HTTP_API_Logger
+
 from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
@@ -1716,6 +1718,10 @@ class UI_ROOT():
 
 class SFA_HTTP_Root:
 
+    def __init__(self):
+        self._fp_hide_in_log = {}
+        self._log_api_call = HTTP_API_Logger()
+
     _cp_config = {
         'tools.init_call.on': True,
         'tools.j2.on': True,
@@ -1802,6 +1808,87 @@ class SFA_HTTP_Root:
     @cherrypy.expose
     def pvt(self, *args, **kwargs):
         return serve_pvt(*args, **kwargs)
+
+    @cherrypy.expose
+    def upload(self,
+               k=None,
+               ufile=None,
+               process_macro_id=None,
+               w=None,
+               p=None,
+               q=None,
+               rdr=None,
+               **kwargs):
+        from neotasker import g
+        try:
+            if ufile is None:
+                raise InvalidParameter('ufile')
+            if process_macro_id is None:
+                raise InvalidParameter('process_macro_id')
+        except Exception as e:
+            logging.error(e)
+            eva.core.log_traceback()
+            raise cp_bad_request(str(e))
+        _k = cp_client_key(k, from_cookie=True, _aci=True)
+        try:
+            content = ufile.file.read()
+        except:
+            if rdr:
+                raise cherrypy.HTTPRedirect(rdr)
+            else:
+                cherrypy.response.headers['Content-Type'] = 'application/json'
+                return format_json(
+                    {
+                        'ok': False
+                    }, minimal=not eva.core.config.development).encode()
+        from hashlib import sha256
+        h = sha256()
+        h.update(content)
+        info = {}
+        info['file_name'] = ufile.filename
+        info['content_type'] = ufile.content_type.value
+        info['system_name'] = f'sfa/{eva.core.config.system_name}'
+        info['sha256'] = h.hexdigest()
+        info['form'] = kwargs
+        self._log_api_call(self.upload, {
+            **info,
+            **{
+                'process_macro_id': process_macro_id,
+                'k': _k
+            }
+        },
+                           logging.debug,
+                           self._fp_hide_in_log,
+                           debug=True)
+        try:
+            info['aci'] = g.aci.copy()
+            result = api.run(k=_k,
+                             i=process_macro_id,
+                             w=w,
+                             p=p,
+                             q=q,
+                             kw={
+                                 'content': content,
+                                 'data': info
+                             })
+        except ResourceNotFound as e:
+            logging.error(e)
+            eva.core.log_traceback()
+            raise cp_api_404(f'process macro {process_macro_id} not found')
+        except AccessDenied as e:
+            logging.error(e)
+            eva.core.log_traceback()
+            raise cp_forbidden_key('access denied to process macro')
+        except Exception as e:
+            logging.error(e)
+            eva.core.log_traceback()
+            raise cp_api_error(str(e))
+        if rdr:
+            raise cherrypy.HTTPRedirect(rdr)
+        else:
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            return format_json(
+                result, minimal=not eva.core.config.development).encode()
 
 
 def start():

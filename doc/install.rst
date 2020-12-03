@@ -464,6 +464,8 @@ logs:
 
          if not conn.is_verified:warnings.warn((....
 
+.. _install_frontend:
+
 Using NGINX as a frontend for SFA interface
 ===========================================
 
