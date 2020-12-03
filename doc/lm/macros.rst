@@ -595,6 +595,23 @@ Optionally:
 * **value** value to set. If empty, varible is deleted
 
 
+.. _macro_api_sha256sum:
+
+sha256sum - calculate SHA256 sum
+--------------------------------
+
+
+
+Parameters:
+
+* **value** value to calculate
+* **hexdigest** return binary digest or hex (True, default)
+
+Returns:
+
+sha256 digest
+
+
 .. _macro_api_shared:
 
 shared - get value of the shared variable

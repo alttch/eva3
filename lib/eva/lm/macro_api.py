@@ -220,6 +220,7 @@ class MacroAPI(object):
             'sensor_value': self.macro_function(self.sensor_value),
             'set': self.macro_function(self.set),
             'state': self.macro_function(self.state),
+            'sha256sum': self.macro_function(self.sha256sum),
             'status': self.macro_function(self.status),
             'value': self.macro_function(self.value),
             'reset': self.macro_function(self.reset),
@@ -1623,6 +1624,24 @@ class MacroAPI(object):
         if not cycle:
             raise ResourceNotFound
         return cycle.is_running()
+
+    def sha256sum(self, value, hexdigest=True):
+        """
+        calculate SHA256 sum
+
+        Args:
+            value: value to calculate
+            hexdigest: return binary digest or hex (True, default)
+
+        Returns:
+            sha256 digest
+        """
+        if not isinstance(value, bytes):
+            value = str(value).encode()
+        from hashlib import sha256
+        s = sha256()
+        s.update(value)
+        return s.hexdigest() if hexdigest else s.digest()
 
 
 def init():
