@@ -168,11 +168,11 @@ Macros have the following built-in variables:
 * **_0** current macro id (i.e. *'test'*)
 * **_00** current macro full id (i.e. *'group1/test'*)
 * **_1, _2, ... _9** first 9 arguments the macro is being executed with
-* **lm_cvars** all :ref:`lm_cvars<lm_cvars>` variables
 * **out** macro may use this variable to output the data which will be set to
   **out** field of the execution result
 * **is_shutdown** if defined, contains a function which returns *True* if macro
   caller got shutdown/stop event (set by :doc:`logic cycle<cycles>`)
+* all :ref:`lm_cvars<lm_cvars>` variables
 
 .. note::
 
