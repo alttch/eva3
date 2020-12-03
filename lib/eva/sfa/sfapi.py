@@ -1822,9 +1822,9 @@ class SFA_HTTP_Root:
         from neotasker import g
         try:
             if ufile is None:
-                raise InvalidParameter('ufile')
+                raise InvalidParameter('ufile is required')
             if process_macro_id is None:
-                raise InvalidParameter('process_macro_id')
+                raise InvalidParameter('process_macro_id is required')
         except Exception as e:
             logging.error(e)
             eva.core.log_traceback()
@@ -1861,6 +1861,8 @@ class SFA_HTTP_Root:
                            self._fp_hide_in_log,
                            debug=True)
         try:
+            if '/' in ufile.filename:
+                raise ValueError('File name contains "/"')
             info['aci'] = g.aci.copy()
             result = api.run(k=_k,
                              i=process_macro_id,
