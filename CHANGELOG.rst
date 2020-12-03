@@ -62,6 +62,8 @@ UC
 LM PLC
 ------
 
+    * fix: "out" variable is now correctly set if macro raises an exception
+
     * SSL, TLS and SMTP auth support for mailer
     * macro function "cmd": new argument "stdin_data"
     * macro function "sha256sum"

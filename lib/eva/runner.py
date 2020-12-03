@@ -413,6 +413,8 @@ class PyThread(object):
             return True if not value.code else False
         except:
             logging.error('Error while running "%s"' % self.script)
+            if 'out' in self.env_globals:
+                self.out = self.env_globals['out']
             eva.core.log_traceback(force=True)
             self.err = traceback.format_exc()
             return False
