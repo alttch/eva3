@@ -21,6 +21,7 @@ import rapidjson
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.tools import parse_func_str
+from eva.tools import prepare_safe_serialize
 
 from eva.exceptions import FunctionFailed
 
@@ -375,8 +376,8 @@ class MacroAction(eva.item.ItemAction):
 
     def serialize(self):
         d = super().serialize()
-        d['args'] = self.argv
-        d['kwargs'] = self.kwargs
+        d['args'] = prepare_safe_serialize(self.argv)
+        d['kwargs'] = prepare_safe_serialize(self.kwargs)
         return d
 
 

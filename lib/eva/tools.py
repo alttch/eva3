@@ -39,6 +39,25 @@ def compare(a, b):
     return (a > b) - (a < b)
 
 
+def prepare_safe_serialize(v, maxlen=100):
+    if isinstance(v, dict):
+        result = {}
+        for i, z in v.items():
+            result[i] = prepare_safe_serialize(z)
+        return result
+    elif isinstance(v, list):
+        result = []
+        for z in v:
+            result.append(prepare_safe_serialize(z))
+        return result
+    elif isinstance(v, str):
+        if len(v) > maxlen:
+            return v[:maxlen] + '...'
+    elif isinstance(v, bytes):
+        return '<binary>'
+    return v
+
+
 class MultiOrderedDict(OrderedDict):
 
     def __setitem__(self, key, value):

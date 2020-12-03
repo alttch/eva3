@@ -26,6 +26,7 @@ from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
 from eva.tools import dict_from_str
+from eva.tools import prepare_safe_serialize
 
 from eva.client import apiclient
 from functools import partial
@@ -522,6 +523,7 @@ class API_Logger(object):
                              debug)
 
     def prepare_info(self, func, p, fp_hide):
+
         # if not eva.core.config.development:
         if 'k' in p:
             del p['k']
@@ -541,6 +543,8 @@ class API_Logger(object):
                     fp(func, p)
                 elif fp in p:
                     p[fp] = '<hidden>'
+        for i, v in p.items():
+            p[i] = prepare_safe_serialize(v)
         return p
 
     def get_auth(self, func, params):
