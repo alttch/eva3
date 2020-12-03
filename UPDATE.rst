@@ -19,6 +19,11 @@ Update instructions
 Note for Python 3.6 users: support of Python 3.6 is very limited, consider
 upgrading to 3.7+.
 
+Field "value" in state and history databases increased to 8192 bytes. To
+use new size, manually change column size or stop a controller and drop the
+table (will be recreated automatically).
+
+
 Added / updated 3rd party modules
 ---------------------------------
 

@@ -11,6 +11,7 @@ Common
 
     * deprecated: RESTful and direct API
 
+    * "value" field in state and history databases increased to 8192 bytes
     * cmd API function accepts args as a list
     * cmd API function accepts STDIN data
     * xc/cmd moved to runtime

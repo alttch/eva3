@@ -881,7 +881,7 @@ class SQLANotifier(GenericNotifier):
                     sa.Column('t', sa.Numeric(20, 8), primary_key=True),
                     sa.Column('oid', sa.String(256), primary_key=True),
                     sa.Column('status', sa.Integer),
-                    sa.Column('value', sa.String(256)))
+                    sa.Column('value', sa.String(8192)))
                 sa.Index('i_t_oid', t_state_history.c.space,
                          t_state_history.c.t, t_state_history.c.oid)
                 sa.Index('i_oid', t_state_history.c.space,

@@ -326,7 +326,7 @@ def load_db_state(items, item_type, clean=False):
         t_state_history = sa.Table(
             'state', meta, sa.Column('id', sa.String(256), primary_key=True),
             sa.Column('tp', sa.String(10)), sa.Column('status', sa.Integer),
-            sa.Column('value', sa.String(256)))
+            sa.Column('value', sa.String(8192)))
         try:
             meta.create_all(dbconn)
         except:

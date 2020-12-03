@@ -374,7 +374,8 @@ def load_lvar_db_state(items, clean=False):
                                           sa.String(256),
                                           primary_key=True),
             sa.Column('set_time', sa.Numeric(20, 8)),
-            sa.Column('status', sa.Integer), sa.Column('value', sa.String(256)))
+            sa.Column('status', sa.Integer), sa.Column('value',
+                                                       sa.String(8192)))
         try:
             meta.create_all(dbconn)
         except:
