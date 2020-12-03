@@ -191,6 +191,7 @@ class MacroAPI(object):
             'off': 0,
             'yes': True,
             'no': False,
+            'get_directory': self.macro_function(get_directory),
             'shared': self.macro_function(shared),
             'set_shared': self.macro_function(set_shared),
             'increment_shared': self.macro_function(increment_shared),
@@ -1642,6 +1643,21 @@ class MacroAPI(object):
         s = sha256()
         s.update(value)
         return s.hexdigest() if hexdigest else s.digest()
+
+
+def get_directory(tp):
+    """
+    Get path to EVA ICS directory
+
+    Args:
+        tp: directory type: eva, runtime, ui, pvt or xc
+    Raises:
+        LookupError: if directory type is invalid
+    """
+    if tp not in ['eva', 'runtime', 'ui', 'pvt', 'xc']:
+        raise LookupError
+    else:
+        return getattr(eva.core, f'dir_{tp}')
 
 
 def init():

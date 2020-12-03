@@ -65,6 +65,7 @@ LM PLC
     * SSL, TLS and SMTP auth support for mailer
     * macro function "cmd": new argument "stdin_data"
     * macro function "sha256sum"
+    * macro function "get_directory"
     * decision rules prop "for_prop_bit" to check individual bits
     * CLI/API option to auto-enable created rules/jobs
 

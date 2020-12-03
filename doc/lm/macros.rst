@@ -334,6 +334,22 @@ Parameters:
 * **code** macro exit code (default: 0, no errors)
 
 
+.. _macro_api_get_directory:
+
+get_directory - get path to EVA ICS directory
+---------------------------------------------
+
+
+
+Parameters:
+
+* **tp** directory type: eva, runtime, ui, pvt or xc
+
+Raises:
+
+* **LookupError** if directory type is invalid
+
+
 .. _macro_api_increment_shared:
 
 increment_shared - increment value of the shared variable
