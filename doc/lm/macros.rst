@@ -170,8 +170,8 @@ Macros have the following built-in variables:
 * **_1, _2, ... _9** first 9 arguments the macro is being executed with
 * **out** macro may use this variable to output the data which will be set to
   **out** field of the execution result
-* **is_shutdown** if defined, contains a function which returns *True* if macro
-  caller got shutdown/stop event (set by :doc:`logic cycle<cycles>`)
+* **is_shutdown** contains a function which returns *True* if macro caller got
+  a core shutdown or :doc:`cycle<cycles>` stop event.
 * all :ref:`lm_cvars<lm_cvars>` variables
 
 .. note::
