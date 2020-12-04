@@ -161,11 +161,13 @@ class LM_API(GenericAPI, GenericCloudAPI):
             raise ResourceNotFound
         elif not apikey.check(k, item):
             raise AccessDenied
-        if s and not -1 <= s <= 1:
+        from eva.lm.lvar import LOGIC_SIMPLE
+        if s and not -1 <= s <= 1 and item.logic != LOGIC_SIMPLE:
             raise InvalidParameter('status should be -1, 0 or 1')
-        if v is None:
-            v = ''
-        else:
+        # if v is None:
+        # v = ''
+        # else:
+        if v is not None:
             v = str(v)
         item.update_set_state(status=s, value=v)
         return True

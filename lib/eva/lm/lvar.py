@@ -10,6 +10,11 @@ import logging
 import time
 import threading
 
+from eva.tools import val_to_boolean
+
+LOGIC_NORMAL = 0
+LOGIC_SIMPLE = 1
+
 
 class LVar(eva.item.VariableItem):
 
@@ -20,6 +25,12 @@ class LVar(eva.item.VariableItem):
         self.prv_value = None
         self.prv_status = 1
         self.update_lock = threading.RLock()
+        self.logic = LOGIC_NORMAL
+
+    def update_config(self, data):
+        if 'logic' in data:
+            self.logic = data['logic']
+        super().update_config(data)
 
     def increment(self):
         return self._increment_decrement(op=1)
@@ -69,7 +80,7 @@ class LVar(eva.item.VariableItem):
                          from_mqtt=False,
                          force_notify=False,
                          timestamp=None):
-        if not self.status and status != 1:
+        if not self.status and status != 1 and self.logic != LOGIC_SIMPLE:
             return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
@@ -83,6 +94,7 @@ class LVar(eva.item.VariableItem):
                                         value=value,
                                         from_mqtt=from_mqtt,
                                         force_notify=force_notify,
+                                        force_update=self.logic == LOGIC_SIMPLE,
                                         timestamp=timestamp):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
@@ -95,7 +107,21 @@ class LVar(eva.item.VariableItem):
             self.update_lock.release()
 
     def set_prop(self, prop, val=None, save=False):
-        if super().set_prop(prop=prop, val=val, save=save):
+        if prop == 'logic':
+            if val is None or val == '':
+                val is 'normal'
+            elif val not in ['normal', 'simple', 'n', 's']:
+                return False
+            if val in ['normal', 'n']:
+                logic = LOGIC_NORMAL
+            elif val in ['simple', 's']:
+                logic = LOGIC_SIMPLE
+            if self.logic != logic:
+                self.logic = logic
+                self.log_set(prop, logic)
+                self.set_modified(save)
+            return True
+        elif super().set_prop(prop=prop, val=val, save=save):
             if prop == 'expires':
                 self.notify()
             return True
@@ -110,7 +136,12 @@ class LVar(eva.item.VariableItem):
                     (self.oid, self.value))
 
     def set_expired(self):
-        if super().set_expired():
+        if self.logic == LOGIC_SIMPLE:
+            super().update_set_state(value='',
+                                     force_update=self.logic == LOGIC_SIMPLE,
+                                     update_expiration=False)
+            logging.info('%s expired' % self.oid)
+        elif super().set_expired():
             if self.status == -1:
                 logging.info('%s expired' % self.oid)
 
@@ -125,6 +156,10 @@ class LVar(eva.item.VariableItem):
                               info=info,
                               props=props,
                               notify=notify)
+        if props:
+            d['logic'] = 'simple' if self.logic == LOGIC_SIMPLE else 'normal'
+        elif config:
+            d['logic'] = self.logic
         d['expires'] = self.expires
         d['set_time'] = self.set_time
         return d
@@ -133,3 +168,9 @@ class LVar(eva.item.VariableItem):
         self.expires = None
         self.set_time = None
         super().destroy()
+
+    def is_expired(self):
+        if self.logic == 'simple':
+            return False
+        else:
+            return super().is_expired()

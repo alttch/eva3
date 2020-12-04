@@ -1577,6 +1577,7 @@ class VariableItem(UpdatableItem):
                          value=None,
                          from_mqtt=False,
                          force_notify=False,
+                         force_update=False,
                          update_expiration=True,
                          timestamp=None):
         if self._destroyed:
@@ -1596,7 +1597,7 @@ class VariableItem(UpdatableItem):
                 logging.error('update %s returned bad data' % self.oid)
                 eva.core.log_traceback()
                 return False
-            if not self.status and _status is None:
+            if not force_update and not self.status and _status is None:
                 logging.debug('%s skipping update - it\'s not active' % \
                         self.oid)
                 return False
@@ -1605,11 +1606,12 @@ class VariableItem(UpdatableItem):
                 if self.status != _status:
                     need_notify = True
                 self.status = _status
-            if value is not None and self.status:
+            if value is not None and (self.status or force_update):
                 if self.value != value:
                     need_notify = True
                 self.value = value
-                if self.status == -1 and _status is None and value != '':
+                if self.status == -1 and _status is None and \
+                        value != '' and not force_update:
                     self.status = 1
                     need_notify = True
             if update_expiration:

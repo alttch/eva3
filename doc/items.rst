@@ -3,7 +3,7 @@ Control and monitoring items
 
 An item in EVA means any object which can be controlled or monitored.
 :doc:`/uc/uc` has 2 native item types: :ref:`unit<unit>` and
-:ref:`sensor<sensor>`, plus :ref:`multi-updates<multiupdate>`, which may
+:ref:`sensor<sensor>`, plus :ref:`multi-updates<multiupdate>`, which can
 contain multiple items at once.
 
 :doc:`/lm/lm` has one native item type :ref:`lvar<lvar>` (logic variable),
@@ -12,7 +12,7 @@ additionally it loads remote units and sensors from connected UCs.
 connected remote controllers.
 
 The configurations of items are stored in runtime folder, from where the
-controllers loads .json files. Each item has multiple parameters which may be
+controllers loads .json files. Each item has multiple parameters which can be
 predefined or customized. All customized parameters can be displayed with the
 help of API list_props or :doc:`EVA console tools</cli>` In case the
 configuration file settings are changed manually or by 3rd party software,
@@ -114,8 +114,8 @@ Status of the unit state is always an integer (a positive number or 0), and is
 by default 0 - unit is "off" (inactive) and 1 - "on" (active).
 
 A unit can have other statuses: for example, a dimmer can include status 2 -
-enabled at 10% of the capacity, 3 - enabled at 50% of the capacity, window may
-be fully open or 50%. In the item configuration, you may assign a label to each
+enabled at 10% of the capacity, 3 - enabled at 50% of the capacity, window can
+be fully open or 50%. In the item configuration, you can assign a label to each
 status for enhancing its usability in interfaces.
 
 Status -1 indicates that unit has an error status. It is set from the outside
@@ -160,11 +160,11 @@ Unit parameters
   If 'expires' param is set to 0, this feature is disabled. The minimum
   expiration step is 0.1 sec.
 
-* **mqtt_update = "notifier:qos"** if set, the item may receive active state
+* **mqtt_update = "notifier:qos"** if set, the item can receive active state
   updates through notification from the specified :ref:`MQTT server<mqtt_>`.
   Example: "eva_1:2".
 
-* **snmp_trap** if set, the item may receive active state updates via
+* **snmp_trap** if set, the item can receive active state updates via
   :ref:`snmp_traps`.
 
 * **update_exec** a :doc:`script</item_scripts>` for passive update of the item
@@ -205,7 +205,7 @@ Unit parameters
   indicated period of time (in seconds) after the last action performed for
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
-* **location** you may specify units' physical location, as GPS coordinates or
+* **location** you can specify units' physical location, as GPS coordinates or
   in custom format. To specify GPS coordinates, set the parameter to value
   *longitude:latitude* or *longitude:latitude:altitude*. If you choose to set
   location as GPS or some other coords, full unit state is appended with
@@ -235,7 +235,7 @@ Unit parameters
   about state only, 0 - disable all event notifications.
 
 * **status_labels**  "labels" used to display the unit statuses by the
-  interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
+  interfaces.  Labels can be changed via :doc:`/uc/uc_api` or
   :doc:`eva uc</cli>`, in the following way: status:number = label, e.g.
   "status:0" = "stop". By default the unit has labels "status:0" = "OFF",
   "status:1" = "ON". Status labels can be used as **status** param to execute
@@ -279,7 +279,7 @@ script).
 The sensor can have 3 statuses:
 
 * **1** sensor is working and collecting data
-* **0** sensor is disabled, the value updates are ignored (this status may be
+* **0** sensor is disabled, the value updates are ignored (this status can be
   set via API or by the user)
 * **-1** sensor error ("expires" timer went off, the status was set because the
   connection with a physical sensor got lost during passive or active update
@@ -290,8 +290,8 @@ The sensor can have 3 statuses:
 
     The sensor error state is automatically cleared if new value data arrives.
 
-Important: the sensor error may be set even if the sensor is disabled. It means
-that the disabled sensor may be switched to "error" and then to "work" mode by
+Important: the sensor error can be set even if the sensor is disabled. It means
+that the disabled sensor can be switched to "error" and then to "work" mode by
 the system itself. Why it works that way? According to the logic of the system,
 the sensor error is an emergency situation that should affect its status even
 if it is disabled and requires an immediate attention of the user.
@@ -374,7 +374,7 @@ Actually lvars are similar to sensors, but with the following differences:
   value and -1 status) and set_time - time when the value was set for the last
   time.
 
-The same logic variable may be declared on several logic controllers, but the
+The same logic variable can be declared on several logic controllers, but the
 "expires" configuration value should remain the same because each controller
 processes it autonomously. The variable becomes "expired" once it is declared
 as such by any controller.
@@ -384,7 +384,7 @@ as such by any controller.
     LVar doesn't set its status to '-1' on *expires* if its status is 0
     (disabled)
 
-The logic variable values may be synchronized via :ref:`MQTT server<mqtt_>` or
+The logic variable values can be synchronized via :ref:`MQTT server<mqtt_>` or
 set via API or external scripts - similar to sensors.
 
 You can use several logic variables as timers in order to organize production
@@ -424,19 +424,12 @@ units
 * **[space/]lvar/<group>/<lvar_id>/set_time** last set time (Unix timestamp)
 * **[space/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
 
-LVar parameters
----------------
-
-As LVars behavior is similar to :ref:`sensors<sensor>` except the values are
-set by user/system, they have the same parameters, except lvars can't be
-updated via SNMP traps / MQTT.
-
 .. _lvar_examples:
 
 Examples using LVars
 --------------------
 
-You may use lvar as a
+You can use lvar as a
 
 * **Variable** To use lvar as a shared variable to exchange some information
   between controllers, apps and SCADA interfaces, just set its value (and
@@ -465,6 +458,33 @@ You may use lvar as a
   * Use **toggle** to toggle lvar value between 0 and 1
   * Use constructions like *if value('lvar_id'):* in :doc:`macros</lm/macros>`
     to determine is the 'flag' lvar is set or not.
+
+LVar parameters
+---------------
+
+As LVars behavior is similar to :ref:`sensors<sensor>` except the values are
+set by user/system, they have the same parameters, except lvars can't be
+updated via SNMP traps / MQTT.
+
+LVars also have an additional parameter *logic*.
+
+Simple logic
+------------
+
+If lvar property *logic* is set to 'simple', it bypasses built-in logic
+behavior conditions:
+
+* LVar status can be set to any integer
+
+* Status "0" is considered as normal and:
+
+    * Lvar value can be updated even if LVar status is 0
+    * LVar is considered as expired even if LVar status is 0
+
+* When LVar becomes expired, its value is cleared, but the status is kept
+
+Simple logic is useful to use LVars as simple double data holding registers
+(integer + any value) for various tasks.
 
 .. _multiupdate:
 
@@ -499,7 +519,7 @@ Multiupdate parameters
 Multi-updates have the same parameters as :ref:`sensors<sensor>`, except that
 "expires", "mqtt_update" and "snmp_trap", plus some additional:
 
-* items = item1, item2, item3... - the list of items for updating, may be
+* items = item1, item2, item3... - the list of items for updating, can be
   changed via :doc:`/uc/uc_api` and :doc:`eva uc</cli>` as follows:
 
     * **-p "item+" -v "item_id"** add item for update
