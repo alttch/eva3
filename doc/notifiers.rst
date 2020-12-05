@@ -321,8 +321,8 @@ Quick facts about MQTT QoS:
   only once and has no duplicates.
 
 
-Use MQTT for updating the item states
--------------------------------------
+Use MQTT for updating item states
+---------------------------------
 
 MQTT is the only EVA notifier type performing two functions at once: both
 sending and receiving messages.
@@ -354,12 +354,18 @@ MQTT and unit actions
 
 MQTT can be also used as API to send actions to the :ref:`units<unit>`. In
 order to send an action to the unit via MQTT, send a message with the
-following subject: *[space]/<group>/<unit_id>/control* and the following body:
+following subject: *[space]/<group>/<unit_id>/control* and:
 
-    status value priority
+* either in a form of text messages "status [value] [priority]". If you want to
+  skip value, but keep priority, set it to null, i.e. "status 0 null 50".
+  "value" and "priority" parameters are optional. If value should be omitted,
+  set it to "none".
 
-value and priority parameters are optional. If value should be omitted, set it
-to "none".
+* or in JSON format (fields "value" and "priority" are optional):
+
+    .. code:: json
+
+        { "status": 1, "value": "", "priority": 100 }
 
 In case you need 100% reliability, it is not recommended to control units via
 MQTT, because MQTT can only guarantee that the action has been received by MQTT
@@ -427,11 +433,16 @@ MySQL and PosgreSQL data storage is also supported.
 
 E.g. to use MySQL, specify db uri as:
 
+.. code::
+
     mysql+pymysql://username:password@host/database
 
 (pymysql Python module is required)
 
 or
+
+.. code::
+
     mysql+mysqldb://username:password@host/database
 
 (mysqlclient Python module is required)
