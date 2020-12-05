@@ -1644,6 +1644,8 @@ def item_match(item, item_ids, groups=None):
                     continue
             else:
                 g = grp
+            if g == item.group:
+                return True
             p = g.find('#')
             if p > -1 and g[:p] == item.group[:p]:
                 return True

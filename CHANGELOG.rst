@@ -8,6 +8,7 @@ Common
 
     * fix: hosts_allow / hosts_assign in JRPC calls
     * fix: cmd wait delay
+    * fix: allow ACL OID groups without masks
 
     * deprecated: RESTful and direct API
 
