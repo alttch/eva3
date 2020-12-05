@@ -224,9 +224,18 @@ Unit parameters
 * **mqtt_control = "notifier:qos"** item gets actions through notifications
   from a specified :ref:`MQTT server<mqtt_>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (e.g.
-  unit/hall/lamps/lamp1/control) in a form of text messages "status [value]
-  [priority]". If you want to skip value, but keep priority, set it to null,
-  i.e. "status 0 null 50".
+  unit/hall/lamps/lamp1/control).
+ 
+  The message should be:
+  
+  * either in a form of text messages "status [value] [priority]". If you want
+    to skip value, but keep priority, set it to null, i.e. "status 0 null 50".
+
+  * or in JSON format (fields "value" and "priority" are optional):
+
+        .. code:: json
+
+            { "status": 1, "value": "", "priority": 100 }
 
 * **modbus_status**, **modbus_value** update item state from :ref:`Modbus
   slave<modbus_slave>` memory space.

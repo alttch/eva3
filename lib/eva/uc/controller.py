@@ -23,6 +23,8 @@ import eva.uc.modbus
 import eva.uc.owfs
 import eva.datapuller
 
+import rapidjson
+
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceAlreadyExists
@@ -778,14 +780,21 @@ def exec_mqtt_unit_action(unit, msg):
     value = None
     priority = None
     try:
-        cmd = msg.split(' ')
-        status = int(cmd[0])
-        if len(cmd) > 1:
-            value = cmd[1]
-        if len(cmd) > 2:
-            priority = int(cmd[2])
-        if value == 'None':
-            value = None
+        # is json?
+        try:
+            payload = rapidjson.loads(msg)
+            status = int(payload.get('status'))
+            value = payload.get('value')
+            priority = payload.get('priority')
+        except:
+            cmd = msg.split(' ')
+            status = int(cmd[0])
+            if len(cmd) > 1:
+                value = cmd[1]
+            if len(cmd) > 2:
+                priority = int(cmd[2])
+            if value == 'None':
+                value = None
         logging.debug('mqtt cmd msg unit = %s' % unit.full_id)
         logging.debug('mqtt cmd msg status = %s' % status)
         logging.debug('mqtt cmd msg value = "%s"' % value)
