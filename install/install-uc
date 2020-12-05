@@ -17,6 +17,7 @@ chmod 755 ./etc
 mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1
+mkdir -p ./runtime/data || exit 1
 mkdir -p ./runtime/uc_notify.d || exit 1
 chmod 700 ./runtime/uc_notify.d || exit 1
 mkdir -p ./runtime/uc_unit.d || exit 1

@@ -170,6 +170,8 @@ mkdir -p ./xc/drivers/phi || exit 1
 mkdir -p ./xc/drivers/lpi || exit 1
 mkdir -p ./xc/extensions || exit 1
 
+mkdir -p ./runtime/data || exit 1
+
 (cd lib/eva/uc && ln -sf ../../../xc/drivers . ) || exit 1
 (cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py . ) || exit 1
 (cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py . ) || exit 1
