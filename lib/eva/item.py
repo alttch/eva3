@@ -667,7 +667,7 @@ class UpdatableItem(Item):
                 if not data:
                     return
                 j = rapidjson.loads(data)
-                t = j['t']
+                t = j.get('t', time.time())
                 remote_controller = j.get('c')
                 if (not self.allow_mqtt_updates_from_controllers and
                         remote_controller

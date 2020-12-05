@@ -339,15 +339,30 @@ configuration param to the local MQTT notifier ID, as well as additionally
 optionally specify MQTT QoS using a semicolon (i.e. *eva_1:2*). QoS=1 is used by
 default.
 
-One item an be subscribed to one MQTT notifier to get the state updates, but
-different items on the same controller can be subscribed to different MQTT
+State updates should be sent either to MQTT topics "path/to/unit/status" and
+"path/to/unit/value" or as JSON message to "path/to/item". In example, to set
+sensor "env/temp" value to 25:
+
+    * MQTT topic: *sensor/env/temp*
+    * MQTT payload:
+
+        .. code:: json
+
+            { "value": 25 }
+
+As item value is always stored / exchanged as a string, it can be set via MQTT
+in any convertible format.
+
+.. note::
+
+    There is also a configuration parameter *mqtt_update_default* which can be
+    set in *etc/uc.ini* (default e.g. to *eva_1:2*) and applied to all newly
+    created items.
+
+One item can be subscribed to a single MQTT notifier to get the state updates,
+but different items on the same controller can be subscribed to different MQTT
 notifiers.
 
-When remote controller is connected, :doc:`/lm/lm` and :doc:`/sfa/sfa` have
-copies of the remote items and it's better to sync them in real time. The MQTT
-notifier where state updates are received from is set in **mqtt_update**
-configuration param of the connected controller, the value
-**mqtt_update_default** from *lm.ini*/*sfa.ini* is used by default.
 
 MQTT and unit actions
 ---------------------

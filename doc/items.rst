@@ -162,7 +162,20 @@ Unit parameters
 
 * **mqtt_update = "notifier:qos"** if set, the item can receive active state
   updates through notification from the specified :ref:`MQTT server<mqtt_>`.
-  Example: "eva_1:2".
+  Example: "eva_1:2". State updates should be sent either to MQTT topics
+  "path/to/unit/status" and "path/to/unit/value" or as JSON message to
+  "path/to/unit". In example, to set unit "tests/unit1" status to 1:
+
+    * MQTT topic: *unit/tests/unit1*
+    * MQTT payload:
+
+        .. code:: json
+
+            { "status": 1 }
+
+  There is also a configuration parameter *mqtt_update_default* which can be
+  set in *etc/uc.ini* (default e.g. to *eva_1:2*) and applied to all newly
+  created items.
 
 * **snmp_trap** if set, the item can receive active state updates via
   :ref:`snmp_traps`.

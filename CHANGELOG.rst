@@ -59,7 +59,7 @@ UC
     * "server cleanup" CLI command (cleans state db)
     * new device template format (equal to IaC deploy)
     * default timeout for Modbus / OWFS reduced to 1s to avoid critical events
-    * unit MQTT control commands can be sent in JSON
+    * unit MQTT control / update commands can be sent in JSON
 
 LM PLC
 ------
