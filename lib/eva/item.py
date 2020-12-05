@@ -1629,6 +1629,69 @@ class VariableItem(UpdatableItem):
         return super().is_expired()
 
 
+def oid_match(oid, item_ids=None, groups=None):
+    if '/' not in oid or not is_oid(oid):
+        return False
+    item_type, iid = parse_oid(oid)
+    item_group, item_id = iid.rsplit('/', 1)
+    if '#' in iid or '+' in iid:
+        for grp in groups:
+            if is_oid(grp):
+                rt, g = parse_oid(grp)
+                if rt != item_type:
+                    continue
+            else:
+                g = grp
+            if g == item_group:
+                return True
+            p = g.find('#')
+            if p > -1 and g[:p - 1] == item_group[:p - 1]:
+                return True
+            if g.find('+') > -1:
+                g1 = g.split('/')
+                g2 = item_group.split('/')
+                g2.append(item_id)
+                if len(g1) == len(g2):
+                    match = True
+                    for i in range(0, len(g1)):
+                        if g1[i] != '+' and g1[i] != g2[i]:
+                            match = False
+                            break
+                    if match:
+                        return True
+        return False
+    else:
+        if (groups and ('#' in groups) or (item_group in groups)) \
+                or '#' in item_ids or \
+                oid in item_ids:
+            return True
+        if groups:
+            for grp in groups:
+                if is_oid(grp):
+                    rt, g = parse_oid(grp)
+                    if rt != item_type:
+                        continue
+                else:
+                    g = grp
+                if g == item_group:
+                    return True
+                p = g.find('#')
+                if p > -1 and g[:p] == item_group[:p]:
+                    return True
+                if g.find('+') > -1:
+                    g1 = g.split('/')
+                    g2 = item_group.split('/')
+                    if len(g1) == len(g2):
+                        match = True
+                        for i in range(0, len(g1)):
+                            if g1[i] != '+' and g1[i] != g2[i]:
+                                match = False
+                                break
+                        if match:
+                            return True
+        return False
+
+
 def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
             or '#' in item_ids or \
