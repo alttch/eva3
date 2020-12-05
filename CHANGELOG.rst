@@ -73,6 +73,7 @@ LM PLC
     * macro function "get_directory"
     * decision rules prop "for_prop_bit" to check individual bits
     * CLI/API option to auto-enable created rules/jobs
+    * CLI: quick creation of rules with no condition
 
 SFA
 ---

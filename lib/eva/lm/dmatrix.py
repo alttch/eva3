@@ -764,44 +764,45 @@ class DecisionRule(eva.item.Item):
                                           '{').replace('===',
                                                        '=').replace('==', '=')
             vals = re.split('[<>}{=]', c)
-            if len(vals) not in [2, 3]:
-                raise Exception('invalid condition length')
-            for i in range(0, len(vals)):
-                v = vals[i]
-                if v == 'x':
-                    if len(vals) == 2:
-                        s = c[len(vals[0])]
-                        if s == '=':
-                            r_imi = vals[1 - i]
-                            r_ixi = r_imi
-                            r_imiq = True
-                            r_ixiq = True
-                        elif (s in ['}', '>'] and
-                              i == 0) or (s in ['{', '<'] and i == 1):
-                            r_imi = vals[1 - i]
-                            r_imiq = s in ['}', '{']
-                        elif (s in ['}', '>'] and
-                              i == 1) or (s in ['{', '<'] and i == 0):
-                            r_ixi = vals[1 - i]
-                            r_ixiq = s in ['}', '{']
-                    elif len(vals) == 3:
-                        if i != 1:
-                            raise Exception('invalid condition')
-                        s1 = c[len(vals[0])]
-                        s2 = c[len(vals[0]) + 2]
-                        if s1 and s2 in ['}', '>']:
-                            r_ixi = vals[i - 1]
-                            r_ixiq = s1 == '}'
-                            r_imi = vals[i + 1]
-                            r_imiq = s2 == '}'
-                        elif s1 and s2 in ['{', '<']:
-                            r_imi = vals[i - 1]
-                            r_imiq = s1 == '{'
-                            r_ixi = vals[i + 1]
-                            r_ixiq = s2 == '{'
-                        if float(r_ixi) <= float(r_imi):
-                            raise Exception('invalid condition')
-                    break
+            if len(vals) > 1:
+                if len(vals) > 3:
+                    raise Exception('invalid condition length')
+                for i in range(0, len(vals)):
+                    v = vals[i]
+                    if v == 'x':
+                        if len(vals) == 2:
+                            s = c[len(vals[0])]
+                            if s == '=':
+                                r_imi = vals[1 - i]
+                                r_ixi = r_imi
+                                r_imiq = True
+                                r_ixiq = True
+                            elif (s in ['}', '>'] and
+                                  i == 0) or (s in ['{', '<'] and i == 1):
+                                r_imi = vals[1 - i]
+                                r_imiq = s in ['}', '{']
+                            elif (s in ['}', '>'] and
+                                  i == 1) or (s in ['{', '<'] and i == 0):
+                                r_ixi = vals[1 - i]
+                                r_ixiq = s in ['}', '{']
+                        elif len(vals) == 3:
+                            if i != 1:
+                                raise Exception('invalid condition')
+                            s1 = c[len(vals[0])]
+                            s2 = c[len(vals[0]) + 2]
+                            if s1 and s2 in ['}', '>']:
+                                r_ixi = vals[i - 1]
+                                r_ixiq = s1 == '}'
+                                r_imi = vals[i + 1]
+                                r_imiq = s2 == '}'
+                            elif s1 and s2 in ['{', '<']:
+                                r_imi = vals[i - 1]
+                                r_imiq = s1 == '{'
+                                r_ixi = vals[i + 1]
+                                r_ixiq = s2 == '{'
+                            if float(r_ixi) <= float(r_imi):
+                                raise Exception('invalid condition')
+                        break
         return {
             'in_range_min': r_imi,
             'in_range_min_eq': r_imiq,
