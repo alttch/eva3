@@ -480,6 +480,7 @@ def format_key(k):
 
 def check(k,
           item=None,
+          oid=None,
           allow=[],
           pvt_file=None,
           rpvt_uri=None,
@@ -494,6 +495,7 @@ def check(k,
 
     Args:
         items: item objects
+        oid: OID (mqtt-style masks allowed)
         allow: check allows
         pvt_file: access to pvt resource
         pvt_file: access to rpvt resource
@@ -532,6 +534,13 @@ def check(k,
                         return False
                 else:
                     return False
+    if oid:
+        if not eva.item.oid_match(oid, _k.item_ids, _k.groups):
+            if ro_op:
+                if not eva.item.oid_match(oid, _k.item_ids_ro, _k.groups_ro):
+                    return False
+            else:
+                return False
     if allow:
         for a in allow:
             if not a in _k.allow:
