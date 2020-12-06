@@ -1494,12 +1494,17 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             if pp.get('jsonrpc') != '2.0':
                 raise cp_api_error('Unsupported RPC protocol')
             req_id = pp.get('id')
+            method = pp.get('method')
+            p = pp.get('params')
             try:
-                p = pp.get('params', {})
                 # fix for some clients
                 if isinstance(p, list):
                     p = p[0]
-                method = pp.get('method')
+                if p is None:
+                    p = {}
+                elif not isinstance(p, dict):
+                    raise InvalidParameter(
+                        f'params - dict expected, {type(p).__name__} found')
                 if not method:
                     raise FunctionFailed('API method not defined')
                 f = self._get_api_function(method)
