@@ -1498,11 +1498,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 p = pp.get('params', {})
                 # fix for some clients
                 if isinstance(p, list):
-                    _p = {}
-                    for param in p:
-                        if isinstance(param, dict):
-                            _p.update(param)
-                    p = _p
+                    p = p[0]
                 method = pp.get('method')
                 if not method:
                     raise FunctionFailed('API method not defined')
