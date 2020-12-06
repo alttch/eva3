@@ -13,7 +13,10 @@ class EI_HTTP_Root:
 
     @cherrypy.expose
     def index(self):
-        raise cherrypy.HTTPRedirect('/%s-ei/' % eva.core.product.code)
+        if eva.api.config.ei_enabled:
+            raise cherrypy.HTTPRedirect('/%s-ei/' % eva.core.product.code)
+        else:
+            raise cherrypy.NotFound()
 
 
 class EI():
@@ -43,7 +46,12 @@ cp_ei_root_config = {
         'tools.staticfile.on': True,
         'tools.staticfile.filename': eva.core.dir_eva + '/lib/eva/i/favicon.ico'
     },
-    '/': tiny_httpe
+    '/': {
+        **tiny_httpe,
+        **{
+            'tools.autojsonrpc.on': True
+        }
+    }
 }
 
 cp_ei_config = {'/': tiny_httpe}
@@ -56,9 +64,8 @@ for u in ['css', 'fonts', 'i', 'js', 'lib']:
 
 
 def start():
-    if not eva.api.config.ei_enabled:
-        return
     cherrypy.tree.mount(EI_HTTP_Root(), '/', config=cp_ei_root_config)
-    cherrypy.tree.mount(EI(),
-                        '/%s-ei' % eva.core.product.code,
-                        config=cp_ei_config)
+    if eva.api.config.ei_enabled:
+        cherrypy.tree.mount(EI(),
+                            '/%s-ei' % eva.core.product.code,
+                            config=cp_ei_config)

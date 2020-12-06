@@ -30,6 +30,12 @@ JSON RPC API URL:
 
     **\http://<ip_address:8817>/jrpc**
 
+    or
+
+    **\http://<ip_address:8817>**
+
+    (all POST requests to the root URI are processed as JSON RPC)
+
 JSON RPC payload encoding
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -1696,7 +1696,7 @@ class UI_ROOT():
     _cp_config = {
         'tools.init_call.on': True,
         'tools.j2.on': True,
-        'tools.jconverter.on': True
+        'tools.jconverter.on': True,
     }
 
     def __init__(self):
@@ -1725,7 +1725,8 @@ class SFA_HTTP_Root:
     _cp_config = {
         'tools.init_call.on': True,
         'tools.j2.on': True,
-        'tools.jconverter.on': True
+        'tools.jconverter.on': True,
+        'tools.autojsonrpc.on': True
     }
 
     @cherrypy.expose

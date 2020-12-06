@@ -607,14 +607,14 @@ def cp_json_pre():
     return
 
 
-def get_json_payload():
+def get_json_payload(force_json=False):
     ct = cherrypy.request.headers.get('Content-Type')
     if ct == 'application/msgpack' or ct == 'application/x-msgpack':
         g.set('ct_format', CT_MSGPACK)
         cl = int(cherrypy.request.headers.get('Content-Length'))
         raw = cherrypy.request.body.read(cl)
         decoder = msgpack_loads
-    elif ct == 'application/json':
+    elif force_json or ct == 'application/json':
         g.set('ct_format', CT_JSON)
         cl = int(cherrypy.request.headers.get('Content-Length'))
         raw = cherrypy.request.body.read(cl).decode()
@@ -630,18 +630,20 @@ def get_json_payload():
 
 def cp_jsonrpc_pre():
     try:
-        data = get_json_payload()
+        data = get_json_payload(force_json=True)
     except:
+        eva.core.log_traceback()
         raise cp_bad_request('invalid JSON data')
     if not data:
+        logging.debug('no JSON data provided')
         raise cp_bad_request('no JSON data provided')
     cherrypy.serving.request.params['p'] = data
 
 
 def cp_nocache():
     headers = cherrypy.serving.response.headers
-    headers[
-        'Cache-Control'] = 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0'
+    headers['Cache-Control'] = ('no-cache, no-store, must-revalidate, '
+                                'post-check=0, pre-check=0')
     headers['Pragma'] = 'no-cache'
     headers['Expires'] = '0'
 
@@ -1484,7 +1486,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 }
             }
 
-        payload = kwargs.get('p')
+        payload = kwargs.get('p', cherrypy.serving.request.params.get('p'))
         result = []
         for pp in payload if isinstance(payload, list) else [payload]:
             if not isinstance(pp, dict) or not pp:
@@ -1494,6 +1496,13 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             req_id = pp.get('id')
             try:
                 p = pp.get('params', {})
+                # fix for some clients
+                if isinstance(p, list):
+                    _p = {}
+                    for param in p:
+                        if isinstance(param, dict):
+                            _p.update(param)
+                    p = _p
                 method = pp.get('method')
                 if not method:
                     raise FunctionFailed('API method not defined')
@@ -1720,6 +1729,14 @@ def start():
     cherrypy.engine.start()
 
 
+def cp_autojsonrpc():
+    r = cherrypy.serving.request
+    if r.method == 'POST' and r.path_info == '/' and jrpc is not None:
+        cp_jsonrpc_pre()
+        r._json_inner_handler = jrpc
+        r.handler = cp_jsonrpc_handler
+
+
 @eva.core.stop
 def stop():
     cherrypy.engine.exit()
@@ -1741,6 +1758,9 @@ def init():
     cherrypy.tools.nocache = cherrypy.Tool('before_finalize',
                                            cp_nocache,
                                            priority=10)
+    cherrypy.tools.autojsonrpc = cherrypy.Tool('before_handler',
+                                               cp_autojsonrpc,
+                                               priority=10)
 
 
 def jsonify_error(value):
