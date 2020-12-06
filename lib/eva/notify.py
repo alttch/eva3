@@ -870,6 +870,86 @@ class SQLANotifier(GenericNotifier):
             result.append(h)
         return sorted(result, key=lambda k: k['t'])
 
+    def get_state_log(self,
+                      oid,
+                      t_start=None,
+                      t_end=None,
+                      limit=None,
+                      time_format=None,
+                      xopts=None,
+                      **kwargs):
+        import pytz
+        import dateutil.parser
+        from datetime import datetime
+        l = int(limit) if limit and not fill else None
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = None
+        else:
+            t_s = None
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = None
+        else:
+            t_e = None
+        q = ''
+        if t_s:
+            q += ' and t>%f' % t_s
+        if t_e:
+            q += ' and t<=%f' % t_e
+        q += ' order by t, oid '
+        if l:
+            q += 'limit %u' % l
+        dbconn = self.db()
+        result = []
+        space = self.space if self.space is not None else ''
+        tz = pytz.timezone(time.tzname[0])
+        oid = oid.replace('#', '%')
+        data = list(
+            dbconn.execute(
+                sql('select oid, t, status, value from state_history where '
+                    'space = :space and oid like :oid' + q),
+                space=space,
+                oid=oid).fetchall())
+        # make sure data is limited
+        if l and len(data) > l:
+            data = data[:l]
+        records = {}
+        for d in data:
+            oid = d[0]
+            status = d[2]
+            value = d[3]
+            # skip repeating records
+            if records.get(oid) == (status, value):
+                continue
+            else:
+                records[oid] = (status, value)
+            h = {}
+            h['oid'] = oid
+            if time_format == 'iso':
+                h['t'] = datetime.fromtimestamp(float(d[1]), tz).isoformat()
+            elif time_format == 'dt_utc':
+                h['t'] = datetime.fromtimestamp(float(d[1]), tz)
+            else:
+                h['t'] = float(d[1])
+            h['status'] = status
+            try:
+                h['value'] = float(value)
+            except:
+                h['value'] = value if value else None
+            result.append(h)
+        return result
+
     def connect(self):
         try:
             if self.db_engine:

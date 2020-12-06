@@ -325,7 +325,7 @@ get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
-If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+If master key is used, the method attempts to get stored state for an item even if it doesn't present currently in system.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/state_history.rest
@@ -371,6 +371,47 @@ If option "w" (fill) is used, number of digits after comma may be specified. E.g
 Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
 
 If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
+
+
+.. _lmapi_restful_state_log:
+
+get item state log
+------------------
+
+State log of a single :doc:`item</items>` or group of the specified type can be obtained using **state_log** command.
+
+Difference from state_history method:
+
+* state_log doesn't optimize data to be displayed on charts * the data is returned from a database as-is * a single item OID or OID mask (e.g. sensor:env/#) can be specified
+
+note: the method supports MQTT-style masks but only masks with wildcard-ending, like "type:group/subgroup/#" are supported.
+
+The method can return state log for disconnected items as well.
+
+For wildcard fetching, API key should have an access to the whole chosen group.
+
+note: record limit means the limit for records, fetched from the database, but repeating state records are automatically grouped and the actual number of returned records can be lower than requested.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/state_log.rest
+    :response: http-examples/lmapi/state_log.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+* **a** history notifier id (default: db_1)
+
+Optionally:
+
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
+* **l** records limit (doesn't work with "w")
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
+* **o** extra options for notifier data request
+
+Returns:
+
+state log records (list)
 
 
 .. _lmapi_restful_state:

@@ -57,6 +57,7 @@ UC
 
     * data pullers
     * DriverAPI v10: Modbus and OWFS helper tools
+    * UC API: new function "state_log"
     * auto_off unit state processor can be cancelled / modified while running
     * "server cleanup" CLI command (cleans state db)
     * new device template format (equal to IaC deploy)
@@ -68,6 +69,7 @@ LM PLC
 
     * fix: "out" variable is now correctly set if macro raises an exception
 
+    * LM API: new function "state_log"
     * LVar variable logic: normal (default) or simple
     * SSL, TLS and SMTP auth support for mailer
     * macro function "cmd": new argument "stdin_data"
@@ -80,6 +82,7 @@ LM PLC
 SFA
 ---
 
+    * SFA API: new function "state_log"
     * PVT serving as /pvt/path/to/file
     * File uploads
     * cloud deploy: "status" and "value" props in deployment files

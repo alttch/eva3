@@ -1331,6 +1331,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state_history(k=k,
                                           i='{}:{}'.format(rtp, ii),
                                           **props)
+            elif kind == 'log':
+                return self.state_log(k=k, i='{}:{}'.format(rtp, ii), **props)
             elif for_dir:
                 return self.state(k=k, p=rtp, g=ii, **props)
             else:

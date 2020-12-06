@@ -1592,6 +1592,8 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.groups(k=k, p=rtp)
             elif kind == 'history':
                 return self.state_history(k=k, i=ii, **props)
+            elif kind == 'log':
+                return self.state_log(k=k, i='{}:{}'.format(rtp, ii), **props)
             elif kind == 'props':
                 return self.list_props(k=k, i=ii)
             elif kind == 'config':

@@ -1963,3 +1963,29 @@ def get_state_history(a=None,
     else:
         raise InvalidParameter('Invalid result format {}'.format(fmt))
     return result
+
+
+def get_state_log(a=None,
+                  oid=None,
+                  t_start=None,
+                  t_end=None,
+                  limit=None,
+                  time_format=None,
+                  xopts=None):
+    if oid is None:
+        raise ResourceNotFound
+    n = eva.notify.get_stats_notifier(a)
+    # TODO: implement tsdb
+    if n.state_storage not in ['sql']:  #, 'tsdb']:
+        raise MethodNotImplemented
+    t_start = fmt_time(t_start)
+    t_end = fmt_time(t_end)
+    try:
+        return n.get_state_log(oid=oid,
+                                 t_start=t_start,
+                                 t_end=t_end,
+                                 limit=limit,
+                                 time_format=time_format,
+                                 xopts=xopts)
+    except:
+        raise FunctionFailed

@@ -875,8 +875,8 @@ class GenericAPI(API):
         State history of one :doc:`item</items>` or several items of the
         specified type can be obtained using **state_history** command.
 
-        If master key is used, method attempt to get stored state for item even
-        if it currently doesn't present.
+        If master key is used, the method attempts to get stored state for an
+        item even if it doesn't present currently in system.
 
         Args:
             k:
@@ -1082,6 +1082,74 @@ class GenericAPI(API):
                                              g=g,
                                              o=o)
             return format_result(result, x, c)
+
+    @log_d
+    def state_log(self, **kwargs):
+        """
+        get item state log
+
+        State log of a single :doc:`item</items>` or group of the specified
+        type can be obtained using **state_log** command.
+
+        Difference from state_history method:
+
+        * state_log doesn't optimize data to be displayed on charts
+        * the data is returned from a database as-is
+        * a single item OID or OID mask (e.g. sensor:env/#) can be specified
+
+        note: the method supports MQTT-style masks but only masks with
+        wildcard-ending, like "type:group/subgroup/#" are supported.
+
+        The method can return state log for disconnected items as well.
+
+        For wildcard fetching, API key should have an access to the whole
+        chosen group.
+
+        note: record limit means the limit for records, fetched from the
+        database, but repeating state records are automatically grouped and the
+        actual number of returned records can be lower than requested.
+
+        Args:
+            k:
+            a: history notifier id (default: db_1)
+            .i: item oid or oid mask (type:group/subgroup/#)
+
+        Optional:
+            s: start time (timestamp or ISO or e.g. 1D for -1 day)
+            e: end time (timestamp or ISO or e.g. 1D for -1 day)
+            l: records limit (doesn't work with "w")
+            t: time format ("iso" or "raw" for unix timestamp, default is "raw")
+            o: extra options for notifier data request
+
+        Returns:
+            state log records (list)
+        """
+        k, a, i, s, e, l, t, o = parse_function_params(kwargs, 'kaiselto',
+                                                       '.sS..is.')
+        if '+' in i or i.count('#') > 1 or ('#' in i and not i.endswith('/#')):
+            raise InvalidParameter(f'i has oid mask "{i}", '
+                                   f'which is not supported')
+        # as notifier methods can be sql-unsafe - avoid injections
+        for _s in ['*', '"', '\'', ' ', ';']:
+            if _s in i:
+                raise InvalidParameter(f'i contains invalid symbols')
+        if o:
+            if isinstance(o, dict):
+                pass
+            elif isinstance(o, str):
+                o = dict_from_str(o)
+            else:
+                raise InvalidParameter('o must be dict or str')
+        if not apikey.check_master(k) and not apikey.check(k, oid=i,
+                                                           ro_op=True):
+            raise ResourceNotFound
+        return eva.item.get_state_log(a=a,
+                                      oid=i,
+                                      t_start=s,
+                                      t_end=e,
+                                      limit=l,
+                                      time_format=t,
+                                      xopts=o)
 
     # return version for embedded hardware
     @log_d
