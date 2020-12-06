@@ -419,7 +419,7 @@
    :returns: API key
    
 
-.. py:function:: key_check(k, item=None, allow=[], pvt_file=None, rpvt_uri=None, ip=None, master=False, sysfunc=False, ro_op=False)
+.. py:function:: key_check(k, item=None, oid=None, allow=[], pvt_file=None, rpvt_uri=None, ip=None, master=False, sysfunc=False, ro_op=False)
    :module: eva.pluginapi
 
    check API key access
@@ -427,6 +427,7 @@
    Arguments are ACL which can be combined
    
    :param items: item objects
+   :param oid: OID (mqtt-style masks allowed)
    :param allow: check allows
    :param pvt_file: access to pvt resource
    :param pvt_file: access to rpvt resource

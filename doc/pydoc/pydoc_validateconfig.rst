@@ -30,7 +30,7 @@
       :raises eva.exceptions.InvalidParameter: if config contains invalid params
       
    
-   .. py:method:: GenericX.validate_config_whi(config={}, config_type='config', allow_extra=False, ignore_private=False, xparams=[])
+   .. py:method:: GenericX.validate_config_whi(config=None, config_type='config', allow_extra=False, ignore_private=False, xparams=[])
       :module: eva.x
    
       Validate config with module help info
