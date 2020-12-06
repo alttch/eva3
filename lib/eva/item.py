@@ -1635,6 +1635,8 @@ def oid_match(oid, item_ids=None, groups=None):
     item_type, iid = parse_oid(oid)
     item_group, item_id = iid.rsplit('/', 1)
     if '#' in iid or '+' in iid:
+        if groups and '#' in groups:
+            return True
         for grp in groups:
             if is_oid(grp):
                 rt, g = parse_oid(grp)
@@ -1645,7 +1647,7 @@ def oid_match(oid, item_ids=None, groups=None):
             if g == item_group:
                 return True
             p = g.find('#')
-            if p > -1 and g[:p - 1] == item_group[:p - 1]:
+            if p > -1 and g[:p] == item_group[:p]:
                 return True
             if g.find('+') > -1:
                 g1 = g.split('/')
@@ -1982,10 +1984,10 @@ def get_state_log(a=None,
     t_end = fmt_time(t_end)
     try:
         return n.get_state_log(oid=oid,
-                                 t_start=t_start,
-                                 t_end=t_end,
-                                 limit=limit,
-                                 time_format=time_format,
-                                 xopts=xopts)
+                               t_start=t_start,
+                               t_end=t_end,
+                               limit=limit,
+                               time_format=time_format,
+                               xopts=xopts)
     except:
         raise FunctionFailed
