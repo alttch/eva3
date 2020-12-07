@@ -32,6 +32,8 @@ Common
         * sendmail
     * "set_user_password" SYS API function now allows logged in users to change
       their passwords
+    * state_history API function can return data for disconnected / deleted
+      items
     * update with pre-downloaded tarballs
     * mailer feature available in all controller types (used by core plugins)
     * "cdata" (custom data) API key field

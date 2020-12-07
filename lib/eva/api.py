@@ -728,16 +728,16 @@ class GenericAPI(API):
                            g=None,
                            o=None):
         import eva.item
-        item = self.controller.get_item(i)
-        if not apikey.check_master(k) and (
-                not item or not apikey.check(k, item, ro_op=True)):
+        if not is_oid(i):
+            item = self.controller.get_item(i)
+            i = item.oid
+        if '+' in i or '#' in i:
+            raise InvalidParameter('wildcard oids are not supported')
+        if not apikey.check_master(k) and (not apikey.check(
+                k, oid=i, ro_op=True)):
             raise ResourceNotFound(i)
-        if is_oid(i):
-            _t, iid = parse_oid(i)
-            if item and item.item_type != _t:
-                raise ResourceNotFound(i)
         return eva.item.get_state_history(a=a,
-                                          oid=item.oid if item else i,
+                                          oid=i,
                                           t_start=s,
                                           t_end=e,
                                           limit=l,
@@ -877,6 +877,8 @@ class GenericAPI(API):
 
         If master key is used, the method attempts to get stored state for an
         item even if it doesn't present currently in system.
+
+        The method can return state log for disconnected items as well.
 
         Args:
             k:
@@ -1090,6 +1092,8 @@ class GenericAPI(API):
 
         State log of a single :doc:`item</items>` or group of the specified
         type can be obtained using **state_log** command.
+
+        note: only SQL notifiers are supported
 
         Difference from state_history method:
 

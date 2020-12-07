@@ -351,6 +351,8 @@ State history of one :doc:`item</items>` or several items of the specified type 
 
 If master key is used, the method attempts to get stored state for an item even if it doesn't present currently in system.
 
+The method can return state log for disconnected items as well.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/sfapi/state_history.req-jrpc
     :response: http-examples/jrpc/sfapi/state_history.resp-jrpc
@@ -403,6 +405,8 @@ state_log - get item state log
 ------------------------------
 
 State log of a single :doc:`item</items>` or group of the specified type can be obtained using **state_log** command.
+
+note: only SQL notifiers are supported
 
 Difference from state_history method:
 
