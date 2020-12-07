@@ -881,7 +881,9 @@ class SQLANotifier(GenericNotifier):
         import pytz
         import dateutil.parser
         from datetime import datetime
-        l = int(limit) if limit else None
+        l = int(limit) if limit is not None else None
+        if l is not None and l <= 0:
+            return []
         if t_start:
             try:
                 t_s = float(t_start)
