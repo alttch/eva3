@@ -881,7 +881,7 @@ class SQLANotifier(GenericNotifier):
         import pytz
         import dateutil.parser
         from datetime import datetime
-        l = int(limit) if limit and not fill else None
+        l = int(limit) if limit else None
         if t_start:
             try:
                 t_s = float(t_start)
@@ -908,8 +908,6 @@ class SQLANotifier(GenericNotifier):
         if t_e:
             q += ' and t<=%f' % t_e
         q += ' order by t, oid '
-        if l:
-            q += 'limit %u' % l
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
@@ -921,9 +919,6 @@ class SQLANotifier(GenericNotifier):
                     'space = :space and oid like :oid' + q),
                 space=space,
                 oid=oid).fetchall())
-        # make sure data is limited
-        if l and len(data) > l:
-            data = data[:l]
         records = {}
         for d in data:
             oid = d[0]
@@ -948,7 +943,7 @@ class SQLANotifier(GenericNotifier):
             except:
                 h['value'] = value if value else None
             result.append(h)
-        return result
+        return result[:l] if l is not None else result
 
     def connect(self):
         try:
