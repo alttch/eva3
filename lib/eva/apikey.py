@@ -692,16 +692,16 @@ def load_keys_from_db():
                          sa.Column('k_id', sa.String(64), primary_key=True),
                          sa.Column('k', sa.String(64)),
                          sa.Column('m', sa.Integer), sa.Column('s', sa.Integer),
-                         sa.Column('i', sa.String(1024)),
-                         sa.Column('g', sa.String(1024)),
-                         sa.Column('i_ro', sa.String(1024)),
-                         sa.Column('g_ro', sa.String(1024)),
+                         sa.Column('i', sa.String(8192)),
+                         sa.Column('g', sa.String(8192)),
+                         sa.Column('i_ro', sa.String(8192)),
+                         sa.Column('g_ro', sa.String(8192)),
                          sa.Column('a', sa.String(256)),
-                         sa.Column('hal', sa.String(1024)),
-                         sa.Column('has', sa.String(1024)),
-                         sa.Column('pvt', sa.String(1024)),
-                         sa.Column('rpvt', sa.String(1024)),
-                         sa.Column('cdata', sa.String(4096)))
+                         sa.Column('hal', sa.String(8192)),
+                         sa.Column('has', sa.String(8192)),
+                         sa.Column('pvt', sa.String(8192)),
+                         sa.Column('rpvt', sa.String(8192)),
+                         sa.Column('cdata', sa.String(16384)))
     try:
         meta.create_all(dbconn)
     except:
