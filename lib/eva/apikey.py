@@ -728,7 +728,7 @@ def create_combined_key(key_ids=[]):
         except KeyError:
             # setup combined key
             ckey_value = gen_random_str(length=64)
-            ckey_id = f'combined_{uuid.uuid4()}'
+            ckey_id = f'comb:{"+".join(_key_ids)}'
             combined_key = APIKey(ckey_value, ckey_id)
             combined_key.master = False
             combined_key.dynamic = True

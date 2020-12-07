@@ -466,7 +466,7 @@ def init():
                          sa.Column('auth', sa.String(128)),
                          sa.Column('u', sa.String(128)),
                          sa.Column('utp', sa.String(32)),
-                         sa.Column('ki', sa.String(128)),
+                         sa.Column('ki', sa.String(2048)),
                          sa.Column('func', sa.String(128)),
                          sa.Column('params', sa.String(512)),
                          sa.Column('status', sa.String(32)))
