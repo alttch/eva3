@@ -152,7 +152,7 @@ _sfa-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state supervisor test toggle unlock user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set slog state supervisor test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[1]}" in
       action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)

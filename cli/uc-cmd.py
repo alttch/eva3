@@ -247,6 +247,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return result
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'state_log':
+            if data:
+                for v in data:
+                    v['time'] = v['t']
+                    del v['t']
         if api_func == 'phi_discover':
             if data:
                 for z, d in enumerate(data.copy()):
@@ -341,6 +346,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if api_func == 'state_history':
             if params['c']:
                 params['g'] = 'chart'
+        if api_func == 'state_log':
+            params['t'] = 'iso'
         elif api_func == 'load_driver':
             try:
                 import re
@@ -478,6 +485,31 @@ class UC_CLI(GenericCLI, ControllerCLI):
                                 help='Generate ascii bar chart',
                                 action='store_true',
                                 dest='_bars')
+
+        sp_slog = self.sp.add_parser('slog', help='Get item state log')
+        sp_slog.add_argument('i',
+                             help='Item ID or OID mask (type:group/#)',
+                             metavar='ID').completer = self.ComplItemOID(self)
+        sp_slog.add_argument('-a',
+                             '--notifier',
+                             help='Notifier to get slog from (default: db_1)',
+                             metavar='NOTIFIER',
+                             dest='a')
+        sp_slog.add_argument('-s',
+                             '--time-start',
+                             help='Start time',
+                             metavar='TIME',
+                             dest='s')
+        sp_slog.add_argument('-e',
+                             '--time-end',
+                             help='End time',
+                             metavar='TIME',
+                             dest='e')
+        sp_slog.add_argument('-l',
+                             '--limit',
+                             help='Records limit (doesn\'t work with fill)',
+                             metavar='N',
+                             dest='l')
 
         sp_watch = self.sp.add_parser('watch', help='Watch item state')
         sp_watch.add_argument('i',
@@ -1456,6 +1488,7 @@ cli = UC_CLI('uc', _me, prog=prog)
 _api_functions = {
     'watch': cli.watch,
     'history': 'state_history',
+    'slog': 'state_log',
     'action:exec': 'action',
     'action:result': 'result',
     'action:enable': 'enable_actions',
@@ -1525,6 +1558,7 @@ _pd_cols = {
         'oid', 'action_enabled', 'description', 'location', 'status', 'value',
         'nstatus', 'nvalue', 'maintenance'
     ],
+    'state_log': ['time', 'oid', 'status', 'value'],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'

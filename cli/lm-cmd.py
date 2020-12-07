@@ -35,8 +35,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 if prefix.startswith('lvar:'):
                     result.add(v['oid'])
                 else:
-                    if v['full_id'].startswith(prefix):
+                    if prefix and v['full_id'].startswith(prefix):
                         result.add(v['full_id'])
+                    else:
+                        result.add(v['oid'])
             if not result:
                 result.add('lvar:')
             return list(result)
@@ -317,6 +319,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if api_func == 'state_history':
             if params['c']:
                 params['g'] = 'chart'
+        if api_func == 'state_log':
+            params['t'] = 'iso'
         elif api_func == 'set_rule_prop':
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
@@ -332,6 +336,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
         super().prepare_run(api_func, params, a)
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'state_log':
+            if data:
+                for v in data:
+                    v['time'] = v['t']
+                    del v['t']
         if api_func == 'list':
             self.pd_cols[api_func] = ['oid']
             x = self.last_api_call_params.get('x')
@@ -572,6 +581,31 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                 help='Generate ascii bar chart',
                                 action='store_true',
                                 dest='_bars')
+
+        sp_slog = self.sp.add_parser('slog', help='Get item state log')
+        sp_slog.add_argument('i',
+                             help='Item ID or OID mask (type:group/#)',
+                             metavar='ID').completer = self.ComplLVAR(self)
+        sp_slog.add_argument('-a',
+                             '--notifier',
+                             help='Notifier to get slog from (default: db_1)',
+                             metavar='NOTIFIER',
+                             dest='a')
+        sp_slog.add_argument('-s',
+                             '--time-start',
+                             help='Start time',
+                             metavar='TIME',
+                             dest='s')
+        sp_slog.add_argument('-e',
+                             '--time-end',
+                             help='End time',
+                             metavar='TIME',
+                             dest='e')
+        sp_slog.add_argument('-l',
+                             '--limit',
+                             help='Records limit (doesn\'t work with fill)',
+                             metavar='N',
+                             dest='l')
 
         sp_watch = self.sp.add_parser('watch', help='Watch item state')
         sp_watch.add_argument('i',
@@ -950,10 +984,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 Rule condition and action, example:
                 if sensor:env/temp.value > 25 then macro1(1, 2, x=3)'''))
         sp_rule_create.add_argument('-E',
-                               '--enable',
-                               help='Enable rule',
-                               dest='e',
-                               action='store_true')
+                                    '--enable',
+                                    help='Enable rule',
+                                    dest='e',
+                                    action='store_true')
         sp_rule_create.add_argument('-y',
                                     '--save',
                                     help='Save rule config after set',
@@ -1032,10 +1066,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                    dest='u',
                                    metavar='UUID')
         sp_job_create.add_argument('-E',
-                               '--enable',
-                               help='Enable job',
-                               dest='e',
-                               action='store_true')
+                                   '--enable',
+                                   help='Enable job',
+                                   dest='e',
+                                   action='store_true')
         sp_job_create.add_argument('-y',
                                    '--save',
                                    help='Save job config after set',
@@ -1334,6 +1368,7 @@ cli = LM_CLI('lm', _me, prog=prog)
 _api_functions = {
     'watch': cli.watch,
     'history': 'state_history',
+    'slog': 'state_log',
     'config:get': 'get_config',
     'config:save': 'save_config',
     'config:props': 'list_props',
@@ -1403,6 +1438,7 @@ _pd_cols = {
         'oid', 'description', 'location', 'status', 'value', 'set', 'expires',
         'exp_in'
     ],
+    'state_log': ['time', 'oid', 'status', 'value'],
     'result': ['time', 'uuid', 'priority', 'item_oid', 'exitcode', 'status'],
     'list': ['oid', 'description'],
     'list_remote': [
