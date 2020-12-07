@@ -123,7 +123,7 @@ assigned locally or with :doc:`Active Directory<msad>` groups.
 
 If more than one key (so more than one ACL) is assigned:
 
-* item ACLs are merged as-is
+* item ACLs and allow/assign hosts/networks are merged as-is
   
 * special ACLs are merged with higher access level (e.g. if one of keys has
   master access, the combined ACL will have master access as well)

@@ -694,7 +694,7 @@ def _recombine_acl(combined_key):
         combined_key.sysfunc = False
         for prop in [
                 'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
-                'pvt_files', 'rpvt_uris', 'cdata'
+                'pvt_files', 'rpvt_uris', 'cdata', 'hosts_allow', 'hosts_assign'
         ]:
             a = getattr(combined_key, prop)
             a.clear()
@@ -711,7 +711,7 @@ def _recombine_acl(combined_key):
                 combined_key.cdata.append(key.cdata)
             for prop in [
                     'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
-                    'pvt_files', 'rpvt_uris'
+                    'pvt_files', 'rpvt_uris', 'hosts_allow', 'hosts_assign'
             ]:
                 for i in getattr(key, prop):
                     a = getattr(combined_key, prop)
@@ -736,7 +736,6 @@ def create_combined_key(key_ids=[]):
             combined_key.master = False
             combined_key.dynamic = True
             combined_key.temporary = True
-            combined_key.set_prop('hosts_allow', '0.0.0.0/0')
             combined_key.combined_from = _key_ids.copy()
             combined_key.cdata = []
             # register
