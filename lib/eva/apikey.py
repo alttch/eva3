@@ -92,7 +92,6 @@ class APIKey(object):
         result['hosts_allow'] = [str(i) for i in self.hosts_allow]
         result['hosts_assign'] = [str(i) for i in self.hosts_assign]
         result['dynamic'] = self.dynamic
-        result['temporary'] = self.temporary
         return result
 
     def set_key(self, k):
