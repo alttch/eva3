@@ -2236,7 +2236,7 @@ assign API key to user
 Parameters:
 
 * **API Key** API key with *master* permissions
-* **a** API key to assign (key id, not a key itself)
+* **a** API key to assign (key id, not a key itself) or multiple keys, comma separated
 
 
 .. _ucapi_restful_create_user:

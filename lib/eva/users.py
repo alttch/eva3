@@ -397,7 +397,7 @@ def get_user(user=None):
 def create_user(user=None, password=None, key=None):
     if user is None or password is None or key is None:
         return False
-    kk = key.split(',')
+    kk = key if isinstance(kk, list) else key.split(',')
     for k in kk:
         if k not in apikey.keys_by_id:
             raise ResourceNotFound(f'API key {k}')
@@ -445,7 +445,7 @@ def set_user_password(user=None, password=None):
 def set_user_key(user=None, key=None):
     if user is None or key is None:
         return None
-    kk = key.split(',')
+    kk = key if isinstance(kk, list) else key.split(',')
     for k in kk:
         if k not in apikey.keys_by_id:
             raise ResourceNotFound(f'API key {k}')

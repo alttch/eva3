@@ -886,7 +886,8 @@ class UserAPI(object):
         Args:
             k: .master
             .u: user login
-            a: API key to assign (key id, not a key itself)
+            a: API key to assign (key id, not a key itself) or multiple keys,
+                comma separated
         """
         u, a = parse_api_params(kwargs, 'ua', 'SS')
         tokens.remove_token(user=u)

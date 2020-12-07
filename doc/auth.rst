@@ -57,7 +57,7 @@ API key properties:
     * **lock** access to lock management functions
     * **device** (for :doc:`/uc/uc` only) access to device templates functions
 
-* **cdata** custom data. Can be set to any custom value (up to 4096
+* **cdata** custom data. Can be set to any custom value (up to 16384
   characters), appears in serialized ACL as-is.
 
 * **dynamic** read-only value, specifying is the key "dynamic" (True, stored in
@@ -112,3 +112,30 @@ Users can be created with :doc:`/sysapi` user management functions or with
 
 API calls can not be performed with user accounts directly, the users must
 login and obtain :doc:`api_tokens`.
+
+.. _combined_acl:
+
+Combined ACLs
+=============
+
+As API keys are used as user ACLs, a user can have more than one API keys
+assigned locally or with :doc:`Active Directory<msad>` groups.
+
+If more than one key (so more than one ACL) is assigned:
+
+* item ACLs are merged as-is
+  
+* special ACLs are merged with higher access level (e.g. if one of keys has
+  master access, the combined ACL will have master access as well)
+
+* **cdata** field becomes a list which contains "cdata" fields of all keys
+  combined.
+
+* **key id** has the value "comb:KEY_1+KEY_2+...KEY_N"
+
+* the key gets an additional field **combined_from** which contains a list of
+  key ids the ACLs are combined from.
+
+Only authenticated users can have combined access. Combined API keys are
+generated for internal purposes only and there is no way to obtain them for
+direct API requests (use users' session tokens instead).

@@ -825,7 +825,8 @@ class GenericCLI(GCLI):
                                     help='User password',
                                     metavar='PASSWORD')
         sp_user_create.add_argument(
-            'a', help='API key ID',
+            'a',
+            help='API key ID or multiple, comma separated',
             metavar='APIKEY_ID').completer = ComplKey(self)
 
         sp_user_password = sp_user.add_parser('password',
@@ -839,7 +840,8 @@ class GenericCLI(GCLI):
         sp_user_key = sp_user.add_parser('key', help='Change API key for user')
         sp_user_key.add_argument('u', help='User login',
                                  metavar='LOGIN').completer = ComplUser(self)
-        sp_user_key.add_argument('a', help='API key ID',
+        sp_user_key.add_argument('a',
+                                 help='API key ID or multiple, comma separated',
                                  metavar='APIKEY_ID').completer = ComplKey(self)
 
         sp_user_destroy = sp_user.add_parser('destroy', help='Delete user')

@@ -836,7 +836,7 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **u** user login
-* **a** API key to assign (key id, not a key itself)
+* **a** API key to assign (key id, not a key itself) or multiple keys, comma separated
 
 .. _sysapi_set_user_password:
 
