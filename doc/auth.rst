@@ -118,7 +118,7 @@ login and obtain :doc:`api_tokens`.
 Combined ACLs
 =============
 
-As API keys are used as user ACLs, a user can have more than one API keys
+As API keys are used as user ACLs, a user can have more than one API key
 assigned locally or with :doc:`Active Directory<msad>` groups.
 
 If more than one key (so more than one ACL) is assigned:
