@@ -72,6 +72,9 @@ class APIKey(object):
         self.set_key(k)
 
     def serialize(self):
+        with key_lock:
+            if self.combined_from:
+                _recombine_acl(self)
         result = {
             'id': self.key_id,
             'master': self.master,
@@ -534,6 +537,8 @@ def check(k,
         if not k or not k in keys or (master and not keys[k].master):
             return False
         _k = keys[k]
+        if _k.combined_from:
+            _recombine_acl(_k)
     if ip and not netacl_match(ip, _k.hosts_allow):
         return False
     if _k.master:
@@ -639,6 +644,8 @@ def serialized_acl(k):
         if not k or not k in keys:
             return r if setup_on else None
         _k = keys[k]
+        if _k.combined_from:
+            _recombine_acl(_k)
     r['key_id'] = _k.key_id
     r['master'] = _k.master or setup_on
     r['cdata'] = _k.cdata
@@ -681,6 +688,37 @@ def add_api_key(key_id=None, save=False):
     return result
 
 
+def _recombine_acl(combined_key):
+    with key_lock:
+        combined_key.master = False
+        combined_key.sysfunc = False
+        for prop in [
+                'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
+                'pvt_files', 'rpvt_uris', 'cdata'
+        ]:
+            a = getattr(combined_key, prop)
+            a.clear()
+        for k_id in combined_key.combined_from:
+            try:
+                key = keys_by_id[k_id]
+            except KeyError:
+                continue
+            if key.master:
+                combined_key.master = True
+            if key.sysfunc:
+                combined_key.sysfunc = True
+            if key.cdata is not None and key.cdata != '':
+                combined_key.cdata.append(key.cdata)
+            for prop in [
+                    'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
+                    'pvt_files', 'rpvt_uris'
+            ]:
+                for i in getattr(key, prop):
+                    a = getattr(combined_key, prop)
+                    if i not in a:
+                        a.append(i)
+
+
 def create_combined_key(key_ids=[]):
     _key_ids = sorted(key_ids)
     _combined_id = ','.join(_key_ids)
@@ -698,26 +736,6 @@ def create_combined_key(key_ids=[]):
             combined_key.set_prop('hosts_allow', '0.0.0.0/0')
             combined_key.combined_from = _key_ids.copy()
             combined_key.cdata = []
-            # combine ACLs
-            for k_id in key_ids:
-                try:
-                    key = keys_by_id[k_id]
-                except KeyError:
-                    raise ValueError(f'API key ID unknown: {k_id}')
-                if key.master:
-                    combined_key.master = True
-                if key.sysfunc:
-                    combined_key.sysfunc = True
-                if key.cdata is not None and key.cdata != '':
-                    combined_key.cdata.append(key.cdata)
-                for prop in [
-                        'item_ids', 'groups', 'item_ids_ro', 'groups_ro',
-                        'allow', 'pvt_files', 'rpvt_uris'
-                ]:
-                    for i in getattr(key, prop):
-                        a = getattr(combined_key, prop)
-                        if i not in a:
-                            a.append(i)
             # register
             keys_by_id[ckey_id] = combined_key
             keys[ckey_value] = combined_key

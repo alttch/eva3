@@ -946,6 +946,7 @@ class UserAPI(object):
             for _k, v in eva.apikey.keys.items():
                 if not v.temporary:
                     r = eva.apikey.serialized_acl(_k)
+                    r['dynamic'] = v.dynamic
                     result.append(r)
         return sorted(sorted(result, key=lambda k: k['key_id']),
                       key=lambda k: k['master'],
