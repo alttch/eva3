@@ -1130,7 +1130,9 @@ class GenericAPI(API):
         """
         k, a, i, s, e, l, t, o = parse_function_params(kwargs, 'kaiselto',
                                                        '.sS..is.')
-        if '+' in i or i.count('#') > 1 or ('#' in i and not i.endswith('/#')):
+        if '+' in i or i.count('#') > 1 or ('#' in i and
+                                            not i.endswith('/#') and
+                                            not i.endswith(':#')):
             raise InvalidParameter(f'i has oid mask "{i}", '
                                    f'which is not supported')
         # as notifier methods can be sql-unsafe - avoid injections

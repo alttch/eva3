@@ -1630,13 +1630,13 @@ class VariableItem(UpdatableItem):
 
 
 def oid_match(oid, item_ids=None, groups=None):
+    if (groups and '#' in groups) or '#' in item_ids:
+        return True
     if '/' not in oid or not is_oid(oid):
         return False
     item_type, iid = parse_oid(oid)
     item_group, item_id = iid.rsplit('/', 1)
     if '#' in iid or '+' in iid:
-        if groups and '#' in groups:
-            return True
         for grp in groups:
             if is_oid(grp):
                 rt, g = parse_oid(grp)
@@ -1663,9 +1663,7 @@ def oid_match(oid, item_ids=None, groups=None):
                         return True
         return False
     else:
-        if (groups and ('#' in groups) or (item_group in groups)) \
-                or '#' in item_ids or \
-                oid in item_ids:
+        if (groups and item_group in groups) or oid in item_ids:
             return True
         if groups:
             for grp in groups:
