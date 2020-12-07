@@ -59,7 +59,7 @@ def msad_init(host,
         meta,
         sa.Column('u', sa.String(64), primary_key=True),
         sa.Column('p', sa.String(64)),
-        sa.Column('cn', sa.String(64)),
+        sa.Column('cn', sa.String(2048)),
         sa.Column('t', sa.Numeric(20, 8)),
     )
     try:
@@ -456,7 +456,7 @@ def init():
     t_users = sa.Table('users', meta,
                        sa.Column('u', sa.String(64), primary_key=True),
                        sa.Column('p', sa.String(64)),
-                       sa.Column('k', sa.String(64)))
+                       sa.Column('k', sa.String(2048)))
     t_api_log = sa.Table('api_log', meta,
                          sa.Column('id', sa.String(36), primary_key=True),
                          sa.Column('t', sa.Numeric(20, 8), nullable=False),

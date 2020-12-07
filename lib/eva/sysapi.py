@@ -942,10 +942,11 @@ class UserAPI(object):
         """
         parse_api_params(kwargs)
         result = []
-        for _k in eva.apikey.keys:
-            r = eva.apikey.serialized_acl(_k)
-            r['dynamic'] = eva.apikey.keys[_k].dynamic
-            result.append(r)
+        with eva.apikey.key_lock:
+            for _k, v in eva.apikey.keys.items():
+                if not v.temporary:
+                    r = eva.apikey.serialized_acl(_k)
+                    result.append(r)
         return sorted(sorted(result, key=lambda k: k['key_id']),
                       key=lambda k: k['master'],
                       reverse=True)

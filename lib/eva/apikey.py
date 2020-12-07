@@ -12,6 +12,7 @@ import copy
 import base64
 import hashlib
 import sqlalchemy as sa
+import threading
 from sqlalchemy import text as sql
 from cryptography.fernet import Fernet
 from netaddr import IPNetwork
@@ -34,6 +35,8 @@ from functools import partial
 
 config = SimpleNamespace(masterkey=None)
 
+key_lock = threading.RLock()
+
 keys = {}
 keys_by_id = {}
 
@@ -41,6 +44,8 @@ allows = []
 all_allows = ['cmd', 'lock', 'device', 'supervisor']
 
 keys_to_delete = set()
+
+combined_keys_cache = {}
 
 
 class APIKey(object):
@@ -62,6 +67,8 @@ class APIKey(object):
         self.config_changed = False
         self.in_db = False
         self.dynamic = False
+        self.temporary = False
+        self.combined_from = []
         self.set_key(k)
 
     def serialize(self):
@@ -82,6 +89,7 @@ class APIKey(object):
         result['hosts_allow'] = [str(i) for i in self.hosts_allow]
         result['hosts_assign'] = [str(i) for i in self.hosts_assign]
         result['dynamic'] = self.dynamic
+        result['temporary'] = self.temporary
         return result
 
     def set_key(self, k):
@@ -98,8 +106,9 @@ class APIKey(object):
                     ':') != -1 or value.find('|') != -1:
                 return False
             if self.key != value:
-                if value in keys:
-                    raise ResourceAlreadyExists('API key')
+                with key_lock:
+                    if value in keys:
+                        raise ResourceAlreadyExists('API key')
                 regenerate_key(self.key_id, k=value, save=False)
                 self.set_modified(save)
             return True
@@ -241,7 +250,7 @@ class APIKey(object):
             self.config_changed = True
 
     def save(self):
-        if not self.dynamic:
+        if not self.dynamic or self.temporary:
             return False
         data = self.serialize()
         for d in [
@@ -301,131 +310,139 @@ class APIKey(object):
 
 
 def load(fname=None, load_from_db=True):
-    keys.clear()
-    keys_by_id.clear()
-    config.masterkey = None
-    logging.info('Loading API keys')
-    fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
-    if not fname_full:
-        logging.warning('No file or product specified '
-                        'skipping loading API keys')
-        return False
-    try:
-        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.read(fname_full)
-        for ks in cfg.sections():
-            try:
-                k = cfg.get(ks, 'key')
-                if k in keys.keys():
-                    logging.warning(f'duplicate key {k}, problems might occur')
-                key = APIKey(k, ks)
+    with key_lock:
+        keys.clear()
+        keys_by_id.clear()
+        config.masterkey = None
+        logging.info('Loading API keys')
+        fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
+        if not fname_full:
+            logging.warning('No file or product specified '
+                            'skipping loading API keys')
+            return False
+        try:
+            cfg = configparser.ConfigParser(inline_comment_prefixes=';')
+            cfg.read(fname_full)
+            for ks in cfg.sections():
                 try:
-                    key.master = (cfg.get(ks, 'master') == 'yes')
-                except:
-                    pass
-                try:
-                    key.sysfunc = (cfg.get(ks, 'sysfunc') == 'yes')
-                except:
-                    pass
-                try:
-                    _ha = cfg.get(ks, 'hosts_allow')
-                except:
-                    _ha = None
-                if _ha:
+                    k = cfg.get(ks, 'key')
+                    if k in keys.keys():
+                        logging.warning(
+                            f'duplicate key {k}, problems might occur')
+                    key = APIKey(k, ks)
                     try:
-                        _hosts_allow = list(
-                            filter(None, [x.strip() for x in _ha.split(',')]))
-                        key.hosts_allow = \
-                                [ IPNetwork(h) for h in _hosts_allow ]
+                        key.master = (cfg.get(ks, 'master') == 'yes')
                     except:
-                        logging.error(f'key {ks} invalid host acl!, skipping')
-                        eva.core.log_traceback()
-                        continue
-                try:
-                    _ha = cfg.get(ks, 'hosts_assign')
-                except:
-                    _ha = None
-                if _ha:
+                        pass
                     try:
-                        _hosts_assign = list(
-                            filter(None, [x.strip() for x in _ha.split(',')]))
-                        key.hosts_assign = \
-                                [ IPNetwork(h) for h in _hosts_assign ]
+                        key.sysfunc = (cfg.get(ks, 'sysfunc') == 'yes')
                     except:
-                        logging.warning(f'key {ks} invalid hosts_assign')
-                        eva.core.log_traceback()
-                try:
-                    key.item_ids = list(
-                        filter(None, [
-                            x.strip() for x in cfg.get(ks, 'items').split(',')
-                        ]))
+                        pass
+                    try:
+                        _ha = cfg.get(ks, 'hosts_allow')
+                    except:
+                        _ha = None
+                    if _ha:
+                        try:
+                            _hosts_allow = list(
+                                filter(None,
+                                       [x.strip() for x in _ha.split(',')]))
+                            key.hosts_allow = \
+                                    [ IPNetwork(h) for h in _hosts_allow ]
+                        except:
+                            logging.error(
+                                f'key {ks} invalid host acl!, skipping')
+                            eva.core.log_traceback()
+                            continue
+                    try:
+                        _ha = cfg.get(ks, 'hosts_assign')
+                    except:
+                        _ha = None
+                    if _ha:
+                        try:
+                            _hosts_assign = list(
+                                filter(None,
+                                       [x.strip() for x in _ha.split(',')]))
+                            key.hosts_assign = \
+                                    [ IPNetwork(h) for h in _hosts_assign ]
+                        except:
+                            logging.warning(f'key {ks} invalid hosts_assign')
+                            eva.core.log_traceback()
+                    try:
+                        key.item_ids = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'items').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.groups = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'groups').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.item_ids_ro = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'items_ro').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.groups_ro = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'groups_ro').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.pvt_files = list(filter(None,
+                            [x.strip() for x in \
+                                    cfg.get(ks, 'pvt').split(',')]))
+                    except:
+                        pass
+                    try:
+                        key.rpvt_uris = list(filter(None,
+                            [x.strip() for x in \
+                                    cfg.get(ks, 'rpvt').split(',')]))
+                    except:
+                        pass
+                    try:
+                        key.allow = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'allow').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.cdata = cfg.get(ks, 'cdata')
+                    except:
+                        pass
+                    keys[k] = key
+                    keys_by_id[ks] = key
+                    if key.master and not config.masterkey:
+                        config.masterkey = k
+                        logging.info('+ masterkey loaded')
                 except:
                     pass
-                try:
-                    key.groups = list(
-                        filter(None, [
-                            x.strip() for x in cfg.get(ks, 'groups').split(',')
-                        ]))
-                except:
-                    pass
-                try:
-                    key.item_ids_ro = list(
-                        filter(None, [
-                            x.strip()
-                            for x in cfg.get(ks, 'items_ro').split(',')
-                        ]))
-                except:
-                    pass
-                try:
-                    key.groups_ro = list(
-                        filter(None, [
-                            x.strip()
-                            for x in cfg.get(ks, 'groups_ro').split(',')
-                        ]))
-                except:
-                    pass
-                try:
-                    key.pvt_files = list(filter(None,
-                        [x.strip() for x in \
-                                cfg.get(ks, 'pvt').split(',')]))
-                except:
-                    pass
-                try:
-                    key.rpvt_uris = list(filter(None,
-                        [x.strip() for x in \
-                                cfg.get(ks, 'rpvt').split(',')]))
-                except:
-                    pass
-                try:
-                    key.allow = list(
-                        filter(None, [
-                            x.strip() for x in cfg.get(ks, 'allow').split(',')
-                        ]))
-                except:
-                    pass
-                try:
-                    key.cdata = cfg.get(ks, 'cdata')
-                except:
-                    pass
-                keys[k] = key
-                keys_by_id[ks] = key
-                if key.master and not config.masterkey:
-                    config.masterkey = k
-                    logging.info('+ masterkey loaded')
-            except:
-                pass
-        if load_from_db:
-            _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
-            keys.update(_keys_from_db)
-            keys_by_id.update(_keys_from_db_by_id)
-        if not config.masterkey:
-            logging.warning('no masterkey specified')
-        eva.core.update_corescript_globals({'masterkey': config.masterkey})
-        return True
-    except:
-        logging.error('Unable to load API keys')
-        eva.core.log_traceback()
-        return False
+            if load_from_db:
+                _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
+                keys.update(_keys_from_db)
+                keys_by_id.update(_keys_from_db_by_id)
+            if not config.masterkey:
+                logging.warning('no masterkey specified')
+            eva.core.update_corescript_globals({'masterkey': config.masterkey})
+            return True
+        except:
+            logging.error('Unable to load API keys')
+            eva.core.log_traceback()
+            return False
 
 
 def key_by_id(key_id):
@@ -435,23 +452,27 @@ def key_by_id(key_id):
     Returns:
         API key
     """
-    return None if not key_id or not key_id in keys_by_id else \
-        keys_by_id[key_id].key
+    with key_lock:
+        return None if not key_id or not key_id in keys_by_id else \
+            keys_by_id[key_id].key
 
 
 def key_ce(key_id):
-    return None if not key_id or not key_id in keys_by_id else \
-        keys_by_id[key_id].ce
+    with key_lock:
+        return None if not key_id or not key_id in keys_by_id else \
+            keys_by_id[key_id].ce
 
 
 def key_private(key_id):
-    return None if not key_id or not key_id in keys_by_id else \
-        keys_by_id[key_id].private_key
+    with key_lock:
+        return None if not key_id or not key_id in keys_by_id else \
+            keys_by_id[key_id].private_key
 
 
 def key_private512(key_id):
-    return None if not key_id or not key_id in keys_by_id else \
-        keys_by_id[key_id].private_key512
+    with key_lock:
+        return None if not key_id or not key_id in keys_by_id else \
+            keys_by_id[key_id].private_key512
 
 
 def key_id(k):
@@ -461,21 +482,24 @@ def key_id(k):
     Returns:
         API key ID
     """
-    return 'unknown' if not k or not k in keys else keys[k].key_id
+    with key_lock:
+        return 'unknown' if not k or not k in keys else keys[k].key_id
 
 
 def key_by_ip_address(ip=None):
     if not ip:
         return None
-    for k, key in keys.copy().items():
-        if netacl_match(ip, key.hosts_assign):
-            return k
+    with key_lock:
+        for k, key in keys.items():
+            if netacl_match(ip, key.hosts_assign):
+                return k
 
 
 def format_key(k):
     if not k:
         return None
-    return key_by_id(k[1:]) if k[0] == '$' else k
+    with key_lock:
+        return key_by_id(k[1:]) if k[0] == '$' else k
 
 
 def check(k,
@@ -506,9 +530,10 @@ def check(k,
     """
     if eva.core.is_setup_mode():
         return True
-    if not k or not k in keys or (master and not keys[k].master):
-        return False
-    _k = keys[k]
+    with key_lock:
+        if not k or not k in keys or (master and not keys[k].master):
+            return False
+        _k = keys[k]
     if ip and not netacl_match(ip, _k.hosts_allow):
         return False
     if _k.master:
@@ -610,9 +635,10 @@ def get_masterkey():
 def serialized_acl(k):
     r = {'key_id': None, 'master': True}
     setup_on = eva.core.is_setup_mode()
-    if not k or not k in keys:
-        return r if setup_on else None
-    _k = keys[k]
+    with key_lock:
+        if not k or not k in keys:
+            return r if setup_on else None
+        _k = keys[k]
     r['key_id'] = _k.key_id
     r['master'] = _k.master or setup_on
     r['cdata'] = _k.cdata
@@ -628,59 +654,109 @@ def serialized_acl(k):
     if _k.rpvt_uris:
         r['rpvt'] = _k.rpvt_uris
     r['allow'] = {}
+    r['dynamic'] = _k.dynamic
+    if _k.combined_from:
+        r['combined_from'] = _k.combined_from
     for a in allows:
         r['allow'][a] = True if a in _k.allow else False
     return r
 
 
 def add_api_key(key_id=None, save=False):
-    if key_id is None:
-        raise FunctionFailed
-    if key_id in keys_by_id:
-        raise ResourceAlreadyExists
-    key_value = gen_random_str(length=64)
-    key = APIKey(key_value, key_id)
-    key.master = False
-    key.dynamic = True
-    key.set_prop('hosts_allow', '0.0.0.0/0', save)
-    keys_by_id[key.key_id] = key
-    keys[key.key] = key
-    result = key.serialize()
-    if key_id in keys_to_delete:
-        keys_to_delete.remove(key_id)
+    with key_lock:
+        if key_id is None:
+            raise FunctionFailed
+        if key_id in keys_by_id:
+            raise ResourceAlreadyExists
+        key_value = gen_random_str(length=64)
+        key = APIKey(key_value, key_id)
+        key.master = False
+        key.dynamic = True
+        key.set_prop('hosts_allow', '0.0.0.0/0', save)
+        keys_by_id[key.key_id] = key
+        keys[key.key] = key
+        result = key.serialize()
+        if key_id in keys_to_delete:
+            keys_to_delete.remove(key_id)
     return result
 
 
-def delete_api_key(key_id):
-    if key_id is None or key_id not in keys_by_id:
-        raise ResourceNotFound
-    if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
-        raise FunctionFailed('Master and static keys can not be deleted')
-    del keys[keys_by_id[key_id].key]
-    del keys_by_id[key_id]
-    if eva.core.config.db_update == 1:
-        dbconn = userdb()
+def create_combined_key(key_ids=[]):
+    _key_ids = sorted(key_ids)
+    _combined_id = ','.join(_key_ids)
+    with key_lock:
         try:
-            dbconn.execute(sql('delete from apikeys where k_id=:key_id'),
-                           key_id=key_id)
-        except:
-            eva.core.report_userdb_error()
-    else:
-        keys_to_delete.add(key_id)
-    return True
+            return combined_keys_cache[_combined_id]
+        except KeyError:
+            # setup combined key
+            ckey_value = gen_random_str(length=64)
+            ckey_id = f'combined_{uuid.uuid4()}'
+            combined_key = APIKey(ckey_value, ckey_id)
+            combined_key.master = False
+            combined_key.dynamic = True
+            combined_key.temporary = True
+            combined_key.set_prop('hosts_allow', '0.0.0.0/0')
+            combined_key.combined_from = _key_ids.copy()
+            combined_key.cdata = []
+            # combine ACLs
+            for k_id in key_ids:
+                try:
+                    key = keys_by_id[k_id]
+                except KeyError:
+                    raise ValueError(f'API key ID unknown: {k_id}')
+                if key.master:
+                    combined_key.master = True
+                if key.sysfunc:
+                    combined_key.sysfunc = True
+                if key.cdata is not None and key.cdata != '':
+                    combined_key.cdata.append(key.cdata)
+                for prop in [
+                        'item_ids', 'groups', 'item_ids_ro', 'groups_ro',
+                        'allow', 'pvt_files', 'rpvt_uris'
+                ]:
+                    for i in getattr(key, prop):
+                        a = getattr(combined_key, prop)
+                        if i not in a:
+                            a.append(i)
+            # register
+            keys_by_id[ckey_id] = combined_key
+            keys[ckey_value] = combined_key
+            combined_keys_cache[_combined_id] = ckey_id
+    return ckey_id
+
+
+def delete_api_key(key_id):
+    with key_lock:
+        if key_id is None or key_id not in keys_by_id:
+            raise ResourceNotFound
+        if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
+            raise FunctionFailed('Master and static keys can not be deleted')
+        del keys[keys_by_id[key_id].key]
+        del keys_by_id[key_id]
+        if eva.core.config.db_update == 1:
+            dbconn = userdb()
+            try:
+                dbconn.execute(sql('delete from apikeys where k_id=:key_id'),
+                               key_id=key_id)
+            except:
+                eva.core.report_userdb_error()
+        else:
+            keys_to_delete.add(key_id)
+        return True
 
 
 def regenerate_key(key_id, k=None, save=False):
-    if key_id is None or key_id not in keys_by_id:
-        raise ResourceNotFound
-    if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
-        raise FunctionFailed('Master and static keys can not be changed')
-    key = keys_by_id[key_id]
-    old_key = key.key
-    key.set_key(gen_random_str(length=64) if k is None else k)
-    keys[key.key] = keys.pop(old_key)
-    key.set_modified(save)
-    return key.key
+    with key_lock:
+        if key_id is None or key_id not in keys_by_id:
+            raise ResourceNotFound
+        if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
+            raise FunctionFailed('Master and static keys can not be changed')
+        key = keys_by_id[key_id]
+        old_key = key.key
+        key.set_key(gen_random_str(length=64) if k is None else k)
+        keys[key.key] = keys.pop(old_key)
+        key.set_modified(save)
+        return key.key
 
 
 def load_keys_from_db():
@@ -751,16 +827,19 @@ def stop():
 
 @eva.core.save
 def save():
-    for i, k in keys_by_id.copy().items():
-        if k.config_changed and not k.save():
-            return False
-    dbconn = userdb()
-    try:
-        for k in keys_to_delete:
-            dbconn.execute(sql('delete from apikeys where k_id=:k_id'), k_id=k)
-        return True
-    except:
-        eva.core.report_db_error(raise_exeption=False)
+    with key_lock:
+        for i, k in keys_by_id.items():
+            if not k.temporary:
+                if k.config_changed and not k.save():
+                    return False
+        dbconn = userdb()
+        try:
+            for k in keys_to_delete:
+                dbconn.execute(sql('delete from apikeys where k_id=:k_id'),
+                               k_id=k)
+            return True
+        except:
+            eva.core.report_db_error(raise_exeption=False)
 
 
 def init():
