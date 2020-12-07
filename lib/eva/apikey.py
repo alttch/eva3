@@ -726,6 +726,9 @@ def create_combined_key(key_ids=[]):
         try:
             return combined_keys_cache[_combined_id]
         except KeyError:
+            for k in key_ids:
+                if k not in keys_by_id:
+                    raise ValueError(f'no such API key: {k}')
             # setup combined key
             ckey_value = gen_random_str(length=64)
             ckey_id = f'comb:{"+".join(_key_ids)}'

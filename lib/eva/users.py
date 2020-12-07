@@ -123,7 +123,13 @@ def msad_authenticate(username, password):
             logging.warning(f'Unable to access active directory: {e}')
             eva.core.log_traceback()
             result = msad_get_cached_credentials(username, password)
-            return _d.msad_key_prefix + result if result else None
+            if result:
+                d = []
+                for r in result.split(','):
+                    d.append(_d.msad_key_prefix + r)
+                return d
+            else:
+                return None
 
         if not user:
             logging.warning(f'user {username} active directory access denied')
@@ -153,12 +159,15 @@ def msad_authenticate(username, password):
 
         if not result:
             return None
-        elif len(result) > 1:
-            raise RuntimeError(
-                f'User {username} has more than one {_d.msad_ou} '
-                f'OU group assigned: {", ".join(result)}')
-        msad_cache_credentials(username, password, result[0])
-        return _d.msad_key_prefix + result[0]
+        # elif len(result) > 1:
+        # raise RuntimeError(
+        # f'User {username} has more than one {_d.msad_ou} '
+        # f'OU group assigned: {", ".join(result)}')
+        msad_cache_credentials(username, password, ','.join(result))
+        d = []
+        for r in result:
+            d.append(_d.msad_key_prefix + r)
+        return d
     except Exception as e:
         logging.error(f'Unable to authenticate via active directory: {e}')
         eva.core.log_traceback()
@@ -170,6 +179,21 @@ def crypt_password(password):
 
 
 def authenticate(user=None, password=None):
+
+    def _format_key(key):
+        try:
+            if isinstance(key, list):
+                kk = key
+            else:
+                kk = key.split(',')
+            if len(kk) == 1:
+                return kk[0]
+            else:
+                return apikey.create_combined_key(kk)
+        except Exception as e:
+            logging.error(e)
+            raise
+
     if user is None or password is None:
         raise AccessDenied('No login/password provided')
     dbconn = userdb()
@@ -180,7 +204,7 @@ def authenticate(user=None, password=None):
     except:
         eva.core.report_userdb_error()
     if r:
-        return r.k, None
+        return _format_key(r.k), None
     else:
         k = msad_authenticate(user, password)
         if k is None:
@@ -188,7 +212,7 @@ def authenticate(user=None, password=None):
         else:
             logging.debug(
                 f'user {user} authenticated via active directory, key id: {k}')
-            return k, 'msad'
+            return _format_key(k), 'msad'
 
 
 def api_log_insert(call_id,
@@ -373,8 +397,10 @@ def get_user(user=None):
 def create_user(user=None, password=None, key=None):
     if user is None or password is None or key is None:
         return False
-    if key not in apikey.keys_by_id:
-        raise ResourceNotFound('API key')
+    kk = key.split(',')
+    for k in kk:
+        if k not in apikey.keys_by_id:
+            raise ResourceNotFound(f'API key {k}')
     try:
         dbconn = userdb()
         row = dbconn.execute(sql('select k from users where u = :u'),
