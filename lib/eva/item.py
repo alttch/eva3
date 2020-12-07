@@ -1977,9 +1977,12 @@ def get_state_log(a=None,
     if oid is None:
         raise ResourceNotFound
     n = eva.notify.get_stats_notifier(a)
-    # TODO: implement tsdb
+    if not n:
+        raise ResourceNotFound('notifier')
     if n.state_storage not in ['sql']:  #, 'tsdb']:
-        raise MethodNotImplemented
+        raise MethodNotImplemented(
+            'state log is supported by SQL notifiers only')
+
     t_start = fmt_time(t_start)
     t_end = fmt_time(t_end)
     try:
