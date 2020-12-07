@@ -945,7 +945,7 @@ class SQLANotifier(GenericNotifier):
             except:
                 h['value'] = value if value else None
             result.append(h)
-        return result[:l] if l is not None else result
+        return result[-1 * l:] if l is not None else result
 
     def connect(self):
         try:
