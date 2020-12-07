@@ -57,8 +57,9 @@ API key properties:
     * **lock** access to lock management functions
     * **device** (for :doc:`/uc/uc` only) access to device templates functions
 
-* **cdata** custom data. Can be set to any custom value (up to 16384
-  characters), appears in serialized ACL as-is.
+* **cdata** list of custom data. Can be set to any custom values (up to 16384
+  characters), appears in serialized ACL as-is. The field is a list, if set
+  from string, it is automatically split with commas.
 
 * **dynamic** read-only value, specifying is the key "dynamic" (True, stored in
   the db) or "static" (False, defined in the key config file)
@@ -123,13 +124,10 @@ assigned locally or with :doc:`Active Directory<msad>` groups.
 
 If more than one key (so more than one ACL) is assigned:
 
-* item ACLs and allow/assign hosts/networks are merged as-is
+* item ACLs, cdata and allow/assign hosts/networks are merged as-is
   
 * special ACLs are merged with higher access level (e.g. if one of keys has
   master access, the combined ACL will have master access as well)
-
-* **cdata** field becomes a list which contains "cdata" fields of all keys
-  combined.
 
 * **key id** has the value "comb:KEY_1+KEY_2+...KEY_N"
 

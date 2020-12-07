@@ -54,7 +54,7 @@ class APIKey(object):
         self.key_id = key_id
         self.master = False
         self.sysfunc = False
-        self.cdata = ''
+        self.cdata = []
         self.item_ids = []
         self.groups = []
         self.item_ids_ro = []
@@ -238,9 +238,15 @@ class APIKey(object):
                 self.set_modified(save)
             return True
         elif prop == 'cdata':
-            val = '' if value is None else value
-            if self.cdata != val:
-                self.cdata = val
+            val = [] if value is None else value
+            if isinstance(val, str):
+                val = val.split(',')
+            res = []
+            for v in val:
+                if v not in res:
+                    res.append(v)
+            if self.cdata != res:
+                self.cdata = res
                 self.set_modified(save)
             return True
         raise ResourceNotFound('property ' + prop)
@@ -257,7 +263,7 @@ class APIKey(object):
         data = self.serialize()
         for d in [
                 'items', 'groups', 'items_ro', 'groups_ro', 'allow',
-                'hosts_allow', 'hosts_assign', 'pvt', 'rpvt'
+                'hosts_allow', 'hosts_assign', 'pvt', 'rpvt', 'cdata'
         ]:
             data[d] = ','.join(data[d])
         dbconn = userdb()
@@ -423,7 +429,11 @@ def load(fname=None, load_from_db=True):
                     except:
                         pass
                     try:
-                        key.cdata = cfg.get(ks, 'cdata')
+                        key.allow = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'cdata').split(',')
+                            ]))
                     except:
                         pass
                     keys[k] = key
@@ -706,11 +716,10 @@ def _recombine_acl(combined_key):
                 combined_key.master = True
             if key.sysfunc:
                 combined_key.sysfunc = True
-            if key.cdata is not None and key.cdata != '':
-                combined_key.cdata.append(key.cdata)
             for prop in [
                     'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
-                    'pvt_files', 'rpvt_uris', 'hosts_allow', 'hosts_assign'
+                    'pvt_files', 'rpvt_uris', 'hosts_allow', 'hosts_assign',
+                    'cdata'
             ]:
                 for i in getattr(key, prop):
                     a = getattr(combined_key, prop)
@@ -736,7 +745,6 @@ def create_combined_key(key_ids=[]):
             combined_key.dynamic = True
             combined_key.temporary = True
             combined_key.combined_from = _key_ids.copy()
-            combined_key.cdata = []
             # register
             keys_by_id[ckey_id] = combined_key
             keys[ckey_value] = combined_key
@@ -810,7 +818,6 @@ def load_keys_from_db():
                 break
             key = APIKey(r.k, r.k_id)
             key.sysfunc = True if val_to_boolean(r.s) else False
-            key.cdata = r.cdata
             for i, v in {
                     'item_ids': 'i',
                     'groups': 'g',
@@ -818,7 +825,8 @@ def load_keys_from_db():
                     'groups_ro': 'g_ro',
                     'allow': 'a',
                     'pvt_files': 'pvt',
-                    'rpvt_uris': 'rpvt'
+                    'rpvt_uris': 'rpvt',
+                    'cdata': 'cdata'
             }.items():
                 setattr(
                     key, i,
