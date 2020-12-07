@@ -41,6 +41,9 @@ Put the following block in controller configuration (e.g. for
     key_prefix =
     ou = EVA
     ;ca = /path/to/ca-file.crt
+    ; cache credentials for the specified time (seconds)
+    ; default: 86400 (1 day), 0 to disable caching
+    ;cache_time = 86400
 
 Host and domain should always be specified. Default key prefix is empty,
 default organizational unit is *EVA*. CA file is not used by default.

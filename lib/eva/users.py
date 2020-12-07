@@ -31,33 +31,105 @@ from eva.tools import SimpleNamespace
 
 from eva.tools import fmt_time
 
-_d = SimpleNamespace(msad=None, msad_ou='EVA', msad_key_prefix='')
+_d = SimpleNamespace(msad=None,
+                     msad_ou='EVA',
+                     msad_key_prefix='',
+                     msad_cache_time=86400)
 
 api_log_clean_delay = 60
 
+msad_cache_clean_delay = 60
 
-def msad_init(host, domain, ca=None, key_prefix=None, ou=None):
+
+def msad_init(host,
+              domain,
+              ca=None,
+              key_prefix=None,
+              ou=None,
+              cache_time=86400):
     try:
         from easyad import EasyAD
     except:
         logging.error('unable to import easyad module')
         return
+    dbconn = userdb()
+    meta = sa.MetaData()
+    t_users = sa.Table(
+        'msad_cache',
+        meta,
+        sa.Column('u', sa.String(64), primary_key=True),
+        sa.Column('p', sa.String(64)),
+        sa.Column('cn', sa.String(64)),
+        sa.Column('t', sa.Numeric(20, 8)),
+    )
+    try:
+        meta.create_all(dbconn)
+    except:
+        eva.core.log_traceback()
+        logging.critical('unable to create msad_cache table in db')
     ad_config = dict(AD_SERVER=host, AD_DOMAIN=domain, CA_CERT_FILE=ca)
     _d.msad = EasyAD(ad_config)
     _d.msad_key_prefix = key_prefix if key_prefix else ''
+    _d.msad_cache_time = cache_time
     if ou is not None:
         _d.msad_ou = ou
+
+
+def msad_cache_credentials(username, password, cn):
+    if _d.msad_cache_time <= 0:
+        return
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    params = {
+        'u': username,
+        'p': crypt_password(password),
+        'cn': cn,
+        't': time.time()
+    }
+    try:
+        if dbconn.execute(
+                sql('update msad_cache set p=:p, cn=:cn, t=:t where u=:u'), **
+                params).rowcount < 1:
+            dbconn.execute(
+                sql('insert into msad_cache(u, p, cn, t) '
+                    'values (:u, :p, :cn, :t)'), **params)
+        dbt.commit()
+        logging.debug(f'MSAD credentials for {username} cached')
+    except:
+        dbt.rollback()
+        raise
+
+
+def msad_get_cached_credentials(username, password):
+    if _d.msad_cache_time <= 0:
+        return
+    logging.debug(f'getting cached credentials for {username}')
+    r = userdb().execute(
+        sql('select cn from msad_cache where u=:u and p=:p and t>=:t'),
+        u=username,
+        p=crypt_password(password),
+        t=time.time() - _d.msad_cache_time).fetchone()
+    return r.cn if r else None
 
 
 def msad_authenticate(username, password):
     try:
         if not _d.msad:
             return None
-        user = _d.msad.authenticate_user(username, password, json_safe=True)
+
+        try:
+            user = _d.msad.authenticate_user(username, password, json_safe=True)
+        except Exception as e:
+            logging.warning(f'Unable to access active directory: {e}')
+            eva.core.log_traceback()
+            result = msad_get_cached_credentials(username, password)
+            return _d.msad_key_prefix + result if result else None
 
         if not user:
             logging.warning(f'user {username} active directory access denied')
             return None
+
+        result = []
 
         for grp in _d.msad.get_all_user_groups(user=user,
                                                credentials=dict(
@@ -77,9 +149,18 @@ def msad_authenticate(username, password):
                 except:
                     pass
             if ou == _d.msad_ou and cn:
-                return _d.msad_key_prefix + cn
-    except:
-        logging.error('Unable to access active directory')
+                result.append(cn)
+
+        if not result:
+            return None
+        elif len(result) > 1:
+            raise RuntimeError(
+                f'User {username} has more than one {_d.msad_ou} '
+                f'OU group assigned: {", ".join(result)}')
+        msad_cache_credentials(username, password, result[0])
+        return _d.msad_key_prefix + result[0]
+    except Exception as e:
+        logging.error(f'Unable to authenticate via active directory: {e}')
         eva.core.log_traceback()
     return None
 
@@ -422,7 +503,12 @@ def update_config(cfg):
     except:
         ou = _d.msad_ou
     logging.debug(f'msad.ou = {ou}')
-    msad_init(host, domain, ca, key_prefix, ou)
+    try:
+        cache_time = int(cfg.get('msad', 'cache_time'))
+    except:
+        cache_time = 86400
+    logging.debug(f'msad.cache_time = {cache_time}')
+    msad_init(host, domain, ca, key_prefix, ou, cache_time)
 
 
 def run_hook(cmd, u, password=None):
@@ -444,6 +530,8 @@ def run_hook(cmd, u, password=None):
 def start():
     if eva.core.config.keep_api_log:
         api_log_cleaner.start()
+    if _d.msad and _d.msad_cache_time > 0:
+        msad_cache_cleaner.start()
 
 
 @eva.core.stop
@@ -463,6 +551,23 @@ def api_log_cleaner(**kwargs):
     try:
         dbconn.execute(sql('delete from api_log where t < :t'),
                        t=time.time() - eva.core.config.keep_api_log)
+        dbt.commit()
+    except:
+        dbt.rollback()
+        raise
+
+
+@background_worker(delay=msad_cache_clean_delay,
+                   name='users:msad_cache_cleaner',
+                   loop='cleaners',
+                   on_error=eva.core.log_traceback)
+def msad_cache_cleaner(**kwargs):
+    logging.debug('cleaning MSAD cache')
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(sql('delete from msad_cache where t < :t'),
+                       t=time.time() - _d.msad_cache_time)
         dbt.commit()
     except:
         dbt.rollback()

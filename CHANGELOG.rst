@@ -46,6 +46,7 @@ Common
     * "slog" CLI command (displays state log)
     * JSON RPC additionally accepts requests to the root URI (required by some
       clients), accepts and trying to fix malformed requests
+    * Active Directory credentials caching
 
 UC
 --

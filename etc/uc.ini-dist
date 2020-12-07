@@ -89,6 +89,9 @@ layout = enterprise
 ;key_prefix =
 ;ou = EVA
 ;ca = /path/to/ca-file.crt
+; cache credentials for the specified time (seconds)
+; default: 86400 (1 day), 0 to disable caching
+;cache_time = 86400
 
 [upnp]
 ; allow UPnP discovery of this controller
