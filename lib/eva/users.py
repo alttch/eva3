@@ -443,8 +443,12 @@ def set_user_password(user=None, password=None):
 
 
 def set_user_key(user=None, key=None):
-    if user is None or key is None or key not in apikey.keys_by_id:
+    if user is None or key is None:
         return None
+    kk = key.split(',')
+    for k in kk:
+        if k not in apikey.keys_by_id:
+            raise ResourceNotFound(f'API key {k}')
     try:
         dbconn = userdb()
         if dbconn.execute(sql('update users set k = :k where u = :u'),
