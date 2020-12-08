@@ -173,6 +173,9 @@ File paths:
 Before/After deploy
 ~~~~~~~~~~~~~~~~~~~
 
+Remote calls
+^^^^^^^^^^^^
+
 Controller API calls may be automatically executed after deployment is
 complete:
 
@@ -181,12 +184,16 @@ complete:
     controller:
         lm/lm1:
             before-deploy:
-                - { api: reset, i: timers/timer1 }
+                - api: reset
+                  i: timers/timer1
             after-deploy:
                 - { api: clear, i: timers/timer1 }
                 - { api: reload_controller, i: uc/uc1 }
                 - { api: reload_controller, i: uc/uc2 }
-                - { api: custom_fn, _pass: true, param1: 123, param2: "x" }
+                - api: custom_fn
+                  _pass: true
+                  param1: 123
+                  param2: "x"
 
 API calls are always executed in the specified order, one-by-one, *api:* field
 contains API function to execute, others specify function parameters. The
@@ -199,6 +206,24 @@ Custom API call timeout can be defined with special parameter *_timeout*.
 
     It is usually recommended to call *reload_controller* for :doc:`/lm/lm` to
     let it instantly load newly deployed items from connected UCs.
+
+Local calls
+^^^^^^^^^^^
+
+Sometimes it's useful to call local SFA function deployment process. This can
+be done with directive "cm-api" which has the same format as "api" for remote
+calls:
+
+.. code:: yaml
+
+    controller:
+        lm/lm1:
+            before-deploy:
+                - api: reset
+                  i: timers/timer1
+                # just for a test
+                - cm-api: reload_controller
+                  i: lm/lm1
 
 Additional deploy functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

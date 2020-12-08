@@ -97,6 +97,7 @@ SFA
     * cloud deploy: skip busy drivers/PHIs during undeployment
     * cloud deploy: skip existing items during deployment (optionally)
     * cloud deploy: local functions ("sleep", "system")
+    * cloud deploy: local cloud manager API calls
     * cloud deploy: file masks in upload-remote
     * cloud deploy: accepts deployment YAML from STDIN
     * cloud deploy: custom before/after deploy timeouts

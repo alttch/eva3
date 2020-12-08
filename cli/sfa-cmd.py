@@ -1175,6 +1175,24 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                          'invalid before-{}deploy, {} {}'
                                         ).format(c, 'un' if und else '',
                                                  e.__class__.__name__, e))
+                            elif 'cm-api' in a:
+                                try:
+                                    func = a['cm-api']
+                                    can_pass_err = a.get('_pass')
+                                    custom_timeout = a.get('_timeout')
+                                    params = a.copy()
+                                    del params['cm-api']
+                                    for p in ['_pass', '_timeout']:
+                                        try:
+                                            del params[p]
+                                        except:
+                                            pass
+                                except Exception as e:
+                                    raise Exception(
+                                        ('Controller {}, '
+                                         'invalid before-{}deploy, {} {}'
+                                        ).format(c, 'un' if und else '',
+                                                 e.__class__.__name__, e))
                             else:
                                 f = a['function']
                                 expect_result = None
@@ -1199,7 +1217,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         result != expect_result:
                                     raise RuntimeError(
                                         f'function failed: {result: {result}}')
-                            else:
+                            elif 'api' in a:
                                 result = macall({
                                     'i': c,
                                     'f': func,
@@ -1221,6 +1239,25 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
+                            elif 'cm-api' in a:
+                                code, data = api.call(func,
+                                                      params,
+                                                      timeout=custom_timeout)
+                                if code != apiclient.result_ok:
+                                    msg = f'API call failed, code {code}'
+                                    if can_pass_err:
+                                        self.print_warn(msg)
+                                    else:
+                                        raise Exception(msg)
+                                elif func == 'cmd' and data.get('exitcode'):
+                                    msg = (f'cmd call failed, '
+                                           f'stderr:\n{data.get("err")}')
+                                    if can_pass_err:
+                                        self.print_warn(msg)
+                                    else:
+                                        raise Exception(msg)
+                            else:
+                                raise RuntimeError('Invalid section')
 
             execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
