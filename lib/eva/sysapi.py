@@ -823,7 +823,7 @@ class UserAPI(object):
             p: user password
             a: API key to assign (key id, not a key itself)
         """
-        u, p, a = parse_api_params(kwargs, 'upa', 'SSS')
+        u, p, a = parse_api_params(kwargs, 'upa', 'SSR')
         return eva.users.create_user(u, p, a)
 
     @log_w
@@ -838,10 +838,10 @@ class UserAPI(object):
             p: property (password or key)
             v: value
         """
-        k, u, p, v = parse_function_params(kwargs, 'upv', 'SSS')
+        u, p, v = parse_api_params(kwargs, 'upv', 'SSR')
         tokens.remove_token(user=u)
         if p == 'password':
-            return eva.users.set_user_password(k, u, v)
+            return eva.users.set_user_password(u, v)
         elif p == 'key':
             return eva.users.set_user_key(u, v)
         else:

@@ -1345,6 +1345,73 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
+        # ===== API Keys =====
+        print('Creating API keys...')
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in self.dict_safe_get(v, 'key', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'create_key',
+                        'p': {
+                            'i': i
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        if code == apiclient.result_already_exists and skip_existing:
+                            print('    [skipped]')
+                        else:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
+                    for prop, value in vv.items():
+                        print('     -- {}={}'.format(prop, value))
+                        code = macall({
+                            'i': c,
+                            'f': 'set_key_prop',
+                            'p': {
+                                'i': i,
+                                'p': prop,
+                                'v': value
+                            }
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
+        print('Creating local users...')
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in self.dict_safe_get(v, 'user', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'create_user',
+                        'p': {
+                            'u': i,
+                            'p': vv['password'],
+                            'a': vv['key']
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        if code == apiclient.result_already_exists and skip_existing:
+                            print('    [skipped]')
+                            for prop, value in vv.items():
+                                print('     -- {}={}'.format(prop, value))
+                                code = macall({
+                                    'i': c,
+                                    'f': 'user.set',
+                                    'p': {
+                                        'u': i,
+                                        'p': prop,
+                                        'v': value
+                                    }
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    raise Exception(
+                                        'API call failed, code {}'.format(code))
+                        else:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
         # ===== PHI =====
         print('Loading PHIs...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1710,6 +1777,38 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         self.print_warn('PHI {} not found'.format(i))
                     elif code == apiclient.result_busy:
                         self.print_warn('PHI {} is in use'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
+        print('Deleting local users...')
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in self.dict_safe_get(v, 'user', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'destroy_user',
+                        'p': {
+                            'u': i
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('User {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
+        print('Deleting API keys...')
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in self.dict_safe_get(v, 'key', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'destroy_key',
+                        'p': {
+                            'i': i
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('API key {} not found'.format(i))
                     elif code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         # ===== CVARS =====

@@ -76,6 +76,41 @@ Here is an example, which:
 "src" field tells deployment function to get PHI module from file or URL and
 upload it to the target controller.
 
+API keys and local users
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Keys can contain any valid key properties, local user accounts MUST have both
+"password" and "key" properties set.
+
+.. code:: yaml
+
+    controller:
+      uc/controller1:
+        key:
+          tkey1:
+            key: verysecret1
+            groups:
+              - plant1/#
+              - plant2/#
+            sysfunc: true
+            allow:
+              - lock
+              - cmd
+          tkey2:
+            key: verysecret2
+            groups: "#"
+            allow:
+              - device
+        user:
+          test1:
+            password: "iu4i32j432s"
+            key: tkey1
+          test2:
+            password: "u89132u2183"
+            key:
+              - tkey1
+              - tkey2
+
 Uploading files
 ~~~~~~~~~~~~~~~
 

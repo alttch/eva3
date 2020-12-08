@@ -413,8 +413,8 @@ def create_user(user=None, password=None, key=None):
         dbconn.execute(sql('insert into users(u, p, k) values (:u, :p, :k)'),
                        u=user,
                        p=crypt_password(password),
-                       k=key)
-        logging.info('User {} created, key: {}'.format(user, key))
+                       k=','.join(kk))
+        logging.info('User {} created, key: {}'.format(user, ','.join(kk)))
     except:
         eva.core.report_userdb_error()
         return None
@@ -452,9 +452,9 @@ def set_user_key(user=None, key=None):
     try:
         dbconn = userdb()
         if dbconn.execute(sql('update users set k = :k where u = :u'),
-                          k=key,
+                          k=','.join(kk),
                           u=user).rowcount:
-            logging.info('user {} key {} is set'.format(user, key))
+            logging.info('user {} key {} is set'.format(user, ','.join(kk)))
             return True
     except:
         eva.core.report_userdb_error()

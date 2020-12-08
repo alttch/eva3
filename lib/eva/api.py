@@ -834,7 +834,6 @@ class GenericAPI(API):
             'product_name': eva.core.product.name,
             'product_code': eva.core.product.code,
             'product_build': eva.core.product.build,
-            'threads': len(threading.enumerate()),
             'uptime': int(time.time() - eva.core.start_time)
         }
         if eva.core.config.enterprise_layout is not None:
@@ -848,6 +847,7 @@ class GenericAPI(API):
             result['setup_mode'] = eva.core.is_setup_mode()
             result['db_update'] = eva.core.config.db_update
             result['polldelay'] = eva.core.config.polldelay
+            result['threads'] = len(threading.enumerate())
             if eva.core.config.development:
                 result['development'] = True
             if eva.benchmark.enabled and eva.benchmark.intervals:
