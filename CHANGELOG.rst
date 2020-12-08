@@ -9,6 +9,8 @@ Common
     * fix: hosts_allow / hosts_assign in JRPC calls
     * fix: cmd wait delay
     * fix: allow ACL OID groups without masks
+    * fix: test command don't report number of active threads any more for
+      API keys without "sysfunc" permission
 
     * deprecated: RESTful and direct API
 
@@ -98,6 +100,7 @@ SFA
     * cloud deploy: file masks in upload-remote
     * cloud deploy: accepts deployment YAML from STDIN
     * cloud deploy: custom before/after deploy timeouts
+    * cloud deploy: API keys and local user accounts deployment
 
 
 3.3.1 (2020-08-26)
