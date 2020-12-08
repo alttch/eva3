@@ -914,7 +914,7 @@ class SQLANotifier(GenericNotifier):
         result = []
         space = self.space if self.space is not None else ''
         tz = pytz.timezone(time.tzname[0])
-        oid = oid.replace('#', '%')
+        oid = oid.replace('#', '%').replace('+', '%')
         data = list(
             dbconn.execute(
                 sql('select oid, t, status, value from state_history where '
