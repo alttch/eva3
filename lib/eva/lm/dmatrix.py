@@ -822,8 +822,8 @@ class DecisionRule(eva.item.Item):
             group = '/'.join(i[:-2])
         if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
             raise Exception('invalid type')
-        if '.b' in prop:
-            prop, prop_bit = prop.split('.b')
+        if '.status.b' in prop or '.value.b' in prop:
+            prop, prop_bit = prop.rsplit('.b', 1)
             prop_bit = int(prop_bit)
         else:
             prop_bit = None
