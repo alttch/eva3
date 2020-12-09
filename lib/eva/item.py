@@ -329,6 +329,7 @@ class UpdatableItem(Item):
         self.expiration_checker_lock = threading.Lock()
         self._updates_allowed = True
         self.update_xc = None
+        self.update_lock = threading.RLock()
         # default status: 0 - off, 1 - on, -1 - error
         self.status = 0
         self.value = ''
@@ -560,7 +561,8 @@ class UpdatableItem(Item):
         return self._updates_allowed
 
     def disable_updates(self):
-        self._updates_allowed = False
+        with self.update_lock:
+            self._updates_allowed = False
 
     def enable_updates(self):
         self._updates_allowed = True
@@ -610,8 +612,9 @@ class UpdatableItem(Item):
             eva.core.log_traceback()
 
     async def _job_update_scheduler(self):
-        logging.debug('{} scheduling update'.format(self.oid))
-        await self.update_processor.trigger()
+        if self.updates_allowed():
+            logging.debug('{} scheduling update'.format(self.oid))
+            await self.update_processor.trigger()
 
     def get_update_xc(self, **kwargs):
         return eva.runner.ExternalProcess(fname=self.update_exec,
@@ -706,27 +709,28 @@ class UpdatableItem(Item):
                          from_mqtt=False,
                          force_notify=False,
                          update_expiration=True):
-        need_notify = False
-        if status is not None and status != '':
-            try:
-                _s = int(status)
-                if self.status != _s:
-                    need_notify = True
-                    self.status = _s
-            except:
-                logging.info('%s status "%s" is not number, can not set' % \
-                        (self.oid, status))
-                eva.core.log_traceback()
-                return False
-            need_notify = True
-        if value is not None:
-            if self.value != value:
+        with self.update_lock:
+            need_notify = False
+            if status is not None and status != '':
+                try:
+                    _s = int(status)
+                    if self.status != _s:
+                        need_notify = True
+                        self.status = _s
+                except:
+                    logging.info('%s status "%s" is not number, can not set' % \
+                            (self.oid, status))
+                    eva.core.log_traceback()
+                    return False
                 need_notify = True
-                self.value = value
-        if update_expiration:
-            self.update_expiration()
-        if need_notify or force_notify:
-            self.notify(skip_subscribed_mqtt=from_mqtt)
+            if value is not None:
+                if self.value != value:
+                    need_notify = True
+                    self.value = value
+            if update_expiration:
+                self.update_expiration()
+            if need_notify or force_notify:
+                self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
     def serialize(self,
@@ -1001,12 +1005,14 @@ class ActiveItem(Item):
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
-                        self.action_before_run(a)
-                        xc = self.get_action_xc(a)
-                        self.action_xc = xc
-                        self.queue_lock.release()
-                        xc.run()
-                        self.action_after_run(a, xc)
+                        try:
+                            self.action_before_run(a)
+                            xc = self.get_action_xc(a)
+                            self.action_xc = xc
+                            self.queue_lock.release()
+                            xc.run()
+                        finally:
+                            self.action_after_run(a, xc)
                         if xc.exitcode < 0:
                             a.set_terminated(exitcode=xc.exitcode,
                                              out=xc.out,
@@ -1569,39 +1575,40 @@ class VariableItem(UpdatableItem):
                          update_expiration=True):
         if self._destroyed:
             return False
-        try:
-            if status is not None:
-                _status = int(status)
-            else:
-                _status = None
-        except:
-            logging.error('update %s returned bad data' % self.oid)
-            eva.core.log_traceback()
-            return False
-        if not self.status and _status is None:
-            logging.debug('%s skipping update - it\'s not active' % \
-                    self.oid)
-            return False
-        need_notify = False
-        if _status is not None:
-            if self.status != _status:
-                need_notify = True
-            self.status = _status
-        if value is not None and self.status:
-            if self.value != value:
-                need_notify = True
-            self.value = value
-            if self.status == -1 and _status is None and value != '':
-                self.status = 1
-                need_notify = True
-        if update_expiration:
-            self.update_expiration()
-        if need_notify or force_notify:
-            logging.debug(
-                '%s status = %u, value = "%s"' % \
-                        (self.oid, self.status, self.value))
-            self.notify(skip_subscribed_mqtt=from_mqtt)
-        return True
+        with self.update_lock:
+            try:
+                if status is not None:
+                    _status = int(status)
+                else:
+                    _status = None
+            except:
+                logging.error('update %s returned bad data' % self.oid)
+                eva.core.log_traceback()
+                return False
+            if not self.status and _status is None:
+                logging.debug('%s skipping update - it\'s not active' % \
+                        self.oid)
+                return False
+            need_notify = False
+            if _status is not None:
+                if self.status != _status:
+                    need_notify = True
+                self.status = _status
+            if value is not None and self.status:
+                if self.value != value:
+                    need_notify = True
+                self.value = value
+                if self.status == -1 and _status is None and value != '':
+                    self.status = 1
+                    need_notify = True
+            if update_expiration:
+                self.update_expiration()
+            if need_notify or force_notify:
+                logging.debug(
+                    '%s status = %u, value = "%s"' % \
+                            (self.oid, self.status, self.value))
+                self.notify(skip_subscribed_mqtt=from_mqtt)
+            return True
 
     def is_expired(self):
         if not self.status:

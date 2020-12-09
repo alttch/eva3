@@ -363,19 +363,15 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             nvalue = self.value
         return (nstatus, nvalue)
 
-    def action_before_get_task(self):
-        super().action_before_get_task()
-        self.enable_updates()
-
     def action_before_run(self, action):
         if not self.update_if_action:
             self.disable_updates()
 
     def action_after_run(self, action, xc):
         self.last_action = time.time()
+        self.enable_updates()
         if self.update_exec_after_action:
             self.update_processor.trigger_threadsafe(force=True)
-        self.enable_updates()
 
     def update_set_state(self,
                          status=None,
@@ -384,42 +380,45 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                          force_notify=False):
         if self._destroyed:
             return False
-        if self.is_maintenance_mode():
-            logging.info('Ignoring {} update in maintenance mode'.format(
-                self.oid))
-            return False
-        try:
-            if status is not None:
-                _status = int(status)
+        with self.update_lock:
+            if not self.updates_allowed():
+                return False
+            if self.is_maintenance_mode():
+                logging.info('Ignoring {} update in maintenance mode'.format(
+                    self.oid))
+                return False
+            try:
+                if status is not None:
+                    _status = int(status)
+                else:
+                    _status = None
+            except:
+                logging.error('update %s returned invalid data' % self.oid)
+                eva.core.log_traceback()
+                return False
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical('Unit::update_set_state locking broken')
+            if self.current_action and self.current_action.is_status_running():
+                nstatus = None
+                nvalue = None
             else:
-                _status = None
-        except:
-            logging.error('update %s returned invalid data' % self.oid)
-            eva.core.log_traceback()
-            return False
-        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('Unit::update_set_state locking broken')
-        if self.current_action and self.current_action.is_status_running():
-            nstatus = None
-            nvalue = None
-        else:
-            nstatus = _status
-            nvalue = value
-        if not self.is_value_valid(value):
-            logging.error('Unit {} got invalid value {}'.format(
-                self.oid, value))
-            _status = -1
-            nstatus = -1
-            value = None
-            nvalue = None
-        else:
-            self.update_expiration()
-        self.set_state(status=_status,
-                       value=value,
-                       nstatus=nstatus,
-                       nvalue=nvalue,
-                       from_mqtt=from_mqtt)
-        self.queue_lock.release()
+                nstatus = _status
+                nvalue = value
+            if not self.is_value_valid(value):
+                logging.error('Unit {} got invalid value {}'.format(
+                    self.oid, value))
+                _status = -1
+                nstatus = -1
+                value = None
+                nvalue = None
+            else:
+                self.update_expiration()
+            self.set_state(status=_status,
+                           value=value,
+                           nstatus=nstatus,
+                           nvalue=nvalue,
+                           from_mqtt=from_mqtt)
+            self.queue_lock.release()
         return True
 
     def set_state(self,
