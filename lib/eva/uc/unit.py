@@ -372,19 +372,15 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             nvalue = self.value
         return (nstatus, nvalue)
 
-    def action_before_get_task(self):
-        super().action_before_get_task()
-        self.enable_updates()
-
     def action_before_run(self, action):
         if not self.update_if_action:
             self.disable_updates()
 
     def action_after_run(self, action, xc):
         self.last_action = time.time()
+        self.enable_updates()
         if self.update_exec_after_action:
             self.update_processor.trigger_threadsafe(force=True)
-        self.enable_updates()
 
     def update_set_state(self,
                          status=None,
@@ -395,6 +391,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if self._destroyed:
             return False
         with self.update_lock:
+            if not self.updates_allowed():
+                return False
             if timestamp is not None:
                 if timestamp <= self.remote_update_timestamp:
                     return False

@@ -562,7 +562,8 @@ class UpdatableItem(Item):
         return self._updates_allowed
 
     def disable_updates(self):
-        self._updates_allowed = False
+        with self.update_lock:
+            self._updates_allowed = False
 
     def enable_updates(self):
         self._updates_allowed = True
@@ -612,8 +613,9 @@ class UpdatableItem(Item):
             eva.core.log_traceback()
 
     async def _job_update_scheduler(self):
-        logging.debug('{} scheduling update'.format(self.oid))
-        await self.update_processor.trigger()
+        if self.updates_allowed():
+            logging.debug('{} scheduling update'.format(self.oid))
+            await self.update_processor.trigger()
 
     def get_update_xc(self, **kwargs):
         return eva.runner.ExternalProcess(fname=self.update_exec,
@@ -1012,12 +1014,14 @@ class ActiveItem(Item):
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
-                        self.action_before_run(a)
-                        xc = self.get_action_xc(a)
-                        self.action_xc = xc
-                        self.queue_lock.release()
-                        xc.run()
-                        self.action_after_run(a, xc)
+                        try:
+                            self.action_before_run(a)
+                            xc = self.get_action_xc(a)
+                            self.action_xc = xc
+                            self.queue_lock.release()
+                            xc.run()
+                        finally:
+                            self.action_after_run(a, xc)
                         if xc.exitcode < 0:
                             a.set_terminated(exitcode=xc.exitcode,
                                              out=xc.out,
