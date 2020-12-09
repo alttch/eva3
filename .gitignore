@@ -17,6 +17,7 @@ lib/eva/lm/extensions
 ui/js/eva_sfa.min.js
 log
 runtime
+mirror
 xc/uc
 xc/lm
 xc/sfa
@@ -40,5 +41,6 @@ sbin/check-mqtt
 sbin/get-setup-options
 sbin/layout-converter
 sbin/eva-update-tables
+sbin/pypi-mirror
 tests/benchmark-uc-crt
 lib/eva/plugins

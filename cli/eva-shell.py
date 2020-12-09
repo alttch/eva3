@@ -301,12 +301,30 @@ class ManagementCLI(GenericCLI):
                                '--repository-url',
                                dest='u',
                                metavar='URL',
-                               help='update repository url')
+                               help='EVA ICS repository url')
         ap_update.add_argument('-i',
                                '--info-only',
                                dest='i',
                                help='Check for a new version without upgrading',
                                action='store_true')
+        ap_update.add_argument('-M',
+                               '--mirror',
+                               dest='mirror',
+                               help='Update local mirror',
+                               action='store_true')
+
+        ap_mirror = self.sp.add_parser('mirror',
+                                       help='Mirror management functions')
+        sp_mirror = ap_mirror.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Management commands')
+        ap_mirror_update = sp_mirror.add_parser(
+            'update', help='Create / Update local EVA ICS mirror')
+        ap_mirror_update.add_argument('-u',
+                                      '--repository-url',
+                                      dest='u',
+                                      metavar='URL',
+                                      help='EVA ICS repository url')
 
     def add_manager_iote_functions(self):
         ap_iote = self.sp.add_parser('iote',
@@ -672,8 +690,8 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime',
-               'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
+               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/drivers/phi',
+               'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -808,6 +826,153 @@ sys.argv = {argv}
         cmd = ('tar', 'xpf', fname, frestore)
         return False if os.system(' '.join(cmd)) else True
 
+    def update_mirror(self, params):
+        try:
+            from configparser import ConfigParser
+            cp = ConfigParser()
+            cp.read(dir_etc + '/sfa.ini')
+            sfa_listen = cp.get('webapi', 'listen')
+            if ':' in sfa_listen:
+                sfa_port = int(sfa_listen.rsplit(':', 1)[-1])
+            else:
+                sfa_port = 80
+        except Exception as e:
+            self.print_err(e)
+            self.print_err('mirror requires SFA, which is not configured')
+            return self.local_func_result_failed
+        import requests
+        import rapidjson
+        try:
+            dir_mirror = dir_eva + '/mirror'
+            dir_mirror_pypi = dir_mirror + '/pypi'
+            dir_mirror_eva = dir_mirror + '/eva'
+            if os.path.isfile(dir_eva + '/python3/bin/pip'):
+                pip = dir_eva + '/python3/bin/pip'
+            else:
+                pip = 'pip3'
+            print(pip)
+            first_install = not os.path.exists(dir_mirror)
+            for d in [dir_mirror, dir_mirror_pypi]:
+                try:
+                    os.mkdir(d)
+                except FileExistsError:
+                    pass
+            with open(f'{dir_eva}/install/mods.list') as fh:
+                mods = [x.strip() for x in fh.readlines()]
+            print('Updating PyPi mirror')
+            print()
+            if os.path.isfile(dir_etc + '/venv'):
+                parser = dir_sbin + f'/parse-source-config {dir_etc}/venv'
+                with os.popen(f'{parser} SKIP') as fh:
+                    mods_skip = fh.read().strip().split()
+                with os.popen(f'{parser} EXTRA') as fh:
+                    mods_extra = fh.read().strip().split()
+            else:
+                mods_skip = []
+                mods_extra = []
+            for m in mods.copy():
+                if m in mods_skip or m.split('=', 1)[0] in mods_skip:
+                    print(self.colored(f'- {m}', color='grey'))
+                    mods.remove(m)
+            for m in mods_extra:
+                print(self.colored(f'+ {m}', color='green'))
+                mods.append(m)
+            if mods_skip or mods_extra:
+                print()
+            print(f'Modules: {len(mods)}')
+            print(self.colored('-' * 40, color='grey', attrs=[]))
+            for mod in mods:
+                if mod:
+                    if os.system(f'{dir_sbin}/pypi-mirror '
+                                 f'download -p {pip} -b -d '
+                                 f'{dir_mirror_pypi}/downloads {mod}'):
+                        return self.local_func_result_failed
+            if os.system(f'{dir_sbin}/pypi-mirror '
+                         f'create -d {dir_mirror_pypi}/downloads '
+                         f'-m {dir_mirror_pypi}/local'):
+                return self.local_func_result_failed
+            print(self.colored('-' * 40, color='grey', attrs=[]))
+            print('Updating EVA ICS mirror')
+            print()
+            build = self._get_build()
+            version = self._get_version()
+            _update_repo = params.get('u')
+            for d in [
+                    dir_mirror_eva, f'{dir_mirror_eva}/{version}',
+                    f'{dir_mirror_eva}/{version}/nightly'
+            ]:
+                try:
+                    os.mkdir(d)
+                except FileExistsError:
+                    pass
+            if not _update_repo:
+                _update_repo = update_repo
+            for f in [
+                    f'{version}/nightly/UPDATE.rst',
+                    f'{version}/nightly/eva-{version}-{build}.tgz'
+            ]:
+                if os.path.isfile(f'{dir_mirror_eva}/{f}'):
+                    print(self.colored(f'- [exists] {f}', color='grey'))
+                else:
+                    r = requests.get(f'{_update_repo}/{f}')
+                    if not r.ok:
+                        raise RuntimeError(f'HTTP error: {r.status_code} while '
+                                           f'downloading {_update_repo}/{f}')
+                    else:
+                        print(self.colored(f'+ [downloaded] {f}',
+                                           color='green'))
+                        with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
+                            fh.write(r.content)
+            with open(f'{dir_mirror_eva}/update_info.json', 'w') as fh:
+                fh.write(
+                    rapidjson.dumps(dict(version=str(version),
+                                         build=str(build))))
+            banner = f'EVA ICS {version} {build} mirror'
+            with open(f'{dir_mirror}/index.html', 'w') as fh:
+                fh.write(banner)
+            import socket
+            hostname = ([
+                l for l in ([
+                    ip
+                    for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+                    if not ip.startswith("127.")
+                ][:1], [[
+                    (s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close())
+                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+                ][0][1]]) if l
+            ][0][0])
+            print(self.colored(f'+ update_info.json', color='green'))
+            print(self.colored('-' * 40, color='grey', attrs=[]))
+            print(banner)
+            print()
+            print(
+                f'EVA ICS update URI: http://{hostname}:{sfa_port}/mirror/eva')
+            print(f'PIP_EXTRA_OPTIONS: -i http://{hostname}:{sfa_port}'
+                  f'/mirror/pypi/local')
+            if first_install:
+                print()
+                print('First time mirroring. Please restart SFA to mount mirror
+                directory')
+            print()
+        except Exception as e:
+            self.print_err(e)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    @staticmethod
+    def _get_build():
+        with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
+            data = p.read()
+            return int(data.strip())
+
+    @staticmethod
+    def _get_version():
+        with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
+            data = p.read()
+            version = data.strip()
+            int(version.split('.')[0])
+            return version
+
     def update(self, params):
         import requests
         import rapidjson
@@ -816,26 +981,19 @@ sys.argv = {argv}
             _update_repo = update_repo
         os.environ['EVA_REPOSITORY_URL'] = _update_repo
         try:
-            with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
-                data = p.read()
-                build = int(data.strip())
-        except:
-            return self.local_func_result_failed
-        try:
-            with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
-                data = p.read()
-                version = data.strip()
-                int(version.split('.')[0])
+            build = self._get_build()
+            version = self._get_version()
         except:
             return self.local_func_result_failed
         try:
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
-                raise Exception('HTTP ERROR')
+                raise Exception(f'HTTP error: {r.status_code} for {_update_repo}')
             result = rapidjson.loads(r.text)
             new_build = int(result['build'])
             new_version = result['version']
-        except:
+        except Exception as e:
+            self.print_err(e)
             return self.local_func_result_failed
         if params.get('i'):
             return 0, {
@@ -888,6 +1046,8 @@ sys.argv = {argv}
             not self.after_save():
             return self.local_func_result_failed
         print('Update completed', end='')
+        if params.get('mirror'):
+            self.update_mirror(dict(u=params.get(u)))
         if self.interactive:
             print('. Now exit EVA shell and log in back')
         else:
@@ -1065,6 +1225,7 @@ _api_functions = {
     'server:get_user': cli.get_controller_user,
     'server:set_user': cli.set_controller_user,
     'version': cli.print_version,
+    'mirror:update': cli.update_mirror,
     'update': cli.update,
     'system:reboot': cli.power_reboot,
     'system:poweroff': cli.power_poweroff,
@@ -1122,7 +1283,9 @@ except:
     pass
 
 cli.default_prompt = '# '
-cli.arg_sections += ['backup', 'server', 'edit', 'masterkey', 'system', 'iote']
+cli.arg_sections += [
+    'backup', 'server', 'edit', 'masterkey', 'system', 'iote', 'mirror'
+]
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
 cli.nodename = nodename

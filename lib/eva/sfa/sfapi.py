@@ -1718,6 +1718,10 @@ class UI_ROOT():
         raise cp_api_404()
 
 
+class EVA_Mirror:
+    pass
+
+
 class SFA_HTTP_Root:
 
     def __init__(self):
@@ -1928,6 +1932,18 @@ def start():
             }
         })
 
+    dir_mirror = eva.core.dir_eva + '/mirror'
+
+    if os.path.isdir(dir_mirror):
+        cherrypy.tree.mount(EVA_Mirror(),
+                            '/mirror',
+                            config={
+                                '/': {
+                                    'tools.staticdir.on': True,
+                                    'tools.staticdir.dir': dir_mirror,
+                                    'tools.staticdir.index': 'index.html'
+                                }
+                            })
     cherrypy.tree.mount(
         UI_ROOT(),
         '/ui',

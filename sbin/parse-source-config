@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -z $2 ]; then
+  echo "Usage: $0 <config> <var>"
+  exit 1
+fi
+
+. $1
+echo ${!2}

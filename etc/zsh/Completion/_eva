@@ -611,14 +611,24 @@ _eva_server() {
   fi
 }
 
+_eva_mirror() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" update
+  else
+    _files
+  fi
+}
+
 _eva() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" backup edit iote lm masterkey ns save server sfa system uc update version
+    compadd "$@" backup edit iote lm masterkey mirror ns save server sfa system uc update version
   else
     case "${words[2]}" in
-      backup|edit|iote|lm|masterkey|server|sfa|system|uc)
+      backup|edit|iote|lm|masterkey|mirror|server|sfa|system|uc)
         _eva_${words[2]}
         ;;
       *)
