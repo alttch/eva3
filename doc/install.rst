@@ -684,9 +684,7 @@ IP/port may differ and need to be corrected manually.
 If the mirror is set up properly, the following url should display a web page
 with EVA ICS version and build:
 
-.. code-block::
-
-    http://<SFA_IP>:<PORT>/mirror/
+    \http://<SFA_IP>:<PORT>/mirror/
 
 Setting up PyPi mirror location
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -695,9 +693,7 @@ On secondary nodes, open "etc/venv" file and add *PIP_EXTRA_OPTIONS* field, as
 given by mirror update command. If the field already exists, merge existing
 options with the new:
 
-.. code-block::
-
-    PIP_EXTRA_OPTIONS="-i http://<SFA_IP>:<PORT>/mirror/pypi/local --trusted-host <SFA_IP>"
+    PIP_EXTRA_OPTIONS="-i \http://<SFA_IP>:<PORT>/mirror/pypi/local --trusted-host <SFA_IP>"
 
 Setting up EVA ICS repository location
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
