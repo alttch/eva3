@@ -14,7 +14,7 @@ Common
 
     * deprecated: RESTful and direct API
 
-    * local mirror feature (EVA ICS and PyPi)
+    * local mirror feature (mirroring EVA ICS repo and PyPi)
     * "value" field in state and history databases increased to 8192 bytes
     * cmd API function accepts args as a list
     * cmd API function accepts STDIN data
