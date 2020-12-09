@@ -946,12 +946,16 @@ sys.argv = {argv}
             print(banner)
             print()
             print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
-            print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port} '
+            print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port}'
                   f'/mirror/pypi/local --trusted-host {hostname}"')
             if first_install:
                 print()
-                print('First time mirroring. Please '
-                      'restart SFA to serve the mirror directory')
+                print(
+                    self.colored(
+                        'First time mirroring. Please '
+                        'restart SFA to serve the mirror directory',
+                        color='yellow',
+                        attrs='bold'))
             print()
         except Exception as e:
             self.print_err(e)

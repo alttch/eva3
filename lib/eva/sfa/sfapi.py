@@ -1947,6 +1947,7 @@ def start():
                             'tools.staticdir.index': 'index.html'
                         }, tiny_httpe)
             })
+
     cherrypy.tree.mount(
         UI_ROOT(),
         '/ui',
