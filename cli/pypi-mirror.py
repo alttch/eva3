@@ -310,8 +310,8 @@ def create_mirror(download_dir='.', mirror_dir='.', pkgs=None):
         pkg_html = generate_pkg_html(pkgs)
         write_html_index(pkg_dir, pkg_html)
         pkg_names.append((pkg_norm_name, pkgs[0].metadata.name))
-    root_html = generate_root_html(pkg_names)
-    write_html_index(mirror_dir, root_html)
+    # root_html = generate_root_html(pkg_names)
+    # write_html_index(mirror_dir, root_html)
 
 def create_metadata_files(download_dir, overwrite=False):
     if overwrite:
