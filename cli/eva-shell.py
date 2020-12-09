@@ -909,7 +909,8 @@ sys.argv = {argv}
                 _update_repo = update_repo
             for f in [
                     f'{version}/nightly/UPDATE.rst',
-                    f'{version}/nightly/eva-{version}-{build}.tgz'
+                    f'{version}/nightly/eva-{version}-{build}.tgz',
+                    f'{version}/nightly/update-{build}.sh'
             ]:
                 if os.path.isfile(f'{dir_mirror_eva}/{f}'):
                     print(self.colored(f'- [exists] {f}', color='grey'))
@@ -945,14 +946,13 @@ sys.argv = {argv}
             print(self.colored('-' * 40, color='grey', attrs=[]))
             print(banner)
             print()
-            print(
-                f'EVA ICS update URI: http://{hostname}:{sfa_port}/mirror/eva')
-            print(f'PIP_EXTRA_OPTIONS: -i http://{hostname}:{sfa_port}'
-                  f'/mirror/pypi/local')
+            print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
+            print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port} '
+                  f'/mirror/pypi/local --trusted-host {hostname}"')
             if first_install:
                 print()
                 print('First time mirroring. Please '
-                      'restart SFA to mount mirror directory')
+                      'restart SFA to serve the mirror directory')
             print()
         except Exception as e:
             self.print_err(e)
