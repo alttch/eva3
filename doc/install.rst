@@ -703,7 +703,7 @@ Secondary nodes must to be updated with "-u
 command.
 
 It is also possible to configure the default repository location, by editing
-the file "etc/eva_shell.ini" (copy it from *eva-shell.ini* dist, if doesn't
+the file "etc/eva_shell.ini" (copy it from *eva-shell.ini-dist*, if doesn't
 exists), section "update", field "url":
 
 .. code:: ini
