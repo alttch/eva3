@@ -951,8 +951,8 @@ sys.argv = {argv}
                   f'/mirror/pypi/local')
             if first_install:
                 print()
-                print('First time mirroring. Please restart SFA to mount mirror
-                directory')
+                print('First time mirroring. Please '
+                      'restart SFA to mount mirror directory')
             print()
         except Exception as e:
             self.print_err(e)
@@ -988,7 +988,8 @@ sys.argv = {argv}
         try:
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
-                raise Exception(f'HTTP error: {r.status_code} for {_update_repo}')
+                raise Exception(
+                    f'HTTP error: {r.status_code} for {_update_repo}')
             result = rapidjson.loads(r.text)
             new_build = int(result['build'])
             new_version = result['version']
