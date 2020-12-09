@@ -618,3 +618,110 @@ With such setup, :ref:`js_framework`-based interface doesn't perform any
 authentication, *$eva.start()* function is called as soon as UI is loaded.
 API method *login* called by framework function will automatically log in user
 using basic authentication credentials provided to front-end server.
+
+Serving local mirror
+====================
+
+If secondary nodes have unstable, slow or no Internet connection, the local
+mirror can be configured. The mirror can be hosted by nodes, where
+:doc:`/sfa/sfa` is set up. The SFA node, which hosts the mirror, must have the
+Internet connection.
+
+The mirror hosts both EVA ICS distribution and all required Python modules +
+their dependencies.
+
+After creation / update, the mirror hosts EVA ICS version / build, which the
+primary node has got. It is possible to host the mirror for a single version
+only.
+
+For the secondary nodes with the Internet connection, using mirror is not
+required.
+
+Installing
+----------
+
+The mirror is automatically created with a command:
+
+.. code:: bash
+
+    eva mirror update
+
+The same command is also used to update mirror files.
+
+.. note::
+
+    If the mirror wasn't used before, the local SFA controller must be
+    restarted to serve the mirror directory:
+
+    .. code:: bash
+
+        eva sfa server restart
+
+The mirror should be updated every time after the host node is update. There is
+also "-M" flag for "eva update" command to perform the mirror update
+automatically.
+
+Configuring mirror
+------------------
+
+The local mirror duplicates settings from "etc/venv". Modules from "SKIP"
+section are not mirrored, modules from "EXTRA" section are included.
+
+This means if any node uses extra Python modules, it is better to include them
+in "EXTRA" section of "etc/venv" of the node the mirror is configured on.
+
+.. note::
+
+    After adding extra modules, update mirror with "eva mirror update" command.
+
+Configuring secondary nodes
+---------------------------
+
+After updating, EVA shell tries to determine the local SFA IP address / port
+and automatically gives configuration instructions. In complicated setups,
+IP/port may differ and need to be corrected manually.
+
+If the mirror is set up properly, the following url should display a web page
+with EVA ICS version and build:
+
+.. code-block::
+
+    http://<SFA_IP>:<PORT>/mirror/
+
+Setting up PyPi mirror location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On secondary nodes, open "etc/venv" file and add *PIP_EXTRA_OPTIONS* field, as
+given by mirror update command. If the field already exists, merge existing
+options with the new:
+
+.. code-block::
+
+    PIP_EXTRA_OPTIONS="-i http://<SFA_IP>:<PORT>/mirror/pypi/local --trusted-host <SFA_IP>"
+
+Setting up EVA ICS repository location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Secondary nodes must to be updated with "-u
+\http://<SFA_IP>:<PORT>/mirror/eva" extra option for "eva update"
+command.
+
+It is also possible to configure the default repository location, by editing
+the file "etc/eva_shell.ini" (copy it from *eva-shell.ini* dist, if doesn't
+exist), section "update", field "url":
+
+.. code:: ini
+
+    [update]
+    url = http://<SFA_IP>:<PORT>/mirror/eva
+
+Removing
+--------
+
+Remove "mirror" in EVA ICS installation directory:
+
+.. code:: bash
+
+    rm -rf /opt/eva/mirror
+
+Optionally, restart the local SFA instance after.

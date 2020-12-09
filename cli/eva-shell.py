@@ -829,9 +829,14 @@ sys.argv = {argv}
     def update_mirror(self, params):
         try:
             from configparser import ConfigParser
-            cp = ConfigParser()
+            cp = ConfigParser(inline_comment_prefixes=';')
             cp.read(dir_etc + '/sfa.ini')
             sfa_listen = cp.get('webapi', 'listen')
+            if sfa_listen.startswith('127.'):
+                self.print_err(
+                    'The local SFA is configured to listen on the loopback only'
+                )
+                return self.local_func_result_failed
             if ':' in sfa_listen:
                 sfa_port = int(sfa_listen.rsplit(':', 1)[-1])
             else:
