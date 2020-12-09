@@ -850,7 +850,6 @@ sys.argv = {argv}
                 pip = dir_eva + '/python3/bin/pip'
             else:
                 pip = 'pip3'
-            print(pip)
             first_install = not os.path.exists(dir_mirror)
             for d in [dir_mirror, dir_mirror_pypi]:
                 try:
