@@ -634,7 +634,7 @@ After creation / update, the mirror hosts EVA ICS version / build, which the
 primary node has got. It is possible to host the mirror for a single version
 only.
 
-For the secondary nodes with the Internet connection, using mirror is not
+For the secondary nodes with the Internet connection, using mirrors is not
 required.
 
 Installing
