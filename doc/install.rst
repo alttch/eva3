@@ -714,7 +714,7 @@ exists), section "update", field "url":
 Removing
 --------
 
-Remove "mirror" in EVA ICS installation directory:
+Remove "mirror" in EVA ICS directory:
 
 .. code:: bash
 
