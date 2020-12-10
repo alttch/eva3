@@ -44,3 +44,4 @@ sbin/eva-update-tables
 sbin/pypi-mirror
 tests/benchmark-uc-crt
 lib/eva/plugins
+.keys

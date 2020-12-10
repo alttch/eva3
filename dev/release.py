@@ -2,6 +2,17 @@
 
 import argparse
 import os
+import hashlib
+import requests
+import sys
+import json
+import random
+
+dir_eva = os.path.dirname(os.path.abspath(__file__)) + '/..'
+
+sys.path.insert(0, dir_eva + '/lib')
+
+import eva.crypto
 
 ap = argparse.ArgumentParser()
 
@@ -25,9 +36,41 @@ ap.add_argument('-u',
 
 a = ap.parse_args()
 
-import random
-if not a.test:
+fname_manifest = '/tmp/manifest-{}.json'.format(random.randint(1, 1000000))
+content = {}
+priv_key = open(f'{dir_eva}/.keys/private.key', 'rb').read()
+for f in [
+        f'eva-{a.version}-{a.build}.tgz', f'update-{a.build}.sh', f'UPDATE.rst'
+]:
+    uri = f'https://get.eva-ics.com/{a.version}/nightly/{f}'
+    r = requests.get(uri)
+    if not r.ok:
+        raise RuntimeError(f'http response: {r.status_code} for {uri}')
+    s = hashlib.sha256()
+    s.update(r.content)
+    signature = eva.crypto.sign(r.content, priv_key)
+    eva.crypto.verify_signature(r.content, signature)
+    content[f] = dict(size=len(r.content),
+                      sha256=s.hexdigest(),
+                      signature=signature)
 
+try:
+    with open(fname_manifest, 'w') as fh:
+        fh.write(
+            json.dumps({
+                'version': a.version,
+                'build': a.build,
+                'content': content
+            }))
+    gsutil(f'cp -a public-read {fname_manifest}'
+           f' gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.build}.json')
+finally:
+    try:
+        os.unlink(fname_manifest)
+    except FileNotFoundError:
+        pass
+exit()
+if not a.test:
     gsutil(
         f'cp -a public-read '
         f'gs://get.eva-ics.com/{a.version}/nightly/eva-{a.version}-{a.build}.tgz'
@@ -51,12 +94,25 @@ if not a.test:
            f'gs://get.eva-ics.com/{a.version}/nightly/UPDATE.rst '
            f'gs://get.eva-ics.com/{a.version}/stable/UPDATE.rst')
 
+    gsutil(
+        f'cp -a public-read '
+        f'gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.version}-{a.build}.json'
+        f' gs://get.eva-ics.com/{a.version}/stable/manifest-{a.version}-{a.build}.json'
+    )
+
 if a.update_info or a.test:
-    import json
     fname = '/tmp/update_info_{}.json'.format(random.randint(1, 1000000))
-    ftarget = 'update_info{}.json'.format('_test' if a.test else '')
-    with open(fname, 'w') as fh:
-        fh.write(json.dumps({'version': a.version, 'build': a.build}))
-    gsutil(f'-h "Cache-Control:no-cache" cp -a public-read '
-           f'{fname} gs://get.eva-ics.com/{ftarget}')
-    os.unlink(fname)
+    try:
+        ftarget = 'update_info{}.json'.format('_test' if a.test else '')
+        with open(fname, 'w') as fh:
+            fh.write(json.dumps({
+                'version': a.version,
+                'build': a.build,
+            }))
+        gsutil(f'-h "Cache-Control:no-cache" cp -a public-read '
+               f'{fname} gs://get.eva-ics.com/{ftarget}')
+    finally:
+        try:
+            os.unlink(name)
+        except FileNotFoundError:
+            pass

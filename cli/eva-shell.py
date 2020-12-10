@@ -847,6 +847,7 @@ sys.argv = {argv}
             return self.local_func_result_failed
         import requests
         import rapidjson
+        import eva.crypto
         try:
             dir_mirror = dir_eva + '/mirror'
             dir_mirror_pypi = dir_mirror + '/pypi'
@@ -911,23 +912,26 @@ sys.argv = {argv}
                     pass
             if not _update_repo:
                 _update_repo = update_repo
-            for f in [
+            manifest = None
+            for idx, f in enumerate([
+                    f'{version}/nightly/manifest-{build}.json',
                     f'{version}/nightly/UPDATE.rst',
                     f'{version}/nightly/eva-{version}-{build}.tgz',
                     f'{version}/nightly/update-{build}.sh'
-            ]:
+            ]):
                 if os.path.isfile(f'{dir_mirror_eva}/{f}'):
                     print(self.colored(f'- [exists] {f}', color='grey'))
+                    if idx == 0:
+                        with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
+                            content = fh.read()
                 else:
-                    r = requests.get(f'{_update_repo}/{f}')
-                    if not r.ok:
-                        raise RuntimeError(f'HTTP error: {r.status_code} while '
-                                           f'downloading {_update_repo}/{f}')
-                    else:
-                        print(self.colored(f'+ [downloaded] {f}',
-                                           color='green'))
-                        with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
-                            fh.write(r.content)
+                    content = eva.crypto.safe_download(f'{_update_repo}/{f}',
+                                                       manifest=manifest)
+                    print(self.colored(f'+ [downloaded] {f}', color='green'))
+                    with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
+                        fh.write(content)
+                if idx == 0:
+                    manifest = rapidjson.loads(content)
             with open(f'{dir_mirror_eva}/update_info.json', 'w') as fh:
                 fh.write(
                     rapidjson.dumps(dict(version=str(version),
@@ -1001,6 +1005,7 @@ sys.argv = {argv}
     def update(self, params):
         import requests
         import rapidjson
+        # TODO safe download
         try:
             self._set_file_lock('update')
         except RuntimeError:
