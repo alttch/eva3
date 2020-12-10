@@ -319,7 +319,7 @@ class ManagementCLI(GenericCLI):
                                              metavar='func',
                                              help='Management commands')
         ap_mirror_update = sp_mirror.add_parser(
-            'update', help='Create / Update local EVA ICS mirror')
+            'update', help='Create / update local EVA ICS mirror')
         ap_mirror_update.add_argument('-u',
                                       '--repository-url',
                                       dest='u',
