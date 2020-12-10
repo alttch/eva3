@@ -981,87 +981,115 @@ sys.argv = {argv}
             int(version.split('.')[0])
             return version
 
+    @staticmethod
+    def _set_file_lock(name):
+        lock_file = dir_eva + f'/var/{name}.lock'
+        if os.path.exists(lock_file):
+            raise RuntimeError
+        else:
+            with open(lock_file, 'w'):
+                pass
+
+    @staticmethod
+    def _remove_file_lock(name):
+        lock_file = dir_eva + f'/var/{name}.lock'
+        try:
+            os.unlink(lock_file)
+        except FileNotFoundError:
+            pass
+
     def update(self, params):
         import requests
         import rapidjson
-        _update_repo = params.get('u')
-        if not _update_repo:
-            _update_repo = update_repo
-        os.environ['EVA_REPOSITORY_URL'] = _update_repo
         try:
-            build = self._get_build()
-            version = self._get_version()
-        except:
+            self._set_file_lock('update')
+        except RuntimeError:
+            self.print_err('update is already active')
             return self.local_func_result_failed
         try:
-            r = requests.get(_update_repo + '/update_info.json', timeout=5)
-            if r.status_code != 200:
-                raise Exception(
-                    f'HTTP error: {r.status_code} for {_update_repo}')
-            result = rapidjson.loads(r.text)
-            new_build = int(result['build'])
-            new_version = result['version']
-        except Exception as e:
-            self.print_err(e)
-            return self.local_func_result_failed
-        if params.get('i'):
-            return 0, {
-                'build': build,
-                'new_build': new_build,
-                'new_version': new_version,
-                'update_available': build < new_build
-            }
-        print(
-            self.colored('Current build', color='blue', attrs=['bold']) +
-            ' : ' + self.colored(build, color='yellow'))
-        print(
-            self.colored('Latest available build', color='blue', attrs=['bold'])
-            + ' : ' + self.colored('{} (v{})'.format(new_build, new_version),
-                                   color='yellow'))
-        if build == new_build:
-            return self.local_func_result_empty
-        if build > new_build:
-            print('Your build is newer than update server has')
-            return self.local_func_result_failed
-        if not params.get('y'):
-            if version != new_version:
-                try:
-                    r = requests.get('{}/{}/nightly/UPDATE.rst'.format(
-                        _update_repo, new_version))
-                    if not r.ok:
-                        raise Exception('server response code {}'.format(
-                            r.status_code))
-                except Exception as e:
-                    print('Unable to download update manifest: {}'.format(e))
-                    return self.local_func_result_failed
-                print()
-                print(r.text)
+            _update_repo = params.get('u')
+            if not _update_repo:
+                _update_repo = update_repo
+            os.environ['EVA_REPOSITORY_URL'] = _update_repo
             try:
-                u = input('Type ' +
-                          self.colored('YES', color='red', attrs=['bold']) +
-                          ' (uppercase) to update, or press ' +
-                          self.colored('ENTER', color='white') + ' to abort > ')
+                build = self._get_build()
+                version = self._get_version()
             except:
-                print()
-                u = ''
-            if u != 'YES':
+                return self.local_func_result_failed
+            try:
+                r = requests.get(_update_repo + '/update_info.json', timeout=5)
+                if r.status_code != 200:
+                    raise Exception(
+                        f'HTTP error: {r.status_code} for {_update_repo}')
+                result = rapidjson.loads(r.text)
+                new_build = int(result['build'])
+                new_version = result['version']
+            except Exception as e:
+                self.print_err(e)
+                return self.local_func_result_failed
+            if params.get('i'):
+                return 0, {
+                    'build': build,
+                    'new_build': new_build,
+                    'new_version': new_version,
+                    'update_available': build < new_build
+                }
+            print(
+                self.colored('Current build', color='blue', attrs=['bold']) +
+                ' : ' + self.colored(build, color='yellow'))
+            print(
+                self.colored(
+                    'Latest available build', color='blue', attrs=['bold']) +
+                ' : ' + self.colored('{} (v{})'.format(new_build, new_version),
+                                     color='yellow'))
+            if build == new_build:
                 return self.local_func_result_empty
-        url = '{}/{}/nightly/update-{}.sh'.format(_update_repo, new_version,
-                                                  new_build)
-        cmd = ('curl -sL ' + url + ' | bash /dev/stdin')
-        if os.system(dir_sbin + '/eva-control stop') or \
-            not self.before_save() or \
-            os.system(cmd) or \
-            not self.after_save():
-            return self.local_func_result_failed
-        print('Update completed', end='')
-        if params.get('mirror'):
-            self.update_mirror(dict(u=params.get(u)))
-        if self.interactive:
-            print('. Now exit EVA shell and log in back')
-        else:
-            print()
-        return self.local_func_result_ok
+            if build > new_build:
+                print('Your build is newer than update server has')
+                return self.local_func_result_failed
+            if not params.get('y'):
+                if version != new_version:
+                    try:
+                        r = requests.get('{}/{}/nightly/UPDATE.rst'.format(
+                            _update_repo, new_version))
+                        if not r.ok:
+                            raise Exception('server response code {}'.format(
+                                r.status_code))
+                    except Exception as e:
+                        print(
+                            'Unable to download update manifest: {}'.format(e))
+                        return self.local_func_result_failed
+                    print()
+                    print(r.text)
+                try:
+                    u = input('Type ' +
+                              self.colored('YES', color='red', attrs=['bold']) +
+                              ' (uppercase) to update, or press ' +
+                              self.colored('ENTER', color='white') +
+                              ' to abort > ')
+                except:
+                    print()
+                    u = ''
+                if u != 'YES':
+                    return self.local_func_result_empty
+            url = '{}/{}/nightly/update-{}.sh'.format(_update_repo, new_version,
+                                                      new_build)
+            cmd = ('curl -sL ' + url + ' | bash /dev/stdin')
+            if os.system(dir_sbin + '/eva-control stop') or \
+                not self.before_save() or \
+                os.system(cmd) or \
+                not self.after_save():
+                return self.local_func_result_failed
+            print('Update completed', end='')
+            if params.get('mirror'):
+                self.update_mirror(dict(u=params.get(u)))
+            if self.interactive:
+                print('. Now exit EVA shell and log in back')
+            else:
+                print()
+            return self.local_func_result_ok
+        finally:
+            self._remove_file_lock('update')
 
     def power_reboot(self, params):
         if not params.get('y'):

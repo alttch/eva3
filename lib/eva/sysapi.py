@@ -359,6 +359,22 @@ class CMDAPI(object):
             eva.core.wait_for(_c.is_finished, wait)
         return _c.serialize()
 
+    @log_w
+    @api_need_master
+    def update_node(self, **kwargs):
+        uri, yes = parse_api_params(kwargs, 'uy', 'ss')
+        uri = f'-u {uri}' if uri else ''
+        if yes != 'YES':
+            raise FunctionFailed('Not confirmed')
+        import datetime
+        log_file = eva.core.dir_eva + '/log/update.log'
+        with open(log_file, 'a') as fh:
+            fh.write((f'\n{datetime.datetime.now().isoformat()}\n' + '-' * 26 +
+                      '\n'))
+        os.system(f'(sleep 0.5 && {eva.core.dir_eva}/bin/eva '
+                  f'update --YES {uri}) >> {log_file} 2>&1 &')
+        return True
+
 
 class LogAPI(object):
 
