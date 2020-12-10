@@ -1112,6 +1112,9 @@ sys.argv = {argv}
             else:
                 print()
             return self.local_func_result_ok
+        except Exception as e:
+            self.print_err(e)
+            return self.local_func_result_failed
         finally:
             self._remove_file_lock('update')
 
