@@ -1081,10 +1081,9 @@ sys.argv = {argv}
                 os.chdir(dir_eva)
                 for f in update_files:
                     with open(f, 'wb') as fh:
-                        print(f)
                         fh.write(
                             safe_download(
-                                f'{update_repo}/{new_version}/nightly/{f}',
+                                f'{_update_repo}/{new_version}/nightly/{f}',
                                 manifest=manifest))
                 if not self.before_save() or \
                     os.system(f'bash {update_script}') or \
