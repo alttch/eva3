@@ -686,8 +686,28 @@ with EVA ICS version and build:
 
     \http://<SFA_IP>:<PORT>/mirror/
 
+Automatic setup
+~~~~~~~~~~~~~~~
+
+On secondary node, type:
+
+.. code:: shell
+
+    eva mirror set http://<SFA_IP>:<PORT>/mirror/
+
+Note that the above command overrides *PIP_EXTRA_OPTIONS* in *etc/venv*.
+
+To switch back to the default EVA ICS and PyPi mirrors, type:
+
+.. code:: shell
+
+    eva mirror set default
+
+Manual setup
+~~~~~~~~~~~~
+
 Setting up PyPi mirror location
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On secondary nodes, open "etc/venv" file and add *PIP_EXTRA_OPTIONS* field, as
 given by mirror update command. If the field already exists, merge existing
@@ -696,7 +716,7 @@ options with the new:
     PIP_EXTRA_OPTIONS="-i \http://<SFA_IP>:<PORT>/mirror/pypi/local --trusted-host <SFA_IP>"
 
 Setting up EVA ICS repository location
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Secondary nodes must to be updated with "-u
 \http://<SFA_IP>:<PORT>/mirror/eva" extra option for "eva update"

@@ -1038,7 +1038,7 @@ sys.argv = {argv}
             print(banner)
             print()
             print(f'Mirror URL: ' +
-                  self.colored(f'http://{hostname}:{sfa_port}/mirror',
+                  self.colored(f'http://{hostname}:{sfa_port}/mirror/',
                                color='green',
                                attrs=['bold']))
             print()
