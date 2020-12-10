@@ -1079,6 +1079,9 @@ sys.argv = {argv}
                 not self.before_save() or \
                 os.system(cmd) or \
                 not self.after_save():
+                self.print_err('FAILED TO APPLY UPDATE! '
+                               'TRYING TO BRING THE NODE BACK ONLINE')
+                self.start_controller(dict(p=None))
                 return self.local_func_result_failed
             print('Update completed', end='')
             if params.get('mirror'):
