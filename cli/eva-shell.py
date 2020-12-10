@@ -845,9 +845,8 @@ sys.argv = {argv}
             self.print_err(e)
             self.print_err('mirror requires SFA, which is not configured')
             return self.local_func_result_failed
-        import requests
         import rapidjson
-        import eva.crypto
+        from eva.crypto import safe_download
         try:
             dir_mirror = dir_eva + '/mirror'
             dir_mirror_pypi = dir_mirror + '/pypi'
@@ -925,8 +924,8 @@ sys.argv = {argv}
                         with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
                             content = fh.read()
                 else:
-                    content = eva.crypto.safe_download(f'{_update_repo}/{f}',
-                                                       manifest=manifest)
+                    content = safe_download(f'{_update_repo}/{f}',
+                                            manifest=manifest)
                     print(self.colored(f'+ [downloaded] {f}', color='green'))
                     with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
                         fh.write(content)
@@ -1003,9 +1002,8 @@ sys.argv = {argv}
             pass
 
     def update(self, params):
-        import requests
         import rapidjson
-        # TODO safe download
+        from eva.crypto import safe_download
         try:
             self._set_file_lock('update')
         except RuntimeError:
@@ -1022,11 +1020,9 @@ sys.argv = {argv}
             except:
                 return self.local_func_result_failed
             try:
-                r = requests.get(_update_repo + '/update_info.json', timeout=5)
-                if r.status_code != 200:
-                    raise Exception(
-                        f'HTTP error: {r.status_code} for {_update_repo}')
-                result = rapidjson.loads(r.text)
+                result = rapidjson.loads(
+                    safe_download(_update_repo + '/update_info.json',
+                                  timeout=10))
                 new_build = int(result['build'])
                 new_version = result['version']
             except Exception as e:
@@ -1052,20 +1048,22 @@ sys.argv = {argv}
             if build > new_build:
                 print('Your build is newer than update server has')
                 return self.local_func_result_failed
+            manifest = rapidjson.loads(
+                safe_download('{}/{}/nightly/manifest-{}.json'.format(
+                    _update_repo, new_version, new_build)))
             if not params.get('y'):
                 if version != new_version:
                     try:
-                        r = requests.get('{}/{}/nightly/UPDATE.rst'.format(
-                            _update_repo, new_version))
-                        if not r.ok:
-                            raise Exception('server response code {}'.format(
-                                r.status_code))
+                        content = safe_download(
+                            '{}/{}/nightly/UPDATE.rst'.format(
+                                _update_repo, new_version),
+                            manifest=manifest)
                     except Exception as e:
-                        print(
-                            'Unable to download update manifest: {}'.format(e))
+                        self.print_err(e)
+                        print('Unable to download update info: {}'.format(e))
                         return self.local_func_result_failed
                     print()
-                    print(r.text)
+                    print(content.decode())
                 try:
                     u = input('Type ' +
                               self.colored('YES', color='red', attrs=['bold']) +
@@ -1077,22 +1075,39 @@ sys.argv = {argv}
                     u = ''
                 if u != 'YES':
                     return self.local_func_result_empty
-            url = '{}/{}/nightly/update-{}.sh'.format(_update_repo, new_version,
-                                                      new_build)
-            cmd = ('curl -sL ' + url + ' | bash /dev/stdin')
-            if os.system(dir_sbin + '/eva-control stop') or \
-                not self.before_save() or \
-                os.system(cmd) or \
-                not self.after_save():
-                self.print_err('FAILED TO APPLY UPDATE! '
-                               'TRYING TO BRING THE NODE BACK ONLINE')
-                self.start_controller(dict(p=None))
-                return self.local_func_result_failed
-            print('Update completed', end='')
+            update_script = f'update-{new_build}.sh'
+            update_files = [update_script, f'eva-{new_version}-{new_build}.tgz']
+            try:
+                os.chdir(dir_eva)
+                for f in update_files:
+                    with open(f, 'wb') as fh:
+                        print(f)
+                        fh.write(
+                            safe_download(
+                                f'{update_repo}/{new_version}/nightly/{f}',
+                                manifest=manifest))
+                if not self.before_save() or \
+                    os.system(f'bash {update_script}') or \
+                    not self.after_save():
+                    self.print_err('FAILED TO APPLY UPDATE! '
+                                   'TRYING TO BRING THE NODE BACK ONLINE')
+                    self.start_controller(dict(p=None))
+                    return self.local_func_result_failed
+                print('Update completed', end='')
+            finally:
+                for f in update_files:
+                    try:
+                        os.unlink(f)
+                    except FileNotFoundError:
+                        pass
             if params.get('mirror'):
+                if not self.before_save():
+                    return self.local_func_result_failed
                 um_result = self.update_mirror(dict(u=params.get(u)))
                 if um_result == self.local_func_result_failed:
                     return um_result
+                if not self.after_save():
+                    return self.local_func_result_failed
             if self.interactive:
                 print('. Now exit EVA shell and log in back')
             else:

@@ -52,6 +52,7 @@ Common
     * Active Directory credentials caching
     * user ACL combining
     * db notifiers: simple cleaning
+    * signed releases
 
 UC
 --
