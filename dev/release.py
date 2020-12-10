@@ -69,7 +69,7 @@ finally:
         os.unlink(fname_manifest)
     except FileNotFoundError:
         pass
-exit()
+
 if not a.test:
     gsutil(
         f'cp -a public-read '
