@@ -326,6 +326,16 @@ class ManagementCLI(GenericCLI):
                                       metavar='URL',
                                       help='EVA ICS repository url')
 
+        ap_mirror_set = sp_mirror.add_parser(
+            'set',
+            help='Set mirror for secondary node (do not run this on primary)')
+        ap_mirror_set.add_argument(
+            'MIRROR_URL',
+            metavar='URL',
+            help=
+            'EVA ICS mirror url as http://server:port/mirror, "default" to restore default settings'
+        )
+
     def add_manager_iote_functions(self):
         ap_iote = self.sp.add_parser('iote',
                                      help='IOTE Cloud management functions')
@@ -826,6 +836,72 @@ sys.argv = {argv}
         cmd = ('tar', 'xpf', fname, frestore)
         return False if os.system(' '.join(cmd)) else True
 
+    def set_mirror(self, params):
+
+        def set_shell_config(fname, prop, value=None):
+            result = []
+            value_changed = False
+            with open(fname) as fh:
+                for l in fh.readlines():
+                    if l.split('=')[0].strip() == prop:
+                        if value is not None:
+                            result.append(f'{prop}="{value}"\n')
+                            value_changed = True
+                    else:
+                        result.append(l)
+            if value and not value_changed:
+                result.append(f'{prop}="{value}"\n')
+            with open(fname, 'w') as fh:
+                fh.write(''.join(result))
+
+        def copy_dist(f):
+            import shutil
+            shutil.copy(f'{f}-dist', f)
+
+        url = params.get('MIRROR_URL')
+        from configparser import ConfigParser
+        cp = ConfigParser(inline_comment_prefixes=';')
+        eva_shell_file = f'{dir_eva}/etc/eva_shell.ini'
+        venv_file = f'{dir_eva}/etc/venv'
+        try:
+            if url != 'default':
+                if not url.endswith('/'):
+                    url += '/'
+                eva_mirror = url + 'eva'
+                pypi_mirror = url + 'pypi/local'
+                from eva.crypto import safe_download
+                import rapidjson
+                rapidjson.loads(
+                    safe_download(eva_mirror + '/update_info.json', timeout=30))
+                if safe_download(pypi_mirror + '/index.html',
+                                 timeout=30).decode().strip() != '+':
+                    raise RuntimeError(
+                        'Invalid mirror (PyPi mirror check failed')
+                if not os.path.exists(eva_shell_file):
+                    copy_dist(eva_shell_file)
+                cp.read(eva_shell_file)
+                cp.set('update', 'url', eva_mirror)
+                with open(eva_shell_file, 'w') as fh:
+                    cp.write(fh)
+                if not os.path.exists(venv_file):
+                    copy_dist(venv_file)
+                trusted_host = pypi_mirror.split('/', 3)[2].split(':', 1)[0]
+                set_shell_config(
+                    venv_file, 'PIP_EXTRA_OPTIONS',
+                    f'-i {pypi_mirror} --trusted-host {trusted_host}')
+            else:
+                if os.path.exists(eva_shell_file):
+                    cp.read(eva_shell_file)
+                    cp.remove_option('update', 'url')
+                    with open(eva_shell_file, 'w') as fh:
+                        cp.write(fh)
+                if os.path.exists(venv_file):
+                    set_shell_config(venv_file, 'PIP_EXTRA_OPTIONS')
+        except Exception as e:
+            self.print_err(e)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
     def update_mirror(self, params):
         try:
             from configparser import ConfigParser
@@ -953,6 +1029,7 @@ sys.argv = {argv}
             print(self.colored('-' * 40, color='grey', attrs=[]))
             print(banner)
             print()
+            print(f'Mirror URL: http://{hostname}:{sfa_port}/mirror')
             print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
             print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port}'
                   f'/mirror/pypi/local --trusted-host {hostname}"')
@@ -1014,6 +1091,10 @@ sys.argv = {argv}
             if not _update_repo:
                 _update_repo = update_repo
             os.environ['EVA_REPOSITORY_URL'] = _update_repo
+            print()
+            print('Using repository : ' +
+                  self.colored(_update_repo, color='green', attrs=['bold']))
+            print()
             try:
                 build = self._get_build()
                 version = self._get_version()
@@ -1290,6 +1371,7 @@ _api_functions = {
     'server:set_user': cli.set_controller_user,
     'version': cli.print_version,
     'mirror:update': cli.update_mirror,
+    'mirror:set': cli.set_mirror,
     'update': cli.update,
     'system:reboot': cli.power_reboot,
     'system:poweroff': cli.power_poweroff,

@@ -615,7 +615,7 @@ _eva_mirror() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" update
+    compadd "$@" set update
   else
     _files
   fi
