@@ -701,23 +701,28 @@ class SQLANotifier(GenericNotifier):
             dbconn = o.db()
             space = o.space if o.space is not None else ''
             logging.debug('.cleaning records older than %u sec' % o.keep)
-            result = dbconn.execute(
-                sql('select oid, max(t) as maxt from state_history where ' +
-                    'space = :space and t < :t group by oid'),
-                space=space,
-                t=time.time() - o.keep)
-            for r in result:
-                dbconn.execute(
-                    sql('delete from state_history where space = :space ' +
-                        'and oid = :oid and t < :maxt'),
+            if o.simple_cleaning:
+                dbconn.execute(sql('delete from state_history where t < :t'),
+                               t=time.time() - o.keep)
+            else:
+                result = dbconn.execute(
+                    sql('select oid, max(t) as maxt from state_history where ' +
+                        'space = :space and t < :t group by oid'),
                     space=space,
-                    oid=r.oid,
-                    maxt=r.maxt)
+                    t=time.time() - o.keep)
+                for r in result:
+                    dbconn.execute(
+                        sql('delete from state_history where space = :space ' +
+                            'and oid = :oid and t < :maxt'),
+                        space=space,
+                        oid=r.oid,
+                        maxt=r.maxt)
 
     def __init__(self,
                  notifier_id,
                  db_uri=None,
                  keep=None,
+                 simple_cleaning=None,
                  space=None,
                  interval=None):
         notifier_type = 'db'
@@ -729,6 +734,7 @@ class SQLANotifier(GenericNotifier):
         self.keep = keep if keep else \
             db_default_keep
         self._keep = keep
+        self.simple_cleaning = simple_cleaning if simple_cleaning else False
         self.history_cleaner = self.HistoryCleaner(name='history_claner:' +
                                                    self.notifier_id,
                                                    o=self)
@@ -1022,6 +1028,13 @@ class SQLANotifier(GenericNotifier):
                 return False
             self._keep = self.keep
             return True
+        elif prop == 'simple_cleaning':
+            if value is None:
+                value = False
+            else:
+                value = val_to_boolean(value)
+            self.simple_cleaning = value
+            return True
         elif prop == 'timeout':
             if super().set_prop(prop, value):
                 self.init_db_engine()
@@ -1036,6 +1049,8 @@ class SQLANotifier(GenericNotifier):
             d['keep'] = self._keep
         if self._db or props:
             d['db'] = self._db
+        if self.simple_cleaning or props:
+            d['simple_cleaning'] = self.simple_cleaning
         return d
 
     def disconnect(self):
@@ -2925,9 +2940,11 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         keep = ncfg.get('keep')
         space = ncfg.get('space')
         interval = ncfg.get('interval')
+        simple_cleaning = ncfg.get('simple_cleaning')
         n = SQLANotifier(_notifier_id,
                          db_uri=db,
                          keep=keep,
+                         simple_cleaning=simple_cleaning,
                          space=space,
                          interval=interval)
     elif ncfg['type'] == 'http-json':

@@ -51,6 +51,7 @@ Common
       clients), accepts and trying to fix malformed requests
     * Active Directory credentials caching
     * user ACL combining
+    * db notifiers: simple cleaning
 
 UC
 --

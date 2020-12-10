@@ -425,10 +425,20 @@ EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or
 :ref:`js_framework` for analysis and e.g. to build graphical charts.
 
-To create db notifier, specify notifier props as **db:<dbfile>[:keeptime]**,
-e.g. *db:history1.db:604800*, where *history1.db* - database file in
-**runtime** folder, *604800* - seconds to keep archive records (1 week). If
-keep time is not specified, EVA keep records for last 86400 seconds (24 hours).
+To create db notifier, specify notifier props as **db:<db_uri>**,
+e.g. *db:runtime/db/history1.db*, where *runtime/db/history1.db* - database
+file in **runtime** folder.
+
+DB notifier properties:
+
+* **keep** keep records for the specified number of seconds. If keep time is
+  not specified, EVA keeps records for last 86400 seconds (24 hours).
+
+* **simple_cleaning** by default, records are analyzed before deletion to make
+  sure each item will have at least one state metric in database after cleanup.
+  This may cause additional overhead for the heavy loaded setups. Setting the
+  property to *true* tells EVA to delete old records with a single query,
+  ignoring that some of the items could have no records left after.
 
 After creating db notifier, don't forget to subscribe it to **state** events.
 Events **action** and **log** are ignored.
