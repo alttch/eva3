@@ -57,6 +57,7 @@ UC
 
     * fix: Modbus/UDP (server) packet processing
     * fix: Modbus serial custom byte size
+    * fix: update_if_action logic
 
     * deprecated: old format of device templates
     * deprecated: multi-update scripts
