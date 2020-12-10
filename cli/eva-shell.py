@@ -962,10 +962,10 @@ sys.argv = {argv}
                         color='yellow',
                         attrs='bold'))
             print()
+            return self.local_func_result_ok
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
-        return self.local_func_result_ok
 
     @staticmethod
     def _get_build():
@@ -1085,7 +1085,9 @@ sys.argv = {argv}
                 return self.local_func_result_failed
             print('Update completed', end='')
             if params.get('mirror'):
-                self.update_mirror(dict(u=params.get(u)))
+                um_result = self.update_mirror(dict(u=params.get(u)))
+                if um_result == self.local_func_result_failed:
+                    return um_result
             if self.interactive:
                 print('. Now exit EVA shell and log in back')
             else:
