@@ -918,7 +918,7 @@ sys.argv = {argv}
                     f'{version}/nightly/eva-{version}-{build}.tgz',
                     f'{version}/nightly/update-{build}.sh'
             ]):
-                if os.path.isfile(f'{dir_mirror_eva}/{f}'):
+                if idx != 1 and os.path.isfile(f'{dir_mirror_eva}/{f}'):
                     print(self.colored(f'- [exists] {f}', color='grey'))
                     if idx == 0:
                         with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
