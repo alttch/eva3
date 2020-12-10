@@ -327,8 +327,7 @@ class ManagementCLI(GenericCLI):
                                       help='EVA ICS repository url')
 
         ap_mirror_set = sp_mirror.add_parser(
-            'set',
-            help='Set mirror for secondary node (do not run this on primary)')
+            'set', help='Set mirror (do not run this on primary node)')
         ap_mirror_set.add_argument(
             'MIRROR_URL',
             metavar='URL',
@@ -864,6 +863,10 @@ sys.argv = {argv}
         eva_shell_file = f'{dir_eva}/etc/eva_shell.ini'
         venv_file = f'{dir_eva}/etc/venv'
         try:
+            if os.path.exists(f'{dir_eva}/mirror'):
+                raise RuntimeError('Can not set mirror URLs on primary node. '
+                                   'If this node should be secondary, '
+                                   'remove "mirror" directory')
             if url != 'default':
                 if not url.endswith('/'):
                     url += '/'
@@ -900,6 +903,11 @@ sys.argv = {argv}
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
+        print(f'Mirror set to ' +
+              self.colored(url, color='green', attrs='bold'))
+        print()
+        if self.interactive:
+            print('Now exit EVA shell and log in back')
         return self.local_func_result_ok
 
     def update_mirror(self, params):
@@ -1029,7 +1037,11 @@ sys.argv = {argv}
             print(self.colored('-' * 40, color='grey', attrs=[]))
             print(banner)
             print()
-            print(f'Mirror URL: http://{hostname}:{sfa_port}/mirror')
+            print(f'Mirror URL: ' +
+                  self.colored(f'http://{hostname}:{sfa_port}/mirror',
+                               color='green',
+                               attrs=['bold']))
+            print()
             print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
             print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port}'
                   f'/mirror/pypi/local --trusted-host {hostname}"')
@@ -1091,7 +1103,6 @@ sys.argv = {argv}
             if not _update_repo:
                 _update_repo = update_repo
             os.environ['EVA_REPOSITORY_URL'] = _update_repo
-            print()
             print('Using repository : ' +
                   self.colored(_update_repo, color='green', attrs=['bold']))
             print()
