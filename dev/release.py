@@ -113,6 +113,6 @@ if a.update_info or a.test:
                f'{fname} gs://get.eva-ics.com/{ftarget}')
     finally:
         try:
-            os.unlink(name)
+            os.unlink(fname)
         except FileNotFoundError:
             pass
