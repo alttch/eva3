@@ -34,3 +34,4 @@ the update.
 .. code-block::
 
     cachetools==4.1.1
+    pyaltt2==0.0.98
