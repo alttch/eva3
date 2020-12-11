@@ -822,6 +822,11 @@ def destroy_cycle(m_id):
 def create_dm_rule(save=False, rule_uuid=None):
     if rule_uuid in dm_rules:
         raise ResourceAlreadyExists
+    if rule_uuid is not None and not re.match(eva.core.OID_ALLOWED_SYMBOLS,
+                                              rule_uuid):
+        raise InvalidParameter(
+            'Unable to create item: invalid symbols in UUID {}'.format(
+                rule_uuid))
     r = eva.lm.dmatrix.DecisionRule(rule_uuid=rule_uuid)
     dm_rules[r.item_id] = r
     if save:
