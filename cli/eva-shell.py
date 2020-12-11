@@ -837,31 +837,11 @@ sys.argv = {argv}
 
     def set_mirror(self, params):
 
-        def set_shell_config(fname, prop, value=None):
-            result = []
-            value_changed = False
-            with open(fname) as fh:
-                for l in fh.readlines():
-                    if l.split('=')[0].strip() == prop:
-                        if value is not None:
-                            result.append(f'{prop}="{value}"\n')
-                            value_changed = True
-                    else:
-                        result.append(l)
-            if value and not value_changed:
-                result.append(f'{prop}="{value}"\n')
-            with open(fname, 'w') as fh:
-                fh.write(''.join(result))
-
-        def copy_dist(f):
-            import shutil
-            shutil.copy(f'{f}-dist', f)
+        from eva.tools import ConfigFile, ShellConfigFile
 
         url = params.get('MIRROR_URL')
-        from configparser import ConfigParser
-        cp = ConfigParser(inline_comment_prefixes=';')
-        eva_shell_file = f'{dir_eva}/etc/eva_shell.ini'
-        venv_file = f'{dir_eva}/etc/venv'
+        eva_shell_file = 'eva_shell.ini'
+        venv_file = 'venv'
         try:
             if os.path.exists(f'{dir_eva}/mirror'):
                 raise RuntimeError('Can not set mirror URLs on primary node. '
@@ -880,26 +860,25 @@ sys.argv = {argv}
                                  timeout=30).decode().strip() != '+':
                     raise RuntimeError(
                         'Invalid mirror (PyPi mirror check failed')
-                if not os.path.exists(eva_shell_file):
-                    copy_dist(eva_shell_file)
-                cp.read(eva_shell_file)
-                cp.set('update', 'url', eva_mirror)
-                with open(eva_shell_file, 'w') as fh:
-                    cp.write(fh)
-                if not os.path.exists(venv_file):
-                    copy_dist(venv_file)
+                with ConfigFile(eva_shell_file, init_if_missing=True) as cf:
+                    cf.set('update', 'url', eva_mirror)
                 trusted_host = pypi_mirror.split('/', 3)[2].split(':', 1)[0]
-                set_shell_config(
-                    venv_file, 'PIP_EXTRA_OPTIONS',
-                    f'-i {pypi_mirror} --trusted-host {trusted_host}')
+                with ShellConfigFile(venv_file, init_if_missing=True) as cf:
+                    cf.set('PIP_EXTRA_OPTIONS',
+                           f'-i {pypi_mirror} --trusted-host {trusted_host}')
             else:
-                if os.path.exists(eva_shell_file):
-                    cp.read(eva_shell_file)
-                    cp.remove_option('update', 'url')
-                    with open(eva_shell_file, 'w') as fh:
-                        cp.write(fh)
-                if os.path.exists(venv_file):
-                    set_shell_config(venv_file, 'PIP_EXTRA_OPTIONS')
+                try:
+                    with ConfigFile(eva_shell_file,
+                                    init_if_missing=False) as cf:
+                        cf.delete('update', 'url')
+                except FileNotFoundError:
+                    pass
+                try:
+                    with ShellConfigFile(venv_file,
+                                         init_if_missing=False) as cf:
+                        cf.delete('PIP_EXTRA_OPTIONS')
+                except FileNotFoundError:
+                    pass
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed

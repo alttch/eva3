@@ -14,6 +14,7 @@ import hashlib
 import uuid
 import string
 import random
+import os
 
 from collections import OrderedDict
 
@@ -26,6 +27,168 @@ from pyaltt2.lp import parse_func_str
 from pyaltt2.network import parse_host_port, netacl_match
 
 from pathlib import Path
+
+dir_etc = os.path.realpath(
+    os.path.abspath(os.path.dirname(__file__)) + '/../../etc')
+
+
+class ConfigFile():
+
+    def __init__(self, fname, init_if_missing=False, backup=True):
+        self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'
+        self.init_if_missing = init_if_missing
+        self._changed = False
+        self.backup = backup
+
+    def __enter__(self):
+        from configparser import ConfigParser
+        self.cp = ConfigParser(inline_comment_prefixes=';')
+        if not os.path.exists(self.fname):
+            if self.init_if_missing:
+                import shutil
+                shutil.copy(f'{self.fname}-dist', self.fname)
+            else:
+                raise FileNotFoundError(f'File not found: {self.fname}')
+        self.cp.read(self.fname)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._changed:
+            import shutil
+            from datetime import datetime
+            if self.backup:
+                shutil.move(
+                    self.fname,
+                    f'{self.fname}-{datetime.now().strftime("%Y%m%d%H%M%S")}')
+            with open(self.fname, 'w') as fh:
+                self.cp.write(fh)
+
+    def add_section(self, section, values):
+        self.cp[section] = values
+        self._changed = True
+
+    def get_section(self, section):
+        return self.cp.get(section)
+
+    def set(self, section, name, value):
+        try:
+            if self.get(section, name) == value:
+                return
+        except:
+            pass
+        try:
+            self.cp[section][name] = value
+        except:
+            self.cp.add_section(section)
+            self.cp[section][name] = value
+        self._changed = True
+
+    def get(self, section, name):
+        return self.cp.get(section, name)
+
+    def delete(self, section, name):
+        try:
+            self.cp.remove_option(section, name)
+            self._changed = True
+        except:
+            pass
+
+    def remove_section(self, section):
+        self.cp.remove_section(section)
+
+    def append(self, section, name, value):
+        try:
+            current = [x.strip() for x in self.get(section, name).split(',')]
+            if value not in current:
+                current.append(value)
+                self.set(section, name, ', '.join(current))
+        except:
+            self.set(section, name, value)
+            return
+
+    def remove(self, section, name, value):
+        try:
+            current = [x.strip() for x in self.get(section, name).split(',')]
+            if value in current:
+                current.remove(value)
+                self.set(section, name, ', '.join(current))
+        except:
+            return
+
+
+class ShellConfigFile():
+
+    def __init__(self, fname, init_if_missing=False, backup=True):
+        self.fname = f'{dir_etc}/{fname}'
+        self.init_if_missing = init_if_missing
+        self._changed = False
+        self.backup = backup
+        self._data = {}
+
+    def __enter__(self):
+        if not os.path.exists(self.fname):
+            if self.init_if_missing:
+                import shutil
+                shutil.copy(f'{self.fname}-dist', self.fname)
+            else:
+                raise FileNotFoundError
+        with open(self.fname) as fh:
+            for line in fh.readlines():
+                line = line.strip()
+                if not line.startswith('#'):
+                    try:
+                        name, value = line.split('=', 1)
+                        if (value.startswith('"') and value.endswith('"')) or \
+                            (value.startswith('\'') and value.endswith('\'')):
+                            value = value[1:-1]
+                        self._data[name] = value.strip()
+                    except:
+                        raise ValueError(
+                            f'Invalid config file: {self.fname} ({line})')
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._changed:
+            import shutil
+            from datetime import datetime
+            if self.backup:
+                shutil.move(
+                    self.fname,
+                    f'{self.fname}-{datetime.now().strftime("%Y%m%d%H%M%S")}')
+            with open(self.fname, 'w') as fh:
+                for k, v in self._data.items():
+                    try:
+                        float(v)
+                        fh.write(f'{k}={v}\n')
+                    except:
+                        fh.write(f'{k}="{v}"\n')
+
+    def set(self, name, value):
+        if self._data.get(name) != value:
+            self._data[name] = value
+            self._changed = True
+
+    def get(self, name):
+        return self._data[name]
+
+    def delete(self, name):
+        try:
+            del self._data[name]
+            self._changed = True
+        except:
+            pass
+
+    def append(self, name, value):
+        current = [x.strip() for x in self._data.get(name, '').split()]
+        if value not in current:
+            current.append(value)
+            self.set(name, ' '.join(current))
+
+    def remove(self, name, value):
+        current = [x.strip() for x in self._data.get(name, '').split()]
+        if value in current:
+            current.remove(value)
+            self.set(name, ' '.join(current))
 
 
 class SimpleNamespace():
