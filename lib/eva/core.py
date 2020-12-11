@@ -61,6 +61,9 @@ controllers = []
 
 plugin_modules = {}
 
+plugin_lock = threading.RLock()
+config_lock = threading.RLock()
+
 spawn = task_supervisor.spawn
 
 _flags = SimpleNamespace(ignore_critical=False,
@@ -826,11 +829,11 @@ def load_plugin_config(cfg):
 
 
 def plugins_exec(method, *args, **kwargs):
-    for p, v in plugin_modules.items():
+    for p, v in plugin_modules.copy().items():
         exec_plugin_func(p, v, method, *args, **kwargs)
 
 
-def exec_plugin_func(pname, plugin, func, *args, **kwargs):
+def exec_plugin_func(pname, plugin, func, *args, raise_err=False, **kwargs):
     try:
         m = getattr(plugin, func)
     except:
@@ -841,7 +844,10 @@ def exec_plugin_func(pname, plugin, func, *args, **kwargs):
     except:
         logging.error(f'Unable to exec plugin func {pname}.{func}')
         log_traceback()
-        return None
+        if raise_err:
+            raise
+        else:
+            return None
 
 
 @cvars_lock

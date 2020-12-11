@@ -1683,6 +1683,30 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     print('    [skipped]')
                 else:
                     raise Exception('API call failed, code {}'.format(code))
+        # ===== Plugin deployment =====
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                if 'plugins' in v:
+                    print(f'Deploying plugins into {c}')
+                for i, vv in self.dict_safe_get(v, 'plugins', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    mod_source = self._read_uri(vv['src'])
+                    code = macall({
+                        'i': c,
+                        'f': 'install_plugin',
+                        'p': {
+                            'i': i,
+                            'm': mod_source,
+                            'c': vv.get('config')
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        if code == apiclient.result_already_exists and \
+                                skip_existing:
+                            print('    [skipped]')
+                        else:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
@@ -1892,6 +1916,26 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     raise Exception(
                                         'File deletion failed, API code {}'.
                                         format(code))
+        # ===== Plugin undeployment =====
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                if 'plugins' in v:
+                    print(f'Undeploying plugins from {c}')
+                for i, vv in self.dict_safe_get(v, 'plugins', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'uninstall_plugin',
+                        'p': {
+                            'i': i
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('Plugin {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception(
+                            'Plugin undeployment failed, API code {}'.format(
+                                code))
 
     def watch(self, props):
         self.watch_item(props['i'],

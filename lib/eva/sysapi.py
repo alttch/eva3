@@ -38,6 +38,7 @@ from eva.tools import dict_from_str
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import AccessDenied
 
 from eva.exceptions import InvalidParameter
@@ -54,6 +55,9 @@ import eva.tokens as tokens
 import eva.users
 
 import eva.notify
+
+from eva.tools import ConfigFile
+from eva.tools import ShellConfigFile
 
 locks_locker = threading.RLock()
 
@@ -1073,6 +1077,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         self._nofp_log('set_user_password', 'p')
         self._nofp_log('file_put', 'm')
         self._nofp_log('cmd', 's')
+        self._nofp_log('install_plugin', ['m', 'c'])
 
     @log_d
     @api_need_rpvt
@@ -1363,6 +1368,65 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         if not n:
             raise ResourceNotFound
         eva.notify.mark_leaving(n)
+        return True
+
+    @log_w
+    @api_need_master
+    def install_plugin(self, **kwargs):
+        prod = ['uc', 'lm', 'sfa']
+        from eva.x import import_x
+        i, m, c = parse_api_params(kwargs, 'imc', 'Ss.')
+        if isinstance(c, str):
+            try:
+                c = dict_from_str(c)
+            except:
+                raise InvalidParameter('Unable to parse config')
+        elif c is None:
+            c = {}
+        fname = f'{eva.core.dir_eva}/plugins/{i}.py'
+        if m:
+            with open(fname, 'w') as fh:
+                fh.write(m)
+        if i in eva.core.plugin_modules:
+            raise ResourceAlreadyExists
+        mod = import_x(fname)
+        configs = eva.core.exec_plugin_func(i,
+                                            mod,
+                                            'install',
+                                            c,
+                                            raise_err=True)
+        products = mod.flags.products
+        with eva.core.config_lock:
+            for p in prod:
+                if p in products:
+                    try:
+                        with ConfigFile(f'{p}.ini') as cf:
+                            cf.append('server', 'plugins', i)
+                            if p in configs:
+                                cf.add_section(f'plugin.{i}', configs[p])
+                    except FileNotFoundError:
+                        pass
+        return True
+
+    @log_w
+    @api_need_master
+    def uninstall_plugin(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
+        if not i in eva.core.plugin_modules:
+            raise ResourceNotFound
+        eva.core.exec_plugin_func(i,
+                                  eva.core.plugin_modules[i],
+                                  'uninstall',
+                                  raise_err=True)
+        products = eva.core.plugin_modules[i].flags.products
+        with eva.core.config_lock:
+            for p in products:
+                try:
+                    with ConfigFile(f'{p}.ini') as cf:
+                        cf.remove('server', 'plugins', i)
+                        cf.remove_section(f'plugin.{i}')
+                except FileNotFoundError:
+                    pass
         return True
 
 
