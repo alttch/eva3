@@ -94,7 +94,10 @@ class ConfigFile():
             pass
 
     def remove_section(self, section):
-        self.cp.remove_section(section)
+        try:
+            self.cp.remove_section(section)
+        except:
+            pass
 
     def append(self, section, name, value):
         try:
