@@ -961,16 +961,24 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     # cloud management
 
+    @staticmethod
+    def _read_stdin(props):
+        if props.get('f') == '-':
+            props['__stdin'] = sys.stdin.read()
+
     def deploy(self, props):
         from eva.client import apiclient
+        self._read_stdin(props)
         if props.get('und'):
-            code, result = self.undeploy(props)
+            code, result = self.undeploy(props, read_stdin=False)
             if code != apiclient.result_ok:
                 return code, result
         return self._deploy_undeploy(props, und=False)
 
-    def undeploy(self, props):
+    def undeploy(self, props, read_stdin=True):
         from eva.client import apiclient
+        if read_stdin:
+            self._read_stdin(props)
         return self._deploy_undeploy(props,
                                      und=True,
                                      del_files=props.get('del_files', False))
@@ -1012,8 +1020,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     v = {}
                 if fname == '-':
                     dirname = '.'
-                    tplc = sys.stdin.read()
-                    print(tplc)
+                    tplc = props['__stdin']
                 else:
                     dirname = os.path.dirname(fname)
                     tplc = self._read_uri(fname)
