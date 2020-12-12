@@ -358,12 +358,12 @@ Rule example:
 
 .. code:: yaml
 
-    dmatrix_rule:
+    dmatrix-rule:
       5ef9b8fd-d527-44ce-ae89-9629afd40d76:
           controller: lm/farm-scada
           description: light normal
           enabled: true
-          oid: "sensor:#/ldr/value"
+          oid: "sensor:#/ldr.value"
           condition: x = 1
           break_after_exec: true
           macro: stop_lamp

@@ -1050,7 +1050,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     'SFA is not Cloud Manager. Enable feature in sfa.ini first')
             print('Checking deployment config...')
             for c in cfg.keys() if cfg else []:
-                if c not in [
+                if c.replace('-', '_') not in [
                         'controller', 'unit', 'sensor', 'lvar', 'lmacro',
                         'lcycle', 'dmatrix_rule', 'job'
                 ]:
@@ -1403,7 +1403,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        if code == apiclient.result_already_exists and skip_existing:
+                        if code == apiclient.result_already_exists and \
+                                skip_existing:
                             print('    [skipped]')
                         else:
                             raise Exception(
@@ -1437,7 +1438,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        if code == apiclient.result_already_exists and skip_existing:
+                        if code == apiclient.result_already_exists and \
+                                skip_existing:
                             print('    [skipped]')
                             for prop, value in vv.items():
                                 print('     -- {}={}'.format(prop, value))
@@ -1650,7 +1652,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         code))
         # ===== RULE CREATION =====
         print('Creating decision rules...')
-        for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
+        for i, v in self.dict_safe_get(
+                cfg, 'dmatrix_rule', self.dict_safe_get(cfg, 'dmatrix-rule',
+                                                        {})).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             rule_props = v.copy()
@@ -1735,7 +1739,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('API call failed, code {}'.format(code))
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
-        for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
+        for i, v in self.dict_safe_get(
+                cfg, 'dmatrix_rule', self.dict_safe_get(cfg, 'dmatrix-rule',
+                                                        {})).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             code = macall({
