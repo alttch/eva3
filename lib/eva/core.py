@@ -276,10 +276,12 @@ def sighandler_hup(signum, frame):
 
 def suicide(**kwargs):
     time.sleep(max_shutdown_time)
-    logging.critical('SUICIDE')
-    if config.show_traceback:
-        faulthandler.dump_traceback()
-    os.kill(os.getpid(), signal.SIGKILL)
+    try:
+        logging.critical('SUICIDE')
+        if config.show_traceback:
+            faulthandler.dump_traceback()
+    finally:
+        os.kill(os.getpid(), signal.SIGKILL)
 
 
 def sighandler_term(signum=None, frame=None):
