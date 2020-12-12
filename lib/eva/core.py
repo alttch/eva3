@@ -195,6 +195,14 @@ def critical(log=True, from_driver=False):
         sighandler_term(None, None)
 
 
+def spawn_thread(fn, *args, **kwargs):
+    threading.Thread(target=fn, args=args, kwargs=kwargs).start()
+
+
+def spawn_daemon(fn, *args, **kwargs):
+    threading.Thread(target=fn, args=args, kwargs=kwargs, daemon=True).start()
+
+
 class Locker(GenericLocker):
 
     def __init__(self, mod=''):

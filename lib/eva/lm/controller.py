@@ -79,6 +79,18 @@ with_macro_functions_m_lock = eva.core.RLocker('lm/controller')
 controller_lock = threading.RLock()
 
 
+def update_config(cfg):
+    try:
+        use_core_pool = cfg.get('plc', 'use_core_pool')
+        use_core_pool = use_core_pool == 'yes'
+    except:
+        use_core_pool = True
+    logging.debug('plc.use_core_pool = %s' % ('yes' \
+                                if use_core_pool else 'no'))
+    if not use_core_pool:
+        eva.lm.plc.spawn = eva.core.spawn_thread
+
+
 def format_rule_id(r_id):
     if is_oid(r_id):
         r_id = oid_to_id(r_id, required='dmatrix_rule')

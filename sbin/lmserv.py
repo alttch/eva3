@@ -90,6 +90,7 @@ eva.upnp.port = 1917
 eva.upnp._data.discover_ports = (1912,)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
+eva.lm.controller.update_config(cfg)
 
 eva.core.start()
 eva.core.register_controller(eva.lm.controller)

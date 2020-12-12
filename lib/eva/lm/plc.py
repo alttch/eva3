@@ -39,6 +39,8 @@ pf_macros = {}
 
 with_macro_functions_lock = eva.core.RLocker('lm/plc')
 
+spawn = eva.core.spawn
+
 
 def load_iec_functions():
     macro_iec_functions.clear()
@@ -260,101 +262,97 @@ class PLC(eva.item.ActiveItem):
             'action_allow_termination': False,
         })
 
-    def _run_action_processor(self, a, **kwargs):
+    async def _run_action_processor(self, a, **kwargs):
         if a.item:
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical('PLC::_t_action_processor locking broken')
+                eva.core.critical()
+                return
             try:
-                if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                    logging.critical('PLC::_t_action_processor locking broken')
-                    eva.core.critical()
-                    return
                 self.current_action = a
                 if not self.action_enabled:
-                    self.queue_lock.release()
                     logging.info(
                      '%s actions disabled, canceling action %s' % \
                      (self.full_id, a.uuid))
                     a.set_canceled()
                 if not a.item.action_enabled:
-                    self.queue_lock.release()
                     logging.info(
                      '%s actions disabled, canceling action %s' % \
                      (a.item.full_id, a.uuid))
                     a.set_canceled()
                 else:
                     if not self.action_may_run(a):
-                        self.queue_lock.release()
                         logging.info(
                                 '%s ignoring action %s' % \
                                  (self.full_id, a.uuid))
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
-                        eva.core.spawn(self._t_action, a)
-                    else:
-                        self.queue_lock.release()
+                        spawn(self._t_action, a)
             except:
                 logging.critical(
                         '%s action processor got an error, restarting' % \
                                 (self.full_id))
                 eva.core.log_traceback()
-            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('PLC::_t_action_processor locking broken')
-                eva.core.critical()
-                return
-            self.current_action = None
-            self.action_xc = None
-            self.queue_lock.release()
+            finally:
+                self.current_action = None
+                self.action_xc = None
+                self.queue_lock.release()
 
     def _t_action(self, a):
-        import eva.runner
-        self.action_log_run(a)
-        self.action_before_run(a)
-        env_globals = {}
-        env_globals.update(eva.lm.extapi.env)
-        env_globals.update(a.item.api.get_globals())
-        env_globals.update(eva.lm.iec_functions.g)
-        env_globals['_source'] = a.source
-        env_globals['args'] = a.argv.copy()
-        # deprecated
-        env_globals['argv'] = env_globals['args']
-        env_globals['kwargs'] = a.kwargs.copy()
-        env_globals['is_shutdown'] = a.is_shutdown_func
-        env_globals['_polldelay'] = eva.core.config.polldelay
-        env_globals['_timeout'] = eva.core.config.timeout
-        for i, v in env_globals['kwargs'].items():
-            env_globals[i] = v
-        env_globals['_0'] = a.item.item_id
-        env_globals['_00'] = a.item.full_id
-        for i, v in eva.core.cvars.copy().items():
-            try:
-                value = v
-                env_globals[i] = value
-            except:
+        try:
+            import eva.runner
+            self.action_log_run(a)
+            self.action_before_run(a)
+            env_globals = {}
+            env_globals.update(eva.lm.extapi.env)
+            env_globals.update(a.item.api.get_globals())
+            env_globals.update(eva.lm.iec_functions.g)
+            env_globals['_source'] = a.source
+            env_globals['args'] = a.argv.copy()
+            # deprecated
+            env_globals['argv'] = env_globals['args']
+            env_globals['kwargs'] = a.kwargs.copy()
+            env_globals['is_shutdown'] = a.is_shutdown_func
+            env_globals['_polldelay'] = eva.core.config.polldelay
+            env_globals['_timeout'] = eva.core.config.timeout
+            for i, v in env_globals['kwargs'].items():
                 env_globals[i] = v
-        for i in range(1, 9):
-            try:
-                env_globals['_%u' % i] = a.argv[i - 1]
-            except:
-                env_globals['_%u' % i] = ''
-        xc = eva.runner.PyThread(item=a.item,
-                                 env_globals=env_globals,
-                                 bcode=eva.lm.macro_api.mbi_code,
-                                 mfcode=mfcode)
-        self.queue_lock.release()
-        xc.run()
-        self.action_after_run(a, xc)
-        if xc.exitcode < 0:
-            a.set_terminated(exitcode=xc.exitcode, out=xc.out, err=xc.err)
-            logging.error('macro %s action %s terminated' % \
-                    (a.item.full_id, a.uuid))
-        elif xc.exitcode == 0:
-            a.set_completed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
-            logging.debug('macro %s action %s completed' % \
-                    (a.item.full_id, a.uuid))
-        else:
-            a.set_failed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
-            logging.error('macro %s action %s failed, code: %u' % \
-                    (a.item.full_id, a.uuid, xc.exitcode))
-        self.action_after_finish(a, xc)
+            env_globals['_0'] = a.item.item_id
+            env_globals['_00'] = a.item.full_id
+            for i, v in eva.core.cvars.copy().items():
+                try:
+                    value = v
+                    env_globals[i] = value
+                except:
+                    env_globals[i] = v
+            for i in range(1, 9):
+                try:
+                    env_globals['_%u' % i] = a.argv[i - 1]
+                except:
+                    env_globals['_%u' % i] = ''
+            xc = eva.runner.PyThread(item=a.item,
+                                     env_globals=env_globals,
+                                     bcode=eva.lm.macro_api.mbi_code,
+                                     mfcode=mfcode)
+            xc.run()
+            self.action_after_run(a, xc)
+            if xc.exitcode < 0:
+                a.set_terminated(exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                logging.error('macro %s action %s terminated' % \
+                        (a.item.full_id, a.uuid))
+            elif xc.exitcode == 0:
+                a.set_completed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                logging.debug('macro %s action %s completed' % \
+                        (a.item.full_id, a.uuid))
+            else:
+                a.set_failed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                logging.error('macro %s action %s failed, code: %u' % \
+                        (a.item.full_id, a.uuid, xc.exitcode))
+            self.action_after_finish(a, xc)
+        except Exception as e:
+            logging.error(e)
+            import eva.core
+            eva.core.log_traceback()
 
 
 class MacroAction(eva.item.ItemAction):

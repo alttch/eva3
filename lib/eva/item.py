@@ -808,8 +808,7 @@ class ActiveItem(Item):
         self._action_timeout = None
         self.term_kill_interval = eva.core.config.timeout
         self._term_kill_interval = None
-        # Lock() is REQUIRED for LM PLC (released in plc._t_action thread)
-        self.queue_lock = threading.Lock()
+        self.queue_lock = threading.RLock()
         self.action_processor = BackgroundQueueWorker(
             fn=self._run_action_processor, on_error=eva.core.log_traceback)
         self.action_processor.before_queue_get = self.action_before_get_task

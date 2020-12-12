@@ -80,6 +80,7 @@ LM PLC
 
     * fix: "out" variable is now correctly set if macro raises an exception
 
+    * new config option "plc/use_core_pool"
     * LM API: new function "state_log"
     * LVar variable logic: normal (default) or simple
     * SSL, TLS and SMTP auth support for mailer

@@ -77,6 +77,11 @@ layout = enterprise
 ; plugins, comma separated
 ;plugins =
 
+;[plc]
+; set "no" to let LM PLC launch macros without thread pool
+; (e.g. useful for handling rare bulk events), default is "yes"
+;use_core_pool = yes
+
 ;[msad]
 ; user authentication via MS Active Directory
 ;host = ad.yourdomain.com
