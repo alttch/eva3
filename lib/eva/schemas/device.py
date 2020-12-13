@@ -2,11 +2,270 @@ SCHEMA_DEVICE = {
     'additionalProperties': False,
     'properties': {
         'additionalProperties': False,
+        'controller': {
+            'patternProperties': {
+                '^.*$': {
+                    'properties': {
+                        'after-deploy': {
+                            'items': {
+                                'oneOf': [{
+                                    'required': ['api']
+                                }, {
+                                    'required': ['cm-api']
+                                }, {
+                                    'required': ['function']
+                                }],
+                                'properties': {
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'minimum': 0,
+                                        'type': 'number'
+                                    },
+                                    'api': {
+                                        'type': 'string'
+                                    },
+                                    'cm-api': {
+                                        'type': 'string'
+                                    },
+                                    'function': {
+                                        'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    }
+                                },
+                                'type': 'object'
+                            },
+                            'type': 'array'
+                        },
+                        'after-undeploy': {
+                            'items': {
+                                'oneOf': [{
+                                    'required': ['api']
+                                }, {
+                                    'required': ['cm-api']
+                                }, {
+                                    'required': ['function']
+                                }],
+                                'properties': {
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'minimum': 0,
+                                        'type': 'number'
+                                    },
+                                    'api': {
+                                        'type': 'string'
+                                    },
+                                    'cm-api': {
+                                        'type': 'string'
+                                    },
+                                    'function': {
+                                        'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    }
+                                },
+                                'type': 'object'
+                            },
+                            'type': 'array'
+                        },
+                        'before-deploy': {
+                            'items': {
+                                'oneOf': [{
+                                    'required': ['api']
+                                }, {
+                                    'required': ['cm-api']
+                                }, {
+                                    'required': ['function']
+                                }],
+                                'properties': {
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'minimum': 0,
+                                        'type': 'number'
+                                    },
+                                    'api': {
+                                        'type': 'string'
+                                    },
+                                    'cm-api': {
+                                        'type': 'string'
+                                    },
+                                    'function': {
+                                        'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    }
+                                },
+                                'type': 'object'
+                            },
+                            'type': 'array'
+                        },
+                        'before-undeploy': {
+                            'items': {
+                                'oneOf': [{
+                                    'required': ['api']
+                                }, {
+                                    'required': ['cm-api']
+                                }, {
+                                    'required': ['function']
+                                }],
+                                'properties': {
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'minimum': 0,
+                                        'type': 'number'
+                                    },
+                                    'api': {
+                                        'type': 'string'
+                                    },
+                                    'cm-api': {
+                                        'type': 'string'
+                                    },
+                                    'function': {
+                                        'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    }
+                                },
+                                'type': 'object'
+                            },
+                            'type': 'array'
+                        },
+                        'cvar': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'type': ['string', 'number', 'boolean']
+                                }
+                            },
+                            'type': 'object'
+                        },
+                        'driver': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'config': {
+                                            'type': 'object'
+                                        },
+                                        'module': {
+                                            'type': 'string'
+                                        }
+                                    },
+                                    'required': ['module'],
+                                    'type': 'object'
+                                }
+                            },
+                            'type': 'object'
+                        },
+                        'key': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'allow': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'cdata': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'groups': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'groups_ro': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'hosts_allow': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'hosts_assign': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'items': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'key': {
+                                            'type': 'string'
+                                        },
+                                        'pvt': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'rpvt': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'sysfunc': {
+                                            'type': 'boolean'
+                                        }
+                                    },
+                                    'type': 'object'
+                                }
+                            },
+                            'type': 'object'
+                        },
+                        'phi': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'config': {
+                                            'type': 'object'
+                                        },
+                                        'module': {
+                                            'type': 'string'
+                                        },
+                                        'src': {
+                                            'type': 'string'
+                                        }
+                                    },
+                                    'required': ['module'],
+                                    'type': 'object'
+                                }
+                            },
+                            'type': 'object'
+                        },
+                        'upload-runtime': {
+                            'items': {
+                                'type': 'string'
+                            },
+                            'type': 'array'
+                        },
+                        'user': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'key': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'password': {
+                                            'type': 'string'
+                                        }
+                                    },
+                                    'required': ['password', 'key'],
+                                    'type': 'object'
+                                }
+                            },
+                            'type': 'object'
+                        }
+                    },
+                    'type': 'object'
+                }
+            },
+            'type': 'object'
+        },
         'sensor': {
             'patternProperties': {
                 '^.*$': {
                     'additionalProperties': False,
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'properties': {
+                        'controller': {
+                            'type': 'string'
+                        },
                         'description': {
                             'type': 'string'
                         },
@@ -85,6 +344,9 @@ SCHEMA_DEVICE = {
             'patternProperties': {
                 '^.*$': {
                     'additionalProperties': False,
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'properties': {
                         'action_allow_termination': {
                             'type': 'boolean'
@@ -111,6 +373,9 @@ SCHEMA_DEVICE = {
                         'auto_off': {
                             'minimum': 0,
                             'type': 'number'
+                        },
+                        'controller': {
+                            'type': 'string'
                         },
                         'description': {
                             'type': 'string'

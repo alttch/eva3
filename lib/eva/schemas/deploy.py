@@ -385,6 +385,9 @@ SCHEMA_DEPLOY = {
                             'type': ['boolean', 'null']
                         }
                     },
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'additionalProperties': False,
                     'required': ['controller']
                 }
@@ -468,6 +471,9 @@ SCHEMA_DEPLOY = {
                             'type': ['boolean', 'null']
                         }
                     },
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'additionalProperties': False,
                     'required': ['controller']
                 }
@@ -516,6 +522,9 @@ SCHEMA_DEPLOY = {
                             'type': ['number', 'null']
                         }
                     },
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'additionalProperties': False,
                     'required': ['controller']
                 }
@@ -547,6 +556,9 @@ SCHEMA_DEPLOY = {
                         'src': {
                             'type': 'string'
                         }
+                    },
+                    'patternProperties': {
+                        '^__.*$': {}
                     },
                     'additionalProperties': False,
                     'required': ['controller']
@@ -629,6 +641,9 @@ SCHEMA_DEPLOY = {
                             'minimum': 1
                         }
                     },
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'additionalProperties': False,
                     'required': ['controller']
                 }
@@ -710,6 +725,9 @@ SCHEMA_DEPLOY = {
                             'minimum': 1
                         }
                     },
+                    'patternProperties': {
+                        '^__.*$': {}
+                    },
                     'additionalProperties': False,
                     'required': ['controller']
                 }
@@ -741,6 +759,9 @@ SCHEMA_DEPLOY = {
                         'macro_kwargs': {
                             'type': ['string', 'object']
                         }
+                    },
+                    'patternProperties': {
+                        '^__.*$': {}
                     },
                     'additionalProperties': False,
                     'required': ['controller']
@@ -781,6 +802,9 @@ SCHEMA_DEPLOY = {
                         'on_error': {
                             'type': ['string', 'null']
                         }
+                    },
+                    'patternProperties': {
+                        '^__.*$': {}
                     },
                     'additionalProperties': False,
                     'required': ['controller']
