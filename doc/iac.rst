@@ -315,8 +315,8 @@ The second example shows how to deploy a sensor and logical variable:
                 id: somedriver.default
                 config:
                     port: 1
-                value: 77 # initial value, optional, initial status for sensor
-                          # is not required (automatically set to 1 - enabled)
+            value: 77 # initial value, optional, initial status for sensor
+                      # is not required (automatically set to 1 - enabled)
 
     lvar:
         group1/timer1:
