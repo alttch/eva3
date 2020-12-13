@@ -135,7 +135,7 @@ E.g. the following JSON RPC API request:
             }
     }
 
-will generate an event with *event.topic="myfunc"* and *event*data* containing
+will generate an event with *event.topic="myfunc"* and *event.data* containing
 the params.
 
 Core scripts can not return API responses. Also note that core scripts should
