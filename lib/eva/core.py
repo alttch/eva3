@@ -150,6 +150,7 @@ CS_EVENT_SYSTEM = 0
 CS_EVENT_STATE = 1
 CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
+CS_EVENT_RPC = 4
 
 logger = logging.getLogger('eva.core')
 
@@ -164,7 +165,8 @@ corescript_globals = {
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API,
     'CS_EVENT_MQTT': CS_EVENT_MQTT,
-    'CS_EVENT_SYSTEM': CS_EVENT_SYSTEM
+    'CS_EVENT_SYSTEM': CS_EVENT_SYSTEM,
+    'CS_EVENT_RPC': CS_EVENT_RPC,
 }
 
 OID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'

@@ -1604,21 +1604,26 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                         f'params - dict expected, {type(p).__name__} found')
                 if not method:
                     raise FunctionFailed('API method not defined')
-                f = self._get_api_function(method)
-                if not f:
-                    raise MethodNotFound
-                k = p.get('k')
-                ip = http_real_ip()
-                if method != 'login':
-                    if not k:
-                        k = eva.apikey.key_by_ip_address(ip)
-                        p['k'] = k
-                    elif k.startswith('token:'):
-                        k = key_token_parse(k, _aci=True)
-                        p['k'] = k
-                    if not apikey.check(k=k, ip=ip):
-                        raise AccessDenied
-                res = f(**p)
+                if method.startswith('cs_'):
+                    eva.core.exec_corescripts(event=SimpleNamespace(
+                        type=eva.core.CS_EVENT_RPC, topic=method[3:], data=p))
+                    res = True
+                else:
+                    f = self._get_api_function(method)
+                    if not f:
+                        raise MethodNotFound
+                    k = p.get('k')
+                    ip = http_real_ip()
+                    if method != 'login':
+                        if not k:
+                            k = eva.apikey.key_by_ip_address(ip)
+                            p['k'] = k
+                        elif k.startswith('token:'):
+                            k = key_token_parse(k, _aci=True)
+                            p['k'] = k
+                        if not apikey.check(k=k, ip=ip):
+                            raise AccessDenied
+                    res = f(**p)
                 if isinstance(res, tuple):
                     res, data = res
                     if isinstance(res, bytes):

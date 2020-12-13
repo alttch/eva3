@@ -84,6 +84,10 @@ value).
 API event
 ---------
 
+.. warning::
+
+    API events are deprecated. Use CS_EVENT_RPC instead
+
 Triggered when HTTP/POST request is performed on */r/cs/somepath*.
 
 .. code-block:: python
@@ -103,6 +107,39 @@ Triggered when HTTP/POST request is performed on */r/cs/somepath*.
 .. note::
 
    Only HTTP/POST RESTful-like API calls are supported
+
+RPC event
+---------
+
+Replaces API events in EVA ICS 3.3.2 and above. Triggered when JSON RPC API
+method starting with "cs\_" is called.
+
+.. code-block:: python
+
+  event.type == CS_EVENT_RPC
+
+* **event.topic** method name, without "cs\_" prefix.
+* **event.data** params
+
+E.g. the following JSON RPC API request:
+
+.. code:: json
+
+    {
+        "jsonrpc": "2.0",
+        "method": "cs_myfunc",
+        "params":
+            {
+                "param1": "value1",
+                "param2": "value2"
+            }
+    }
+
+will generate an event with *event.topic="myfunc"* and *event*data* containing
+the params.
+
+Core scripts can not return API responses. Also note that core scripts should
+handle any authentication by themselves.
 
 MQTT event
 ----------

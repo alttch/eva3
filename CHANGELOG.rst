@@ -12,7 +12,7 @@ Common
     * fix: test command don't report number of active threads any more for
       API keys without "sysfunc" permission
 
-    * deprecated: RESTful and direct API
+    * deprecated: RESTful and direct API, including CS_EVENT_API in Core scripts
 
     * local mirror feature (mirroring EVA ICS repo and PyPi)
     * "value" field in state and history databases increased to 8192 bytes
@@ -24,6 +24,7 @@ Common
     * deep code audit and tons of bug fixes
     * Core scripts:
         * new event CS_EVENT_SYSTEM (invoked on startup / shutdown)
+        * new event CS_EVENT_RPC (replaces deprecated CS_EVENT_API)
         * logger object
     * Core Plugins API v2, new functions:
         * create_db_engine
