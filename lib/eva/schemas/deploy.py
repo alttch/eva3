@@ -139,6 +139,13 @@ SCHEMA_DEPLOY = {
                                     'function': {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
+                                    },
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'type': 'number',
+                                        'minimum': 0
                                     }
                                 },
                                 'oneOf': [{
@@ -165,6 +172,13 @@ SCHEMA_DEPLOY = {
                                     'function': {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
+                                    },
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'type': 'number',
+                                        'minimum': 0
                                     }
                                 },
                                 'oneOf': [{
@@ -191,6 +205,13 @@ SCHEMA_DEPLOY = {
                                     'function': {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
+                                    },
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'type': 'number',
+                                        'minimum': 0
                                     }
                                 },
                                 'oneOf': [{
@@ -217,6 +238,13 @@ SCHEMA_DEPLOY = {
                                     'function': {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
+                                    },
+                                    '_pass': {
+                                        'type': 'boolean'
+                                    },
+                                    '_timeout': {
+                                        'type': 'number',
+                                        'minimum': 0
                                     }
                                 },
                                 'oneOf': [{
