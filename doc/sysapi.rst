@@ -94,7 +94,12 @@ where:
 * **ID** request ID (any custom value). If not specified, API response isn't
   sent back
 * **METHOD** JSON RPC method to call
-* **PARAMS** method params, url-encoded.
+* **PARAMS** method params, as url-encoded JSON
+
+E.g. the following HTTP GET request will invoke method "test" with request id=1
+and params *{ "k": "mykey" }*:
+
+    *\http://<ip_address:port>/jrpc?i=1&m=test&p=%7B%22k%22%3A%22mykey%22%7D*
 
 .. note::
 
