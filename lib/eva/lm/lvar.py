@@ -161,7 +161,8 @@ class LVar(eva.item.VariableItem):
         elif config:
             d['logic'] = self.logic
         d['expires'] = self.expires
-        d['set_time'] = self.set_time
+        if not props:
+            d['set_time'] = self.set_time
         return d
 
     def destroy(self):
