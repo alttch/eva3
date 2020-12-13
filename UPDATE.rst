@@ -35,3 +35,8 @@ the update.
 
     cachetools==4.1.1
     pyaltt2==0.0.98
+
+Deprecated
+----------
+
+* RESTful and direct API calls. Use JSON RPC only

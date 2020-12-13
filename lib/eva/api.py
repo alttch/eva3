@@ -629,15 +629,36 @@ def get_json_payload(force_json=False):
 
 
 def cp_jsonrpc_pre():
-    try:
-        data = get_json_payload(force_json=True)
-    except:
-        eva.core.log_traceback()
-        raise cp_bad_request('invalid JSON data')
-    if not data:
-        logging.debug('no JSON data provided')
-        raise cp_bad_request('no JSON data provided')
-    cherrypy.serving.request.params['p'] = data
+    r = cherrypy.serving.request
+    if r.method == 'GET':
+        try:
+            data = {
+                'jsonrpc': '2.0',
+                'method': r.params.get('m'),
+                'params': rapidjson.loads(r.params.get('p'))
+            }
+            i = r.params.get('i')
+            try:
+                i = int(i)
+            except:
+                pass
+            if i:
+                data['id'] = i
+        except:
+            eva.core.log_traceback()
+            raise cp_bad_request('invalid JSON data')
+    elif r.method == 'POST':
+        try:
+            data = get_json_payload(force_json=True)
+        except:
+            eva.core.log_traceback()
+            raise cp_bad_request('invalid JSON data')
+        if not data:
+            logging.debug('no JSON data provided')
+            raise cp_bad_request('no JSON data provided')
+    else:
+        raise cp_api_405()
+    r.params['p'] = data
 
 
 def cp_nocache():
@@ -1665,7 +1686,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 log_api_call_result('FunctionFailed')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_func_failed, e)
-            if req_id:
+            if req_id is not None:
                 r['id'] = req_id
                 if isinstance(payload, list):
                     result.append(r)

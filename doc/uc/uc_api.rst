@@ -80,6 +80,28 @@ Response field *"message"* may contain additional information about error.
     methods to wait until action finish). Web browser may repeat API call
     continuously, which may lead to absolutely unexpected behavior.
 
+JSON RPC via HTTP GET
+~~~~~~~~~~~~~~~~~~~~~
+
+Embedded equipment sometimes can send HTTP GET requests only. JSON RPC API
+supports such calls as well.
+
+To make JSON RPC API request with HTTP get, send it to:
+
+    **\http://<ip_address:8812>/jrpc?i=ID&m=METHOD&p=PARAMS**
+
+where:
+
+* **ID** request ID (any custom value). If not specified, API response isn't
+  sent back
+* **METHOD** JSON RPC method to call
+* **PARAMS** method params, url-encoded.
+
+.. note::
+
+    JSON RPC API calls via HTTP GET are insecure, limited to 2048 bytes and can
+    not be batch. Use JSON RPC via HTTP POST with JSON or MessagePack payload
+    always when possible.
 
 Long API calls
 --------------
