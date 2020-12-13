@@ -76,6 +76,7 @@ UC
     * new device template format (equal to IaC deploy)
     * default timeout for Modbus / OWFS reduced to 1s to avoid critical events
     * unit MQTT control / update commands can be sent in JSON
+    * strict device deployment files schema check (new format only)
 
 LM PLC
 ------
@@ -109,6 +110,7 @@ SFA
     * cloud deploy: accepts deployment YAML from STDIN
     * cloud deploy: custom before/after deploy timeouts
     * cloud deploy: API keys and local user accounts deployment
+    * strict device deployment files schema check
 
 
 3.3.1 (2020-08-26)
