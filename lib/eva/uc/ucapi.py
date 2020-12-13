@@ -36,6 +36,7 @@ from eva.tools import oid_to_id
 from eva.tools import parse_oid
 from eva.tools import is_oid
 from eva.tools import val_to_boolean
+from eva.tools import validate_schema
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -936,13 +937,15 @@ class UC_API(GenericAPI):
                     raise InvalidParameter('no id field for mu')
                 self.create_mu(k=_k, i=i, g=g, save=save)
         # common format
+        if 'units' not in cfg and 'sensors' not in cfg and 'mu' not in cfg:
+            validate_schema(cfg, 'device')
         for item_type in ['unit', 'sensor']:
             items = cfg.get(item_type)
             if items:
                 for oid in items:
                     oid = f'{item_type}:{oid}'
                     self.create(k=_k, i=oid)
-        return self._do_update_device(cfg=cfg, save=save)
+        return self._do_update_device(cfg=cfg, save=save, validate_config=False)
 
     @log_i
     @api_need_device
@@ -967,13 +970,14 @@ class UC_API(GenericAPI):
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
-        return self._do_update_device(cfg=cfg, save=save)
+        return self._do_update_device(cfg=cfg, save=save, validate_config=True)
 
     def _do_update_device(self,
                           tpl_config={},
                           device_tpl=None,
                           cfg=None,
-                          save=False):
+                          save=False,
+                          validate_config=False):
         _k = eva.apikey.get_masterkey()
         if cfg is None:
             cfg = self._load_device_config(tpl_config=tpl_config,
@@ -1015,6 +1019,10 @@ class UC_API(GenericAPI):
                 self._device_set_props(_k, 'mu:{}/{}'.format(g, i),
                                        u.get('props'), save)
         # common format
+        if validate_config and \
+                'units' not in cfg and \
+                'sensors' not in cfg and 'mu' not in cfg:
+            validate_schema(cfg, 'device')
         controllers = cfg.get('controller')
         if controllers:
             c = controllers.get(eva.core.config.controller_name)
@@ -1135,6 +1143,8 @@ class UC_API(GenericAPI):
                 except:
                     pass
         # common format
+        if 'units' not in cfg and 'sensors' not in cfg and 'mu' not in cfg:
+            validate_schema(cfg, 'device')
         for item_type in ['unit', 'sensor']:
             items = cfg.get(item_type)
             if items:

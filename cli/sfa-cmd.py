@@ -1006,6 +1006,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         except:
             pass
         from eva.client import apiclient
+        from eva.tools import validate_schema
         test_mode = props.get('test')
         try:
             try:
@@ -1032,6 +1033,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     self.print_debug(ys)
                     self.print_debug('-' * 3)
                 cfg = yaml.load(ys)
+                validate_schema(cfg, 'deploy')
             except Exception as e:
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']

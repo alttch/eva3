@@ -31,6 +31,23 @@ from pathlib import Path
 dir_etc = os.path.realpath(
     os.path.abspath(os.path.dirname(__file__)) + '/../../etc')
 
+schema_lock = threading.RLock()
+
+SCHEMAS = {}
+
+
+def validate_schema(data, schema_id):
+    import jsonschema
+    import importlib
+    with schema_lock:
+        if schema_id in SCHEMAS:
+            schema = SCHEMAS[schema_id]
+        else:
+            mod = importlib.import_module(f'eva.schemas.{schema_id}')
+            schema = getattr(mod, f'SCHEMA_{schema_id.upper()}')
+            SCHEMAS[schema_id] = schema
+    jsonschema.validate(data, schema=schema)
+
 
 class ConfigFile():
 
