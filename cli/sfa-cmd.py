@@ -1583,10 +1583,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                ] and val.startswith('^'):
                         file2u = val[1:]
                         val = os.path.basename(val[1:])
+                    elif tp == 'lmacro' and prop == 'src':
+                        prop = ''
+                        file2u = val
+                        val = os.path.basename(val)
                     else:
                         file2u = None
                     prop = prop.replace('-', '_')
-                    print('     - {} = {}'.format(prop, val))
+                    if prop:
+                        print('     - {} = {}'.format(prop, val))
                     if prop in ['status', 'value']:
                         if tp in ['unit', 'sensor']:
                             fn = 'update'
@@ -1607,7 +1612,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'f': fn,
                             'p': params
                         })[1].get('code')
-                    else:
+                    elif prop:
                         code = macall({
                             'i':
                                 c,
@@ -1624,8 +1629,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
                     if file2u:
+                        if tp == 'lmacro' and 'action_exec' not in item_props:
+                            fx = os.path.basename(file2u)
+                            if '.' in fx:
+                                ext = '.' + fx.rsplit('.', 1)[-1]
+                            rf = f'{i}{ext}'
+                        else:
+                            rf = val
                         remotefn = 'xc/{}/{}'.format(
-                            'lm' if tp in ['lvar', 'lmacro'] else 'uc', val)
+                            'lm' if tp in ['lvar', 'lmacro'] else 'uc', rf)
                         code = macall({
                             'i': c,
                             'f': 'file_put',

@@ -393,6 +393,19 @@ Jobs can be deployed the similar way as rules:
         macro_args: [ 'task1' ]
         every: "wednesday at 12:00"
 
+Cycles
+------
+
+.. code:: yaml
+
+    lcycle:
+      test:
+        controller: lm/lab-ws2
+        description: "scheduled job 1"
+        interval: 1
+        macro: do_cycle1
+        macro_args: [ 'task1' ]
+
 How to deploy configuration
 ===========================
 
