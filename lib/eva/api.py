@@ -1089,16 +1089,16 @@ class GenericAPI(API):
                                             z=z)
                 process_status = 'status' in r
                 process_value = 'value' in r
-                for z, tt in enumerate(r['t']):
+                for zz, tt in enumerate(r['t']):
                     if tt not in result:
                         result[tt] = {}
                     if process_status:
                         rk = i + '/status'
-                        result[tt][rk] = r['status'][z]
+                        result[tt][rk] = r['status'][zz]
                         result_keys.add(rk)
                     if process_value:
                         rk = i + '/value'
-                        result[tt][rk] = r['value'][z]
+                        result[tt][rk] = r['value'][zz]
                         result_keys.add(rk)
             if not result_keys:
                 return {}
