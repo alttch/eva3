@@ -5,6 +5,7 @@ SCHEMA_DEVICE = {
         'controller': {
             'patternProperties': {
                 '^.*$': {
+                    'additionalProperties': False,
                     'properties': {
                         'after-deploy': {
                             'items': {
@@ -225,6 +226,24 @@ SCHEMA_DEVICE = {
                             },
                             'type': 'object'
                         },
+                        'plugins': {
+                            'patternProperties': {
+                                '^.*$': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'config': {
+                                            'type': ['object']
+                                        },
+                                        'src': {
+                                            'type': 'string'
+                                        }
+                                    },
+                                    'required': ['src'],
+                                    'type': 'object'
+                                }
+                            },
+                            'type': 'object'
+                        },
                         'upload-runtime': {
                             'items': {
                                 'type': 'string'
@@ -381,8 +400,8 @@ SCHEMA_DEVICE = {
                             'type': 'string'
                         },
                         'driver': {
+                            'additionalProperties': False,
                             'properties': {
-                                'additionalProperties': False,
                                 'config': {
                                     'type': 'object'
                                 },

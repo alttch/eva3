@@ -8,6 +8,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'cvar': {
                             'type': 'object',
@@ -22,6 +23,7 @@ SCHEMA_DEPLOY = {
                             'patternProperties': {
                                 '^.*$': {
                                     'type': 'object',
+                                    'additionalProperties': False,
                                     'properties': {
                                         'module': {
                                             'type': 'string'
@@ -33,8 +35,7 @@ SCHEMA_DEPLOY = {
                                             'type': 'object'
                                         }
                                     },
-                                    'required': ['module'],
-                                    'additionalProperties': False
+                                    'required': ['module']
                                 }
                             }
                         },
@@ -43,6 +44,7 @@ SCHEMA_DEPLOY = {
                             'patternProperties': {
                                 '^.*$': {
                                     'type': 'object',
+                                    'additionalProperties': False,
                                     'properties': {
                                         'module': {
                                             'type': 'string'
@@ -51,8 +53,7 @@ SCHEMA_DEPLOY = {
                                             'type': 'object'
                                         }
                                     },
-                                    'required': ['module'],
-                                    'additionalProperties': False
+                                    'required': ['module']
                                 }
                             }
                         },
@@ -61,6 +62,7 @@ SCHEMA_DEPLOY = {
                             'patternProperties': {
                                 '^.*$': {
                                     'type': 'object',
+                                    'additionalProperties': False,
                                     'properties': {
                                         'allow': {
                                             'type': ['string', 'array']
@@ -95,8 +97,7 @@ SCHEMA_DEPLOY = {
                                         'sysfunc': {
                                             'type': 'boolean'
                                         }
-                                    },
-                                    'additionalProperties': False
+                                    }
                                 }
                             }
                         },
@@ -105,6 +106,7 @@ SCHEMA_DEPLOY = {
                             'patternProperties': {
                                 '^.*$': {
                                     'type': 'object',
+                                    'additionalProperties': False,
                                     'properties': {
                                         'password': {
                                             'type': 'string'
@@ -113,8 +115,25 @@ SCHEMA_DEPLOY = {
                                             'type': ['string', 'array']
                                         }
                                     },
-                                    'required': ['password', 'key'],
-                                    'additionalProperties': False
+                                    'required': ['password', 'key']
+                                }
+                            }
+                        },
+                        'plugins': {
+                            'type': 'object',
+                            'patternProperties': {
+                                '^.*$': {
+                                    'type': 'object',
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'src': {
+                                            'type': 'string'
+                                        },
+                                        'config': {
+                                            'type': ['object']
+                                        }
+                                    },
+                                    'required': ['src']
                                 }
                             }
                         },
@@ -264,6 +283,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -276,14 +296,14 @@ SCHEMA_DEPLOY = {
                         },
                         'driver': {
                             'type': 'object',
+                            'additionalProperties': False,
                             'properties': {
                                 'id': {
                                     'type': 'string'
                                 },
                                 'config': {
                                     'type': 'object'
-                                },
-                                'additionalProperties': False
+                                }
                             }
                         },
                         'action_allow_termination': {
@@ -388,7 +408,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -397,6 +416,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -474,7 +494,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -483,6 +502,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -525,7 +545,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -534,6 +553,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -560,7 +580,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -569,6 +588,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -644,7 +664,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -653,6 +672,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -728,7 +748,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -737,6 +756,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'controller': {
                             'type': 'string'
@@ -763,7 +783,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
@@ -772,6 +791,7 @@ SCHEMA_DEPLOY = {
             'patternProperties': {
                 '^.*$': {
                     'type': 'object',
+                    'additionalProperties': False,
                     'properties': {
                         'autostart': {
                             'type': 'boolean'
@@ -806,7 +826,6 @@ SCHEMA_DEPLOY = {
                     'patternProperties': {
                         '^__.*$': {}
                     },
-                    'additionalProperties': False,
                     'required': ['controller']
                 }
             }
