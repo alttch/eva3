@@ -1777,9 +1777,9 @@ def get_state_history(a=None,
                       time_format=None,
                       fill=None,
                       fmt=None,
-                      xopts=None):
+                      xopts=None,
+                      tz=None):
     import dateutil
-    import pytz
     import pandas as pd
     import math
     from datetime import datetime
@@ -1808,7 +1808,8 @@ def get_state_history(a=None,
             limit=limit,
             prop=prop,
             time_format=tf if not t_start or not fill else 'dt_utc',
-            xopts=xopts)
+            xopts=xopts,
+            tz=tz)
     except:
         raise FunctionFailed
     if n.state_storage == 'sql':
@@ -1818,7 +1819,9 @@ def get_state_history(a=None,
         parse_df = False
         parse_tsdb = True
     if ((t_start and fill) or parse_tsdb) and result:
-        tz = pytz.timezone(time.tzname[0])
+        if not tz:
+            import pytz
+            tz = pytz.timezone(time.tzname[0])
         if t_start:
             try:
                 t_s = float(t_start)
@@ -1974,7 +1977,8 @@ def get_state_log(a=None,
                   t_end=None,
                   limit=None,
                   time_format=None,
-                  xopts=None):
+                  xopts=None,
+                  tz=None):
     if oid is None:
         raise ResourceNotFound
     n = eva.notify.get_stats_notifier(a)
@@ -1992,6 +1996,7 @@ def get_state_log(a=None,
                                t_end=t_end,
                                limit=limit,
                                time_format=time_format,
-                               xopts=xopts)
+                               xopts=xopts,
+                               tz=tz)
     except:
         raise FunctionFailed

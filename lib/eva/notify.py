@@ -784,6 +784,7 @@ class SQLANotifier(GenericNotifier):
                   prop=None,
                   time_format=None,
                   xopts=None,
+                  tz=None,
                   **kwargs):
         import pytz
         import dateutil.parser
@@ -831,7 +832,8 @@ class SQLANotifier(GenericNotifier):
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
-        tz = pytz.timezone(time.tzname[0])
+        if not tz:
+            tz = pytz.timezone(time.tzname[0])
         data = []
         # if we have start time - fetch newest record before it
         if t_s:
@@ -883,6 +885,7 @@ class SQLANotifier(GenericNotifier):
                       limit=None,
                       time_format=None,
                       xopts=None,
+                      tz=None,
                       **kwargs):
         import pytz
         import dateutil.parser
@@ -919,7 +922,8 @@ class SQLANotifier(GenericNotifier):
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
-        tz = pytz.timezone(time.tzname[0])
+        if not tz:
+            tz = pytz.timezone(time.tzname[0])
         oid = oid.replace('#', '%').replace('+', '%')
         data = list(
             dbconn.execute(
@@ -1320,6 +1324,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                   prop=None,
                   time_format=None,
                   xopts=None,
+                  tz=None,
                   **kwargs):
         import pytz
         import dateutil.parser
@@ -1367,7 +1372,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             props = 'status,value' if not fill else 'mode(status),mean(value)'
         data = []
         space = (self.space + '/') if self.space is not None else ''
-        if time_format == 'iso':
+        if time_format == 'iso' and not tz:
             tz = pytz.timezone(time.tzname[0])
         q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
         try:

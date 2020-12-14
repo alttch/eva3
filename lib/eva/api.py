@@ -736,6 +736,17 @@ class GenericAPI(API):
             raise FunctionFailed('{} is dead'.format(a.uuid))
         return a.serialize()
 
+    @staticmethod
+    def _get_timezone(z):
+        if z:
+            import pytz
+            try:
+                return pytz.timezone(z)
+            except:
+                raise FunctionFailed(f'Invalid time zone: {z}')
+        else:
+            return None
+
     def _get_state_history(self,
                            k=None,
                            a=None,
@@ -747,7 +758,9 @@ class GenericAPI(API):
                            t=None,
                            w=None,
                            g=None,
-                           o=None):
+                           o=None,
+                           z=None):
+        tz = self._get_timezone(z)
         import eva.item
         if not is_oid(i):
             item = self.controller.get_item(i)
@@ -766,7 +779,8 @@ class GenericAPI(API):
                                           time_format=t,
                                           fill=w,
                                           fmt=g,
-                                          xopts=o)
+                                          xopts=o,
+                                          tz=tz)
 
     def _result(self, k, u, i, g, s, rtp):
         import eva.item
@@ -912,6 +926,7 @@ class GenericAPI(API):
             l: records limit (doesn't work with "w")
             x: state prop ("status" or "value")
             t: time format ("iso" or "raw" for unix timestamp, default is "raw")
+            z: Time zone (pytz, e.g. UTC or Europe/Prague)
             w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
                 etc.), start time is required, set to 1D if not specified
             g: output format ("list", "dict" or "chart", default is "list")
@@ -949,8 +964,8 @@ class GenericAPI(API):
         If binary prefix is required, it should be followed by "b", e.g.
         5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
         """
-        k, a, i, s, e, l, x, t, w, g, c, o = parse_function_params(
-            kwargs, 'kaiselxtwgco', '.sr..issss..')
+        k, a, i, s, e, l, x, t, w, g, c, o, z = parse_function_params(
+            kwargs, 'kaiselxtwgcoz', '.sr..issss...')
 
         if o:
             if isinstance(o, dict):
@@ -1070,7 +1085,8 @@ class GenericAPI(API):
                                             t=t,
                                             w=w,
                                             g=None,
-                                            o=o)
+                                            o=o,
+                                            z=z)
                 process_status = 'status' in r
                 process_value = 'value' in r
                 for z, tt in enumerate(r['t']):
@@ -1103,7 +1119,8 @@ class GenericAPI(API):
                                              t=t,
                                              w=w,
                                              g=g,
-                                             o=o)
+                                             o=o,
+                                             z=z)
             return format_result(result, x, c)
 
     @log_d
@@ -1144,13 +1161,14 @@ class GenericAPI(API):
             e: end time (timestamp or ISO or e.g. 1D for -1 day)
             l: records limit (doesn't work with "w")
             t: time format ("iso" or "raw" for unix timestamp, default is "raw")
+            z: Time zone (pytz, e.g. UTC or Europe/Prague)
             o: extra options for notifier data request
 
         Returns:
             state log records (list)
         """
-        k, a, i, s, e, l, t, o = parse_function_params(kwargs, 'kaiselto',
-                                                       '.sS..is.')
+        k, a, i, s, e, l, t, o, z = parse_function_params(
+            kwargs, 'kaiseltoz', '.sS..is..')
         if ('+' in (i[:-2] if i.endswith('/+') else i).replace(
                 ':+/', '').replace(
                     '/+/', '')) or (i.count('#') > 1 or
@@ -1178,7 +1196,8 @@ class GenericAPI(API):
                                       t_end=e,
                                       limit=l,
                                       time_format=t,
-                                      xopts=o)
+                                      xopts=o,
+                                      tz=self._get_timezone(z))
 
     # return version for embedded hardware
     @log_d

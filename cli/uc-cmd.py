@@ -344,6 +344,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             if params.get('p') and params['p'].find('=') != -1:
                 params['p'], params['v'] = params['p'].split('=', 1)
         if api_func == 'state_history':
+            params['t'] = 'iso'
             if params['c']:
                 params['g'] = 'chart'
         if api_func == 'state_log':
@@ -456,6 +457,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
                                 help='End time',
                                 metavar='TIME',
                                 dest='e')
+        sp_history.add_argument(
+            '-z',
+            '--time-zone',
+            help='Time zone (pytz, e.g. UTC or Europe/Prague)',
+            metavar='ZONE',
+            dest='z')
         sp_history.add_argument('-l',
                                 '--limit',
                                 help='Records limit (doesn\'t work with fill)',
@@ -505,6 +512,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
                              help='End time',
                              metavar='TIME',
                              dest='e')
+        sp_slog.add_argument('-z',
+                             '--time-zone',
+                             help='Time zone (pytz, e.g. UTC or Europe/Prague)',
+                             metavar='ZONE',
+                             dest='z')
         sp_slog.add_argument('-l',
                              '--limit',
                              help='Records limit (doesn\'t work with fill)',

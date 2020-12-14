@@ -38,6 +38,7 @@ Common
       their passwords
     * state_history API function can return data for disconnected / deleted
       items
+    * new argument for state_history: z (time zone)
     * update with pre-downloaded tarballs
     * mailer feature available in all controller types (used by core plugins)
     * "cdata" (custom data) API key field

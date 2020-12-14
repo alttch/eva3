@@ -1563,10 +1563,11 @@ class GenericCLI(GCLI):
                 v = None
                 for k in result.keys():
                     if k == time_field:
-                        from datetime import datetime
-                        t = datetime.strftime(
-                            datetime.fromtimestamp(result[k][i]),
-                            '%Y-%m-%d %T,%f')[:-3]
+                        # from datetime import datetime
+                        # t = datetime.strftime(
+                        # datetime.fromtimestamp(result[k][i]),
+                        # '%Y-%m-%d %T,%f %z')[:-3]
+                        t = result[k][i]
                     elif k == plot_field:
                         v = result[k][i]
                         if isinstance(v, str):
@@ -1592,9 +1593,10 @@ class GenericCLI(GCLI):
                     except:
                         r[k] = ''
                 else:
-                    from datetime import datetime
-                    t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
-                                          '%Y-%m-%d %T,%f')[:-3]
+                    # from datetime import datetime
+                    # t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
+                    # '%Y-%m-%d %T,%f')[:-3]
+                    t = result[k][i]
             rt = OrderedDict()
             rt['time'] = t
             rt.update(r)
