@@ -10,6 +10,7 @@ Common
     * fix: cmd wait delay
     * fix: allow ACL OID groups without masks
     * fix: test command don't report number of active threads any more for
+    * fix: JSON logging
       API keys without "sysfunc" permission
 
     * deprecated: RESTful and direct API, including CS_EVENT_API in Core scripts
