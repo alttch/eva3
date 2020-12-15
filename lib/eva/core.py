@@ -537,11 +537,12 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             try:
-                config.log_format = cfg.get('server', 'log_format')
+                config.log_format = cfg.get('server', 'log_format').strip()
             except:
                 pass
             try:
-                config.syslog_format = cfg.get('server', 'syslog_format')
+                config.syslog_format = cfg.get('server',
+                                               'syslog_format').strip()
             except:
                 pass
             try:
