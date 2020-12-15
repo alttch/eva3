@@ -84,7 +84,12 @@ def init():
         colorize=os.environ.get('EVA_CORE_RAW_STDOUT') != '1',
         formatter=formatter,
         syslog_formatter=logging.Formatter(eva.core.config.syslog_format)
-        if eva.core.config.syslog_format else None)
+        if eva.core.config.syslog_format else None,
+        log_json=log_format.startswith('{') or log_format.endswith('}'),
+        syslog_json=eva.core.config.syslog_format and
+        (eva.core.config.syslog_format.startswith('{') or
+         eva.core.config.syslog_format.endswith('}')),
+    )
 
 
 def start():
