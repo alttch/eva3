@@ -709,7 +709,7 @@ class SQLANotifier(GenericNotifier):
                     sql('select oid, max(t) as maxt from state_history where ' +
                         'space = :space and t < :t group by oid'),
                     space=space,
-                    t=time.time() - o.keep)
+                    t=time.time() - o.keep).fetchall()
                 for r in result:
                     dbconn.execute(
                         sql('delete from state_history where space = :space ' +
