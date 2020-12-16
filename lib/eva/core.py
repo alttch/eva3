@@ -198,11 +198,15 @@ def critical(log=True, from_driver=False):
 
 
 def spawn_thread(fn, *args, **kwargs):
-    threading.Thread(target=fn, args=args, kwargs=kwargs).start()
+    t = threading.Thread(target=fn, args=args, kwargs=kwargs)
+    t.start()
+    return t
 
 
 def spawn_daemon(fn, *args, **kwargs):
-    threading.Thread(target=fn, args=args, kwargs=kwargs, daemon=True).start()
+    t = threading.Thread(target=fn, args=args, kwargs=kwargs, daemon=True)
+    t.start()
+    return t
 
 
 class Locker(GenericLocker):

@@ -519,6 +519,7 @@ class Cycle(eva.item.Item):
         self.ict = 100
         self.autostart = False
         self.cycle_future = None
+        self._cycle_lock = threading.RLock()
         self.cycle_enabled = False
         self.cycle_status = 0
         self.iterations = 0
@@ -766,21 +767,30 @@ class Cycle(eva.item.Item):
             self.notify()
             return False
         self.cycle_enabled = True
-        self.cycle_future = eva.core.spawn(self._t_cycle)
+        with self._cycle_lock:
+            self.cycle_future = spawn(self._t_cycle)
         return True
 
     def stop(self, wait=True):
-        if self.cycle_future and self.cycle_future.running():
-            self.cycle_status = 2
-            self.notify()
-            self.cycle_enabled = False
-            if wait:
-                try:
-                    self.cycle_future.result()
-                except:
-                    eva.core.log_traceback()
-        else:
-            self.cycle_enabled = False
+        with self._cycle_lock:
+            if self.cycle_future:
+                if isinstance(self.cycle_future, threading.Thread):
+                    f_is_running = self.cycle_future.is_alive
+                    f_wait = self.cycle_future.join
+                else:
+                    f_is_running = self.cycle_future.running
+                    f_wait = self.cycle_future.result
+                if f_is_running():
+                    self.cycle_status = 2
+                    self.notify()
+                    self.cycle_enabled = False
+                    if wait or True:
+                        try:
+                            f_wait()
+                        except:
+                            eva.core.log_traceback()
+            else:
+                self.cycle_enabled = False
         return True
 
     def reset_stats(self):
