@@ -13,6 +13,20 @@ bus, OWFS is preferred.
 EVA ICS provides additional functionality for OWFS, such as bus locking,
 automatic retry attempts, virtual ports for drivers etc.
 
+Setup
+=====
+
+Starting from EVA ICS 3.3.2, OWFS library is optional, so firstly install
+
+.. code:: bash
+
+    apt -y install libow-dev
+    # or for Fedora
+    yum install -y owfs-libs owfs-devel
+
+and add Python library to EVA ICS venv: set *EXTRA="onewire==0.2"* in
+*/opt/eva/etc/venv* and rebuild EVA ICS venv (*/opt/eva/install/build-venv*).
+
 Defining OWFS bus
 =================
 

@@ -15,6 +15,8 @@ Common
 
     * deprecated: RESTful and direct API, including CS_EVENT_API in Core scripts
 
+    * 1-Wire OWFS libraries are now optional by default
+
     * local mirror feature (mirroring EVA ICS repo and PyPi)
     * "value" field in state and history databases increased to 8192 bytes
     * cmd API function accepts args as a list

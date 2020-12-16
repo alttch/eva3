@@ -12,7 +12,6 @@ six==1.11.0
 pyyaml==3.12
 netaddr==0.7.19
 netifaces==0.10.9
-onewire==0.2
 paho-mqtt==1.4.0
 pandas==0.22.0
 pillow==7.2.0
