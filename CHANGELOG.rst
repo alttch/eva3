@@ -6,12 +6,14 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * RedHat Enterprise Linux (7/8) officially supported
+
     * fix: hosts_allow / hosts_assign in JRPC calls
     * fix: cmd wait delay
     * fix: allow ACL OID groups without masks
     * fix: test command don't report number of active threads any more for
+           API keys without "sysfunc" permission
     * fix: JSON logging
-      API keys without "sysfunc" permission
 
     * deprecated: RESTful and direct API, including CS_EVENT_API in Core scripts
 
