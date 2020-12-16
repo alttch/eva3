@@ -1948,7 +1948,7 @@ def get_state_history(a=None,
         pass
     # convert to list if required
     if limit is not None:
-        result = result[:int(limit)]
+        result = result[-1 * int(limit):]
     if not fmt or fmt == 'list':
         res = {'t': []}
         for r in result:
