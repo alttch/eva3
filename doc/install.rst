@@ -556,7 +556,7 @@ The cloud manager (enabled by default in *etc/sfa.ini* section "cloud",
 option "cloud_manager = yes"), provides two features:
 
 * The cloud manager interface is enabled on SFA node at
-  \http://SFA_IP:SFA_PORT/cloudmanager
+  \http://SFA_IP:SFA_PORT/cloudmanager/ (the default port is 8828).
 
 * SFA can set "masterkey" property for secondary controllers collected. This
   allows SFA to send them managing and advanced control commands.
