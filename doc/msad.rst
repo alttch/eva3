@@ -13,7 +13,9 @@ Install LDAP and SASL2 development libraries
 
 .. code:: shell
 
-    apt-get install libsasl2-dev libldap2-dev libssl-dev
+    apt -y install libsasl2-dev libldap2-dev libssl-dev
+    # or for Fedora
+    yum install -y openldap-devel openssl-devel
 
 Append **easyad** module to EVA ICS Python venv (*/opt/eva/etc/venv*) extras
 
