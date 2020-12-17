@@ -331,9 +331,8 @@ class ManagementCLI(GenericCLI):
         ap_mirror_set.add_argument(
             'MIRROR_URL',
             metavar='URL',
-            help=
-            'EVA ICS mirror url as http://server:port/mirror, "default" to restore default settings'
-        )
+            help='EVA ICS mirror url as http://server:port/mirror,'
+            ' "default" to restore default settings')
 
     def add_manager_iote_functions(self):
         ap_iote = self.sp.add_parser('iote',

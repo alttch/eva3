@@ -971,7 +971,197 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             dest='c',
         )
 
+        sp_cloud_update = sp_cloud.add_parser('update',
+                                              help='Update cloud nodes')
+        sp_cloud_update.add_argument(
+            '--test',
+            help='Test update plan without actual updating',
+            dest='test',
+            action='store_true')
+        sp_cloud_update.add_argument(
+            '-S',
+            '--shutdown-delay',
+            help='Controller shutdown delay before checking (default: 30 sec)',
+            default=30,
+            metavar='SEC',
+            type=float,
+            dest='s')
+        sp_cloud_update.add_argument(
+            '-C',
+            '--check-timeout',
+            help='Max node update duration (default: 60 sec)',
+            default=60,
+            metavar='SEC',
+            type=float,
+            dest='c')
+        sp_cloud_update.add_argument('--YES',
+                                     dest='y',
+                                     help='Update without any prompts',
+                                     action='store_true')
+
     # cloud management
+
+    @staticmethod
+    def _get_build():
+        dir_sbin = dir_eva + '/sbin'
+        with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
+            data = p.read()
+            return int(data.strip())
+
+    @staticmethod
+    def _get_version():
+        dir_sbin = dir_eva + '/sbin'
+        with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
+            data = p.read()
+            version = data.strip()
+            int(version.split('.')[0])
+            return version
+
+    def cloud_update(self, params):
+        from eva.client import apiclient
+        from functools import partial
+        debug = params.get('_debug')
+        update_timeout = params.get('c')
+        shutdown_delay = params.get('s')
+        api = params['_api']
+        call = partial(api.call,
+                       timeout=params.get('_timeout', self.default_timeout),
+                       _debug=params.get('_debug'))
+        macall = partial(call, 'management_api_call')
+        code, test = call('test')
+        if code != apiclient.result_ok or not test.get('ok'):
+            raise Exception('SFA API is inaccessible, code: {}'.format(code))
+        my_build = self._get_build()
+        my_version = self._get_version()
+        print('Collecting data...')
+        code, data = call('list_controllers')
+        if code != apiclient.result_ok:
+            raise Exception(
+                'Unable to list controllers, API code: {}'.format(code))
+        nodes = {}
+        for c in data:
+            if c['enabled'] and c['connected'] and c['managed'] and int(
+                    c['build']) < my_build:
+                if int(c['build']) < 2020121702:
+                    if debug:
+                        self.print_debug(
+                            f'{c["oid"]} build is lower than 2020121702')
+                    continue
+                node = c['full_id'].rsplit('/')[-1]
+                if node not in nodes:
+                    if debug:
+                        self.print_debug('ma-test ' + c['oid'])
+                    code, result = call('matest_controller', {'i': c['oid']})
+                    if code != apiclient.result_ok:
+                        self.print_warn(
+                            f'Skipping {c["full_id"]} (ma-test code {code})')
+                    else:
+                        nodes[node] = c['full_id']
+        controllers = []
+        for c in data:
+            if c['enabled'] and c['connected']:
+                node = c['full_id'].rsplit('/')[-1]
+                if node in nodes:
+                    controllers.append((c['full_id'], node))
+        if not nodes:
+            print('No update candidates found')
+            return self.local_func_result_empty
+        print()
+        self.print_warn('make sure all nodes have either '
+                        'the Internet connection or valid mirror setup')
+        print()
+        print('Nodes to update:')
+        for n, v in nodes.items():
+            print(f' -- {n} -> via {v}')
+        print(f'Controllers to check (have to be up in {update_timeout} sec):')
+        for c in controllers:
+            print(f' -- {c[0]}')
+        if params.get('test'):
+            return self.local_func_result_ok
+        if not params.get('y'):
+            print()
+            try:
+                u = input('Type ' +
+                          self.colored('YES', color='red', attrs=['bold']) +
+                          ' (uppercase) to update, or press ' +
+                          self.colored('ENTER', color='white') + ' to abort > ')
+            except:
+                print()
+                u = ''
+            if u != 'YES':
+                return self.local_func_result_empty
+        print()
+        print('Sending update node commands...')
+        update_result = self.local_func_result_ok
+        for n, v in nodes.items():
+            print(f'{n}: ', end='', flush=True)
+            try:
+                code = macall({
+                    'i': v,
+                    'f': 'update_node',
+                    'p': {
+                        'y': 'YES'
+                    }
+                })[1].get('code')
+                if code != apiclient.result_ok:
+                    raise Exception(f'failed, code {code}')
+                print('OK')
+            except Exception as e:
+                for c in controllers.copy():
+                    if c[1] == n:
+                        controllers.remove(c)
+                self.print_err(e)
+                update_result = self.local_func_result_failed
+
+        pbar = ''
+        import time
+
+        def fancy_sleep(msg=''):
+            nonlocal pbar
+            if sys.stdout.isatty():
+                pbar += '.'
+                print(msg + pbar, end='', flush=True)
+                if len(pbar) > 3:
+                    print('\r', end='')
+                    print(' ' * (4 + len(msg)), end='\r', flush=True)
+                    print(msg, end='', flush=True)
+                    pbar = ''
+            time.sleep(1)
+            if sys.stdout.isatty():
+                print('\r', end='', flush=True)
+
+        if controllers:
+            for t in range(int(shutdown_delay)):
+                fancy_sleep('Waiting for update')
+            print()
+            time_limit = time.perf_counter() + update_timeout
+            pbar = ''
+            while controllers and time.perf_counter() < time_limit:
+                for c in controllers.copy():
+                    if debug:
+                        self.print_debug(c[0])
+                    code, data = call('reload_controller', {'i': c[0]})
+                    if code == apiclient.result_ok:
+                        time.sleep(1)
+                        code, data = call('get_controller', {'i': c[0]})
+                        if int(data['build']) >= my_build:
+                            print(
+                                self.colored(c[0] + ' -> OK',
+                                             color='green',
+                                             attrs='bold'))
+                        else:
+                            self.print_warn(
+                                f'{c[0]} -> FAILED! (update not applied)')
+                            update_result = self.local_func_result_failed
+                        controllers.remove(c)
+                if controllers:
+                    fancy_sleep()
+            else:
+                if controllers:
+                    for c, n in controllers:
+                        self.print_err(f'CRITICAL: {c} NOT STARTED')
+                        update_result = self.local_func_result_failed
+        return update_result
 
     @staticmethod
     def _read_stdin(props):
@@ -2023,7 +2213,8 @@ _api_functions = {
     'notify:reload': 'reload_clients',
     'notify:restart': 'notify_restart',
     'cloud:deploy': cli.deploy,
-    'cloud:undeploy': cli.undeploy
+    'cloud:undeploy': cli.undeploy,
+    'cloud:update': cli.cloud_update
 }
 
 _pd_cols = {

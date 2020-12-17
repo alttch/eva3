@@ -42,7 +42,7 @@ _eva_sfa_cloud() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'deploy undeploy' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'deploy undeploy update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

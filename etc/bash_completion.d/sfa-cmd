@@ -22,7 +22,7 @@ _sfa-cmd_cloud() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'deploy undeploy' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'deploy undeploy update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

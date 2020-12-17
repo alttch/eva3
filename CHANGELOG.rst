@@ -119,6 +119,7 @@ SFA
     * cloud deploy: custom before/after deploy timeouts
     * cloud deploy: API keys and local user accounts deployment
     * strict device deployment files schema check
+    * cloud updates
 
 
 3.3.1 (2020-08-26)

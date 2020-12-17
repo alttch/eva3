@@ -44,7 +44,7 @@ _eva_sfa_cloud() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" deploy undeploy
+    compadd "$@" deploy undeploy update
   else
     _files
   fi
