@@ -1069,6 +1069,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         print()
         self.print_warn('make sure all nodes have either '
                         'the Internet connection or valid mirror setup')
+        print('Update logs will be '
+              'available on each node at EVA_DIR/log/update.log')
         print()
         print('Nodes to update:')
         for n, v in nodes.items():
