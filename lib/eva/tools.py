@@ -139,7 +139,7 @@ class ConfigFile():
 class ShellConfigFile():
 
     def __init__(self, fname, init_if_missing=False, backup=True):
-        self.fname = f'{dir_etc}/{fname}'
+        self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'
         self.init_if_missing = init_if_missing
         self._changed = False
         self.backup = backup
