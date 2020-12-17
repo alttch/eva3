@@ -471,6 +471,127 @@ automatically, macro id should be always unique.
     The triple underline (**___**) is used by system and should not be used in
     item IDs or groups.
 
+.. _install_cloud:
+
+Cloud setup
+===========
+
+Configuring LM and SFA as primary
+---------------------------------
+
+:doc:`/lm/lm` and :doc:`/sfa/sfa` nodes can monitor and control items on
+different nodes. :doc:`/uc/uc` instances can be connected to both, while LM PLC
+instances can be connected to SFA only.
+
+The components can be connected to each other either P2P, via HTTP or via
+:ref:`MQTT <mqtt_>`. Usually in production setups, MQTT is the most secure and
+recommended way, unless for components running on the localhost.
+
+On the primary node (the node you want to connect other nodes to), MQTT
+notifier can be configured either with "easy-setup" or manually. Let's
+manually configure MQTT notifier for SFA, with automatic discovery feature:
+
+.. code:: bash
+
+    eva -I # go interactive
+    ns sfa
+    create eva_1 mqtt:MQTT_HOST # set login/password/SSL if required
+    set eva_1 discovery_enabled 1
+    test eva_1 # test should pass
+    enable eva_1
+    server restart
+
+After restart, SFA is ready to accept cloud member controllers.
+
+Configuring LM and UC as secondary
+----------------------------------
+
+To automatically connect controllers from the secondary node, they must have
+the same "default" API key. So, secondary node installation should look like:
+
+.. code-block:: bash
+
+    sudo -s
+    curl geteva.cc | env DEFAULTKEY=qwerty sh /dev/stdin -a
+
+Setting the same master key is insecure and not recommended unless all nodes
+are in absolutely trusted environment.
+
+Next, let's (manually) configure MQTT notifier, e.g. for UC:
+
+.. code:: bash
+
+    eva -I # go interactive
+    ns uc
+    create eva_1 mqtt:MQTT_HOST # set login/password/SSL if required
+    set eva_1 announce_interval 30 # announce itself every 30 seconds
+    set eva_1 api_enabled 1 # accept API calls via MQTT
+    subscribe server eva_1 # subscribe to server events
+    subscribe state eva_1 -g '#' # subscribe to item states from all groups
+    test eva_1 # test should pass
+    enable eva_1
+    server restart
+
+After restart, the controller will be seen in connected LM PLC and SFA as
+"dynamic". That means the controller record disappears after each restart. To
+set controller connection permanent, set its property "static" to "true" (or
+"1"):
+
+.. code:: bash
+
+    eva sfa controller set uc/ucnode1 static 1 -y
+
+The secondary controller is also set automatically as static, when the primary
+one is configured as a Cloud manager and the secondary's property "masterkey"
+is set.
+
+Cloud manager
+-------------
+
+A primary :doc:`/sfa/sfa` instance is called cloud manager. There can be more
+than one Cloud manager in the cloud, having different secondary controllers
+with different permissions connected.
+
+The cloud manager (enabled by default in *etc/sfa.ini* section "cloud",
+option "cloud_manager = yes"), provides two features:
+
+* The cloud manager interface is enabled on SFA node at
+  \http://SFA_IP:SFA_PORT/cloudmanager
+
+* SFA can set "masterkey" property for secondary controllers collected. This
+  allows SFA to send them managing and advanced control commands.
+
+Cloud manager allows to manage the whole cloud from the one node. Cloud manager
+is required for :doc:`/iac`.
+
+Cloud updates
+-------------
+
+A command, run on Cloud manager node:
+
+.. code-block:: bash
+
+    eva sfa cloud update
+
+allows to run updates on all nodes connected.
+
+* Despite EVA ICS never applies update unless the system is checked and ready,
+  the cloud update should be used with extremely caution in production setups.
+
+* All nodes should have either the Internet connection or a valid :ref:`local
+  mirror <install_mirror>` set up.
+
+* The nodes are always updated to the latest EVA ICS version available, so if
+  your setup requires particular versions for all of them, consider using the
+  local mirror.
+
+* As industrial computers may be slow and controllers may be busy, sometimes
+  "cloud update" could produce false warnings and errors, e.g. when it expects
+  a remote controller to already have a new version installed, while it was not
+  even shot down for update yet. It is recommended to play with
+  "--shutdown-delay" and "--check-timeout" command options to find the best
+  combination for your setup.
+
 Log file customization
 ======================
 
@@ -639,6 +760,8 @@ With such setup, :ref:`js_framework`-based interface doesn't perform any
 authentication, *$eva.start()* function is called as soon as UI is loaded.
 API method *login* called by framework function will automatically log in user
 using basic authentication credentials provided to front-end server.
+
+.. _install_mirror:
 
 Serving local mirror
 ====================
