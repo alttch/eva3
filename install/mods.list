@@ -30,6 +30,7 @@ python-rapidjson==0.7.2
 msgpack-python==0.5.6
 pytz==2018.9
 neotermcolor==2.0.8
+cheroot==8.5.1
 cherrypy==17.4.1
 twisted==18.7.0
 timeouter==0.0.15
