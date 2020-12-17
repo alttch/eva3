@@ -16,7 +16,8 @@ automatic retry attempts, virtual ports for drivers etc.
 Setup
 =====
 
-Starting from EVA ICS 3.3.2, OWFS library is optional, so firstly install
+Starting from EVA ICS 3.3.2, OWFS libraries are not installed by default, so
+firstly install
 
 .. code:: bash
 
