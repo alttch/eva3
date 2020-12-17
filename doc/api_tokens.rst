@@ -42,3 +42,18 @@ Token will expire and become invalid, if:
   was obtained with user credentials)
 
 * the controller was restarted.
+
+Read-only mode
+==============
+
+The client can ask the server to set read-only mode for the current token, e.g.
+after an idle period. This can be performed by calling "set_token_readonly" API
+method. Read-only mode can not be set for tokens, assigned to master keys.
+
+In read-only mode, only read-only API calls are accepted, others return
+"result_token_restricted"(15) API error.
+
+To exit read-only mode, user must either authenticate again and obtain a new
+token or re-use the existing one by calling "login" API method with params
+*a=CURRENT_TOKEN* and either "u" and "p" (if token was assigned to user
+account) or "k" (if token was assigned directly to API key).

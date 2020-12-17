@@ -1291,6 +1291,9 @@ class GenericAPI(API):
         If authentication token is specified, the function will check it and
         return token information if it is valid.
 
+        If both token and credentials (user or API key) are specified, the
+        function will return the token to normal mode.
+
         Args:
             k: valid API key or
             u: user login

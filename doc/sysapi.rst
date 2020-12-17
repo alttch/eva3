@@ -301,6 +301,8 @@ If both **k** and **u** args are absent, but API method is called with HTTP requ
 
 If authentication token is specified, the function will check it and return token information if it is valid.
 
+If both token and credentials (user or API key) are specified, the function will return the token to normal mode.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/sysapi/login.req-jrpc
     :response: http-examples/jrpc/sysapi/login.resp-jrpc
