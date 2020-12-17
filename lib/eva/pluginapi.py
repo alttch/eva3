@@ -7,10 +7,8 @@ __api__ = 2
 import threading
 
 import eva.core
-from eva.apikey import check as key_check
 from eva.apikey import key_id as key_id
 from eva.apikey import key_by_id
-from eva.apikey import check_master as key_check_master
 from eva.apikey import get_masterkey
 
 from eva.api import parse_api_params
@@ -21,6 +19,9 @@ from eva.tools import parse_function_params
 from eva.api import log_d as api_log_d
 from eva.api import log_i as api_log_i
 from eva.api import log_w as api_log_w
+
+from eva.api import key_check
+from eva.api import key_check_master
 
 import eva.api
 

@@ -48,7 +48,7 @@ Read-only mode
 
 The client can ask the server to set read-only mode for the current token, e.g.
 after an idle period. This can be performed by calling "set_token_readonly" API
-method. Read-only mode can not be set for tokens, assigned to master keys.
+method.
 
 In read-only mode, only read-only API calls are accepted, others return
 "result_token_restricted"(15) API error.

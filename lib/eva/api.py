@@ -78,12 +78,13 @@ _exposed_lock = threading.RLock()
 _exposed = {}
 
 
-def key_check_master(*args, **kwargs):
-    # if get_aci('auth') == 'token' and tokens.get_token_mode(
-    # get_aci('token')) != tokens.TOKEN_MODE_NORMAL:
-    # return False
-    # else:
-    return apikey.check_master(*args, **kwargs)
+def key_check_master(*args, ro_op=False, **kwargs):
+    result = apikey.check_master(*args, **kwargs)
+    if result is True and not ro_op:
+        if get_aci('auth') == 'token' and tokens.get_token_mode(
+                get_aci('token')) != tokens.TOKEN_MODE_NORMAL:
+            raise TokenRestricted
+    return result
 
 
 def key_check(*args, ro_op=False, **kwargs):
@@ -792,7 +793,8 @@ class GenericAPI(API):
             i = item.oid
         if '+' in i or '#' in i:
             raise InvalidParameter('wildcard oids are not supported')
-        if not key_check_master(k) and (not key_check(k, oid=i, ro_op=True)):
+        if not key_check_master(k, ro_op=True) and (not key_check(
+                k, oid=i, ro_op=True)):
             raise ResourceNotFound(i)
         return eva.item.get_state_history(a=a,
                                           oid=i,
@@ -1224,7 +1226,8 @@ class GenericAPI(API):
                 o = dict_from_str(o)
             else:
                 raise InvalidParameter('o must be dict or str')
-        if not key_check_master(k) and not key_check(k, oid=i, ro_op=True):
+        if not key_check_master(k, ro_op=True) and not key_check(
+                k, oid=i, ro_op=True):
             raise ResourceNotFound
         return eva.item.get_state_log(a=a,
                                       oid=i,
@@ -1253,9 +1256,7 @@ class GenericAPI(API):
         Applies read-only mode for token. In read-only mode, only read-only
         functions work, others return result_token_restricted(15).
 
-        The method works only for token-authenticated API calls. Tokens,
-        assigned to master keys, are not affected (the method will fail with
-        result_not_implemented(14)).
+        The method works for token-authenticated API calls only.
 
         To exit read-only mode, user must either re-login or, to keep the
         current token, call "login" API method with both token and user
@@ -1268,8 +1269,8 @@ class GenericAPI(API):
         print(t)
         print(t['ki'])
         print(apikey.key_by_id(t['ki']))
-        if apikey.check_master(apikey.key_by_id(t['ki'])):
-            raise MethodNotImplemented('not implemented for master keys')
+        # if apikey.check_master(apikey.key_by_id(t['ki'])):
+        # raise MethodNotImplemented('not implemented for master keys')
         if not t:
             raise FunctionFailed
         tokens.set_token_mode(token_id, tokens.TOKEN_MODE_RO)

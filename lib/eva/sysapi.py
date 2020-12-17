@@ -812,7 +812,7 @@ class UserAPI(object):
         else:
             f = {}
         # force record filter if not master
-        if not key_check(k, master=True):
+        if not key_check_master(k, ro_op=True):
             from eva.api import get_aci
             u = get_aci('u')
             if u is not None:
@@ -1088,7 +1088,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         k, f, ic, nocache = parse_function_params(kwargs,
                                                   ['k', 'f', 'ic', 'nocache'],
                                                   '.S..')
-        if not key_check(k, rpvt_uri=f):
+        if not key_check(k, rpvt_uri=f, ro_op=True):
             logging.warning('rpvt uri %s access forbidden' % (f))
             eva.core.log_traceback()
             raise AccessDenied
@@ -1198,10 +1198,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                 raise ResourceNotFound
             return val
         else:
-            if key_check_master(k):
-                return eva.core.get_cvar()
-            else:
-                raise AccessDenied
+            return eva.core.get_cvar()
 
     @log_i
     @api_need_master

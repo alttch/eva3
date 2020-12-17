@@ -81,7 +81,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                                       'kp',
                                       '.S',
                                       defaults={'p': 'lvar'})
-        if key_check_master(k):
+        if key_check_master(k, ro_op=True):
             if tp == 'LV' or tp == 'lvar':
                 return sorted(eva.lm.controller.lvars_by_group.keys())
             else:
