@@ -179,6 +179,8 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_busy = 13
     # the method is not implemented in/for requested resource
     result_not_implemented = 14
+    # the token, used for API call, is valid, but currently restricted
+    result_token_restricted = 15
 
 In case of error, result is an empty dict or contains field "error" which is
 filled with error message from server (if available).

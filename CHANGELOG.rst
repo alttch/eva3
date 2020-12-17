@@ -59,6 +59,7 @@ Common
     * JSON RPC API via HTTP GET
     * Active Directory credentials caching
     * user ACL combining
+    * Read-only mode for tokens, "set_token_readonly" API function
     * db notifiers: simple cleaning
     * signed releases
 

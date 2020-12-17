@@ -29,6 +29,9 @@ from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
 
+from eva.api import key_check
+from eva.api import key_check_master
+
 from eva.api import api_result_accepted
 
 from eva.tools import format_json
@@ -100,7 +103,7 @@ def api_need_cmd(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), allow=['cmd']):
+        if not key_check(kwargs.get('k'), allow=['cmd']):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -114,7 +117,7 @@ def api_need_sysfunc(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), sysfunc=True):
+        if not key_check(kwargs.get('k'), sysfunc=True):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -128,7 +131,7 @@ def api_need_lock(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), allow=['lock']):
+        if not key_check(kwargs.get('k'), allow=['lock']):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -809,7 +812,7 @@ class UserAPI(object):
         else:
             f = {}
         # force record filter if not master
-        if not eva.apikey.check(k, master=True):
+        if not key_check(k, master=True):
             from eva.api import get_aci
             u = get_aci('u')
             if u is not None:
@@ -882,7 +885,7 @@ class UserAPI(object):
         """
         k, u, p = parse_function_params(kwargs, 'kup', '.sS')
         if u:
-            if not eva.apikey.check(k, master=True):
+            if not key_check(k, master=True):
                 raise AccessDenied('master key is required for "u" param')
             else:
                 tokens.remove_token(user=u)
@@ -1085,7 +1088,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         k, f, ic, nocache = parse_function_params(kwargs,
                                                   ['k', 'f', 'ic', 'nocache'],
                                                   '.S..')
-        if not eva.apikey.check(k, rpvt_uri=f):
+        if not key_check(k, rpvt_uri=f):
             logging.warning('rpvt uri %s access forbidden' % (f))
             eva.core.log_traceback()
             raise AccessDenied
@@ -1195,7 +1198,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                 raise ResourceNotFound
             return val
         else:
-            if eva.apikey.check_master(k):
+            if key_check_master(k):
                 return eva.core.get_cvar()
             else:
                 raise AccessDenied

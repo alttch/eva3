@@ -19,6 +19,9 @@ from eva.api import parse_api_params
 from eva.api import http_real_ip
 from eva.api import api_need_master
 
+from eva.api import key_check
+from eva.api import key_check_master
+
 from eva.api import api_result_accepted
 
 from eva.api import generic_web_api_method
@@ -74,7 +77,7 @@ def api_need_device(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), allow=['device']):
+        if not key_check(kwargs.get('k'), allow=['device']):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -154,7 +157,7 @@ class UC_API(GenericAPI):
             .p: item type (unit [U] or sensor [S])
         """
         k, tp = parse_function_params(kwargs, 'kp', '.S')
-        if apikey.check_master(k):
+        if key_check_master(k):
             if tp == 'U' or tp == 'unit':
                 return sorted(eva.uc.controller.units_by_group.keys())
             elif tp == 'S' or tp == 'sensor':
@@ -172,7 +175,7 @@ class UC_API(GenericAPI):
                 m = eva.uc.controller.sensors_by_full_id
             if m:
                 for i, v in m.copy().items():
-                    if apikey.check(k, v, ro_op=True) and not v.group in groups:
+                    if key_check(k, v, ro_op=True) and not v.group in groups:
                         groups.append(v.group)
                 return sorted(groups)
             else:
@@ -198,7 +201,7 @@ class UC_API(GenericAPI):
         k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.sssb')
         if i:
             item = eva.uc.controller.get_item(i)
-            if not item or not apikey.check(k, item, ro_op=True):
+            if not item or not key_check(k, item, ro_op=True):
                 raise ResourceNotFound
             if is_oid(i):
                 t, iid = parse_oid(i)
@@ -219,7 +222,7 @@ class UC_API(GenericAPI):
                 raise ResourceNotFound
             result = []
             for i, v in gi.copy().items():
-                if apikey.check(k, v, ro_op=True) and \
+                if key_check(k, v, ro_op=True) and \
                         (not group or \
                             eva.item.item_match(v, [], [grp])):
                     r = v.serialize(full=full)
@@ -257,7 +260,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         if s == 'toggle':
             s = 0 if item.status else 1
@@ -295,7 +298,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         s = 0 if item.status else 1
         return self._process_action_result(
@@ -321,7 +324,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         return item.disable_actions()
 
@@ -340,7 +343,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         return item.enable_actions()
 
@@ -432,7 +435,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
@@ -459,7 +462,7 @@ class UC_API(GenericAPI):
         phi = eva.uc.driverapi.get_phi(i)
         if not phi:
             raise ResourceNotFound
-        elif not apikey.check(k, phi):
+        elif not key_check(k, phi):
             raise AccessDenied
         return phi.push_state(payload=p)
 
@@ -484,7 +487,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         result = item.kill()
         if not result:
@@ -508,7 +511,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item:
             raise ResourceNotFound
-        elif not apikey.check(k, item):
+        elif not key_check(k, item):
             raise AccessDenied
         return item.q_clean()
 
@@ -535,14 +538,14 @@ class UC_API(GenericAPI):
             a = eva.uc.controller.Q.history_get(u)
             if not a:
                 raise ResourceNotFound
-            elif not apikey.check(k, a.item):
+            elif not key_check(k, a.item):
                 raise AccessDenied
             return a.kill(), api_result_accepted
         elif i:
             item = eva.uc.controller.get_unit(i)
             if not item:
                 raise ResourceNotFound
-            elif not apikey.check(k, item):
+            elif not key_check(k, item):
                 raise AccessDenied
             return item.terminate(), api_result_accepted
         raise InvalidParameter('Either "u" or "i" must be specified')

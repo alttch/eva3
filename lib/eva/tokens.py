@@ -4,6 +4,19 @@ import eva.core
 from eva.tools import gen_random_str
 from functools import wraps
 from neotasker import background_worker
+"""
+token (dict) fields:
+    u: user login
+    utp: user type
+    ki: API key ID
+    t: token creation or refresh time
+    m: token mode (NORMAL, RO)
+"""
+
+TOKEN_MODE_NORMAL = 1
+TOKEN_MODE_RO = 2
+
+TOKEN_MODE_NAMES = {1: 'normal', 2: 'readonly'}
 
 tokens = {}
 
@@ -40,7 +53,13 @@ def append_token(key_id, user=None, utp=None):
         i += 1
         if i > 3:
             return False
-    tokens[token] = {'u': user, 'ki': key_id, 'utp': utp, 't': time.time()}
+    tokens[token] = {
+        'u': user,
+        'ki': key_id,
+        'utp': utp,
+        't': time.time(),
+        'm': TOKEN_MODE_NORMAL
+    }
     logging.debug('{} added. user: {}, key id: {}'.format(
         token[:12], user, key_id))
     return token
@@ -78,6 +97,18 @@ def refresh_token(token):
         return True
     except:
         return False
+
+
+@need_tokens_enabled
+@tokens_lock
+def get_token_mode(token):
+    return tokens[token]['m']
+
+
+@need_tokens_enabled
+@tokens_lock
+def set_token_mode(token, mode):
+    tokens[token]['m'] = mode
 
 
 @need_tokens_enabled

@@ -78,6 +78,23 @@ _exposed_lock = threading.RLock()
 _exposed = {}
 
 
+def key_check_master(*args, **kwargs):
+    # if get_aci('auth') == 'token' and tokens.get_token_mode(
+    # get_aci('token')) != tokens.TOKEN_MODE_NORMAL:
+    # return False
+    # else:
+    return apikey.check_master(*args, **kwargs)
+
+
+def key_check(*args, ro_op=False, **kwargs):
+    result = apikey.check(*args, ro_op=ro_op, **kwargs)
+    if result is True and not ro_op:
+        if get_aci('auth') == 'token' and tokens.get_token_mode(
+                get_aci('token')) != tokens.TOKEN_MODE_NORMAL:
+            raise TokenRestricted
+    return result
+
+
 def expose_api_method(fn, f, sys_api=False):
     if f.__class__.__name__ != 'method':
         raise ValueError('only class methods can be exposed')
@@ -100,6 +117,10 @@ class EvaHIAuthenticationRequired(Exception):
     pass
 
 
+class TokenRestricted(Exception):
+    pass
+
+
 def api_need_master(f):
     """
     API method decorator to pass if API key is masterkey
@@ -107,7 +128,7 @@ def api_need_master(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check_master(kwargs.get('k')):
+        if not key_check_master(kwargs.get('k')):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -310,6 +331,10 @@ def generic_web_api_method(f):
             raise cp_api_409(e)
         except AccessDenied as e:
             log_api_call_result('AccessDenied')
+            eva.core.log_traceback()
+            raise cp_forbidden_key(e)
+        except TokenRestricted as e:
+            log_api_call_result('TokenRestricted')
             eva.core.log_traceback()
             raise cp_forbidden_key(e)
         except FunctionFailed as e:
@@ -572,7 +597,7 @@ def cp_check_perm(api_key=None, path_info=None):
     # pass login and info
     if path in ['/login', '/info', '/token']:
         return
-    if apikey.check(k, ip=http_real_ip()):
+    if key_check(k, ip=http_real_ip(), ro_op=True):
         return
     raise cp_forbidden_key()
 
@@ -767,8 +792,7 @@ class GenericAPI(API):
             i = item.oid
         if '+' in i or '#' in i:
             raise InvalidParameter('wildcard oids are not supported')
-        if not apikey.check_master(k) and (not apikey.check(
-                k, oid=i, ro_op=True)):
+        if not key_check_master(k) and (not key_check(k, oid=i, ro_op=True)):
             raise ResourceNotFound(i)
         return eva.item.get_state_history(a=a,
                                           oid=i,
@@ -786,7 +810,7 @@ class GenericAPI(API):
         import eva.item
         if u:
             a = self.controller.Q.history_get(u)
-            if not a or not apikey.check(k, a.item, ro_op=True):
+            if not a or not key_check(k, a.item, ro_op=True):
                 raise ResourceNotFound
             return a.serialize()
         else:
@@ -797,7 +821,7 @@ class GenericAPI(API):
                     raise ResourceNotFound
                 ar = None
                 item = self.controller.get_item(rtp + ':' + item_id)
-                if not apikey.check(k, item, ro_op=True):
+                if not key_check(k, item, ro_op=True):
                     raise ResourceNotFound
                 if item_id.find('/') > -1:
                     if item_id in self.controller.Q.actions_by_item_full_id:
@@ -810,7 +834,7 @@ class GenericAPI(API):
             else:
                 ar = self.controller.Q.actions
             for a in ar:
-                if not apikey.check(k, a.item, ro_op=True):
+                if not key_check(k, a.item, ro_op=True):
                     continue
                 if g and \
                         not eva.item.item_match(a.item, [], [ g ]):
@@ -859,8 +883,15 @@ class GenericAPI(API):
             masterkey only { "master": true } is returned)
         """
         k = parse_function_params(kwargs, 'k', 'S')
+        aci = g.get('aci').copy()
+        for f in ['id', 'token']:
+            try:
+                del aci[f]
+            except KeyError:
+                pass
         result = {
             'acl': apikey.serialized_acl(k),
+            'aci': aci,
             'system': eva.core.config.system_name,
             'controller': eva.core.config.controller_name,
             'time': time.time(),
@@ -874,32 +905,38 @@ class GenericAPI(API):
         if eva.core.config.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \
                     eva.core.config.enterprise_layout else 'simple'
-        if apikey.check_master(k):
-            result['file_management'] = \
-                    eva.sysapi.config.api_file_management_allowed
-        if apikey.check(k, sysfunc=True):
-            result['debug'] = eva.core.config.debug
-            result['setup_mode'] = eva.core.is_setup_mode()
-            result['db_update'] = eva.core.config.db_update
-            result['polldelay'] = eva.core.config.polldelay
-            result['threads'] = len(threading.enumerate())
-            if eva.core.config.development:
-                result['development'] = True
-            if eva.benchmark.enabled and eva.benchmark.intervals:
-                intervals = []
-                for k, v in eva.benchmark.intervals.items():
-                    s = v.get('s')
-                    e = v.get('e')
-                    if s is None or e is None:
-                        continue
-                    intervals.append(e - s)
-                try:
-                    result['benchmark_crt'] = sum(intervals) / float(
-                        len(intervals))
-                except Exception as e:
-                    logging.error('Unable to calculate CRT: {}'.format(e))
-                    eva.core.log_traceback()
-                    result['benchmark_crt'] = -1
+        try:
+            if key_check_master(k):
+                result['file_management'] = \
+                        eva.sysapi.config.api_file_management_allowed
+        except TokenRestricted:
+            pass
+        try:
+            if key_check(k, sysfunc=True):
+                result['debug'] = eva.core.config.debug
+                result['setup_mode'] = eva.core.is_setup_mode()
+                result['db_update'] = eva.core.config.db_update
+                result['polldelay'] = eva.core.config.polldelay
+                result['threads'] = len(threading.enumerate())
+                if eva.core.config.development:
+                    result['development'] = True
+                if eva.benchmark.enabled and eva.benchmark.intervals:
+                    intervals = []
+                    for k, v in eva.benchmark.intervals.items():
+                        s = v.get('s')
+                        e = v.get('e')
+                        if s is None or e is None:
+                            continue
+                        intervals.append(e - s)
+                    try:
+                        result['benchmark_crt'] = sum(intervals) / float(
+                            len(intervals))
+                    except Exception as e:
+                        logging.error('Unable to calculate CRT: {}'.format(e))
+                        eva.core.log_traceback()
+                        result['benchmark_crt'] = -1
+        except TokenRestricted:
+            pass
         return True, result
 
     @log_d
@@ -1187,8 +1224,7 @@ class GenericAPI(API):
                 o = dict_from_str(o)
             else:
                 raise InvalidParameter('o must be dict or str')
-        if not apikey.check_master(k) and not apikey.check(k, oid=i,
-                                                           ro_op=True):
+        if not key_check_master(k) and not key_check(k, oid=i, ro_op=True):
             raise ResourceNotFound
         return eva.item.get_state_log(a=a,
                                       oid=i,
@@ -1208,6 +1244,36 @@ class GenericAPI(API):
             'version': eva.core.version,
             'system': eva.core.config.system_name,
         }
+
+    @log_d
+    def set_token_readonly(self, **kwargs):
+        """
+        Set token read-only
+
+        Applies read-only mode for token. In read-only mode, only read-only
+        functions work, others return result_token_restricted(15).
+
+        The method works only for token-authenticated API calls. Tokens,
+        assigned to master keys, are not affected (the method will fail with
+        result_not_implemented(14)).
+
+        To exit read-only mode, user must either re-login or, to keep the
+        current token, call "login" API method with both token and user
+        credentials.
+        """
+        if get_aci('auth') != 'token':
+            raise FunctionFailed('user is not logged in')
+        token_id = get_aci('token')
+        t = tokens.get_token(token_id)
+        print(t)
+        print(t['ki'])
+        print(apikey.key_by_id(t['ki']))
+        if apikey.check_master(apikey.key_by_id(t['ki'])):
+            raise MethodNotImplemented('not implemented for master keys')
+        if not t:
+            raise FunctionFailed
+        tokens.set_token_mode(token_id, tokens.TOKEN_MODE_RO)
+        return True
 
     @log_i
     def login(self, **kwargs):
@@ -1255,11 +1321,26 @@ class GenericAPI(API):
         if a:
             t = tokens.get_token(a)
             if t:
-                result = {'key': t['ki'], 'token': a}
+                if k:
+                    ki = apikey.key_id(k)
+                    if ki != t['ki']:
+                        raise AccessDenied
+                elif u:
+                    ki, _ = eva.users.authenticate(u, p)
+                    if ki != t['ki']:
+                        raise AccessDenied
+                tokens.set_token_mode(a, tokens.TOKEN_MODE_NORMAL)
+                result = {
+                    'key': t['ki'],
+                    'token': a,
+                    'mode': tokens.TOKEN_MODE_NAMES[t['m']]
+                }
                 if t['u'] is not None:
                     result['user'] = t['u']
                 return result
             else:
+                if u or k:
+                    raise AccessDenied
                 # try basic auth or evaHI login
                 if hasattr(cherrypy, 'serving') and hasattr(
                         cherrypy.serving, 'request'):
@@ -1271,7 +1352,7 @@ class GenericAPI(API):
                 else:
                     raise AccessDenied('Invalid token')
         if not u and k:
-            if not apikey.check(k, ip=http_real_ip()):
+            if not key_check(k, ip=http_real_ip()):
                 raise AccessDenied
             ki = apikey.key_id(k)
             token = tokens.append_token(ki)
@@ -1279,7 +1360,7 @@ class GenericAPI(API):
                 raise FunctionFailed('token generation error')
             return {'key': ki, 'token': token}
         key, utp = eva.users.authenticate(u, p)
-        if not apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
+        if not key_check(apikey.key_by_id(key), ip=http_real_ip()):
             raise AccessDenied
         token = tokens.append_token(key, u, utp)
         if not token:
@@ -1504,6 +1585,7 @@ def key_token_parse(k, _aci=False):
     if _aci:
         set_aci('auth', 'token')
         set_aci('token', k)
+        set_aci('token_mode', tokens.TOKEN_MODE_NAMES[token['m']])
         set_aci('u', token['u'])
         set_aci('utp', token['utp'])
     return apikey.key_by_id(token['ki'])
@@ -1640,7 +1722,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                         elif k.startswith('token:'):
                             k = key_token_parse(k, _aci=True)
                             p['k'] = k
-                        if not apikey.check(k=k, ip=ip):
+                        if not key_check(k=k, ip=ip, ro_op=True):
                             raise AccessDenied
                     res = f(**p)
                 if isinstance(res, tuple):
@@ -1682,6 +1764,10 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 log_api_call_result('AccessDenied')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_forbidden, e)
+            except TokenRestricted as e:
+                log_api_call_result('TokenRestricted')
+                r = format_error(apiclient.result_token_restricted,
+                                 'token restricted')
             except MethodNotFound as e:
                 log_api_call_result('MethodNotFound')
                 eva.core.log_traceback()
@@ -1854,6 +1940,7 @@ def start():
 def cp_autojsonrpc():
     r = cherrypy.serving.request
     if r.method == 'POST' and r.path_info == '/' and jrpc is not None:
+        init_api_call()
         cp_jsonrpc_pre()
         r._json_inner_handler = jrpc
         r.handler = cp_jsonrpc_handler

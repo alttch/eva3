@@ -46,6 +46,7 @@ result_invalid_params = 11
 result_already_exists = 12  # returned by JSON RPC only, 409
 result_busy = 13  # 409
 result_not_implemented = 14  # 400
+result_token_restricted = 15
 
 
 # copy of eva.tools.parse_host_port to avoid unnecesseary imports
