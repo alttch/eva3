@@ -1321,15 +1321,16 @@ class GenericAPI(API):
         if a:
             t = tokens.get_token(a)
             if t:
-                if k:
-                    ki = apikey.key_id(k)
-                    if ki != t['ki']:
-                        raise AccessDenied
-                elif u:
-                    ki, _ = eva.users.authenticate(u, p)
-                    if ki != t['ki']:
-                        raise AccessDenied
-                tokens.set_token_mode(a, tokens.TOKEN_MODE_NORMAL)
+                if k is not None or u is not None:
+                    if k is not None:
+                        ki = apikey.key_id(k)
+                        if ki != t['ki']:
+                            raise AccessDenied
+                    elif u is not None:
+                        ki, _ = eva.users.authenticate(u, p)
+                        if ki != t['ki']:
+                            raise AccessDenied
+                    tokens.set_token_mode(a, tokens.TOKEN_MODE_NORMAL)
                 result = {
                     'key': t['ki'],
                     'token': a,
