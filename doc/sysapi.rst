@@ -340,7 +340,7 @@ set_token_readonly - Set token read-only
 
 Applies read-only mode for token. In read-only mode, only read-only functions work, others return result_token_restricted(15).
 
-The method works only for token-authenticated API calls. Tokens, assigned to master keys, are not affected (the method will fail with result_not_implemented(14)).
+The method works for token-authenticated API calls only.
 
 To exit read-only mode, user must either re-login or, to keep the current token, call "login" API method with both token and user credentials.
 

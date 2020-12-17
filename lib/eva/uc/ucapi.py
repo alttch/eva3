@@ -157,7 +157,7 @@ class UC_API(GenericAPI):
             .p: item type (unit [U] or sensor [S])
         """
         k, tp = parse_function_params(kwargs, 'kp', '.S')
-        if key_check_master(k):
+        if key_check_master(k, ro_op=True):
             if tp == 'U' or tp == 'unit':
                 return sorted(eva.uc.controller.units_by_group.keys())
             elif tp == 'S' or tp == 'sensor':
