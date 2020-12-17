@@ -13,6 +13,27 @@ almost ready to use.
 
 .. contents::
 
+Officially supported platforms
+==============================
+
+Recommended for enterprise setups
+---------------------------------
+
+* `RedHat Enterprise Linux 8 <https://www.redhat.com/en/enterprise-linux-8>`_
+
+* `Ubuntu Linux LTS 18.04/20.04 <https://ubuntu.com/>`_
+
+Tested and fully compatible
+---------------------------
+
+* `Debian Linux 10 and newer <https://www.debian.org/>`_
+
+* `Ubuntu Linux 18.10 and newer <https://ubuntu.com/>`_
+
+* `Raspbian Linux <https://www.raspberrypi.org/>`_
+
+* `Fedora Linux <https://getfedora.org/>`_
+
 System Requirements
 ===================
 
