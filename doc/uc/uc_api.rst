@@ -1043,6 +1043,8 @@ Modbus registers must be specified as list or comma separated memory addresses p
 
 Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
 
+Float32 numbers are returned as Python-converted floats and may have broken precision. Consider converting back to f32 on the client side.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/ucapi/read_modbus_port.req-jrpc
     :response: http-examples/jrpc/ucapi/read_modbus_port.resp-jrpc
@@ -1053,6 +1055,8 @@ Parameters:
 * **p** Modbus virtual port
 * **s** Slave ID
 * **i** Modbus register(s)
+* **f** data type (u16, i16, u32, i32, u64, i64, f32 or bit)
+* **c** count, if register range not specified
 
 Optionally:
 
