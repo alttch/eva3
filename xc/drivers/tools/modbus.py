@@ -400,8 +400,8 @@ def read_f32(port, reg, count=1, **kwargs):
             data.append(
                 np.array([
                     x for x in
-                    result.registers[0].to_bytes(2, byteorder='little') +
-                    result.registers[1].to_bytes(2, byteorder='little')
+                    result.registers[i].to_bytes(2, byteorder='little') +
+                    result.registers[i+1].to_bytes(2, byteorder='little')
                 ],
                          dtype=np.uint8).view(dtype=np.float32)[0])
         return data
