@@ -55,9 +55,12 @@ Downloading PHIs
 Creating tag lists
 ------------------
 
-Both PHIs require tag lists - lists of CIP tags to poll from/to the En/IP
-equipment. Tag lists are simple text files, with one tag per line. If tag
-contains an array, element index should be specified.
+If bulk updates are planned, both PHIs require tag lists - lists of CIP tags to
+poll from/to the En/IP equipment. Tag lists are simple text files, with one tag
+per line. If tag contains an array, element index should be specified.
+
+If bulk updates are not required or performed with :doc:`data
+pullers</datapullers>`, the tag lists are not required.
 
 .. code::
 
