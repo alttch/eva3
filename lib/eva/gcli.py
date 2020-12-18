@@ -345,18 +345,20 @@ class GCLI(object):
                 f'{self.colored(label.rjust(max_label_length), color="cyan")}'
                 f' {line}', extra)
 
-    def print_err(self, *args):
+    def print_err(self, *args, **kwargs):
         for s in args:
-            print(self.colored(s, color='red', attrs=[]), file=sys.stderr)
+            print(self.colored(s, color='red', attrs=[]),
+                  file=sys.stderr,
+                  **kwargs)
 
-    def print_warn(self, s, w=True):
+    def print_warn(self, s, w=True, **kwargs):
         print(
             self.colored(('WARNING: ' if w else '') + s,
                          color='yellow',
-                         attrs=['bold']))
+                         attrs=['bold']), **kwargs)
 
-    def print_debug(self, s):
-        print(self.colored(s, color='grey', attrs=['bold']))
+    def print_debug(self, s, **kwargs):
+        print(self.colored(s, color='grey', attrs=['bold']), **kwargs)
 
     def can_colorize(self):
         return not self.suppress_colors and \
