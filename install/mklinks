@@ -22,3 +22,6 @@ done
 for p in ${SBIN}; do
   ln -sf ../cli/venvl sbin/"${p}"
 done
+
+rm -f lib/eva/features
+ln -sf ../../xc/features lib/eva/features

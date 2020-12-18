@@ -11,6 +11,8 @@ import platform
 import argparse
 import textwrap
 
+from functools import lru_cache
+
 nodename = platform.node()
 
 from pathlib import Path
@@ -22,6 +24,8 @@ dir_sbin = dir_eva + '/sbin'
 dir_cli = dir_eva + '/cli'
 dir_runtime = dir_eva + '/runtime'
 sys.path.insert(0, dir_lib)
+
+import eva.features
 
 dir_cwd = os.getcwd()
 
@@ -107,6 +111,16 @@ class ComplIOTE(ComplGeneric):
         return result
 
 
+class ComplFeatures(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        import glob
+        return [
+            x.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+            for x in glob.glob('lib/eva/features/*.yml')
+        ]
+
+
 class ManagementCLI(GenericCLI):
 
     def prepare_result_data(self, data, api_func, itype):
@@ -134,6 +148,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_backup_functions()
         self.add_manager_edit_functions()
         self.add_management_shells()
+        self.add_manager_feature_functions()
         self.add_manager_iote_functions()
         self.add_manager_power_functions()
         self.add_user_defined_functions()
@@ -333,6 +348,34 @@ class ManagementCLI(GenericCLI):
             metavar='URL',
             help='EVA ICS mirror url as http://server:port/mirror,'
             ' "default" to restore default settings')
+
+    def add_manager_feature_functions(self):
+        ap_feature = self.sp.add_parser('feature', help='Feature functions')
+        sp_feature = ap_feature.add_subparsers(dest='_func',
+                                               metavar='func',
+                                               help='Management commands')
+
+        ap_list_available = sp_feature.add_parser(
+            'list-available', help='List available features')
+
+        ap_help = sp_feature.add_parser('help', help='Get feature help')
+        ap_help.add_argument('i',
+                             metavar='FEATURE').completer = ComplFeatures(self)
+
+        ap_setup = sp_feature.add_parser('setup', help='Setup feature')
+        ap_setup.add_argument('i',
+                              metavar='FEATURE').completer = ComplFeatures(self)
+        ap_setup.add_argument('c',
+                              metavar='PARAMETERS',
+                              help='Parameters, name=value, comma separated',
+                              nargs='?')
+        ap_setup = sp_feature.add_parser('remove', help='Remove feature')
+        ap_setup.add_argument('i',
+                              metavar='FEATURE').completer = ComplFeatures(self)
+        ap_setup.add_argument('c',
+                              metavar='PARAMETERS',
+                              help='Parameters, name=value, comma separated',
+                              nargs='?')
 
     def add_manager_iote_functions(self):
         ap_iote = self.sp.add_parser('iote',
@@ -664,12 +707,7 @@ sys.argv = {argv}
         return False
 
     def print_version(self, params):
-        with os.popen('{}/eva-tinyapi -V; {}/eva-tinyapi -B'.format(
-                dir_sbin, dir_sbin)) as p:
-            data = p.readlines()
-        if len(data) != 2:
-            return self.local_func_result_failed
-        result = {'version': data[0].strip(), 'build': data[1].strip()}
+        result = {'version': self._get_version(), 'build': self._get_build()}
         return 0, result
 
     def before_save(self):
@@ -1038,12 +1076,14 @@ sys.argv = {argv}
             return self.local_func_result_failed
 
     @staticmethod
+    @lru_cache
     def _get_build():
         with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
             data = p.read()
             return int(data.strip())
 
     @staticmethod
+    @lru_cache
     def _get_version():
         with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
             data = p.read()
@@ -1333,6 +1373,100 @@ sys.argv = {argv}
                         attrs=['bold']))
             return self.local_func_result_empty if ok else (10, '')
 
+    @lru_cache
+    def _feature_info(self, name):
+        import yaml
+        try:
+            yaml.warnings({'YAMLLoadWarning': False})
+        except:
+            pass
+        import jinja2
+        import importlib
+        fname = f'{dir_lib}/eva/features/{name}.yml'
+        version = self._get_version()
+        build = self._get_build()
+        with open(fname) as fh:
+            tplc = fh.read()
+        tpl = jinja2.Template(tplc)
+        tpl.globals['import_module'] = importlib.import_module
+        setup_cmd = f'feature setup {name} '
+        if not self.interactive:
+            setup_cmd = 'eva ' + setup_cmd
+        ys = tpl.render({
+            'EVA_VERSION': version,
+            'EVA_BUILD': build,
+            'setup_cmd': setup_cmd
+        })
+        data = yaml.load(ys)
+        return data
+
+    def list_features(self, params):
+        import glob
+        files = glob.glob(f'{dir_lib}/eva/features/*.yml')
+        result = []
+        for f in files:
+            name = f.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+            info = self._feature_info(name)
+            result.append({'name': name, 'description': info['description']})
+        return 0, sorted(result, key=lambda k: k['name'])
+
+    def feature_help(self, params):
+        try:
+            info = self._feature_info(params['i']).copy()
+        except FileNotFoundError:
+            self.print_err(f'Feature not found: {params["i"]}')
+            return self.local_func_result_failed
+        if 'example' in info:
+            example = info['example']
+            del info['example']
+            if 'help' in info:
+                info['help'] += '\n'
+            else:
+                info['help'] = ''
+            info['help'] += 'Example:\n\n  ' + self.colored(example,
+                                                            color='white')
+        return 0, info
+
+    def feature_setup(self, params):
+        return self._feature_setup_remove('setup', params)
+
+    def feature_remove(self, params):
+        return self._feature_setup_remove('remove', params)
+
+    def _feature_setup_remove(self, mode, params):
+        from eva.tools import dict_from_str
+        import importlib
+        try:
+            info = self._feature_info(params['i']).copy()
+        except FileNotFoundError:
+            self.print_err(f'Feature not found: {params["i"]}')
+            return self.local_func_result_failed
+        c = dict_from_str(params['c'])
+        if c is None:
+            c = {}
+        args_ok = True
+        valid_args = []
+        for arg, h in info.get(mode, {}).get('mandatory-args', {}).items():
+            valid_args.append(arg)
+            if arg not in c:
+                self.print_err(f'Required parameter "{arg}" not set ({h})')
+                args_ok = False
+        valid_args += info.get(mode, {}).get('optional-args', {}).keys()
+        for arg in c:
+            if arg not in valid_args:
+                self.print_err(f'Invalid parameter "{arg}"')
+                args_ok = False
+        if not args_ok:
+            return self.local_func_result_failed
+        mod = importlib.import_module(f'eva.features.{params["i"]}')
+        try:
+            getattr(mod, mode)(**c)
+        except Exception as e:
+            print()
+            self.print_err(e)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
 
 def make_exec_cmd_func(cmd):
 
@@ -1359,6 +1493,10 @@ _api_functions = {
     'server:get_user': cli.get_controller_user,
     'server:set_user': cli.set_controller_user,
     'version': cli.print_version,
+    'feature:list-available': cli.list_features,
+    'feature:help': cli.feature_help,
+    'feature:setup': cli.feature_setup,
+    'feature:remove': cli.feature_remove,
     'mirror:update': cli.update_mirror,
     'mirror:set': cli.set_mirror,
     'update': cli.update,
@@ -1417,9 +1555,12 @@ try:
 except:
     pass
 
+eva.features.print_err = cli.print_err
+
 cli.default_prompt = '# '
 cli.arg_sections += [
-    'backup', 'server', 'edit', 'masterkey', 'system', 'iote', 'mirror'
+    'backup', 'server', 'edit', 'masterkey', 'system', 'iote', 'mirror',
+    'feature'
 ]
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
