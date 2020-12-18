@@ -57,6 +57,9 @@ class ConfigFile():
         self._changed = False
         self.backup = backup
 
+    def is_changed(self):
+        return self._changed
+
     def __enter__(self):
         from configparser import ConfigParser
         self.cp = ConfigParser(inline_comment_prefixes=';')
@@ -116,6 +119,10 @@ class ConfigFile():
         except:
             pass
 
+    def replace_section(self, section, values):
+        self.remove_section(section)
+        return self.add_section(section, values)
+
     def append(self, section, name, value):
         try:
             current = [x.strip() for x in self.get(section, name).split(',')]
@@ -144,6 +151,9 @@ class ShellConfigFile():
         self._changed = False
         self.backup = backup
         self._data = {}
+
+    def is_changed(self):
+        return self._changed
 
     def __enter__(self):
         if not os.path.exists(self.fname):
