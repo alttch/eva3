@@ -1415,6 +1415,9 @@ class UC_API(GenericAPI):
         Modbus registers must be specified as list or comma separated memory
         addresses predicated with register type (h - holding, c - coil).
 
+        To set bit, specify register as hX/Y where X = register number, Y = bit
+        number (supports u16, u32, u64 data types)
+
         Args:
             k: .master
             .p: Modbus virtual port
@@ -1422,11 +1425,50 @@ class UC_API(GenericAPI):
             .i: Modbus register address
             v: register value(s) (integer or hex or list)
             z: if True, use 0x05-06 commands (write single register/coil)
+            f: data type (u16, i16, u32, i32, u64, i64, f32), ignored if z=True
 
         Optional:
             t: max allowed timeout for the operation
         """
-        i, p, s, t, v, z = parse_api_params(kwargs, 'ipstvz', 'SSRnRb')
+        import eva.uc.drivers.tools.modbus as mbtools
+
+        def safe_number(n):
+            try:
+                val = float(n)
+                if int(val) == val:
+                    val = int(val)
+                return val
+            except:
+                return safe_int(n)
+
+        SETTERS = {
+            'u16': mbtools.write_u16,
+            'i16': mbtools.write_i16,
+            'u32': mbtools.write_u32,
+            'i32': mbtools.write_i32,
+            'u64': mbtools.write_u64,
+            'i64': mbtools.write_i16,
+            'f32': mbtools.write_f32,
+        }
+        GETTERS = {
+            'u16': mbtools.read_u16,
+            'u32': mbtools.read_u32,
+            'u64': mbtools.read_u64,
+        }
+        i, p, s, t, v, z, f = parse_api_params(kwargs, 'ipstvzf', 'SSRnRbs')
+        if not f:
+            f = 'u16'
+        if f == 'f32':
+            convert_number = safe_number
+        else:
+            convert_number = safe_int
+        if not z:
+            try:
+                setter = SETTERS[f]
+                if '/' in i[1:]:
+                    getter = GETTERS[f]
+            except KeyError:
+                raise InvalidParameter('data type not supported')
         if not t:
             t = eva.core.config.timeout
         try:
@@ -1441,15 +1483,27 @@ class UC_API(GenericAPI):
                 value = []
                 for val in v:
                     value.append(
-                        safe_int(val) if rtype == 'h' else val_to_boolean(v))
+                        convert_number(val) if rtype ==
+                        'h' else val_to_boolean(v))
             else:
-                value = [safe_int(v) if rtype == 'h' else val_to_boolean(v)]
+                value = [
+                    convert_number(v) if rtype == 'h' else val_to_boolean(v)
+                ]
         except:
             raise InvalidParameter('value')
         if not eva.uc.modbus.is_port(p):
             raise ResourceNotFound('Modbus port')
         try:
-            addr = safe_int(i[1:])
+            if '/' in i[1:]:
+                addr = safe_int(i[1:i.find('/')])
+                bit = safe_int(i[(i.find('/') + 1):])
+            else:
+                bit = None
+                addr = safe_int(i[1:])
+            if bit and rtype != 'h':
+                raise ValueError
+            if bit and len(value) > 1:
+                raise ValueError
         except:
             raise InvalidParameter(i)
         mb = eva.uc.modbus.get_port(p, t)
@@ -1457,10 +1511,19 @@ class UC_API(GenericAPI):
             raise FunctionFailed('Unable to acquire Modbus port')
         try:
             if rtype == 'h':
+                if bit is not None:
+                    b = getter(mb, rtype + str(addr), unit=slave_id)[0]
+                    if val_to_boolean(value[0]):
+                        b = b | 1 << bit
+                    else:
+                        if b >> bit & 1:
+                            b = b ^ 1 << bit
+                    value[0] = b
                 if z:
                     data = mb.write_register(addr, value[0], unit=slave_id)
                 else:
-                    data = mb.write_registers(addr, value, unit=slave_id)
+                    print(addr, value, setter)
+                    return setter(mb, rtype + str(addr), value, unit=slave_id)
             elif rtype == 'c':
                 if z:
                     data = mb.write_coil(addr, value[0], unit=slave_id)

@@ -298,6 +298,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 else:
                     d['addr_hex'] = hex(addr)
                     d['hex'] = hex(d['value'])
+                    d['bin'] = bin(d['value'])
             return sorted(sorted(data, key=lambda k: k['addr']),
                           key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
@@ -1006,6 +1007,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Use single-write Modbus command (0x05-0x06)',
             action='store_true',
             dest='z')
+        sp_modbus_write.add_argument(
+            '-f',
+            '--data-type',
+            help='Data type (u16, i16, u32, i32, u64, i64, f64), ignored '
+            'if single-write command is selected',
+            metavar='TYPE',
+            choices=['u16', 'i16', 'u32', 'i32', 'u64', 'i64', 'f32'],
+            dest='f')
 
         sp_modbus_destroy = sp_modbus.add_parser('destroy',
                                                  help='Destroy (undefine) port')
@@ -1575,8 +1584,10 @@ _pd_cols = {
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'
     ],
-    'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
-    'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'err'],
+    'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'bin'],
+    'read_modbus_port': [
+        'reg', 'addr', 'addr_hex', 'value', 'hex', 'bin', 'err'
+    ],
     'list_modbus_ports': [
         'id', 'params', 'lock', 'timeout', 'retries', 'delay'
     ],

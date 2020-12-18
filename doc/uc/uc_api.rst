@@ -1085,6 +1085,8 @@ write_modbus_port - write Modbus register(s) to remote slave
 
 Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, c - coil).
 
+To set bit, specify register as hX/Y where X = register number, Y = bit number (supports u16, u32, u64 data types)
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/ucapi/write_modbus_port.req-jrpc
     :response: http-examples/jrpc/ucapi/write_modbus_port.resp-jrpc
@@ -1097,6 +1099,7 @@ Parameters:
 * **i** Modbus register address
 * **v** register value(s) (integer or hex or list)
 * **z** if True, use 0x05-06 commands (write single register/coil)
+* **f** data type (u16, i16, u32, i32, u64, i64, f32), ignored if z=True
 
 Optionally:
 
