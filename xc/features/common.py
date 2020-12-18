@@ -63,17 +63,25 @@ def eva_cmd(cmd, passthru=False):
 
 
 def install_system_packages(packages, prepare=True):
-    if OS_LIKE == 'debian':
-        pre_cmd = f'{sudo}apt-get update'
-        installer = f'{sudo}apt-get install -y --no-install-recommends '
-    elif OS_LIKE == 'fedora':
-        pre_cmd = None
-        installer = f'{SUDO}yum install -y'
-    if pre_cmd and prepare:
-        print('Preparing...')
-        exec_shell(pre_cmd)
-    print('Installing packages: ' + ' '.join(packages))
-    exec_shell(installer + ' '.join(packages))
+    try:
+        if OS_LIKE == 'debian':
+            pre_cmd = f'{sudo}apt-get update'
+            installer = f'{sudo}apt-get install -y --no-install-recommends '
+        elif OS_LIKE == 'fedora':
+            pre_cmd = None
+            installer = f'{SUDO}yum install -y'
+        if pre_cmd and prepare:
+            print('Preparing...')
+            exec_shell(pre_cmd)
+        print('Installing packages: ' + ' '.join(packages))
+        exec_shell(installer + ' '.join(packages))
+    except:
+        from . import print_err
+        print_err('\nIf the command requires root permissions but EVA ICS is '
+                  'managed by the regular user,\ntry repeating it with '
+                  'SUDO=sudo OS env variable set (sudo should accept commands'
+                  ' without the password)')
+        raise
 
 
 def rebuild_python_venv():
