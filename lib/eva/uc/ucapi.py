@@ -1311,16 +1311,42 @@ class UC_API(GenericAPI):
         values of holding registers from 1000 to 1010 and coil registers from
         10 to 15
 
+        Float32 numbers are returned as Python-converted floats and may have
+        broken precision. Consider converting back to f32 on the client side.
+
         Args:
             k: .master
             .p: Modbus virtual port
             .s: Slave ID
             .i: Modbus register(s)
+            f: data type (u16, i16, u32, i32, u64, i64, f32 or bit)
+            c: count, if register range not specified
 
         Optional:
             t: max allowed timeout for the operation
         """
-        i, p, s, t = parse_api_params(kwargs, 'ipst', '.SRn')
+        import eva.uc.drivers.tools.modbus as mbtools
+        import math
+        i, p, s, t, f, c = parse_api_params(kwargs, 'ipstfc', '.SRnsi')
+
+        if c is None:
+            c = 1
+        elif c <= 0:
+            raise InvalidParameter('count have to be greater than zero')
+
+        GETTERS = {
+            'bit': mbtools.read_u16,
+            'u16': mbtools.read_u16,
+            'i16': mbtools.read_i16,
+            'u32': mbtools.read_u32,
+            'i32': mbtools.read_i32,
+            'u64': mbtools.read_u64,
+            'i64': mbtools.read_i64,
+            'f32': mbtools.read_f32,
+        }
+        TYPE_LENGTH = {'u32': 2, 'i32': 2, 'u64': 4, 'i64': 4, 'f32': 2}
+        if not f:
+            f = 'u16'
         if not t:
             t = eva.core.config.timeout
         if isinstance(i, str):
@@ -1336,6 +1362,14 @@ class UC_API(GenericAPI):
         if not eva.uc.modbus.is_port(p):
             raise ResourceNotFound('Modbus port')
         result = []
+        try:
+            getter = GETTERS[f]
+        except:
+            raise InvalidParameter('data type not supported')
+        try:
+            type_len = TYPE_LENGTH[f]
+        except KeyError:
+            type_len = 1
         mb = eva.uc.modbus.get_port(p, t)
         if not mb:
             raise FunctionFailed('Unable to acquire Modbus port')
@@ -1353,8 +1387,8 @@ class UC_API(GenericAPI):
                     except:
                         raise InvalidParameter(reg)
                 else:
-                    addr = r
-                    ae = addr
+                    addr = int(r)
+                    ae = addr + (c - 1) * type_len
                 try:
                     addr = safe_int(addr)
                 except:
@@ -1366,41 +1400,55 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter(reg)
                 count = ae - addr + 1
+                rcnt = math.ceil(count / type_len)
                 if count < 1:
                     raise InvalidParameter(reg)
-                if rtype == 'h':
-                    data = mb.read_holding_registers(addr, count, unit=slave_id)
-                elif rtype == 'd':
-                    data = mb.read_discrete_inputs(addr, count, unit=slave_id)
-                elif rtype == 'i':
-                    data = mb.read_input_registers(addr, count, unit=slave_id)
-                else:
-                    data = mb.read_coils(addr, count, unit=slave_id)
-                if data.isError():
+                try:
+                    if rtype in ['d', 'c']:
+                        data = mbtools.read_bool(mb,
+                                                 rtype + str(addr),
+                                                 count,
+                                                 unit=slave_id)
+                    else:
+                        data = getter(mb,
+                                      rtype + str(addr),
+                                      rcnt,
+                                      unit=slave_id)
+                except Exception as e:
                     result.append({
-                        'addr':
-                            '{}{}'.format(rtype, addr),
-                        'error':
-                            str(data.message if hasattr(data, 'message'
-                                                       ) else data)
+                        'addr': '{}{}'.format(rtype, addr),
+                        'error': str(e)
                     })
+                    eva.core.log_traceback()
                 else:
                     cc = 1
-                    for d in data.registers if rtype in ['h', 'i'
-                                                        ] else data.bits:
+                    for d in data:
                         if d is True:
                             v = 1
                         elif d is False:
                             v = 0
+                        elif f == 'f32':
+                            v = float(d)
                         else:
                             v = d
-                        result.append({
-                            'addr': '{}{}'.format(rtype, addr),
-                            'value': v
-                        })
-                        addr += 1
+                        tp = 'coil' if rtype in ['d', 'c'] else f
+                        if f == 'bit' and rtype not in ['d', 'c']:
+                            for i in range(16):
+                                result.append({
+                                    'addr': f'{rtype}{addr}',
+                                    'bit': i,
+                                    'type': 'bit',
+                                    'value': v >> i & 1
+                                })
+                        else:
+                            result.append({
+                                'addr': '{}{}'.format(rtype, addr),
+                                'type': tp,
+                                'value': v
+                            })
+                        addr += 1 if rtype in ['d', 'c'] else type_len
                         cc += 1
-                        if cc > count:
+                        if cc > rcnt:
                             break
             return sorted(result, key=lambda k: k['addr'])
         finally:
@@ -1447,7 +1495,7 @@ class UC_API(GenericAPI):
             'u32': mbtools.write_u32,
             'i32': mbtools.write_i32,
             'u64': mbtools.write_u64,
-            'i64': mbtools.write_i16,
+            'i64': mbtools.write_i64,
             'f32': mbtools.write_f32,
         }
         GETTERS = {
@@ -1522,7 +1570,6 @@ class UC_API(GenericAPI):
                 if z:
                     data = mb.write_register(addr, value[0], unit=slave_id)
                 else:
-                    print(addr, value, setter)
                     return setter(mb, rtype + str(addr), value, unit=slave_id)
             elif rtype == 'c':
                 if z:

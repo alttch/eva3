@@ -85,8 +85,8 @@ UC
     * default timeout for Modbus / OWFS reduced to 1s to avoid critical events
     * unit MQTT control / update commands can be sent in JSON
     * strict device deployment files schema check (new format only)
-    * Modbus virtual port functions and CLI data types (u16, i16, u32, i32,
-      u64, i64, f64) and bit setters
+    * Modbus virtual port API methods and CLI data types (u16, i16, u32, i32,
+      u64, i64, f64) and bit getters / setters
 
 LM PLC
 ------

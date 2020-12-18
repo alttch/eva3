@@ -297,10 +297,24 @@ class UC_CLI(GenericCLI, ControllerCLI):
                     del (d['error'])
                 else:
                     d['addr_hex'] = hex(addr)
-                    d['hex'] = hex(d['value'])
-                    d['bin'] = bin(d['value'])
-            return sorted(sorted(data, key=lambda k: k['addr']),
-                          key=lambda k: k['reg'])
+                    if d['type'] == 'f32':
+                        import numpy as np
+                        d['value'] = np.float32(d['value'])
+                    elif d['type'] == 'bit':
+                        d['_s'] = d["addr"] * 16 + d['bit']
+                        d['addr'] = f'{d["addr"]}/{d["bit"]}'
+                        d['addr_hex'] = f'{d["addr_hex"]}/{hex(d["bit"])}'
+                    elif d['value'] >= 0:
+                        try:
+                            d['hex'] = hex(d['value'])
+                            if d['value'] < 65536:
+                                d['bin'] = bin(d['value'])
+                        except:
+                            pass
+            return sorted(
+
+                    sorted(data, key=lambda k: k.get('_s', k['addr']))
+                    ,key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
@@ -988,6 +1002,21 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'separated, predicated by type (h, c, i, d), range may be ' +
             'specified. e.g. h1000-1010,c10-15',
             metavar='REGISTERS')
+        sp_modbus_read.add_argument(
+            '-f',
+            '--data-type',
+            help='Data type (u16, i16, u32, i32, u64, i64, f64 or bit)',
+            metavar='TYPE',
+            choices=['u16', 'i16', 'u32', 'i32', 'u64', 'i64', 'f32', 'bit'],
+            dest='f')
+        sp_modbus_read.add_argument(
+            '-c',
+            '--count',
+            help='count, if register range not specified',
+            metavar='NUM',
+            type=int,
+            dest='c')
+
         sp_modbus_write = sp_modbus.add_parser(
             'write', help='Write register value to remote Modbus slave')
         sp_modbus_write.add_argument(
