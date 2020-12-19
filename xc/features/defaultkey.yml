@@ -1,0 +1,8 @@
+description: Change default key of the local installation
+help: |
+  Changes default key of all local components installed
+example: {{ setup_cmd }}key=NEW_SECRET_DEFAULT_KEY
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/auth.html#default-and-custom-api-keys
+setup:
+  mandatory-args:
+    key: New default key
