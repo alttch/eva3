@@ -694,10 +694,10 @@ if [ $APPEND -ne 1 ]; then
     askMQTT
 elif [ ! "$MQTT_HOST" ]; then
   askMQTT
-  [ "$MQTT_HOST" ] && APPEND_MQTT=1
   echo
 fi
 
+[ "$MQTT_HOST" ] && APPEND_MQTT=1
 
 if [ $APPEND -ne 1 ]; then
     echo
