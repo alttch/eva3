@@ -18,7 +18,7 @@ def setup(node=None, key=None):
     for c in controllers:
         print(c)
         cli_call('sfa',
-                 f'controller set {c} masterkey {key}',
+                 f'controller set {c} masterkey {key} -y',
                  return_result=True)
         cli_call('sfa', f'controller ma-test {c}', return_result=True)
 
@@ -29,4 +29,4 @@ def remove(node=None):
     controllers = get_controllers(node)
     for c in controllers:
         print(c)
-        cli_call('sfa', f'controller set {c} masterkey', return_result=True)
+        cli_call('sfa', f'controller set {c} masterkey -y', return_result=True)
