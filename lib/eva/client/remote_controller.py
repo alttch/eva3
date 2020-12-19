@@ -1348,13 +1348,13 @@ class RemoteUCPool(RemoteControllerPool):
                 logging.error('Failed to reload sensors from %s' %
                               controller_id)
                 return False
+            return True
         except:
             logging.error('failed to reload controller ' + controller_id)
             eva.core.log_traceback()
             return False
         finally:
             self.item_management_lock.release()
-        return True
 
     def cmd(self,
             controller_id,
@@ -1612,44 +1612,46 @@ class RemoteLMPool(RemoteControllerPool):
             logging.critical('RemoteLMPool::remove locking broken')
             eva.core.critical()
             return False
-        if controller_id in self.lvars_by_controller:
-            for i in self.lvars_by_controller[controller_id].keys():
+        try:
+            if controller_id in self.lvars_by_controller:
+                for i in self.lvars_by_controller[controller_id].keys():
+                    try:
+                        self.lvars[i].destroy()
+                        del (self.lvars[i])
+                        del (self.controllers_by_lvar[i])
+                    except:
+                        eva.core.log_traceback()
                 try:
-                    self.lvars[i].destroy()
-                    del (self.lvars[i])
-                    del (self.controllers_by_lvar[i])
+                    del (self.lvars_by_controller[controller_id])
                 except:
                     eva.core.log_traceback()
-            try:
-                del (self.lvars_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        if controller_id in self.macros_by_controller:
-            for i in self.macros_by_controller[controller_id].keys():
+            if controller_id in self.macros_by_controller:
+                for i in self.macros_by_controller[controller_id].keys():
+                    try:
+                        self.macros[i].destroy()
+                        del (self.macros[i])
+                        del (self.controllers_by_macro[i])
+                    except:
+                        eva.core.log_traceback()
                 try:
-                    self.macros[i].destroy()
-                    del (self.macros[i])
-                    del (self.controllers_by_macro[i])
+                    del (self.macros_by_controller[controller_id])
                 except:
                     eva.core.log_traceback()
-            try:
-                del (self.macros_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        if controller_id in self.cycles_by_controller:
-            for i in self.cycles_by_controller[controller_id].keys():
+            if controller_id in self.cycles_by_controller:
+                for i in self.cycles_by_controller[controller_id].keys():
+                    try:
+                        self.cycles[i].destroy()
+                        del (self.cycles[i])
+                        del (self.controllers_by_cycle[i])
+                    except:
+                        eva.core.log_traceback()
                 try:
-                    self.cycles[i].destroy()
-                    del (self.cycles[i])
-                    del (self.controllers_by_cycle[i])
+                    del (self.cycles_by_controller[controller_id])
                 except:
                     eva.core.log_traceback()
-            try:
-                del (self.cycles_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        self.item_management_lock.release()
-        return True
+            return True
+        finally:
+            self.item_management_lock.release()
 
     def reload_controller(self, controller_id):
         result = super().reload_controller(controller_id)
@@ -1784,10 +1786,10 @@ class RemoteLMPool(RemoteControllerPool):
             else:
                 logging.error('Failed to reload cycles from %s' % controller_id)
                 return False
+            return True
         except:
             logging.error('failed to reload controller ' + controller_id)
             eva.core.log_traceback()
             return False
         finally:
             self.item_management_lock.release()
-        return True
