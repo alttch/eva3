@@ -1,0 +1,4 @@
+description: Net-SNMP libraries
+help: |
+  Provides faster work with SNMP, if supported by a PHI module
+example: {{ setup_cmd }}

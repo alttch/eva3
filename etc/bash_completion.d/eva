@@ -18,6 +18,16 @@ _eva_iote() {
   fi
 }
 
+_eva_feature() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'help list-available remove setup' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_sfa_server() {
   local cur prev words cword
   _init_completion || return
@@ -623,10 +633,10 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup edit iote lm masterkey mirror ns save server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit feature iote lm masterkey mirror ns save server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
-      backup|edit|iote|lm|masterkey|mirror|server|sfa|system|uc)
+      backup|edit|feature|iote|lm|masterkey|mirror|server|sfa|system|uc)
         _eva_${words[1]}
         ;;
       *)
