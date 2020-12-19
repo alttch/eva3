@@ -1,0 +1,5 @@
+description: 1-Wire support via OWFS
+help: |
+  Installs OWFS system and Python libraries
+example: {{ setup_cmd }}
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/owfs.html
