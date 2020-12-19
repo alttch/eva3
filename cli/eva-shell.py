@@ -1438,9 +1438,11 @@ sys.argv = {argv}
         return 0, info
 
     def feature_setup(self, params):
+        print(f'Setting up feature {params["i"]}...')
         return self._feature_setup_remove('setup', params)
 
     def feature_remove(self, params):
+        print(f'Removing feature {params["i"]}...')
         return self._feature_setup_remove('remove', params)
 
     def _feature_setup_remove(self, mode, params):
