@@ -14,7 +14,7 @@ from .common import install_system_packages
 from .common import append_python_libraries
 from .common import remove_python_libraries
 
-from .common import restart_controller, cli_call
+from .common import restart_controller, cli_call, eva_jcmd
 
 from .common import ConfigFile, ShellConfigFile
 

@@ -6,6 +6,7 @@ __version__ = "3.3.2"
 import os
 import sys
 import subprocess
+import rapidjson
 
 from pathlib import Path
 
@@ -63,8 +64,18 @@ def exec_shell(cmd, passthru=False):
             raise RuntimeError(f'command failed: {cmd}')
 
 
-def eva_cmd(cmd, passthru=False):
-    exec_shell(dir_eva + '/bin/eva ' + cmd, passthru=passthru)
+def eva_jcmd(controller, cmd, passthru=False):
+    p = subprocess.run(f'{dir_eva}/bin/eva {controller} -J {cmd}',
+                       shell=True,
+                       capture_output=True)
+    if p.returncode != 0:
+        print_err('FAILED')
+        print_err(p.stderr.decode(), end='')
+        raise RuntimeError(f'command failed: {cmd}')
+    try:
+        return rapidjson.loads(p.stdout.decode())
+    except:
+        raise RuntimeError(f'invalid JSON output: {cmd}')
 
 
 def install_system_packages(packages, prepare=True):
