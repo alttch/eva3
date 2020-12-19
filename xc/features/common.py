@@ -85,7 +85,7 @@ def install_system_packages(packages, prepare=True):
             installer = f'{sudo}apt-get install -y --no-install-recommends '
         elif OS_LIKE == 'fedora':
             pre_cmd = None
-            installer = f'{SUDO}yum install -y'
+            installer = f'{sudo}yum install -y '
         if pre_cmd and prepare:
             print('Preparing...')
             exec_shell(pre_cmd)
