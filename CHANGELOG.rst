@@ -21,6 +21,8 @@ Common
     * 1-Wire OWFS libraries are now optional by default
 
     * local mirror feature (mirroring EVA ICS repo and PyPi)
+    * "feature setup/remove" - execute common setup tasks with a single command
+      from EVA shell.
     * "value" field in state and history databases increased to 8192 bytes
     * cmd API function accepts args as a list
     * cmd API function accepts STDIN data
