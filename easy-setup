@@ -34,6 +34,7 @@ BENCHMARK=0
 CLOUDMANAGER=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
 DEPLOY_FILE=
+FEATURES=
 
 REMOTES='0.0.0.0/0'
 
@@ -89,10 +90,12 @@ function usage {
     echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
     echo " --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)"
     echo
-    echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, may be used"
+    echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, can be specified"
     echo "                          several times"
     echo
     echo "--cloud-manager           set up SFA cloud manager"
+    echo
+    echo "--feature NAME:PARAMS     Install additional feature, can be specified several times"
     echo "--deploy FILE             deploy config from YAML file (requires cloud manager"
     echo
 }
@@ -466,12 +469,17 @@ do
             MQTT_DISCOVERY_ENABLED=1
             shift
         ;;
-      --mqtt-disable-retain)
+        --mqtt-disable-retain)
             MQTT_NO_RETAIN=1
             shift
         ;;
         -u)
             DEFAULT_USER="$2"
+            shift
+            shift
+        ;;
+        --feature)
+            FEATURES="$FEATURES $2"
             shift
             shift
         ;;
@@ -587,9 +595,9 @@ fi
 EVA_DIR=$(dirname "$(realpath "$0")")
 cd "${EVA_DIR}" || exit 11
 
-[ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+[ -f "${EVA_DIR}/etc/venv" ] && source ${EVA_DIR}/etc/venv
 
-[ -z $PYTHON ] && PYTHON=python3
+[ -z "$PYTHON" ] && PYTHON=python3
 
 PYTHON_MINOR=$($PYTHON --version|cut -d. -f2)
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
@@ -975,6 +983,22 @@ fi
 
 setup_supervisor_onboot || exit 11
 
+# FEATURES
+
+if [ "$FEATURES" ]; then
+  for f in $FEATURES; do
+    if [[ "$f" == *":"* ]]; then
+      feature=$(echo $f | cut -d: -f1)
+      params=$(echo $f | cut -d: -f2-)
+    else
+      feature=$f
+      params=
+    fi
+    ./bin/eva feature setup ${feature} ${params} || exit 12
+  done
+fi
+
+
 # COMPLETED
 
 if [ $APPEND_MQTT -eq 1 ]; then
@@ -1031,9 +1055,9 @@ echo "LINK=$LINK" >> ./etc/easy_setup
 
 if [ "${DEPLOY_FILE}" ]; then
   P=$(realpath "${DEPLOY_FILE}")
-  cd "$(dirname "${P}")" || exit 12
+  cd "$(dirname "${P}")" || exit 13
   "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "$(basename "$DEPLOY_FILE")" -u -y
-  cd "${EVA_DIR}" || exit 12
+  cd "${EVA_DIR}" || exit 13
 fi
 
 if [ $BENCHMARK -eq 1 ]; then
