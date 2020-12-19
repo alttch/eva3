@@ -1,0 +1,10 @@
+description: Ethernet/IP
+help: |
+  Installs cpppo (https://github.com/pjkundert/cpppo) library, required by
+  cpppo PHI modules
+example: {{ setup_cmd }}mods=1
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/integrations/ethernetip.html
+setup: &args
+  optional-args:
+    mods: Automatically download/remove required PHI modules
+remove: *args
