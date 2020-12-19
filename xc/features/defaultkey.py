@@ -3,7 +3,7 @@ from eva.features import cli_call, restart_controller
 
 
 def setup(key=None):
-    if key is None or key == '':
+    if not key:
         raise InvalidParameter
     data = cli_call('', 'server status', return_result=True)
     changed = False
