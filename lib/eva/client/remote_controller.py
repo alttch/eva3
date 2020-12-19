@@ -1218,31 +1218,33 @@ class RemoteUCPool(RemoteControllerPool):
             logging.critical('RemoteUCPool::remove locking broken')
             eva.core.critical()
             return False
-        if controller_id in self.units_by_controller:
-            for i in self.units_by_controller[controller_id].keys():
+        try:
+            if controller_id in self.units_by_controller:
+                for i in self.units_by_controller[controller_id].keys():
+                    try:
+                        self.units[i].destroy()
+                        del (self.units[i])
+                        del (self.controllers_by_unit[i])
+                    except:
+                        eva.core.log_traceback()
                 try:
-                    self.units[i].destroy()
-                    del (self.units[i])
-                    del (self.controllers_by_unit[i])
+                    del (self.units_by_controller[controller_id])
                 except:
                     eva.core.log_traceback()
-            try:
-                del (self.units_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        if controller_id in self.sensors_by_controller:
-            for i in self.sensors_by_controller[controller_id].keys():
+            if controller_id in self.sensors_by_controller:
+                for i in self.sensors_by_controller[controller_id].keys():
+                    try:
+                        self.sensors[i].destroy()
+                        del (self.sensors[i])
+                    except:
+                        eva.core.log_traceback()
                 try:
-                    self.sensors[i].destroy()
-                    del (self.sensors[i])
+                    del (self.sensors_by_controller[controller_id])
                 except:
                     eva.core.log_traceback()
-            try:
-                del (self.sensors_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        self.item_management_lock.release()
-        return True
+            return True
+        finally:
+            self.item_management_lock.release()
 
     def reload_controller(self, controller_id):
         result = super().reload_controller(controller_id)
