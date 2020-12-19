@@ -1,0 +1,14 @@
+description: Set master key for a node, connected to Cloud Manager
+help: |
+  Quickly set master key for a node, connected to the local Cloud Manager
+
+  The local SFA must be setup with cloud manager enabled.
+example: {{ setup_cmd }}node=plant1,key=NODE_MASTER_KEY
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/install.html#cloud-manager
+setup:
+  mandatory-args:
+    node: Node name
+    key: Node master key
+remove:
+  mandatory-args:
+    node: Node name
