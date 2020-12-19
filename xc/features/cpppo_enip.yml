@@ -1,4 +1,4 @@
-description: Ethernet/IP
+description: Ethernet/IP via cpppo library
 help: |
   Installs cpppo (https://github.com/pjkundert/cpppo) library, required by
   cpppo PHI modules
