@@ -1130,11 +1130,18 @@ sys.argv = {argv}
             except:
                 return self.local_func_result_failed
             try:
-                result = rapidjson.loads(
-                    safe_download(_update_repo + '/update_info.json',
-                                  timeout=10))
-                new_build = int(result['build'])
-                new_version = result['version']
+                if 'EVA_UPDATE_FORCE_VERSION' in os.environ:
+                    new_version, new_build = os.environ[
+                        'EVA_UPDATE_FORCE_VERSION'].split(':')
+                    new_build = int(new_build)
+                    forced_version = True
+                else:
+                    result = rapidjson.loads(
+                        safe_download(_update_repo + '/update_info.json',
+                                      timeout=10))
+                    new_build = int(result['build'])
+                    new_version = result['version']
+                    forced_version = False
             except Exception as e:
                 self.print_err(e)
                 return self.local_func_result_failed
@@ -1147,12 +1154,15 @@ sys.argv = {argv}
                 }
             print(
                 self.colored('Current build', color='blue', attrs=['bold']) +
-                ' : ' + self.colored(build, color='yellow'))
+                ' : ' + self.colored(f'{build} (v{version})', color='cyan'))
             print(
                 self.colored(
-                    'Latest available build', color='blue', attrs=['bold']) +
-                ' : ' + self.colored('{} (v{})'.format(new_build, new_version),
-                                     color='yellow'))
+                    f'{"Selected" if forced_version else "Latest available"}'
+                    ' build',
+                    color='blue',
+                    attrs=['bold']) + ' : ' +
+                self.colored('{} (v{})'.format(new_build, new_version),
+                             color='yellow'))
             if build == new_build:
                 return self.local_func_result_empty
             if build > new_build:

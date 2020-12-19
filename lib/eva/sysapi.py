@@ -369,7 +369,8 @@ class CMDAPI(object):
     @log_w
     @api_need_master
     def update_node(self, **kwargs):
-        uri, yes = parse_api_params(kwargs, 'uy', 'ss')
+        v, uri, yes = parse_api_params(kwargs, 'vuy', 'sss')
+        env = 'EVA_UPDATE_FORCE_VERSION="{v}"' if v else ''
         uri = f'-u {uri}' if uri else ''
         if yes != 'YES':
             raise FunctionFailed('Not confirmed')
@@ -378,7 +379,7 @@ class CMDAPI(object):
         with open(log_file, 'a') as fh:
             fh.write((f'\n{datetime.datetime.now().isoformat()}\n' + '-' * 26 +
                       '\n'))
-        os.system(f'(sleep 0.5 && {eva.core.dir_eva}/bin/eva '
+        os.system(f'(sleep 0.5 && {env} {eva.core.dir_eva}/bin/eva '
                   f'update --YES {uri}) >> {log_file} 2>&1 &')
         return True
 

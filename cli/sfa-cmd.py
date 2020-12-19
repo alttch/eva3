@@ -1102,6 +1102,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     'i': v,
                     'f': 'update_node',
                     'p': {
+                        'v': f'{my_version}:{my_build}',
                         'y': 'YES'
                     }
                 })[1].get('code')
@@ -1146,14 +1147,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code == apiclient.result_ok:
                         time.sleep(1)
                         code, data = call('get_controller', {'i': c[0]})
-                        if int(data['build']) >= my_build:
+                        if int(data['build']) == my_build:
                             print(
                                 self.colored(c[0] + ' -> OK',
                                              color='green',
                                              attrs='bold'))
                         else:
                             self.print_warn(
-                                f'{c[0]} -> FAILED! (update not applied)')
+                                f'{c[0]} -> FAILED! (update not applied or '
+                                'wrong build installed)')
                             update_result = self.local_func_result_failed
                         controllers.remove(c)
                 if controllers:
