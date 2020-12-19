@@ -737,7 +737,7 @@ sys.argv = {argv}
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
                '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/drivers/phi',
-               'xc/extensions', 'xc/features', 'etc', 'ui')
+               'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
