@@ -737,7 +737,7 @@ sys.argv = {argv}
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
                '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/drivers/phi',
-               'xc/extensions', 'etc', 'ui')
+               'xc/extensions', 'xc/features', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -1460,7 +1460,12 @@ sys.argv = {argv}
             return self.local_func_result_failed
         mod = importlib.import_module(f'eva.features.{params["i"]}')
         try:
-            getattr(mod, mode)(**c)
+            fn = getattr(mod, mode)
+        except AttributeError:
+            self.print_err('Not supported by selected feature')
+            return self.local_func_result_failed
+        try:
+            fn(**c)
         except Exception as e:
             print()
             self.print_err(e)
