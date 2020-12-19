@@ -1047,7 +1047,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         self.print_debug(
                             f'{c["oid"]} build is lower than 2020121702')
                     continue
-                node = c['full_id'].rsplit('/')[-1]
+                node = c['id']
                 if node not in nodes:
                     if debug:
                         self.print_debug('ma-test ' + c['oid'])
@@ -1060,7 +1060,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         controllers = []
         for c in data:
             if c['enabled'] and c['connected']:
-                node = c['full_id'].rsplit('/')[-1]
+                node = c['id']
                 if node in nodes:
                     controllers.append((c['full_id'], node))
         if not nodes:
