@@ -62,4 +62,4 @@ def remove(id=None):
                 restart_controller(c)
             except:
                 from eva.features import print_warn
-                print_warn(f'WARNING: unable to destroy {id} notifier for {c}')
+                print_warn(f'unable to destroy {id} notifier for {c}')

@@ -223,6 +223,8 @@ class ManagementCLI(GenericCLI):
                                          help='Edit commands')
 
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
+        sp_edit_venv = sp_edit.add_parser(
+            'venv', help='Edit Python virtual environment configuration')
 
         ap_masterkey = self.sp.add_parser('masterkey',
                                           help='Masterkey management')
@@ -1282,6 +1284,12 @@ sys.argv = {argv}
             return self.local_func_result_failed
         return self.local_func_result_ok
 
+    def edit_venv(self, params):
+        editor = os.environ.get('EDITOR', 'vi')
+        code = os.system('{} {}/etc/venv'.format(editor, dir_eva))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
+
     def save(self, params):
         p = params['p']
         if p:
@@ -1405,6 +1413,7 @@ sys.argv = {argv}
         ys = tpl.render({
             'EVA_VERSION': version,
             'EVA_BUILD': build,
+            'EVA_DIR': dir_eva,
             'setup_cmd': setup_cmd
         })
         data = yaml.load(ys)
@@ -1533,6 +1542,7 @@ _api_functions = {
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
     'edit:crontab': cli.edit_crontab,
+    'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
 }
 
@@ -1577,6 +1587,8 @@ except:
     pass
 
 eva.features.print_err = cli.print_err
+eva.features.print_warn = cli.print_warn
+eva.features.print_debug = cli.print_debug
 eva.features.cli = cli
 
 cli.default_prompt = '# '

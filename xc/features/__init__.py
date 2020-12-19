@@ -11,7 +11,7 @@ from .common import UnsupportedOS
 
 from .common import install_system_packages
 
-from .common import append_python_libraries
+from .common import append_python_libraries, rebuild_python_venv
 from .common import remove_python_libraries
 
 from .common import restart_controller, cli_call, eva_jcmd, exec_shell
@@ -31,3 +31,7 @@ def print_err(*args, **kwargs):
 
 def print_warn(*args, **kwargs):
     neotermcolor.cprint(*args, color='yellow', attrs=['bold'], **kwargs)
+
+
+def print_debug(*args, **kwargs):
+    print(self.colored(*args, color='grey', attrs=['bold']), **kwargs)
