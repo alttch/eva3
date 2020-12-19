@@ -1076,14 +1076,14 @@ sys.argv = {argv}
             return self.local_func_result_failed
 
     @staticmethod
-    @lru_cache
+    @lru_cache(maxsize=None)
     def _get_build():
         with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
             data = p.read()
             return int(data.strip())
 
     @staticmethod
-    @lru_cache
+    @lru_cache(maxsize=None)
     def _get_version():
         with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
             data = p.read()
@@ -1383,7 +1383,7 @@ sys.argv = {argv}
                         attrs=['bold']))
             return self.local_func_result_empty if ok else (10, '')
 
-    @lru_cache
+    @lru_cache(maxsize=None)
     def _feature_info(self, name):
         import yaml
         try:

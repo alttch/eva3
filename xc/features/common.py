@@ -57,7 +57,11 @@ def exec_shell(cmd, input=None, passthru=False):
         if code:
             raise RuntimeError(f'shell command failed (code {code}):\n{cmd}')
     else:
-        p = subprocess.run(cmd, input=input, shell=True, capture_output=True)
+        p = subprocess.run(cmd,
+                           input=input,
+                           shell=True,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
         if p.returncode != 0:
             print_err('FAILED')
             print_err(p.stderr.decode(), end='')
@@ -67,7 +71,8 @@ def exec_shell(cmd, input=None, passthru=False):
 def eva_jcmd(controller, cmd, input=input, passthru=False):
     p = subprocess.run(f'{dir_eva}/bin/eva {controller} -J {cmd}',
                        shell=True,
-                       capture_output=True)
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
     if p.returncode != 0:
         print_err('FAILED')
         print_err(p.stderr.decode(), end='')

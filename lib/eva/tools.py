@@ -165,7 +165,7 @@ class ShellConfigFile():
         with open(self.fname) as fh:
             for line in fh.readlines():
                 line = line.strip()
-                if not line.startswith('#'):
+                if line and not line.startswith('#'):
                     try:
                         name, value = line.split('=', 1)
                         if (value.startswith('"') and value.endswith('"')) or \
