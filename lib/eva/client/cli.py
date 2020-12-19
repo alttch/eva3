@@ -1400,7 +1400,9 @@ class GenericCLI(GCLI):
                     self.print_err(e)
                     return 9
             elif c.get('json') or a._json or api_func in self.always_json:
-                self.print_json(result)
+                # hack for features, remove when subshells will be merged
+                if '--quiet' not in sys.argv:
+                    self.print_json(result)
             else:
                 return self.process_result(result, code, api_func, itype, a)
         return 0

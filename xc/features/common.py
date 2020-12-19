@@ -135,22 +135,25 @@ def remove_python_libraries(libs, rebuild_venv=True):
         rebuild_python_venv()
 
 
-def cli_call(cmd, as_json=False):
+def cli_call(controller, cmd, return_result=False):
     from . import cli
-    if as_json:
-        cmd = '-J ' + cmd
+    dcmd = controller
+    if dcmd:
+        dcmd += ' '
+    dcmd += cmd
+    cmd = controller + (' -J --quiet ' if return_result else ' ') + cmd
     code, data = cli.call(cmd)
     if code:
-        raise RuntimeError(f'Command failed: "eva {cmd}"')
+        raise RuntimeError(f'Command failed: "eva {dcmd}"')
     else:
-        print()
+        return data
 
 
 def download_phis(phis):
     from . import cli
     for phi in phis:
         print(f'Downloading PHI module {phi}')
-        cli_call(f'uc phi download -y {phi}')
+        cli_call('uc', f'phi download -y {phi}', return_result=True)
 
 
 def remove_phis(phis):
@@ -158,4 +161,4 @@ def remove_phis(phis):
     for phi in phis:
         phi = phi.rsplit('/', 1)[-1].rsplit('.', 1)[0]
         print(f'Removing PHI module {phi}')
-        cli_call(f'uc phi unlink {phi}')
+        cli_call('uc', f'phi unlink {phi}', return_result=True)
