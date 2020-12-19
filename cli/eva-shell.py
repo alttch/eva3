@@ -1441,7 +1441,11 @@ sys.argv = {argv}
         except FileNotFoundError:
             self.print_err(f'Feature not found: {params["i"]}')
             return self.local_func_result_failed
-        c = dict_from_str(params['c'])
+        try:
+            c = dict_from_str(params['c'])
+        except:
+            self.print_err('Invalid parameters')
+            return self.local_func_result_failed
         if c is None:
             c = {}
         args_ok = True
