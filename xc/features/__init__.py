@@ -15,5 +15,8 @@ from .common import ConfigFile, ShellConfigFile
 
 from .common import InvalidParameter
 
+from .common import download_phis, remove_phis
+
+
 def print_err(*args, **kwargs):
     neotermcolor.cprint(*args, color='red', **kwargs)

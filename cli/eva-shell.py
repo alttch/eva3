@@ -1556,6 +1556,7 @@ except:
     pass
 
 eva.features.print_err = cli.print_err
+eva.features.cli = cli
 
 cli.default_prompt = '# '
 cli.arg_sections += [
