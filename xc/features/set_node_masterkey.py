@@ -26,3 +26,7 @@ def setup(node=None, key=None):
 def remove(node=None):
     if not node:
         raise InvalidParameter
+    controllers = get_controllers(node)
+    for c in controllers:
+        print(c)
+        cli_call('sfa', f'controller set {c} masterkey', return_result=True)

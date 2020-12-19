@@ -50,21 +50,21 @@ OS_ID, OS_LIKE = get_os()
 CONTROLLERS = {'uc': 'UC', 'lm': 'LM PLC', 'sfa': 'SFA'}
 
 
-def exec_shell(cmd, passthru=False):
+def exec_shell(cmd, input=None, passthru=False):
     from . import print_err
     if passthru:
         code = os.system(cmd)
         if code:
             raise RuntimeError(f'shell command failed (code {code}):\n{cmd}')
     else:
-        p = subprocess.run(cmd, shell=True, capture_output=True)
+        p = subprocess.run(cmd, input=input, shell=True, capture_output=True)
         if p.returncode != 0:
             print_err('FAILED')
             print_err(p.stderr.decode(), end='')
             raise RuntimeError(f'command failed: {cmd}')
 
 
-def eva_jcmd(controller, cmd, passthru=False):
+def eva_jcmd(controller, cmd, input=input, passthru=False):
     p = subprocess.run(f'{dir_eva}/bin/eva {controller} -J {cmd}',
                        shell=True,
                        capture_output=True)
@@ -173,3 +173,7 @@ def remove_phis(phis):
         phi = phi.rsplit('/', 1)[-1].rsplit('.', 1)[0]
         print(f'Removing PHI module {phi}')
         cli_call('uc', f'phi unlink {phi}', return_result=True)
+
+
+def is_installed(p):
+    return os.path.exists(f'{dir_eva}/etc/{p}.ini')
