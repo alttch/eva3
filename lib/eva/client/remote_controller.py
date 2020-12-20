@@ -1280,7 +1280,13 @@ class RemoteUCPool(RemoteControllerPool):
             return result
         if controller_id == 'ALL':
             return True
-        uc = self.controllers[controller_id]
+        try:
+            uc = self.controllers[controller_id]
+        except KeyError:
+            # controller removed from pool
+            logging.error('Failed to reload %s, not found in pool' %
+                          controller_id)
+            return False
         try:
             units = uc.load_units()
             if units is None:
