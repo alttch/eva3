@@ -1607,7 +1607,6 @@ class GenericMQTTNotifier(GenericNotifier):
         def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
-            eva.core._flags.started.wait(timeout=60)
             o.send_message(o.announce_topic,
                            o.announce_msg,
                            qos=o.qos['system'],
@@ -1739,12 +1738,18 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.disconnect()
         self.announcer.stop()
 
+    def start_announcer(self):
+        eva.core._flags.started.wait(timeout=60)
+        # sleep 5 seconds to make sure the controller is started
+        time.sleep(5)
+        self.announcer.start()
+
     def on_connect(self, client, userdata, flags, rc):
         if eva.core.is_shutdown_requested():
             return
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
-            self.announcer.start()
+            eva.core.spawn(self.start_announcer)
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('.GenericMQTTNotifier::on_connect locking broken')
             eva.core.critical()
