@@ -22,7 +22,7 @@ from .common import InvalidParameter
 
 from .common import download_phis, remove_phis
 
-from .common import is_installed
+from .common import is_enabled
 
 
 def print_err(*args, **kwargs):

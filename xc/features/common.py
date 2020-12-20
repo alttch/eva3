@@ -16,6 +16,7 @@ sudo = os.environ['SUDO'] + ' ' if 'SUDO' in os.environ else ''
 
 from eva.tools import ShellConfigFile, ConfigFile
 from eva.tools import dict_from_str
+from eva.tools import val_to_boolean
 
 from eva.exceptions import InvalidParameter
 
@@ -180,5 +181,9 @@ def remove_phis(phis):
         cli_call('uc', f'phi unlink {phi}', return_result=True)
 
 
-def is_installed(p):
-    return os.path.exists(f'{dir_eva}/etc/{p}.ini')
+def is_enabled(p):
+    with ShellConfigFile('eva_servers') as fh:
+        try:
+            return val_to_boolean(fh.get(f'{p.upper()}_ENABLED'))
+        except KeyError:
+            return False

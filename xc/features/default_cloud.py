@@ -1,5 +1,5 @@
 from eva.features import InvalidParameter, dir_eva
-from eva.features import cli_call, is_installed, exec_shell, restart_controller
+from eva.features import cli_call, is_enabled, exec_shell, restart_controller
 
 from eva.tools import val_to_boolean
 
@@ -44,7 +44,7 @@ def setup(mqtt=None,
     batch.append(f'set {id} announce_interval {announce}')
     batch.append(f'enable {id}')
     for c in ['uc', 'lm']:
-        if is_installed(c):
+        if is_enabled(c):
             print(f'{c.upper()}...')
             for b in batch:
                 cli_call(f'ns {c}', b, return_result=True)
@@ -55,7 +55,7 @@ def remove(id=None):
     if not id:
         id = 'eva_1'
     for c in ['uc', 'lm']:
-        if is_installed(c):
+        if is_enabled(c):
             print(f'{c.upper()}...')
             try:
                 cli_call(f'ns {c}', f'destroy {id}', return_result=True)
