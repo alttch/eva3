@@ -1749,7 +1749,7 @@ class GenericMQTTNotifier(GenericNotifier):
             return
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
-            eva.core.spawn(self.start_announcer)
+            eva.core.spawn_daemon(self.start_announcer)
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('.GenericMQTTNotifier::on_connect locking broken')
             eva.core.critical()
