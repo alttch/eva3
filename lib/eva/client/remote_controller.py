@@ -1306,7 +1306,6 @@ class RemoteUCPool(RemoteControllerPool):
                 return False
             try:
                 timestamp = time.time()
-                units = uc.load_units()
                 p = {}
                 for u in units:
                     if u.full_id in self.units and u.controller != uc:
