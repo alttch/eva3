@@ -978,7 +978,7 @@ def append_controller(uri,
             return False
         api.set_timeout(t)
     else:
-        api.set_timeout(eva.core.config.timeout)
+        api.set_timeout(eva.core.config.timeout / 2)
     uport = ''
     if uri.startswith('http://') or uri.startswith('https://'):
         if uri.count(':') == 1 and uri.count('/') == 2:

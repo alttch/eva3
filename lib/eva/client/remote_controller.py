@@ -224,7 +224,7 @@ class RemoteController(eva.item.Item):
             self._key = api._key
         else:
             self.api = eva.client.coreapiclient.CoreAPIClient()
-            self.api.set_timeout(eva.core.config.timeout)
+            self.api.set_timeout(eva.core.config.timeout / 2)
             self._key = None
         self.masterkey = None
         self._masterkey = None
@@ -489,7 +489,7 @@ class RemoteController(eva.item.Item):
                 except:
                     return False
             else:
-                self.api.set_timeout(eva.core.config.timeout)
+                self.api.set_timeout(eva.core.config.timeout / 2)
                 self.set_modified(save)
                 return True
         elif prop == 'retries':
