@@ -13,3 +13,4 @@ setup:
   optional-args:
     key_prefix: Prefix mapping of local API keys for mapping to AD groups
     ca: Path to CA certificate file
+    cache_time: Authentication cache (seconds), if DC is not available
