@@ -23,6 +23,8 @@ from eva.client import apiclient
 from neotasker import BackgroundIntervalWorker, BackgroundWorker
 from eva.types import CT_JSON, CT_MSGPACK
 
+# import eva.debuglock
+
 # websocket.enableTrace(True)
 
 _warning_time_diff = 1
@@ -232,7 +234,7 @@ class RemoteController(eva.item.Item):
         self.mqtt_update = mqtt_update
         self.reload_interval = 30
         self.connected = False
-        self.retries = 2
+        self.retries = 0
         self.static = static
         self.enabled = enabled
         self.wait_for_autoremove = False
@@ -753,6 +755,8 @@ class RemoteControllerPool(object):
             on_error=eva.core.log_traceback,
             loop='cleaners',
             delay=eva.core.config.action_cleaner_interval)
+        self.pending = []
+        self.pending_lock = threading.RLock()
 
     def cmd(self,
             controller_id,
@@ -776,27 +780,49 @@ class RemoteControllerPool(object):
         return c.api_call('cmd', p)
 
     def append(self, controller, need_type=None):
-        if controller.load_remote(need_type=need_type) or \
-                controller.item_id != '':
-            if not self.management_lock.acquire(
-                    timeout=eva.core.config.timeout):
-                logging.critical('RemoteControllerPool::append locking broken')
-                eva.core.critical()
-                return False
-            try:
-                if controller.item_id in self.controllers:
-                    logging.error(
-                        'Unable to append controller {}, already exists'.format(
-                            controller.full_id))
+        try:
+            with self.pending_lock:
+                if controller.oid in self.pending:
+                    logging.debug(
+                        f'Skipping adding {controller.oid} into pool, '
+                        f'already pending')
                     return False
-                self.controllers[controller.item_id] = controller
-                controller.pool = self
-                if controller.enabled:
-                    self.start_controller_reload_worker(controller)
-                return True
+                else:
+                    self.pending.append(controller.oid)
+            try:
+                if controller.load_remote(need_type=need_type) or \
+                        controller.item_id != '':
+                    if not self.management_lock.acquire(
+                            timeout=eva.core.config.timeout):
+                        logging.critical(
+                            f'RemoteControllerPool::append locking broken'
+                            f' ({controller.oid})')
+                        eva.core.critical()
+                        return False
+                    try:
+                        if controller.item_id in self.controllers:
+                            logging.error(
+                                'Unable to append controller {}, already exists'
+                                .format(controller.full_id))
+                            return False
+                        self.controllers[controller.item_id] = controller
+                        controller.pool = self
+                        if controller.enabled:
+                            return self.start_controller_reload_worker(
+                                controller)
+                        else:
+                            return True
+                    finally:
+                        self.management_lock.release()
+                return False
             finally:
-                self.management_lock.release()
-        return False
+                try:
+                    with self.pending_lock:
+                        self.pending.remove(controller.oid)
+                except ValueError:
+                    pass
+        except:
+            eva.core.log_traceback()
 
     def remove(self, controller_id):
         if not self.management_lock.acquire(timeout=eva.core.config.timeout):
@@ -850,8 +876,9 @@ class RemoteControllerPool(object):
             eva.core.critical()
             return False
         try:
+            if eva.core.is_shutdown_requested():
+                return False
             self.reload_workers[controller.item_id] = w
-            self.reload_controller(controller.item_id)
             w.start()
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
@@ -863,6 +890,7 @@ class RemoteControllerPool(object):
                 worker.start()
             else:
                 controller.register_mqtt()
+            return True
         except:
             eva.core.log_traceback()
         finally:
