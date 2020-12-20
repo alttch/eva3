@@ -1210,7 +1210,7 @@ def stop():
         save()
     eva.lm.jobs.scheduler.stop()
     for i, v in cycles_by_id.copy().items():
-        v.stop(wait=False)
+        v.stop()
     for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if uc_pool:
