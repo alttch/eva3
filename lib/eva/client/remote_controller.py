@@ -482,7 +482,7 @@ class RemoteController(eva.item.Item):
         elif prop == 'timeout':
             if val is not None:
                 try:
-                    self.api.set_timeout(int(val))
+                    self.api.set_timeout(float(val))
                     self.log_set(prop, val)
                     self.set_modified(save)
                     return True
