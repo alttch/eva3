@@ -15,6 +15,7 @@ Common
     * fix: test command don't report number of active threads any more for
            API keys without "sysfunc" permission
     * fix: JSON logging
+    * fix: improved stability of controller pools
 
     * deprecated: RESTful and direct API, including CS_EVENT_API in Core scripts
 
