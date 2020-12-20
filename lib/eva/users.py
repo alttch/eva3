@@ -534,7 +534,7 @@ def update_config(cfg):
         ou = _d.msad_ou
     logging.debug(f'msad.ou = {ou}')
     try:
-        cache_time = int(cfg.get('msad', 'cache_time'))
+        cache_time = float(cfg.get('msad', 'cache_time'))
     except:
         cache_time = 86400
     logging.debug(f'msad.cache_time = {cache_time}')
