@@ -825,6 +825,11 @@ After updating, EVA shell tries to determine the local SFA IP address / port
 and automatically gives configuration instructions. In complicated setups,
 IP/port may differ and need to be corrected manually.
 
+.. note::
+
+    The mirror can be used only by secondary nodes with the same CPU
+    architecture.
+
 If the mirror is set up properly, the following url should display a web page
 with EVA ICS version and build:
 
