@@ -782,13 +782,13 @@ class RemoteControllerPool(object):
     def append(self, controller, need_type=None):
         try:
             with self.pending_lock:
-                if controller.oid in self.pending:
+                if controller.api._uri in self.pending:
                     logging.debug(
-                        f'Skipping adding {controller.oid} into pool, '
+                        f'Skipping adding {controller.api._uri} into pool, '
                         f'already pending')
                     return False
                 else:
-                    self.pending.append(controller.oid)
+                    self.pending.append(controller.api._uri)
             try:
                 if controller.load_remote(need_type=need_type) or \
                         controller.item_id != '':
@@ -796,7 +796,7 @@ class RemoteControllerPool(object):
                             timeout=eva.core.config.timeout):
                         logging.critical(
                             f'RemoteControllerPool::append locking broken'
-                            f' ({controller.oid})')
+                            f' ({controller.api._uri})')
                         eva.core.critical()
                         return False
                     try:
@@ -818,7 +818,7 @@ class RemoteControllerPool(object):
             finally:
                 try:
                     with self.pending_lock:
-                        self.pending.remove(controller.oid)
+                        self.pending.remove(controller.api._uri)
                 except ValueError:
                     pass
         except:
