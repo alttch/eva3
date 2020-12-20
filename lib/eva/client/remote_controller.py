@@ -406,8 +406,9 @@ class RemoteController(eva.item.Item):
                 'Remote controller {} EVA version is {}, my: {}'.format(
                     self.full_id, result['version'], eva.core.version))
         self.item_id = result['system']
-        self.config_changed = True
-        self.set_group(result['product_code'])
+        if self.group != result['product_code']:
+            self.set_group(result['product_code'])
+            self.config_changed = True
         self.product_build = result['product_build']
         logging.info('controller %s loaded' % self.full_id)
         self.version = result['version']
