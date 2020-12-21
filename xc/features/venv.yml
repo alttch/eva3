@@ -1,8 +1,8 @@
 description: Rebuild Python virtual environment
 help: |
-  If rebuild from scratch requested and failed, EVA shell will not start. Go to
-  the system console and rebuild venv manually, with {{ EVA_DIR }}/install/build-venv
-  command.
+  If rebuild from scratch is requested and failed, EVA shell will not start. Go
+  to the system console and rebuild venv manually, with {{ EVA_DIR
+}}/install/build-venv command.
 example: {{ setup_cmd }}
 doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/install.html#customizing-python-virtual-environment
 setup:
