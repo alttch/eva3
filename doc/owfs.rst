@@ -16,8 +16,21 @@ automatic retry attempts, virtual ports for drivers etc.
 Setup
 =====
 
-Starting from EVA ICS 3.3.2, OWFS libraries are not installed by default, so
-firstly install
+Starting from EVA ICS 3.3.2, OWFS libraries are not installed by default.
+
+Automatic setup
+---------------
+
+.. code:: bash
+
+    eva feature setup owfs
+
+.. note::
+
+    Automatic setup is not supported on RedHat Enterprise Linux 8
+
+Manual setup
+------------
 
 .. code:: bash
 

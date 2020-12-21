@@ -239,6 +239,12 @@ EVA ICS installation script automatically creates Python virtual environment in
 .. code-block:: bash
 
     ./install/build-venv
+
+or
+
+.. code-block:: bash
+
+    eva feature setup venv
     
 If you want to rebuild venv from scratch, delete *python3* folder completely.
 
@@ -425,6 +431,28 @@ its folder or clone the installation. Just do the following:
 * start EVA ICS back (*./sbin/eva-control start*)
 * correct logrotate and on-boot startup paths
 
+Setting up additional features
+==============================
+
+Some optional features require installing additional modules and system
+libraries and putting the proper settings in EVA ICS configuration files.
+
+This process can be automated with "eva feature" command, which provides small
+code snippets to quickly setup or remove a chosen feature.
+
+For example, to setup *net-snmp* library (speeds up some supported SNMP
+:doc:`PHI modules </drivers>`), type:
+
+.. code:: bash
+
+    eva feature setup netsnmp
+
+Full list of feature snippets can be obtained with command:
+
+.. code:: bash
+
+    eva feature list-available
+
 Watchdog
 ========
 
@@ -503,8 +531,8 @@ manually configure MQTT notifier for SFA, with automatic discovery feature:
 
 After restart, SFA is ready to accept cloud member controllers.
 
-Configuring LM and UC as secondary
-----------------------------------
+Configuring UC and LM PLC as secondaries
+----------------------------------------
 
 To automatically connect controllers from the secondary node, they must have
 the same "default" API key. So, secondary node installation should look like:
@@ -517,7 +545,19 @@ the same "default" API key. So, secondary node installation should look like:
 Setting the same master key is insecure and not recommended unless all nodes
 are in absolutely trusted environment.
 
-Next, let's (manually) configure MQTT notifier, e.g. for UC:
+The local components' default key can be quickly changed later with a command:
+
+.. code:: bash
+
+    eva feature setup default_key key=NEW_SECRET_DEFAULT_KEY
+
+Automatic default cloud configuration for the local UC and LM PLC instances:
+
+.. code:: bash
+
+    eva feature setup default_cloud mqtt=user:password@192.168.1.12
+
+Manual MQTT notifier configuration (e.g. for UC):
 
 .. code:: bash
 
@@ -563,6 +603,13 @@ option "cloud_manager = yes"), provides two features:
 
 Cloud manager allows to manage the whole cloud from the one node. Cloud manager
 is required for :doc:`/iac`.
+
+Master key for components of a specified node connected can be automatically
+set with a command:
+
+.. code::
+
+    eva feature setup node_masterkey node=plant1,key=NODE_MASTER_KEY
 
 Cloud updates
 -------------

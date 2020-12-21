@@ -36,15 +36,25 @@ equipment and tasks.
 Setup
 =====
 
+Automatic setup
+---------------
+
+.. code:: bash
+
+    eva feature setup cpppo_enip mods=1
+
+Manual setup
+------------
+
 Required libraries
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Both PHI modules require `cpppo <https://github.com/pjkundert/cpppo/>`_ Python
 library. The library isn't installed by default. Set *EXTRA="cpppo==4.0.6"* in
 */opt/eva/etc/venv* and rebuild EVA ICS venv (*/opt/eva/install/build-venv*).
 
 Downloading PHIs
-----------------
+~~~~~~~~~~~~~~~~
 
 .. code:: bash
 

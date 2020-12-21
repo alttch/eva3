@@ -9,8 +9,37 @@ scripts</item_scripts>` or with :doc:`drivers </drivers>`.
 
 .. _snmp_traps:
 
+Connecting equipment with drivers
+=================================
+
+Supported SNMP equipment can be quickly connected with corresponding :doc:`PHI
+modules </drivers>`. Some modules support *net-snmp*. This library is faster
+than *pysnmp* installed by default, but requires additional system setup:
+
+.. code:: bash
+
+    eva feature setup netsnmp
+
+or manually:
+
+* add *python3-netsnmp==1.1a1* to *EXTRA* section of "etc/venv" configuration
+  file
+
+* install required system libraries:
+
+.. code:: bash
+
+    apt -y install libsnmp-dev
+    # or for Fedora
+    yum install -y net-snmp-devel
+
+* rebuild EVA ICS venv (*/opt/eva/install/build-venv*).
+
+Universal processing
+====================
+
 SNMP traps
-==========
+----------
 
 Active :doc:`item<items>` updates can be done using SNMP traps notifications.
 
@@ -35,7 +64,7 @@ use *eva uc* :doc:`console app</cli>` or UC API :ref:`set_prop<ucapi_set_prop>`
 function. In this tutorial we'll configure SNMP-traps handler with *eva uc*. 
 
 ident_vars - identifying the trap
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **snmp_trap.ident_vars** variable is used by the handler to filter trap
 notifications and parse only those ones directly related to the item. You
@@ -71,7 +100,7 @@ Result:
 To reset **ident_vars** variable, run the command without -v key.
 
 set_down - handling the failures
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the controller receives trap notification indicating that the item is not
 available or disabled, its status is set to -1.
@@ -105,7 +134,7 @@ Result:
 To reset **set_down** variable, run the command without -v key. 
 
 set_status - setting the item status
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the source device sends trap notifications with variable having the item
 status in the format similar to EVA, the handler can immediately change the
@@ -135,7 +164,7 @@ Result:
 To reset **set_status** variable, run the command without -v key. 
 
 set_value - setting the item value
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the source device sends trap notifications with the variable having the
 item value  (usually, these are various sensor controllers which e.g. send
@@ -166,7 +195,7 @@ Result:
 To reset **set_value** variable, run the command without -v key. 
 
 set_if - conditional state updates
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the received trap notification contains certain variables but none of them
 can be used to set status and/or value as-is, you can define your own rules and
@@ -224,7 +253,7 @@ can delete the condition only by deleting the entire **set_if** variable by
 running the command without -v key.
 
 Disabling SNMP traps processing
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To disable SNMP traps processing for a single item, delete its **snmp_traps**
 variable:

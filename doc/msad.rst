@@ -6,8 +6,18 @@ To authenticate EVA ICS users, `Microsoft Active Directory
 
 Active Directory support is not configured by default.
 
-System setup
+Automatic setup
+===============
+
+.. code:: shell
+
+    eva feature setup msad host=192.168.1.15,domain=myorganization.com,key_prefix=msad_
+
+Manual setup
 ============
+
+System setup
+------------
 
 Install LDAP and SASL2 development libraries
 
@@ -30,7 +40,7 @@ Rebuild EVA ICS venv
     /opt/eva/install/build-venv
 
 EVA Controller configuration
-============================
+----------------------------
 
 Put the following block in controller configuration (e.g. for
 :doc:`SFA</sfa/sfa>` edit */opt/eva/etc/sfa.ini*)
