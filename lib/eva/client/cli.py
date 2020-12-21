@@ -625,7 +625,12 @@ class GenericCLI(GCLI):
                                        help='Log commands')
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
-        ap_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
+        sp_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
+        sp_dump.add_argument('-s',
+                             '--support-request',
+                             help='Prepare support request',
+                             action='store_true',
+                             dest='_sr')
         sp_log_info = sp_log.add_parser('info', help='Send info message')
         sp_log_info.add_argument('m', help='Message', metavar='MSG')
         sp_log_warning = sp_log.add_parser('warning',
@@ -1374,6 +1379,23 @@ class GenericCLI(GCLI):
             params['_debug'] = debug
             params['_func'] = func
             code, result = api_func(params)
+        if api_func == 'dump' and code == apiclient.result_ok:
+            if a._sr:
+                f = result['file']
+                try:
+                    if c.get('json') or a._json or api_func in self.always_json:
+                        ss = ' > /dev/null 2>&1'
+                    else:
+                        ss = ''
+                    code = os.system(
+                        f'cd {dir_eva}/var && {dir_eva}/bin/prepare-sr {f} {ss}'
+                    )
+                    if code != 0:
+                        return self.local_func_result_failed
+                    else:
+                        result['file'] = f + '.sr'
+                finally:
+                    os.unlink(f)
         if return_result:
             return code, result
         if not isinstance(api_func, str):
