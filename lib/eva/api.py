@@ -877,6 +877,11 @@ class GenericAPI(API):
         Test can be executed with any valid API key of the controller the
         function is called to.
 
+        For SFA, the result section "connected" contains connection status of
+        remote controllers. The API key must have an access either to "uc" and
+        "lm" groups ("remote_uc:uc" and "remote_lm:lm") or to particular
+        controller oids.
+
         Args:
             k: any valid API key
 

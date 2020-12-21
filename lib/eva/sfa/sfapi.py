@@ -307,6 +307,11 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         Test can be executed with any valid API key of the controller the
         function is called to.
 
+        The result section "controllers" contains connection status of remote
+        controllers. The API key must have an access either to "uc" and "lm"
+        groups ("remote_uc:uc" and "remote_lm:lm") or to particular controller
+        oids.
+
         Args:
             k: any valid API key
 
@@ -323,6 +328,15 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             result['supervisor_lock'] = None
         if (icvars):
             result['cvars'] = eva.core.get_cvar()
+        controllers = {}
+        for cc in [
+                eva.sfa.controller.remote_ucs, eva.sfa.controller.remote_lms
+        ]:
+            for i, v in cc.copy().items():
+                if key_check(k, oid=v.oid, ro_op=True):
+                    controllers[v.oid] = v.connected
+        if controllers:
+            result['connected'] = controllers
         return True, result
 
     @log_d

@@ -113,6 +113,8 @@ SFA
     * SFA API: new function "state_log"
     * PVT serving as /pvt/path/to/file
     * File uploads
+    * connected controllers in "test" API method (*$eva.server_info.connected*
+      in EVA JS Framework)
     * cloud deploy: "status" and "value" props in deployment files
     * cloud deploy: module uploads and binary files support
     * cloud deploy: skip busy drivers/PHIs during undeployment
