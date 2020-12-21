@@ -334,7 +334,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         ]:
             for i, v in cc.copy().items():
                 if key_check(k, oid=v.oid, ro_op=True):
-                    controllers[v.oid] = v.connected
+                    controllers[v.full_id] = v.connected
         if controllers:
             result['connected'] = controllers
         return True, result
