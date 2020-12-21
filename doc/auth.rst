@@ -129,7 +129,12 @@ If more than one key (so more than one ACL) is assigned:
 * special ACLs are merged with higher access level (e.g. if one of keys has
   master access, the combined ACL will have master access as well)
 
-* **key id** has the value "comb:KEY_1+KEY_2+...KEY_N"
+* to assign multiple API keys to a local user, separate them either with commas
+  (in :doc:`CLI </cli>`) or send as list (:ref:`create_user
+  <sysapi_create_user>` API function).
+
+* **key id** in reports and :ref:`test <sysapi_test>` API function has the value
+  "comb:KEY_1+KEY_2+...KEY_N"
 
 * the key gets an additional field **combined_from** which contains a list of
   key ids the ACLs are combined from.
