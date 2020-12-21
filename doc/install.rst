@@ -482,7 +482,8 @@ for items to have the same id in different groups, however full item id
     Before adding items, consider what kind of :ref:`layout<item_layout>` you
     want to use: simple or enterprise
 
-    Starting from 3.2.0, default item layout is **enterprise**.
+    Starting from 3.2.0, the default item layout is **enterprise**. The simple
+    layout is deprecated.
 
 Item groups can coincide and often it is convenient to make them similar: for
 example, if you set *groups=security/#* in API key config file, you will allow
