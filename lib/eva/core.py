@@ -152,6 +152,8 @@ CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
 CS_EVENT_RPC = 4
 
+DUMP_LOG_RECORDS = 5000
+
 logger = logging.getLogger('eva.core')
 
 corescript_globals = {
@@ -406,6 +408,7 @@ def create_dump(e='request', msg=''):
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
+        result['log'] = pyaltt2.logs.get(n=DUMP_LOG_RECORDS)
         result['plugin_modules'] = serialize_plugins()
         result['plugins'] = {
             p: exec_plugin_func(p, v, 'dump')
