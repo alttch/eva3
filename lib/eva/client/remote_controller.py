@@ -1315,7 +1315,6 @@ class RemoteUCPool(RemoteControllerPool):
                         self.units[u.full_id] = u
                         self.controllers_by_unit[u.full_id] = uc
                         u.start_processors()
-                        u.notify()
                     else:
                         unit = self.units[u.full_id]
                         if unit.update_set_state(status=u.status,
@@ -1357,7 +1356,6 @@ class RemoteUCPool(RemoteControllerPool):
                             self.sensors[u.full_id].is_destroyed():
                         self.sensors[u.full_id] = u
                         u.start_processors()
-                        u.notify()
                     else:
                         self.sensors[u.full_id].update_set_state(
                             status=u.status, value=u.value, timestamp=timestamp)
@@ -1727,7 +1725,6 @@ class RemoteLMPool(RemoteControllerPool):
                         self.lvars[u.full_id] = u
                         self.controllers_by_lvar[u.full_id] = lm
                         u.start_processors()
-                        u.notify()
                     p[u.full_id] = u
                     _u = self.get_lvar(u.full_id)
                     if _u:
@@ -1797,7 +1794,6 @@ class RemoteLMPool(RemoteControllerPool):
                         self.cycles[u.full_id] = u
                         self.controllers_by_cycle[u.full_id] = lm
                         u.start_processors()
-                        u.notify()
                     p[u.full_id] = u
                     _u = self.get_cycle(u.full_id)
                     if _u:
