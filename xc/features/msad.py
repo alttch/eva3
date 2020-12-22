@@ -11,10 +11,11 @@ python_libs = ['easyad==1.0.9']
 def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
     if not host or not domain:
         raise InvalidParameter
-    try:
-        cache_time = float(cache_time)
-    except:
-        raise InvalidParameter('cache_time is not a number')
+    if cache_time:
+        try:
+            cache_time = float(cache_time)
+        except:
+            raise InvalidParameter('cache_time is not a number')
     if OS_LIKE == 'debian':
         install_system_packages(['libsasl2-dev', 'libldap2-dev', 'libssl-dev'])
     elif OS_LIKE == 'fedora':
@@ -27,7 +28,7 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
         config['key_prefix'] = key_prefix
     if ca:
         config['ca'] = ca
-    if cache_time > 0 :
+    if cache_time and cache_time > 0 :
         config['cache_time'] = cache_time
     with ConfigFile('sfa.ini') as fh:
         fh.replace_section('msad', config)
