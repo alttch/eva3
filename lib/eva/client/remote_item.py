@@ -173,9 +173,10 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                 if s is not None or v is not None:
                     self.update_nstate(nstatus=s, nvalue=v)
                 if 'action_enabled' in j:
-                    self.action_enabled = eva.tools.val_to_boolean(
-                        j['action_enabled'])
-                    self.notify()
+                    val = eva.tools.val_to_boolean(j['action_enabled'])
+                    if self.action_enabled != val:
+                        self.action_enabled = val
+                        self.notify()
             except:
                 eva.core.log_traceback()
 

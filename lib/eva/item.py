@@ -731,7 +731,6 @@ class UpdatableItem(Item):
                             (self.oid, status))
                     eva.core.log_traceback()
                     return False
-                need_notify = True
             if value is not None:
                 if self.value != value:
                     need_notify = True
