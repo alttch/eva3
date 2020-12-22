@@ -19,13 +19,14 @@ from eva.tools import dict_from_str
 from eva.tools import val_to_boolean
 
 from eva.exceptions import InvalidParameter
+from eva.exceptions import GenericException
 
 
-class UnsupportedOS(Exception):
+class UnsupportedOS(GenericException):
 
     def __str__(self):
         msg = super().__str__()
-        return msg if msg else 'Unsupported OS or distribution'
+        return 'Unsupported OS or distribution' + (', ' + msg if msg else '')
 
 
 def get_os():

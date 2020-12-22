@@ -11,8 +11,8 @@ def setup(python_lib_only=None):
     if python_lib_only is not None:
         python_lib_only = val_to_boolean(python_lib_only)
     if not python_lib_only:
-        if OS_ID == 'rhel':
-            raise UnsupportedOS
+        if OS_ID in ['rhel', 'centos'] or True:
+            raise UnsupportedOS(kb='KB00003')
         elif OS_LIKE == 'debian':
             install_system_packages(['libow-dev'])
         elif OS_LIKE == 'fedora':

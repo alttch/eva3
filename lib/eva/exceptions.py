@@ -6,14 +6,24 @@ __version__ = "3.3.2"
 import logging
 
 from eva.tools import InvalidParameter
+from eva.tools import kb_uri
 
 
 class GenericException(Exception):
 
-    def __init__(self, msg=''):
+    def __init__(self, msg='', kb=None):
         super().__init__(str(msg))
+        self.kb = kb
         logging.debug('Exception {}: {}'.format(self.__class__.__name__,
                                                 str(self)))
+
+    def __str__(self):
+        msg = super().__str__()
+        if self.kb:
+            if not msg:
+                msg = ''
+            msg += kb_uri(self.kb)
+        return msg
 
 
 class FunctionFailed(GenericException):

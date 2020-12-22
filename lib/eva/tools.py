@@ -35,6 +35,8 @@ schema_lock = threading.RLock()
 
 SCHEMAS = {}
 
+def kb_uri(article_id):
+    return f'https://kb.eva-ics.com/articles/{article_id}.html'
 
 def validate_schema(data, schema_id):
     import jsonschema

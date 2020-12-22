@@ -1400,6 +1400,7 @@ sys.argv = {argv}
             pass
         import jinja2
         import importlib
+        from eva.tools import kb_uri
         fname = f'{dir_lib}/eva/features/{name}.yml'
         version = self._get_version()
         build = self._get_build()
@@ -1414,7 +1415,8 @@ sys.argv = {argv}
             'EVA_VERSION': version,
             'EVA_BUILD': build,
             'EVA_DIR': dir_eva,
-            'setup_cmd': setup_cmd
+            'setup_cmd': setup_cmd,
+            'kb_uri': kb_uri
         })
         data = yaml.load(ys)
         return data
