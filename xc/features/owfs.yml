@@ -1,5 +1,10 @@
 description: 1-Wire support via OWFS
 help: |
   Installs OWFS system and Python libraries
+
+  For RedHat Enterprise Linux 8, see https://kb.eva-ics.com/articles/00/KB00003.html
 example: {{ setup_cmd }}
 doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/owfs.html
+setup:
+  optional-args:
+    python_lib_only: Python lib only (consider libow is already installed)
