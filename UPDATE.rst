@@ -23,19 +23,6 @@ Field "value" in state and history databases increased to 8192 bytes. To
 use new size, manually change column size or stop a controller and drop the
 table (will be recreated automatically).
 
-
-Added / updated 3rd party modules
----------------------------------
-
-The following Python modules are installed / updated automatically in EVA venv.
-If your setup has no Internet connection, install them manually before applying
-the update.
-
-.. code-block::
-
-    cachetools==4.1.1
-    pyaltt2==0.0.98
-
 Deprecated
 ----------
 
