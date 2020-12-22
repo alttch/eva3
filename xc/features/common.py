@@ -98,11 +98,13 @@ def install_system_packages(packages, prepare=True):
         print('Installing packages: ' + ' '.join(packages))
         exec_shell(installer + ' '.join(packages))
     except:
-        from . import print_err
-        print_err('\nIf the command requires root permissions but EVA ICS is '
-                  'managed by the regular user,\ntry repeating it with '
-                  'SUDO=sudo OS env variable set (sudo should accept commands'
-                  ' without the password)')
+        if os.getuid() != 0:
+            from . import print_err
+            print_err(
+                '\nIf the command requires root permissions but EVA ICS is '
+                'managed by the regular user,\ntry repeating it with '
+                'SUDO=sudo OS env variable set (sudo should accept commands'
+                ' without the password)')
         raise
 
 
