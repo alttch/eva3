@@ -419,13 +419,14 @@
    :returns: API key
    
 
-.. py:function:: key_check(k, item=None, oid=None, allow=[], pvt_file=None, rpvt_uri=None, ip=None, master=False, sysfunc=False, ro_op=False)
+.. py:function:: key_check(*args, ro_op=False, **kwargs)
    :module: eva.pluginapi
 
    check API key access
    
    Arguments are ACL which can be combined
    
+   :param k: API key, required
    :param items: item objects
    :param oid: OID (mqtt-style masks allowed)
    :param allow: check allows
@@ -437,10 +438,13 @@
    :param ro_op: is item operation read-only
    
 
-.. py:function:: key_check_master(k)
+.. py:function:: key_check_master(*args, ro_op=False, **kwargs)
    :module: eva.pluginapi
 
-   check is given key a masterkey
+   check master API key access
+   
+   :param k: API key, required
+   :param ro_op: is item operation read-only
    
 
 .. py:function:: key_id(k)

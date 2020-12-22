@@ -524,22 +524,6 @@ def check(k,
           master=False,
           sysfunc=False,
           ro_op=False):
-    """
-    check API key access
-
-    Arguments are ACL which can be combined
-
-    Args:
-        items: item objects
-        oid: OID (mqtt-style masks allowed)
-        allow: check allows
-        pvt_file: access to pvt resource
-        pvt_file: access to rpvt resource
-        ip: caller IP
-        master: is master access required
-        sysfunc: is sysfunc required
-        ro_op: is item operation read-only
-    """
     if eva.core.is_setup_mode():
         return True
     with key_lock:

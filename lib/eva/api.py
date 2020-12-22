@@ -79,6 +79,13 @@ _exposed = {}
 
 
 def key_check_master(*args, ro_op=False, **kwargs):
+    """
+    check master API key access
+
+    Args:
+        k: API key, required
+        ro_op: is item operation read-only
+    """
     result = apikey.check_master(*args, **kwargs)
     if result is True and not ro_op:
         if get_aci('auth') == 'token' and tokens.get_token_mode(
@@ -88,6 +95,23 @@ def key_check_master(*args, ro_op=False, **kwargs):
 
 
 def key_check(*args, ro_op=False, **kwargs):
+    """
+    check API key access
+
+    Arguments are ACL which can be combined
+
+    Args:
+        k: API key, required
+        items: item objects
+        oid: OID (mqtt-style masks allowed)
+        allow: check allows
+        pvt_file: access to pvt resource
+        pvt_file: access to rpvt resource
+        ip: caller IP
+        master: is master access required
+        sysfunc: is sysfunc required
+        ro_op: is item operation read-only
+    """
     result = apikey.check(*args, ro_op=ro_op, **kwargs)
     if result is True and not ro_op:
         if get_aci('auth') == 'token' and tokens.get_token_mode(
