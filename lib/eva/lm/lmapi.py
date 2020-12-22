@@ -1254,8 +1254,11 @@ class LM_API(GenericAPI, GenericCloudAPI):
             k: .master
             .i: lvar id
         """
-        i = parse_api_params(kwargs, 'i', 'S')
-        return eva.lm.controller.destroy_item(i)
+        i, g = parse_api_params(kwargs, 'ig', 'ss')
+        if not i and not g:
+            raise InvalidParameter('either lvar id or group must be specified')
+        return eva.lm.controller.destroy_item(i) if i \
+                else eva.lm.controller.destroy_group(g)
 
     @log_w
     @api_need_master

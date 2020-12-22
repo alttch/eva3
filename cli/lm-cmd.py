@@ -59,6 +59,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
+    class ComplLVARGroupList(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            opts = []
+            code, data = self.cli.call(['list'] + opts)
+            if code:
+                return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
     class ComplLVARProp(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
@@ -731,8 +743,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                action='store_true')
 
         ap_destroy = self.sp.add_parser('destroy', help='Delete LVar')
-        ap_destroy.add_argument('i', help='LVar ID',
-                                metavar='ID').completer = self.ComplLVAR(self)
+        ap_destroy.add_argument('i', help='LVar ID', metavar='ID',
+                                nargs='?').completer = self.ComplLVAR(self)
+        ap_destroy.add_argument(
+            '-g',
+            '--group',
+            help='Destroy group of items',
+            metavar='GROUP',
+            dest='g').completer = self.ComplLVARGroupList(self)
 
     def add_lm_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')

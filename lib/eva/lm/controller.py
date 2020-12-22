@@ -1083,6 +1083,15 @@ def create_lvar(lvar_id, group=None, save=False):
 
 
 @with_item_lock
+def destroy_group(group=None):
+    if group is None or group not in items_by_group:
+        raise ResourceNotFound
+    for i in items_by_group[group].copy():
+        destroy_item('{}/{}'.format(group, i))
+    return True
+
+
+@with_item_lock
 def destroy_item(item):
     try:
         if isinstance(item, str):

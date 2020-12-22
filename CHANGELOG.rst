@@ -106,6 +106,7 @@ LM PLC
     * decision rules prop "for_prop_bit" to check individual bits
     * CLI/API option to auto-enable created rules/jobs
     * CLI: quick creation of rules with no condition
+    * LVar deletion by group ("destroy_lvar" API method and CLI)
 
 SFA
 ---
