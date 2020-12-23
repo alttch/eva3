@@ -6,8 +6,8 @@ FAQ
 Is this a "smart home"?
 =======================
 
-EVA is a universal system used for the construction of both "smart home" and
-automated control system (`ICS
+EVA ICS is a universal system used for the construction of both "smart home"
+and automated control system (`ICS
 <https://en.wikipedia.org/wiki/Industrial_control_system>`_) in an industrial
 enterprise.
 
@@ -51,8 +51,9 @@ If the system is free and open, what is your interest?
 
 We have been engaged in the automation activities for both private and
 enterprise sectors for many years. Our clients work with different systems,
-including previous versions of EVA. The development of EVA 3 is a step towards
-unification of all configurations that we support and use ourselves.
+including previous versions of EVA ICS. The development of EVA ICS v3 is the
+step towards unification of all configurations that we support and use
+ourselves.
 
 We decided to distribute the new system completely free of charge, but we
 provide commercial support for setups where reliability is of critical
@@ -62,25 +63,25 @@ systems.
 
 In addition, if:
 
-* you want to become a system integrator and provide commercial support
-* you want to distribute our system together with your device
+* you want to become a system integrator and provide commercial support * you
+  want to distribute our system together with your device
 * you want to make us an offer we can't refuse
 
 you should `contact us <https://www.altertech.com/>`_ and we will make a
 suitable offer to you.
 
-Is EVA complex and difficult to learn?
-======================================
+Is EVA ICS complicated and difficult to learn?
+==============================================
 
-We try to make our system as simple and user-friendly as possible even for
-those who have never encountered the process automation.
+We try to keep our system simple and user-friendly, even for those who have
+never encountered the process automation.
 
 Is it reliable?
 ===============
 
 It is reliable enough for home and office setups, as well as for small
-industrial configurations, but if you use EVA on an enterprise, you should at
-least understand the system well.
+industrial configurations, but if you use EVA on an enterprise, you should
+perfectly understand EVA ICS platform principles.
 
 How about security?
 ===================
@@ -194,9 +195,6 @@ Why EVA ICS has 3 different APIs?
 
 EVA ICS goal is to allow any possible client perform API calls.
 
-RESTful is a perfect API design architecture when you are 100% sure your client
-can use it. But there's still many old equipment/software, which can perform
-HTTP/GET (plus HTTP/POST, if you're lucky) requests only.
-
-We have a plans to keep only RESTful and JSON RPC API in EVA ICS v4, but
-HTTP/GET API compatibility will be kept at least until 2030.
+We have the plan to keep only JSON RPC API in EVA ICS v4. Starting from EVA ICS
+3.3.2, there is a way for the old hardware to send JSON RPC requests via
+HTTP/GET, so direct API calls are deprecated.
