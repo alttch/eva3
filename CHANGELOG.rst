@@ -13,7 +13,8 @@ Common
     * fix: cmd wait delay
     * fix: allow ACL OID groups without masks
     * fix: test command don't report number of active threads any more for
-           API keys without "sysfunc" permission
+      API keys without "sysfunc" permission
+
     * fix: JSON logging
     * fix: improved stability of controller pools
 
