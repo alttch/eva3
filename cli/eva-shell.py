@@ -1026,8 +1026,10 @@ sys.argv = {argv}
                         with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
                             content = fh.read()
                 else:
-                    content = safe_download(f'{_update_repo}/{f}',
-                                            manifest=manifest)
+                    content = safe_download(
+                        f'{_update_repo}/{f}',
+                        manifest=manifest
+                        if not f.endswith('/UPDATE.rst') else None)
                     print(self.colored(f'+ [downloaded] {f}', color='green'))
                     with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
                         fh.write(content)
@@ -1178,8 +1180,7 @@ sys.argv = {argv}
                     try:
                         content = safe_download(
                             '{}/{}/nightly/UPDATE.rst'.format(
-                                _update_repo, new_version),
-                            manifest=manifest)
+                                _update_repo, new_version))
                     except Exception as e:
                         self.print_err(e)
                         print('Unable to download update info: {}'.format(e))

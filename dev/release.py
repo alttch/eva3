@@ -39,9 +39,7 @@ a = ap.parse_args()
 fname_manifest = '/tmp/manifest-{}.json'.format(random.randint(1, 1000000))
 content = {}
 priv_key = open(f'{dir_eva}/.keys/private.key', 'rb').read()
-for f in [
-        f'eva-{a.version}-{a.build}.tgz', f'update-{a.build}.sh', f'UPDATE.rst'
-]:
+for f in [f'eva-{a.version}-{a.build}.tgz', f'update-{a.build}.sh']:
     uri = f'https://get.eva-ics.com/{a.version}/nightly/{f}'
     r = requests.get(uri)
     if not r.ok:
