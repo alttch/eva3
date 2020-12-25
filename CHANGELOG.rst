@@ -7,7 +7,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
-    * RedHat Enterprise Linux (7/8) officially supported
+    * RedHat Enterprise Linux 8 is now officially supported
 
     * fix: hosts_allow / hosts_assign in JRPC calls
     * fix: cmd wait delay
@@ -22,6 +22,7 @@ Common
 
     * 1-Wire OWFS libraries are now optional by default
 
+    * Python 3.9 support
     * local mirror feature (mirroring EVA ICS repo and PyPi)
     * "feature setup/remove" - execute common setup tasks with a single command
       from EVA shell.
