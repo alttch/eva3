@@ -15,6 +15,11 @@ We do not reform automation – we change the approach: taking the classical
 technology as a basis, we simplify everything else to the maximum. Automation
 is simple and available for everyone!
 
+.. note::
+
+    This is the main EVA ICS documentation site. For troubleshooting, firstly
+    check the `EVA ICS Knowledge base <https://kb.eva-ics.com/>`_.
+
 What is EVA
 ===========
 
