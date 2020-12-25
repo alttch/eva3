@@ -67,8 +67,8 @@ class PHI(GenericPHI):
         if not port:
             return self.data.copy()
         try:
-            if self.simulate_timeout:
-                self._make_timeout()
+            # if self.simulate_timeout:
+            # self._make_timeout()
             return self.data.get(str(port))
         except:
             return None
@@ -79,7 +79,7 @@ class PHI(GenericPHI):
         time.sleep(self.simulate_timeout)
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
-        if self.simulate_timeout:
+        if self.simulate_timeout and (not cfg or not cfg.get('skip_timeout')):
             self._make_timeout()
         if isinstance(port, list):
             ports = port
@@ -174,7 +174,7 @@ class PHI(GenericPHI):
                 state = val
             if port < 1 or port > 16 or val < -1 or val > 1:
                 return None
-            self.set(port=str(port), data=state)
+            self.set(port=str(port), data=state, cfg={'skip_timeout': True})
             self.log_debug('test set port %s=%s' % (port, state))
             if self.phi_cfg.get('event_on_test_set'):
                 handle_phi_event(self, port, self.data)
