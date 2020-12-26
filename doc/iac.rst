@@ -206,7 +206,16 @@ Custom API call timeout can be defined with special parameter *_timeout*.
 .. note::
 
     It is usually recommended to call *reload_controller* for :doc:`/lm/lm` to
-    let it instantly load newly deployed items from connected UCs.
+    let it instantly load newly deployed items from connected UCs for EVA ICS prior to 3.3.2.
+
+    Starting from 3.3.2, if units or sensors were deployed, all LM PLCs, listed
+    in "controller" section, are reloaded automatically. If a LM PLC has no
+    deployment configuration, it should be listed as an empty dict:
+
+    .. code:: yaml
+
+        controller:
+          lm/lm1: {}
 
 Local calls
 ^^^^^^^^^^^
@@ -301,6 +310,12 @@ All child fields specify item properties, except:
 * Field *controller* specifies controller, where item should be deployed
 * For units and sensors, *driver* field may be used to assign driver to the
   item.
+
+.. note::
+
+    It is not necessary to list the target controller in "controller" section,
+    unless it needs to be additionally configured (e.g. load
+    drivers/PHIs)
 
 If *action_exec* or *update_exec* values are started with *^* symbol, it tells
 deployment tool to upload local file on the controller.

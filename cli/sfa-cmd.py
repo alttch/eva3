@@ -1275,6 +1275,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             # check basic items
             controllers = set()
             controllers_fm_required = set()
+            ucs_to_reload = set()
             for x in [
                     'unit', 'sensor', 'lvar', 'lmacro', 'lcycle',
                     'dmatrix_rule', 'job'
@@ -1283,10 +1284,13 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if not v or not 'controller' in v:
                         raise Exception(
                             'No controller specified for {} {}'.format(x, i))
-                    if x in ['unit', 'sensor'
-                            ] and not v['controller'].startswith('uc/'):
-                        raise Exception('Invalid controller specified ' +
-                                        'for {} {} (uc required)'.format(x, i))
+                    if x in ['unit', 'sensor']:
+                        if not v['controller'].startswith('uc/'):
+                            raise Exception(
+                                'Invalid controller specified ' +
+                                'for {} {} (uc required)'.format(x, i))
+                        else:
+                            ucs_to_reload.add(v['controller'])
                     if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule', 'job'
                             ] and not v['controller'].startswith('lm/'):
                         raise Exception('Invalid controller specified ' +
@@ -1494,6 +1498,34 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
+            if ucs_to_reload:
+                print('Reloading LM PLCs')
+                for c in controllers:
+                    if c.startswith('lm/'):
+                        print(f' -- {c}')
+                        result = macall({
+                            'i': c,
+                            'f': 'list_controllers',
+                        })[1]
+                        code = result.get('code')
+                        data = result.get('data')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
+                        for d in data:
+                            cid = d['full_id']
+                            if cid in ucs_to_reload:
+                                print(f'      {cid}')
+                                code = macall({
+                                    'i': c,
+                                    'f': 'reload_controller',
+                                    'p': {
+                                        'i': cid
+                                    }
+                                })[1].get('code')
+                                if code != apiclient.result_ok:
+                                    raise Exception(
+                                        'API call failed, code {}'.format(code))
             print('Reloading local SFA')
             for c in controllers:
                 print(' -- {}'.format(c))
