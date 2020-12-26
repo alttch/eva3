@@ -682,74 +682,6 @@ Optionally:
 
 
 
-.. _sfapi_restful_cat_macro:
-
-Logic control macros
-====================
-
-
-
-.. _sfapi_restful_run:
-
-execute macro
--------------
-
-Execute a :doc:`macro</lm/macros>` with the specified arguments.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/run.rest
-    :response: http-examples/sfapi/run.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-Optionally:
-
-* **a** macro arguments, array or space separated
-* **kw** macro keyword arguments, name=value, comma separated or dict
-* **w** wait for the completion for the specified number of seconds
-* **p** queue priority (default is 100, lower is better)
-* **q** global queue timeout, if expires, action is marked as "dead"
-
-
-.. _sfapi_restful_groups_macro:
-
-get macro groups list
----------------------
-
-Get the list of macros. Useful e.g. for custom interfaces.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups_macro.rest
-    :response: http-examples/sfapi/groups_macro.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-
-.. _sfapi_restful_list_macros:
-
-get macro list
---------------
-
-Get the list of all available :doc:`macros</lm/macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_macros.rest
-    :response: http-examples/sfapi/list_macros.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-Optionally:
-
-* **i** filter by controller
-
-
-
 .. _sfapi_restful_cat_cycle:
 
 Logic cycles
@@ -803,6 +735,74 @@ Get the list of all available :doc:`cycles</lm/cycles>`.
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/list_cycles.rest
     :response: http-examples/sfapi/list_cycles.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+Optionally:
+
+* **i** filter by controller
+
+
+
+.. _sfapi_restful_cat_macro:
+
+Logic macros
+============
+
+
+
+.. _sfapi_restful_run:
+
+execute macro
+-------------
+
+Execute a :doc:`macro</lm/macros>` with the specified arguments.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/run.rest
+    :response: http-examples/sfapi/run.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+Optionally:
+
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
+* **w** wait for the completion for the specified number of seconds
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+
+.. _sfapi_restful_groups_macro:
+
+get macro groups list
+---------------------
+
+Get the list of macros. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups_macro.rest
+    :response: http-examples/sfapi/groups_macro.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _sfapi_restful_list_macros:
+
+get macro list
+--------------
+
+Get the list of all available :doc:`macros</lm/macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_macros.rest
+    :response: http-examples/sfapi/list_macros.resp-rest
 
 Parameters:
 

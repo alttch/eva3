@@ -653,5 +653,5 @@ Device limitations
 
 * :ref:`LVars<lvar>` can not be part of the device and :doc:`/lm/lm` doesn't
   have any device management functions, but devices on the connected UCs can be
-  created from :ref:`logic control macros<macro_api_deploy_device>`.
+  created from :ref:`logic macros<macro_api_deploy_device>`.
 

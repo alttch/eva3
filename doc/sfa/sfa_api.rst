@@ -580,10 +580,73 @@ Parameters:
 * **i** lvar id
 
 
+.. _sfapi_cat_cycle:
+
+Logic cycles
+============
+
+
+
+.. _sfapi_get_cycle:
+
+get_cycle - get cycle information
+---------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sfapi/get_cycle.req-jrpc
+    :response: http-examples/jrpc/sfapi/get_cycle.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+* **i** cycle id
+
+Returns:
+
+field "value" contains real average cycle interval
+
+.. _sfapi_groups_cycle:
+
+groups_cycle - get cycle groups list
+------------------------------------
+
+Get the list of cycles. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sfapi/groups_cycle.req-jrpc
+    :response: http-examples/jrpc/sfapi/groups_cycle.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+
+.. _sfapi_list_cycles:
+
+list_cycles - get cycle list
+----------------------------
+
+Get the list of all available :doc:`cycles</lm/cycles>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sfapi/list_cycles.req-jrpc
+    :response: http-examples/jrpc/sfapi/list_cycles.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+
+Optionally:
+
+* **g** filter by group
+* **i** filter by controller
+
+
 .. _sfapi_cat_macro:
 
-Logic control macros
-====================
+Logic macros
+============
 
 
 
@@ -646,69 +709,6 @@ Optionally:
 * **u** action UUID (will be auto generated if none specified)
 * **p** queue priority (default is 100, lower is better)
 * **q** global queue timeout, if expires, action is marked as "dead"
-
-
-.. _sfapi_cat_cycle:
-
-Logic cycles
-============
-
-
-
-.. _sfapi_get_cycle:
-
-get_cycle - get cycle information
----------------------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/sfapi/get_cycle.req-jrpc
-    :response: http-examples/jrpc/sfapi/get_cycle.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-* **i** cycle id
-
-Returns:
-
-field "value" contains real average cycle interval
-
-.. _sfapi_groups_cycle:
-
-groups_cycle - get cycle groups list
-------------------------------------
-
-Get the list of cycles. Useful e.g. for custom interfaces.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/sfapi/groups_cycle.req-jrpc
-    :response: http-examples/jrpc/sfapi/groups_cycle.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-
-.. _sfapi_list_cycles:
-
-list_cycles - get cycle list
-----------------------------
-
-Get the list of all available :doc:`cycles</lm/cycles>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/sfapi/list_cycles.req-jrpc
-    :response: http-examples/jrpc/sfapi/list_cycles.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-
-Optionally:
-
-* **g** filter by group
-* **i** filter by controller
 
 
 .. _sfapi_cat_supervisor:

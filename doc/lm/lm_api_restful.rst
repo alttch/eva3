@@ -767,185 +767,6 @@ Optionally:
 
 
 
-.. _lmapi_restful_cat_macro:
-
-Logic control macros
-====================
-
-
-
-.. _lmapi_restful_create_macro:
-
-create new macro
-----------------
-
-Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_macro.rest
-    :response: http-examples/lmapi/create_macro.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-Optionally:
-
-
-
-.. _lmapi_restful_destroy_macro:
-
-delete macro
-------------
-
-Deletes :doc:`macro<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_macro.rest
-    :response: http-examples/lmapi/destroy_macro.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-
-.. _lmapi_restful_run:
-
-execute macro
--------------
-
-Execute a :doc:`macro<macros>` with the specified arguments.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/run.rest
-    :response: http-examples/lmapi/run.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-Optionally:
-
-* **a** macro arguments, array or space separated
-* **kw** macro keyword arguments, name=value, comma separated or dict
-* **w** wait for the completion for the specified number of seconds
-* **p** queue priority (default is 100, lower is better)
-* **q** global queue timeout, if expires, action is marked as "dead"
-
-
-.. _lmapi_restful_list_macro_props:
-
-get macro configuration properties
-----------------------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macro_props.rest
-    :response: http-examples/lmapi/list_macro_props.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-
-.. _lmapi_restful_groups_macro:
-
-get macro groups list
----------------------
-
-Get the list of macros. Useful e.g. for custom interfaces.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups_macro.rest
-    :response: http-examples/lmapi/groups_macro.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-
-.. _lmapi_restful_get_macro:
-
-get macro information
----------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_macro.rest
-    :response: http-examples/lmapi/get_macro.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-
-.. _lmapi_restful_list_macros:
-
-get macro list
---------------
-
-Get the list of all available :doc:`macros<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macros.rest
-    :response: http-examples/lmapi/list_macros.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-Optionally:
-
-
-
-.. _lmapi_restful_result:
-
-macro execution result
-----------------------
-
-Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/result.rest
-    :response: http-examples/lmapi/result.resp-rest
-
-Parameters:
-
-* **API Key** valid API key
-
-Optionally:
-
-* **g** filter by unit group
-* **s** filter by action status: Q for queued, R for running, F for finished
-
-Returns:
-
-list or single serialized action object
-
-
-.. _lmapi_restful_set_macro_prop:
-
-set macro configuration property
---------------------------------
-
-Set configuration parameters of the :doc:`macro<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_macro_prop.rest
-    :response: http-examples/lmapi/set_macro_prop.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-Optionally:
-
-* **save** save configuration after successful call
-
-
-
 .. _lmapi_restful_cat_cycle:
 
 Logic cycles
@@ -1129,6 +950,185 @@ Parameters:
 Optionally:
 
 * **wait** wait until cycle is stopped
+
+
+
+.. _lmapi_restful_cat_macro:
+
+Logic macros
+============
+
+
+
+.. _lmapi_restful_create_macro:
+
+create new macro
+----------------
+
+Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_macro.rest
+    :response: http-examples/lmapi/create_macro.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+
+
+.. _lmapi_restful_destroy_macro:
+
+delete macro
+------------
+
+Deletes :doc:`macro<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_macro.rest
+    :response: http-examples/lmapi/destroy_macro.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_run:
+
+execute macro
+-------------
+
+Execute a :doc:`macro<macros>` with the specified arguments.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/run.rest
+    :response: http-examples/lmapi/run.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+Optionally:
+
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
+* **w** wait for the completion for the specified number of seconds
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+
+.. _lmapi_restful_list_macro_props:
+
+get macro configuration properties
+----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macro_props.rest
+    :response: http-examples/lmapi/list_macro_props.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_groups_macro:
+
+get macro groups list
+---------------------
+
+Get the list of macros. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups_macro.rest
+    :response: http-examples/lmapi/groups_macro.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _lmapi_restful_get_macro:
+
+get macro information
+---------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_macro.rest
+    :response: http-examples/lmapi/get_macro.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _lmapi_restful_list_macros:
+
+get macro list
+--------------
+
+Get the list of all available :doc:`macros<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macros.rest
+    :response: http-examples/lmapi/list_macros.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+Optionally:
+
+
+
+.. _lmapi_restful_result:
+
+macro execution result
+----------------------
+
+Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/result.rest
+    :response: http-examples/lmapi/result.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+Optionally:
+
+* **g** filter by unit group
+* **s** filter by action status: Q for queued, R for running, F for finished
+
+Returns:
+
+list or single serialized action object
+
+
+.. _lmapi_restful_set_macro_prop:
+
+set macro configuration property
+--------------------------------
+
+Set configuration parameters of the :doc:`macro<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_macro_prop.rest
+    :response: http-examples/lmapi/set_macro_prop.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **save** save configuration after successful call
 
 
 

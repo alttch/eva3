@@ -1,5 +1,5 @@
-Logic control macros
-********************
+Logic macros
+************
 
 In :doc:`lm` macros can be triggered on the list of events, third-party
 applications or user via :doc:`LM EI<lm_ei>` interface or :doc:`LM API<lm_api>`

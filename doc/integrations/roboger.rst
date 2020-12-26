@@ -2,8 +2,7 @@ Roboger
 *******
 
 `Roboger <https://roboger.com/>`_ is a free robots event messaging service,
-which can be easily integrated with EVA ICS :doc:`logic control macros
-</lm/macros>`.
+which can be easily integrated with EVA ICS :doc:`logic macros </lm/macros>`.
 
 Servers supported
 =================
@@ -53,7 +52,7 @@ Using in macros
 ===============
 
 After the extension is loaded, function *roboger_push* becomes available in all
-:doc:`logic control macros </lm/macros>`:
+:doc:`logic macros </lm/macros>`:
 
 .. code:: python
 

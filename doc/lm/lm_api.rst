@@ -693,189 +693,6 @@ Optionally:
 * **save** save configuration after successful call
 
 
-.. _lmapi_cat_macro:
-
-Logic control macros
-====================
-
-
-
-.. _lmapi_create_macro:
-
-create_macro - create new macro
--------------------------------
-
-Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/create_macro.req-jrpc
-    :response: http-examples/jrpc/lmapi/create_macro.resp-jrpc
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** macro id
-
-Optionally:
-
-* **g** macro group
-
-.. _lmapi_destroy_macro:
-
-destroy_macro - delete macro
-----------------------------
-
-Deletes :doc:`macro<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/destroy_macro.req-jrpc
-    :response: http-examples/jrpc/lmapi/destroy_macro.resp-jrpc
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** macro id
-
-.. _lmapi_get_macro:
-
-get_macro - get macro information
----------------------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/get_macro.req-jrpc
-    :response: http-examples/jrpc/lmapi/get_macro.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-* **i** macro id
-
-.. _lmapi_groups_macro:
-
-groups_macro - get macro groups list
-------------------------------------
-
-Get the list of macros. Useful e.g. for custom interfaces.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/groups_macro.req-jrpc
-    :response: http-examples/jrpc/lmapi/groups_macro.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-
-.. _lmapi_list_macro_props:
-
-list_macro_props - get macro configuration properties
------------------------------------------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/list_macro_props.req-jrpc
-    :response: http-examples/jrpc/lmapi/list_macro_props.resp-jrpc
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** macro id
-
-.. _lmapi_list_macros:
-
-list_macros - get macro list
-----------------------------
-
-Get the list of all available :doc:`macros<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/list_macros.req-jrpc
-    :response: http-examples/jrpc/lmapi/list_macros.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-
-Optionally:
-
-* **g** filter by group
-
-.. _lmapi_result:
-
-result - macro execution result
--------------------------------
-
-Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/result.req-jrpc
-    :response: http-examples/jrpc/lmapi/result.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-
-Optionally:
-
-* **u** action uuid or
-* **i** macro id
-* **g** filter by unit group
-* **s** filter by action status: Q for queued, R for running, F for finished
-
-Returns:
-
-list or single serialized action object
-
-.. _lmapi_run:
-
-run - execute macro
--------------------
-
-Execute a :doc:`macro<macros>` with the specified arguments.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/run.req-jrpc
-    :response: http-examples/jrpc/lmapi/run.resp-jrpc
-
-Parameters:
-
-* **k** valid API key
-* **i** macro id
-
-Optionally:
-
-* **a** macro arguments, array or space separated
-* **kw** macro keyword arguments, name=value, comma separated or dict
-* **w** wait for the completion for the specified number of seconds
-* **u** action UUID (will be auto generated if none specified)
-* **p** queue priority (default is 100, lower is better)
-* **q** global queue timeout, if expires, action is marked as "dead"
-
-.. _lmapi_set_macro_prop:
-
-set_macro_prop - set macro configuration property
--------------------------------------------------
-
-Set configuration parameters of the :doc:`macro<macros>`.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/jrpc/lmapi/set_macro_prop.req-jrpc
-    :response: http-examples/jrpc/lmapi/set_macro_prop.resp-jrpc
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** item id
-* **p** property name (or empty for batch set)
-
-Optionally:
-
-* **v** propery value (or dict for batch set)
-* **save** save configuration after successful call
-
-
 .. _lmapi_cat_cycle:
 
 Logic cycles
@@ -1063,6 +880,189 @@ Parameters:
 Optionally:
 
 * **wait** wait until cycle is stopped
+
+
+.. _lmapi_cat_macro:
+
+Logic macros
+============
+
+
+
+.. _lmapi_create_macro:
+
+create_macro - create new macro
+-------------------------------
+
+Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/create_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/create_macro.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** macro id
+
+Optionally:
+
+* **g** macro group
+
+.. _lmapi_destroy_macro:
+
+destroy_macro - delete macro
+----------------------------
+
+Deletes :doc:`macro<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/destroy_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/destroy_macro.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** macro id
+
+.. _lmapi_get_macro:
+
+get_macro - get macro information
+---------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/get_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/get_macro.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+* **i** macro id
+
+.. _lmapi_groups_macro:
+
+groups_macro - get macro groups list
+------------------------------------
+
+Get the list of macros. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/groups_macro.req-jrpc
+    :response: http-examples/jrpc/lmapi/groups_macro.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+
+.. _lmapi_list_macro_props:
+
+list_macro_props - get macro configuration properties
+-----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/list_macro_props.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_macro_props.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** macro id
+
+.. _lmapi_list_macros:
+
+list_macros - get macro list
+----------------------------
+
+Get the list of all available :doc:`macros<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/list_macros.req-jrpc
+    :response: http-examples/jrpc/lmapi/list_macros.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+
+Optionally:
+
+* **g** filter by group
+
+.. _lmapi_result:
+
+result - macro execution result
+-------------------------------
+
+Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/result.req-jrpc
+    :response: http-examples/jrpc/lmapi/result.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+
+Optionally:
+
+* **u** action uuid or
+* **i** macro id
+* **g** filter by unit group
+* **s** filter by action status: Q for queued, R for running, F for finished
+
+Returns:
+
+list or single serialized action object
+
+.. _lmapi_run:
+
+run - execute macro
+-------------------
+
+Execute a :doc:`macro<macros>` with the specified arguments.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/run.req-jrpc
+    :response: http-examples/jrpc/lmapi/run.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+* **i** macro id
+
+Optionally:
+
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
+* **w** wait for the completion for the specified number of seconds
+* **u** action UUID (will be auto generated if none specified)
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+.. _lmapi_set_macro_prop:
+
+set_macro_prop - set macro configuration property
+-------------------------------------------------
+
+Set configuration parameters of the :doc:`macro<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/lmapi/set_macro_prop.req-jrpc
+    :response: http-examples/jrpc/lmapi/set_macro_prop.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** item id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
 
 
 .. _lmapi_cat_ext:
