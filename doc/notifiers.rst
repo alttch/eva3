@@ -531,7 +531,7 @@ parameter *o={ "rp": "daily" }*.
 
 .. note::
 
-    It's recommended to set notifier interval property, to properly handle
+    It's recommended to set notifier "interval" property, to properly handle
     states for the rarely updated items.
 
 .. _prometheus_:
