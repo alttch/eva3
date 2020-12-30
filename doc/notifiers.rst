@@ -529,10 +529,10 @@ After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
 to select metrics from *daily* retention policy, specifying additional
 parameter *o={ "rp": "daily" }*.
 
-.. note::
+.. warning::
 
-    It's recommended to set notifier "interval" property, to properly handle
-    states for the rarely updated items.
+    It is highly recommended to set notifier "interval" property, to properly
+    handle states for the rarely updated items.
 
 .. _prometheus_:
 
