@@ -15,6 +15,7 @@ import shlex
 import eva.core
 
 from functools import wraps
+from functools import partial
 
 from eva.api import api_need_master
 from eva.api import parse_api_params
@@ -554,6 +555,43 @@ class FileAPI(object):
     @staticmethod
     def _file_not_found(fname):
         return ResourceNotFound('file:runtime/{}'.format(fname))
+
+    @log_w
+    @api_need_file_management
+    @api_need_master
+    def install_pkg(self, **kwargs):
+        i, m, o, u = parse_api_params(kwargs, 'imou', 'SS.b')
+        import base64
+        import tarfile
+        try:
+            raw = base64.b64decode(m)
+            from io import BytesIO
+            buf = BytesIO()
+            buf.write(raw)
+            buf.seek(0)
+            pkg = tarfile.open(fileobj=buf)
+        except:
+            logging.error('Invalid package format')
+            raise
+        try:
+            code = pkg.extractfile('setup.py').read().decode()
+        except:
+            logging.error('Invalid package: no setup.py found')
+            raise
+        for f in pkg.members.copy():
+            if f.name == 'setup.py':
+                pkg.members.remove(f)
+        env = {
+            'extract_package': partial(pkg.extractall, path=eva.core.dir_eva)
+        }
+        eva.core.spawn(eva.core.run_corescript_code,
+                       code=code,
+                       event=SimpleNamespace(
+                           type=eva.core.CS_EVENT_PKG_UNINSTALL
+                           if u else eva.core.CS_EVENT_PKG_INSTALL,
+                           data=o),
+                       env_globals=env)
+        return True
 
     @log_i
     @api_need_file_management

@@ -167,6 +167,7 @@ corescript_globals = {
     'spawn': spawn,
     'logger': logger,
     'g': cs_shared_namespace,
+    'dir_eva': dir_eva,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API,
     'CS_EVENT_MQTT': CS_EVENT_MQTT,
@@ -1270,6 +1271,18 @@ def _t_exec_corescripts(event=None, env_globals={}):
     logging.debug('executing core scripts, event type={}'.format(event.type))
     for c in cs_data.corescripts.copy():
         eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run()
+
+
+def run_corescript_code(code=None, event=None, env_globals={}):
+    try:
+        import eva.runner
+        d = env_globals.copy()
+        d['event'] = event
+        d.update(corescript_globals)
+        logging.debug('running core script, event type={}'.format(event.type))
+        exec(code, d, d)
+    except Exception as e:
+        log_traceback()
 
 
 def plugins_event_state(source, data):

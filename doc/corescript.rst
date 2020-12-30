@@ -51,6 +51,8 @@ Core script globals and functions
 * *logging*, *time*, *json (rapidjson)* and *eva.apikey* modules are imported
   by default.
 
+* **dir_eva** EVA ICS directory
+
 * **event** event info name space
 
 * **g** special name space, shared across all core scripts
