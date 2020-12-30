@@ -128,11 +128,11 @@ def api_need_supervisor_pass(f):
 
 @with_supervisor_lock
 def can_pass_supervisor_lock(k, op='l'):
-    if not supervisor_lock or key_check_master(k):
+    if not supervisor_lock or key_check_master(k, ro_op=True):
         return True
     else:
         ltp = supervisor_lock[op]
-        if ltp is None and key_check(k, allow=['supervisor']):
+        if ltp is None and key_check(k, allow=['supervisor'], ro_op=True):
             return True
         elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['key_id']:
             return True
@@ -858,7 +858,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             for c, d in \
                 eva.sfa.controller.lm_pool.macros_by_controller.copy().items():
                 for a, v in d.copy().items():
-                    if key_check(k, v) and \
+                    if key_check(k, v, ro_op=True) and \
                         (not group or \
                             eva.item.item_match(v, [], [ group ])):
                         result.append(v.serialize(info=True))
@@ -875,7 +875,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             for a, v in \
                 eva.sfa.controller.lm_pool.macros_by_controller[\
                                                         c_id].copy().items():
-                if key_check(k, v) and (not group or \
+                if key_check(k, v, ro_op=True) and (not group or \
                         eva.item.item_match(v, [], [ group ])):
                     result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['id'])
@@ -894,7 +894,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k = parse_function_params(kwargs, 'k', '.')
         result = []
         for a, v in eva.sfa.controller.lm_pool.macros.copy().items():
-            if key_check(k, v) and not v.group in result:
+            if key_check(k, v, ro_op=True) and not v.group in result:
                 result.append(v.group)
         return sorted(result)
 
@@ -1557,7 +1557,7 @@ def serve_pvt(*args, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
     _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
     if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
         raise cp_api_404()
-    if not key_check(_k, pvt_file=f, ip=http_real_ip()):
+    if not key_check(_k, pvt_file=f, ip=http_real_ip(), ro_op=True):
         logging.warning('pvt %s file %s access forbidden' % (_r, f))
         raise cp_forbidden_key()
     if f.endswith('.j2'):
@@ -1765,7 +1765,7 @@ class SFA_HTTP_Root:
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None:
             return _tool_error_response('uri not provided', code=400)
-        if not key_check(_k, rpvt_uri=f, ip=http_real_ip()):
+        if not key_check(_k, rpvt_uri=f, ip=http_real_ip(), ro_op=True):
             logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
         if f[:3] in ['uc/', 'lm/']:
