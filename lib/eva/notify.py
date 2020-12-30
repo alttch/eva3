@@ -1435,6 +1435,106 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     return False
             return True
 
+    def get_state_log(self,
+                      oid,
+                      t_start=None,
+                      t_end=None,
+                      limit=None,
+                      time_format=None,
+                      xopts=None,
+                      tz=None,
+                      **kwargs):
+        import pytz
+        import dateutil.parser
+        from datetime import datetime
+        l = int(limit) if limit is not None else None
+        if l is not None and l <= 0:
+            return []
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = None
+        else:
+            t_s = None
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = None
+        else:
+            t_e = None
+        q = ''
+        rp = ''
+        if xopts and 'rp' in xopts:
+            rp = '"{}".'.format(xopts['rp'])
+        if t_s:
+            q += ' where time>%u' % (t_s * 1000000000)
+        if t_e:
+            q += ' and time<=%f' % (t_e * 1000000000)
+        data = []
+        space = (self.space + '/') if self.space is not None else ''
+        if time_format == 'iso' and not tz:
+            tz = pytz.timezone(time.tzname[0])
+        q = 'select status,value from {}"{}" {}'.format(rp, oid, q)
+        try:
+            r = self.rsession().post(url=self.uri +
+                                     '/query?db={}'.format(self.db),
+                                     data={
+                                         'q': q,
+                                         'epoch': 'ms'
+                                     },
+                                     timeout=self.get_timeout(),
+                                     **self.xrargs)
+            if not r.ok:
+                raise Exception('influxdb server error HTTP code {}'.format(
+                    r.status_code))
+            data = r.json()
+            if 'error' in data['results'][0]:
+                self.log_error(message=data['results'][0]['error'])
+                raise Exception
+            if not data['results'][0] or 'series' not in data['results'][0]:
+                return []
+            else:
+                data = data['results'][0]['series'][0]['values']
+        except:
+            eva.core.log_traceback()
+            self.log_error(message='unable to get state for {}'.format(oid))
+            raise
+        records = {}
+        result = []
+        for d in data:
+            t = d[0] / 1000
+            status = d[1]
+            value = d[2]
+            print(t)
+            # skip repeating records
+            if records.get(oid) == (status, value):
+                continue
+            else:
+                records[oid] = (status, value)
+            h = {}
+            h['oid'] = oid
+            if time_format == 'iso':
+                h['t'] = datetime.fromtimestamp(t, tz).isoformat()
+            elif time_format == 'dt_utc':
+                h['t'] = datetime.fromtimestamp(t, tz)
+            else:
+                h['t'] = t
+            h['status'] = status
+            try:
+                h['value'] = float(value)
+            except:
+                h['value'] = value if value else None
+            result.append(h)
+        return result[-1 * l:] if l is not None else result
+
     def log_notify(self):
         logging.debug('.sending data notification to ' + \
                 '%s method = %s, uri: %s, db: %s' % (self.notifier_id,
