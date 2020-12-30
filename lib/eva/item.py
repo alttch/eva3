@@ -1799,16 +1799,16 @@ def get_state_history(a=None,
     t_start = fmt_time(t_start)
     t_end = fmt_time(t_end)
     try:
-        result = n.get_state(
-            oid=oid,
-            t_start=t_start,
-            t_end=t_end,
-            fill=fill.split(':', 1)[0] if fill else None,
-            limit=limit,
-            prop=prop,
-            time_format=tf if not t_start or not fill else 'dt_utc',
-            xopts=xopts,
-            tz=tz)
+        n_time_format = tf if not t_start or not fill else 'dt_utc'
+        result = n.get_state(oid=oid,
+                             t_start=t_start,
+                             t_end=t_end,
+                             fill=fill.split(':', 1)[0] if fill else None,
+                             limit=limit,
+                             prop=prop,
+                             time_format=n_time_format,
+                             xopts=xopts,
+                             tz=tz)
     except:
         raise FunctionFailed
     if n.state_storage == 'sql':
@@ -1871,7 +1871,7 @@ def get_state_history(a=None,
             result = []
             for i in range(0, len(sp['index']) if parse_df else len(sp)):
                 t = sp['index'][i].timestamp() if parse_df else sp[i][0]
-                if time_format == 'iso':
+                if time_format == 'iso' and n_time_format != 'iso':
                     t = datetime.fromtimestamp(t, tz).isoformat()
                 r = {'t': t}
                 if parse_df:
