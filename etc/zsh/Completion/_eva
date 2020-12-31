@@ -34,7 +34,7 @@ _eva_sfa_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch plugins reload restart start status stop
+    compadd "$@" cleanup launch pkg-install plugins reload restart start status stop
   else
     _files
   fi
@@ -201,7 +201,7 @@ _eva_lm_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch plugins reload restart start status stop
+    compadd "$@" cleanup launch pkg-install plugins reload restart start status stop
   else
     _files
   fi
@@ -368,7 +368,7 @@ _eva_uc_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch plugins reload restart start status stop
+    compadd "$@" cleanup launch pkg-install plugins reload restart start status stop
   else
     _files
   fi
@@ -595,7 +595,7 @@ _eva_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" crontab
+    compadd "$@" crontab venv
   else
     _files
   fi

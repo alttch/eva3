@@ -866,6 +866,20 @@ class GenericCLI(GCLI):
             except:
                 print('Unable to open %s' % a._fname)
                 return 97
+        elif api_func == 'install_pkg':
+            try:
+                from eva.tools import read_uri, dict_from_str
+                params['i'] = Path(a._fname).stem
+                params['m'] = read_uri(fname=a._fname,
+                                       file_read_mode='rb',
+                                       b64=True)
+                try:
+                    params['o'] = dict_from_str(params['o'])
+                except:
+                    pass
+            except:
+                print('Unable to open %s' % a._fname)
+                return 97
         elif api_func == 'log_get':
             params['l'] = self.get_log_level_code(params['l'])
             if params.get('n') is None:
@@ -1833,11 +1847,29 @@ class ControllerCLI(object):
 
         ap_plugins = sp_controller.add_parser('plugins',
                                               help='List loaded core plugins')
-        ap_cleanuo = sp_controller.add_parser(
+        ap_pkg_install = sp_controller.add_parser(
+            'pkg-install', help='Install package tarball')
+        ap_pkg_install.add_argument('_fname',
+                                    help='Package file or URL',
+                                    metavar='FILE').completer = self.ComplGlob(
+                                        ['*.tgz', '*.tar.gz', '*.tar'])
+        ap_pkg_install.add_argument('-o',
+                                    '--options',
+                                    dest='o',
+                                    help='Package setup options',
+                                    metavar='OPTS')
+        ap_pkg_install.add_argument('-w',
+                                    '--wait',
+                                    metavar='SEC',
+                                    default=1,
+                                    dest='w',
+                                    help='Wait until the package is installed')
+        ap_cleanup = sp_controller.add_parser(
             'cleanup',
             help='Cleanup controller: remove non-critical DB entries etc.')
 
         self.append_api_functions({'server:plugins': 'list_plugins'})
+        self.append_api_functions({'server:pkg-install': 'install_pkg'})
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
