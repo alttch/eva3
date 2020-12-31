@@ -584,13 +584,11 @@ class FileAPI(object):
             buf.seek(0)
             pkg = tarfile.open(fileobj=buf)
         except:
-            logging.error('Invalid package format')
-            raise
+            raise FunctionFailed('Invalid package format')
         try:
             code = pkg.extractfile('setup.py').read().decode()
         except:
-            logging.error('Invalid package: no setup.py found')
-            raise
+            raise FunctionFailed('Invalid package: no setup.py found')
         for f in pkg.members.copy():
             if f.name == 'setup.py':
                 pkg.members.remove(f)
