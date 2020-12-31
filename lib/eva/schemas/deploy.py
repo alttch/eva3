@@ -159,6 +159,9 @@ SCHEMA_DEPLOY = {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
                                     },
+                                    'install-pkg': {
+                                        'type': 'string'
+                                    },
                                     '_pass': {
                                         'type': 'boolean'
                                     },
@@ -173,6 +176,8 @@ SCHEMA_DEPLOY = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }]
                             }
                         },
@@ -192,6 +197,9 @@ SCHEMA_DEPLOY = {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
                                     },
+                                    'install-pkg': {
+                                        'type': 'string'
+                                    },
                                     '_pass': {
                                         'type': 'boolean'
                                     },
@@ -206,6 +214,8 @@ SCHEMA_DEPLOY = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }]
                             }
                         },
@@ -225,6 +235,9 @@ SCHEMA_DEPLOY = {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
                                     },
+                                    'install-pkg': {
+                                        'type': 'string'
+                                    },
                                     '_pass': {
                                         'type': 'boolean'
                                     },
@@ -239,6 +252,8 @@ SCHEMA_DEPLOY = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }]
                             }
                         },
@@ -258,6 +273,9 @@ SCHEMA_DEPLOY = {
                                         'type': 'string',
                                         'enum': ['system', 'sleep']
                                     },
+                                    'install-pkg': {
+                                        'type': 'string'
+                                    },
                                     '_pass': {
                                         'type': 'boolean'
                                     },
@@ -272,6 +290,8 @@ SCHEMA_DEPLOY = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }]
                             }
                         }

@@ -1369,6 +1369,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             print('Executing commands in before-{}deploy...'.format(
                 'un' if und else ''))
 
+            def _fmt_params(func, params):
+                params = params.copy()
+                if func == 'install_pkg':
+                    del params['m']
+                return params
+
             def execute_custom_tasks(step):
                 for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                     if v:
@@ -1376,6 +1382,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 v, '{}-{}deploy'.format(step,
                                                         'un' if und else ''),
                             []):
+                            if 'install-pkg' in a:
+                                a['api'] = 'install_pkg'
+                                import base64
+                                fname = a['install-pkg']
+                                a['i'] = Path(fname).stem
+                                a['m'] = base64.b64encode(
+                                    self._read_uri(fname, dirname,
+                                                   'rb')).decode()
+                                del a['install-pkg']
                             if 'api' in a:
                                 try:
                                     func = a['api']
@@ -1429,7 +1444,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             print(' -- {}: {} {}'.format(
                                 '' if callable(func) else c,
                                 func.__name__ if callable(func) else func,
-                                params))
+                                _fmt_params(func, params)))
                             if callable(func):
                                 result = func(*args, **kwargs)
                                 if expect_result is not None and \

@@ -15,6 +15,8 @@ SCHEMA_DEVICE = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }],
                                 'properties': {
                                     '_pass': {
@@ -32,6 +34,9 @@ SCHEMA_DEVICE = {
                                     },
                                     'function': {
                                         'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    },
+                                    'install-pkg': {
                                         'type': 'string'
                                     }
                                 },
@@ -47,6 +52,8 @@ SCHEMA_DEVICE = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }],
                                 'properties': {
                                     '_pass': {
@@ -64,6 +71,9 @@ SCHEMA_DEVICE = {
                                     },
                                     'function': {
                                         'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    },
+                                    'install-pkg': {
                                         'type': 'string'
                                     }
                                 },
@@ -79,6 +89,8 @@ SCHEMA_DEVICE = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }],
                                 'properties': {
                                     '_pass': {
@@ -96,6 +108,9 @@ SCHEMA_DEVICE = {
                                     },
                                     'function': {
                                         'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    },
+                                    'install-pkg': {
                                         'type': 'string'
                                     }
                                 },
@@ -111,6 +126,8 @@ SCHEMA_DEVICE = {
                                     'required': ['cm-api']
                                 }, {
                                     'required': ['function']
+                                }, {
+                                    'required': ['install-pkg']
                                 }],
                                 'properties': {
                                     '_pass': {
@@ -128,6 +145,9 @@ SCHEMA_DEVICE = {
                                     },
                                     'function': {
                                         'enum': ['system', 'sleep'],
+                                        'type': 'string'
+                                    },
+                                    'install-pkg': {
                                         'type': 'string'
                                     }
                                 },
