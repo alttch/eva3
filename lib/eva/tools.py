@@ -56,6 +56,11 @@ def validate_schema(data, schema_id):
 class ConfigFile():
     """
     A helper to manage .ini files
+
+    Example:
+
+        with ConfigFile('uc.ini') as cf:
+            cf.set('plugin.my', 'field1', 'value1')
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
@@ -65,6 +70,10 @@ class ConfigFile():
         self.backup = backup
 
     def is_changed(self):
+        """
+        Returns True, if configuration file was changed and will be saved after
+        the statement exit
+        """
         return self._changed
 
     def __enter__(self):
@@ -91,13 +100,22 @@ class ConfigFile():
                 self.cp.write(fh)
 
     def add_section(self, section, values):
+        """
+        Add section with dict of values
+        """
         self.cp[section] = values
         self._changed = True
 
     def get_section(self, section):
+        """
+        Get dict of section values
+        """
         return self.cp.get(section)
 
     def set(self, section, name, value):
+        """
+        Set section field value
+        """
         try:
             if self.get(section, name) == value:
                 return
@@ -114,6 +132,9 @@ class ConfigFile():
         return self.cp.get(section, name)
 
     def delete(self, section, name):
+        """
+        Delete field from section
+        """
         try:
             self.cp.remove_option(section, name)
             self._changed = True
@@ -121,16 +142,26 @@ class ConfigFile():
             pass
 
     def remove_section(self, section):
+        """
+        Remove section
+        """
         try:
             self.cp.remove_section(section)
         except:
             pass
 
     def replace_section(self, section, values):
+        """
+        Replace section with dict of values
+        """
         self.remove_section(section)
         return self.add_section(section, values)
 
     def append(self, section, name, value):
+        """
+        Append value to array field (in .ini configs, arrays are string fields
+        with values, separated with commas)
+        """
         try:
             current = [x.strip() for x in self.get(section, name).split(',')]
             if value not in current:
@@ -141,6 +172,9 @@ class ConfigFile():
             return
 
     def remove(self, section, name, value):
+        """
+        Remove value from array field
+        """
         try:
             current = [x.strip() for x in self.get(section, name).split(',')]
             if value in current:
@@ -153,6 +187,11 @@ class ConfigFile():
 class ShellConfigFile():
     """
     A helper to manage shell scripts configuration files
+
+    Example:
+
+        with ShellConfigFile('venv') as cf:
+            cf.set('SYSTEM_SITE_PACKAGES', 0)
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
@@ -163,6 +202,10 @@ class ShellConfigFile():
         self._data = {}
 
     def is_changed(self):
+        """
+        Returns True, if configuration file was changed and will be saved after
+        the statement exit
+        """
         return self._changed
 
     def __enter__(self):
@@ -204,14 +247,23 @@ class ShellConfigFile():
                         fh.write(f'{k}="{v}"\n')
 
     def set(self, name, value):
+        """
+        Set field to value
+        """
         if self._data.get(name) != value:
             self._data[name] = value
             self._changed = True
 
     def get(self, name):
+        """
+        Get field value
+        """
         return self._data[name]
 
     def delete(self, name):
+        """
+        Delete field
+        """
         try:
             del self._data[name]
             self._changed = True
@@ -219,12 +271,19 @@ class ShellConfigFile():
             pass
 
     def append(self, name, value):
+        """
+        Append value to array field (in shell configs, arrays are string fields
+        with values, separated with spaces)
+        """
         current = [x.strip() for x in self._data.get(name, '').split()]
         if value not in current:
             current.append(value)
             self.set(name, ' '.join(current))
 
     def remove(self, name, value):
+        """
+        Remove value from array field
+        """
         current = [x.strip() for x in self._data.get(name, '').split()]
         if value in current:
             current.remove(value)

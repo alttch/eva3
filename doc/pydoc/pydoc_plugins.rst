@@ -8,7 +8,7 @@
    API blueprint extension class
    
 
-.. py:exception:: AccessDenied(msg='')
+.. py:exception:: AccessDenied(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when call has no access to the resource
@@ -20,7 +20,7 @@
       Return str(self).
       
 
-.. py:exception:: FunctionFailed(msg='')
+.. py:exception:: FunctionFailed(msg='', kb=None)
    :module: eva.pluginapi
 
    raised with function failed with any reason
@@ -101,7 +101,7 @@
    
       list of weak references to the object (if defined)
 
-.. py:exception:: MethodNotImplemented(msg='')
+.. py:exception:: MethodNotImplemented(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when requested method exists but requested functionality is not
@@ -114,7 +114,7 @@
       Return str(self).
       
 
-.. py:exception:: ResourceAlreadyExists(msg='')
+.. py:exception:: ResourceAlreadyExists(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when requested resource already exists
@@ -126,7 +126,7 @@
       Return str(self).
       
 
-.. py:exception:: ResourceBusy(msg='')
+.. py:exception:: ResourceBusy(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when requested resource is busy (e.g. can't be changed)
@@ -138,7 +138,7 @@
       Return str(self).
       
 
-.. py:exception:: ResourceNotFound(msg='')
+.. py:exception:: ResourceNotFound(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when requested resource is not found
@@ -150,7 +150,7 @@
       Return str(self).
       
 
-.. py:exception:: TimeoutException(msg='')
+.. py:exception:: TimeoutException(msg='', kb=None)
    :module: eva.pluginapi
 
    raised when call is timed out

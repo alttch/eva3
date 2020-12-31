@@ -55,3 +55,11 @@ Here is a very simple example of the package setup script:
 The package setup script SHOULD check event type, as it can be launched with
 other core script events later (functionality is reserved for the further EVA
 ICS versions).
+
+Manipulating with configuration files
+=====================================
+
+The setup core script automatically has configuration helpers in globals. These
+helpers are already in globals and should not be imported manually.
+
+.. include:: pydoc/pydoc_configs.rst
