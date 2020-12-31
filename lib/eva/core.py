@@ -244,11 +244,11 @@ def log_traceback(*args, notifier=False, **kwargs):
 
 class CoreAction:
 
-    def __init__(self, fn, *args, _name=None, _description=None, **kwargs):
+    def __init__(self, fn, *args, _name=None, _call_for=None, **kwargs):
         self.fn = fn
         self.name = _name if _name else fn.__name__
         self.args = args
-        self.description = _description
+        self.call_for = _call_for
         self.kwargs = kwargs
         self.uuid = str(uuid.uuid4())
         self.started = threading.Event()
@@ -261,7 +261,7 @@ class CoreAction:
     def serialize(self):
         return {
             'uuid': self.uuid,
-            'description': self.description,
+            'call_for': self.call_for,
             'finished': self.finished.is_set(),
             'exitcode': self.exitcode,
             'out': self.out,
@@ -295,11 +295,11 @@ class CoreAction:
             self.finished.set()
 
 
-def action(fn, *args, _wait=None, _name=None, _description=None, **kwargs):
+def action(fn, *args, _wait=None, _name=None, _call_for=None, **kwargs):
     action = CoreAction(fn,
                         *args,
                         _name=_name,
-                        _description=_description,
+                        _call_for=_call_for,
                         **kwargs)
     action.run(wait=_wait)
     return action.serialize()

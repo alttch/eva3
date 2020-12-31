@@ -602,7 +602,7 @@ class FileAPI(object):
         return eva.core.action(eva.core.run_corescript_code,
                                _wait=w,
                                _name='install_pkg',
-                               _description=i,
+                               _call_for=i,
                                code=code,
                                event=SimpleNamespace(
                                    type=eva.core.CS_EVENT_PKG_UNINSTALL
