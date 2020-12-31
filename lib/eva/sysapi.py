@@ -560,7 +560,7 @@ class FileAPI(object):
     @api_need_file_management
     @api_need_master
     def install_pkg(self, **kwargs):
-        i, m, o, u = parse_api_params(kwargs, 'imou', 'SS.b')
+        i, m, o, u, w = parse_api_params(kwargs, 'imouw', 'SS.bn')
         import base64
         import tarfile
         try:
@@ -584,14 +584,16 @@ class FileAPI(object):
         env = {
             'extract_package': partial(pkg.extractall, path=eva.core.dir_eva)
         }
-        eva.core.spawn(eva.core.run_corescript_code,
-                       code=code,
-                       event=SimpleNamespace(
-                           type=eva.core.CS_EVENT_PKG_UNINSTALL
-                           if u else eva.core.CS_EVENT_PKG_INSTALL,
-                           data=o),
-                       env_globals=env)
-        return True
+        return eva.core.action(eva.core.run_corescript_code,
+                               _wait=w,
+                               _name='install_pkg',
+                               _description=i,
+                               code=code,
+                               event=SimpleNamespace(
+                                   type=eva.core.CS_EVENT_PKG_UNINSTALL
+                                   if u else eva.core.CS_EVENT_PKG_INSTALL,
+                                   data=o),
+                               env_globals=env)
 
     @log_i
     @api_need_file_management
@@ -1121,6 +1123,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         self._nofp_log('file_put', 'm')
         self._nofp_log('cmd', 's')
         self._nofp_log('install_plugin', ['m', 'c'])
+        self._nofp_log('install_pkg', ['m', 'o'])
 
     @log_d
     @api_need_rpvt
