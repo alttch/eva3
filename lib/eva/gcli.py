@@ -98,11 +98,10 @@ class GCLI(object):
             self.mask = mask if mask else '*'
 
         def __call__(self, prefix, **kwargs):
-            result = []
             import glob
             for m in self.mask:
-                result += glob.glob(prefix + m)
-            return result
+                for f in glob.glob(prefix + m):
+                    yield f
 
     def setup_parser(self):
         if not self.interactive and not self.batch_file:
