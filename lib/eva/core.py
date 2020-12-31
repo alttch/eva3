@@ -242,6 +242,69 @@ def log_traceback(*args, notifier=False, **kwargs):
     pyaltt2.logs.log_traceback(*args, use_ignore=notifier, **kwargs)
 
 
+class CoreAction:
+
+    def __init__(self, fn, *args, _name=None, _description=None, **kwargs):
+        self.fn = fn
+        self.name = _name if _name else fn.__name__
+        self.args = args
+        self.description = _description
+        self.kwargs = kwargs
+        self.uuid = str(uuid.uuid4())
+        self.started = threading.Event()
+        self.finished = threading.Event()
+        self.exitcode = None
+        self.out = None
+        self.err = None
+        self.time = {'created': time.time()}
+
+    def serialize(self):
+        return {
+            'uuid': self.uuid,
+            'description': self.description,
+            'finished': self.finished.is_set(),
+            'exitcode': self.exitcode,
+            'out': self.out,
+            'err': self.err,
+            'function': self.name,
+            'time': self.time.copy()
+        }
+
+    def run(self, wait=None):
+        spawn(self.spawn, self.fn, *self.args, **self.kwargs)
+        self.started.wait(config.timeout)
+        if wait:
+            self.wait(wait)
+
+    def wait(self, timeout=None):
+        self.finished.wait(timeout=timeout)
+
+    def spawn(self, fn, *args, **kwargs):
+        self.started.set()
+        self.time['running'] = time.time()
+        try:
+            self.out = fn(*args, **kwargs)
+            self.exitcode = 0
+            self.time['completed'] = time.time()
+        except:
+            self.exitcode = 1
+            self.err = traceback.format_exc()
+            self.time['failed'] = time.time()
+            log_traceback()
+        finally:
+            self.finished.set()
+
+
+def action(fn, *args, _wait=None, _name=None, _description=None, **kwargs):
+    action = CoreAction(fn,
+                        *args,
+                        _name=_name,
+                        _description=_description,
+                        **kwargs)
+    action.run(wait=_wait)
+    return action.serialize()
+
+
 dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollection(on_error=log_traceback)
 shutdown = FunctionCollection(on_error=log_traceback)
@@ -1274,15 +1337,11 @@ def _t_exec_corescripts(event=None, env_globals={}):
 
 
 def run_corescript_code(code=None, event=None, env_globals={}):
-    try:
-        import eva.runner
-        d = env_globals.copy()
-        d['event'] = event
-        d.update(corescript_globals)
-        logging.debug('running core script, event type={}'.format(event.type))
-        exec(code, d, d)
-    except Exception as e:
-        log_traceback()
+    d = env_globals.copy()
+    d['event'] = event
+    d.update(corescript_globals)
+    logging.debug('running core script, event type={}'.format(event.type))
+    exec(code, d, d)
 
 
 def plugins_event_state(source, data):
