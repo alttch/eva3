@@ -1466,8 +1466,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
-                                elif func == 'cmd' and data.get('exitcode'):
-                                    msg = (f'cmd call failed, '
+                                elif func in ['cmd', 'install_pkg'
+                                             ] and data.get('exitcode'):
+                                    msg = (f'API call failed, '
                                            f'stderr:\n{data.get("err")}')
                                     if can_pass_err:
                                         self.print_warn(msg)
