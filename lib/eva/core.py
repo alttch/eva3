@@ -286,7 +286,8 @@ class CoreAction:
             self.out = fn(*args, **kwargs)
             self.exitcode = 0
             self.time['completed'] = time.time()
-        except:
+        except Exception as e:
+            logging.error(f'core action error {e}')
             self.exitcode = 1
             self.err = traceback.format_exc()
             self.time['failed'] = time.time()
