@@ -24,6 +24,7 @@ Common
 
     * Python 3.9 support
     * local mirror feature (mirroring EVA ICS repo and PyPi)
+    * custom packages deployment
     * "feature setup/remove" - execute common setup tasks with a single command
       from EVA shell.
     * "value" field in state and history databases increased to 8192 bytes
