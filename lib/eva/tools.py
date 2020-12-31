@@ -36,6 +36,29 @@ schema_lock = threading.RLock()
 SCHEMAS = {}
 
 
+def read_uri(fname, dirname=None, file_read_mode='r', b64=False):
+
+    def _encode(content):
+        if b64:
+            import base64
+            content = base64.b64encode(content).decode()
+        return content
+
+    if fname.startswith('/') or fname.startswith('./'):
+        target = fname
+    else:
+        target = (dirname + '/' + fname) if dirname else fname
+    if target.startswith('http://') or target.startswith('https://'):
+        import requests
+        result = requests.get(target)
+        if not result.ok:
+            raise Exception('http code {}'.format(result.status_code))
+        return result.text if file_read_mode == 'r' else _encode(result.content)
+    else:
+        with open(target, file_read_mode) as fd:
+            return _encode(fd.read())
+
+
 def kb_uri(article_id):
     return f'https://kb.eva-ics.com/articles/{article_id}.html'
 

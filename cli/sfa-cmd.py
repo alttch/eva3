@@ -1189,22 +1189,6 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                      und=True,
                                      del_files=props.get('del_files', False))
 
-    @staticmethod
-    def _read_uri(fname, dirname=None, file_read_mode='r'):
-        if fname.startswith('/') or fname.startswith('./'):
-            target = fname
-        else:
-            target = (dirname + '/' + fname) if dirname else fname
-        if target.startswith('http://') or target.startswith('https://'):
-            import requests
-            result = requests.get(target)
-            if not result.ok:
-                raise Exception('http code {}'.format(result.status_code))
-            return result.text if file_read_mode == 'r' else result.content
-        else:
-            with open(target, file_read_mode) as fd:
-                return fd.read()
-
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml
         try:
@@ -1213,6 +1197,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             pass
         from eva.client import apiclient
         from eva.tools import validate_schema
+        from eva.tools import read_uri
         test_mode = props.get('test')
         try:
             try:
@@ -1230,7 +1215,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     tplc = props['__stdin']
                 else:
                     dirname = os.path.dirname(fname)
-                    tplc = self._read_uri(fname)
+                    tplc = read_uri(fname)
                 tpl = jinja2.Template(tplc)
                 tpl.globals['import_module'] = importlib.import_module
                 ys = tpl.render(v)
@@ -1300,7 +1285,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if self.dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
-                                    self._read_uri(v[p][1:], dirname)
+                                    read_uri(v[p][1:], dirname)
                                 except:
                                     raise Exception(
                                         ('{} is defined as {} for {} {}, ' +
@@ -1318,7 +1303,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 fname, remote_file = f.split(':')
                                 if '*' not in fname:
                                     try:
-                                        self._read_uri(fname, dirname, 'rb')
+                                        read_uri(fname, dirname, 'rb')
                                     except:
                                         raise Exception(
                                             ('{}: {} unable to open ' +
@@ -1329,7 +1314,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                                                 {}).items():
                             if 'src' in phi_data:
                                 try:
-                                    self._read_uri(fname, dirname, 'rb')
+                                    read_uri(fname, dirname, 'rb')
                                 except:
                                     raise Exception(
                                         ('{}: {} unable to open ' +
@@ -1370,9 +1355,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 'un' if und else ''))
 
             def _fmt_params(func, params):
-                params = params.copy()
-                if func == 'install_pkg':
-                    del params['m']
+                if isinstance(params, dict):
+                    params = params.copy()
+                    if func == 'install_pkg':
+                        del params['m']
                 return params
 
             def execute_custom_tasks(step):
@@ -1384,12 +1370,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             []):
                             if 'install-pkg' in a:
                                 a['api'] = 'install_pkg'
-                                import base64
                                 fname = a['install-pkg']
                                 a['i'] = Path(fname).stem
-                                a['m'] = base64.b64encode(
-                                    self._read_uri(fname, dirname,
-                                                   'rb')).decode()
+                                a['m'] = read_uri(fname,
+                                                  dirname,
+                                                  'rb',
+                                                  b64=True)
                                 del a['install-pkg']
                             if 'api' in a:
                                 try:
@@ -1587,6 +1573,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         skip_existing = props.get('skip')
         from eva.client import apiclient
+        from eva.tools import read_uri
         # ===== FILE UPLOAD =====
         print('Uploading files...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1596,7 +1583,6 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         for fname, remote_file in self._get_files(f):
                             print(' -- {}: {} -> {}'.format(
                                 c, fname, remote_file))
-                            import base64
                             code = 0
                             code = macall({
                                 'i': c,
@@ -1605,9 +1591,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     'i':
                                         remote_file,
                                     'm':
-                                        base64.b64encode(
-                                            self._read_uri(
-                                                fname, dirname, 'rb')).decode(),
+                                        read_uri(fname, dirname, 'rb',
+                                                 b64=True),
                                     'b':
                                         True
                                 }
@@ -1722,7 +1707,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
                     if 'src' in vv:
                         print(' -- {}: {} -> {}'.format(c, vv['src'], i))
-                        mod_source = self._read_uri(vv['src'])
+                        mod_source = read_uri(vv['src'])
                         code = macall({
                             'i': c,
                             'f': 'put_phi_mod',
@@ -1899,7 +1884,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'f': 'file_put',
                             'p': {
                                 'i': remotefn,
-                                'm': self._read_uri(file2u, dirname)
+                                'm': read_uri(file2u, dirname)
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
@@ -1969,7 +1954,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     print(f'Deploying plugins into {c}')
                 for i, vv in self.dict_safe_get(v, 'plugins', {}).items():
                     print(' -- {}: {}'.format(c, i))
-                    mod_source = self._read_uri(vv['src'])
+                    mod_source = read_uri(vv['src'])
                     code = macall({
                         'i': c,
                         'f': 'install_plugin',
