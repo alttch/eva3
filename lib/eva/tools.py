@@ -35,8 +35,10 @@ schema_lock = threading.RLock()
 
 SCHEMAS = {}
 
+
 def kb_uri(article_id):
     return f'https://kb.eva-ics.com/articles/{article_id}.html'
+
 
 def validate_schema(data, schema_id):
     import jsonschema
@@ -240,7 +242,7 @@ def prepare_safe_serialize(v, maxlen=100):
         for i, z in v.items():
             result[i] = prepare_safe_serialize(z)
         return result
-    elif isinstance(v, list):
+    elif isinstance(v, list) or isinstance(v, tuple):
         result = []
         for z in v:
             result.append(prepare_safe_serialize(z))
@@ -250,7 +252,9 @@ def prepare_safe_serialize(v, maxlen=100):
             return v[:maxlen] + '...'
     elif isinstance(v, bytes):
         return '<binary>'
-    return v
+    elif isinstance(v, float) or isinstance(v, int) or isinstance(v, bool):
+        return v
+    return str(v)
 
 
 class MultiOrderedDict(OrderedDict):
