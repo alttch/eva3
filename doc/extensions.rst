@@ -51,3 +51,9 @@ Plug-ins
 * :doc:`plugins` - applications and function libraries that run inside EVA ICS.
   This is the most advanced way to extend EVA ICS functionality: plug-ins can
   implement all of the above plus much and much more.
+
+
+Extensions as packages
+======================
+
+See :doc:`/packages`

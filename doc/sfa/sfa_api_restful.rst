@@ -175,6 +175,21 @@ Returns:
 list with plugin module information
 
 
+.. _sfapi_restful_install_pkg:
+
+install a package
+-----------------
+
+Installs the :doc:`package </packages>`
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+* **m** package content (base64-encoded tar/tgz)
+* **o** package setup options
+* **w** wait (in seconds) before API call sends a response. This allows to try waiting until the package is installed
+
+
 .. _sfapi_restful_shutdown_core:
 
 shutdown the controller

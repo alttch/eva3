@@ -225,6 +225,25 @@ Optionally:
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
 * **s** STDIN data
 
+.. _sysapi_install_pkg:
+
+install_pkg - install a package
+-------------------------------
+
+Installs the :doc:`package </packages>`
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/install_pkg.req-jrpc
+    :response: http-examples/jrpc/sysapi/install_pkg.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** package name
+* **m** package content (base64-encoded tar/tgz)
+* **o** package setup options
+* **w** wait (in seconds) before API call sends a response. This allows to try waiting until the package is installed
+
 .. _sysapi_list_plugins:
 
 list_plugins - get list of loaded core plugins

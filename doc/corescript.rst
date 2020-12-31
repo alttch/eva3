@@ -183,6 +183,12 @@ Triggered on system events
     are completed. The script chain must finish in 30 seconds, otherwise the
     controller suicides itself and kills own process with SIGKILL signal.
 
+Setting up packages
+-------------------
+
+See :doc:`/packages`
+
+
 Logging
 =======
 

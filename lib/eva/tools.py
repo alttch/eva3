@@ -54,6 +54,9 @@ def validate_schema(data, schema_id):
 
 
 class ConfigFile():
+    """
+    A helper to manage .ini files
+    """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
         self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'
@@ -148,6 +151,9 @@ class ConfigFile():
 
 
 class ShellConfigFile():
+    """
+    A helper to manage shell scripts configuration files
+    """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
         self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'

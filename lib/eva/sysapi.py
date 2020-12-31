@@ -560,6 +560,19 @@ class FileAPI(object):
     @api_need_file_management
     @api_need_master
     def install_pkg(self, **kwargs):
+        """
+        install a package
+
+        Installs the :doc:`package </packages>`
+
+        Args:
+            k: .master
+            .i: package name
+            m: package content (base64-encoded tar/tgz)
+            o: package setup options
+            w: wait (in seconds) before API call sends a response. This allows
+                to try waiting until the package is installed
+        """
         i, m, o, u, w = parse_api_params(kwargs, 'imouw', 'SS.bn')
         import base64
         import tarfile
@@ -582,7 +595,9 @@ class FileAPI(object):
             if f.name == 'setup.py':
                 pkg.members.remove(f)
         env = {
-            'extract_package': partial(pkg.extractall, path=eva.core.dir_eva)
+            'extract_package': partial(pkg.extractall, path=eva.core.dir_eva),
+            'ConfigFile': ConfigFile,
+            'ShellConfigFile': ShellConfigFile,
         }
         return eva.core.action(eva.core.run_corescript_code,
                                _wait=w,

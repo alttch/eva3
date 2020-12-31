@@ -235,6 +235,25 @@ calls:
                 - cm-api: reload_controller
                   i: lm/lm1
 
+.. _iac_pkg:
+
+Installing packages
+~~~~~~~~~~~~~~~~~~~
+
+A :doc:`package</packages>` can be installed during any deployment stage.
+
+Syntax:
+
+.. code:: yaml
+
+    controller:
+      uc/uc1:
+        after-deploy:
+          - install-pkg: /path/to/package.tgz
+            o: { x: 2 }
+            w: 5
+
+
 Additional deploy functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
