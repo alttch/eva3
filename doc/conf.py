@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'EVA ICS'
-copyright = '2020, AlterTech'
+copyright = '2021, AlterTech'
 author = 'AlterTech'
 
 # The version info for the project you're documenting, acts as replacement for

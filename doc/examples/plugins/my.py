@@ -30,7 +30,7 @@ var2 = value2
 
 # plugin header, required
 __author__ = 'Altertech, https://www.altertech.com/'
-__copyright__ = 'Copyright (C) 2012-2020 Altertech'
+__copyright__ = 'Copyright (C) 2012-2021 Altertech'
 __license__ = 'Apache License 2.0'
 __version__ = "3.3.2"
 
