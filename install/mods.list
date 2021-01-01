@@ -29,7 +29,7 @@ pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.2.0
 python-rapidjson==0.7.2
-msgpack-python==0.5.6
+msgpack==1.0.2
 pytz==2018.9
 neotermcolor==2.0.8
 cheroot==8.5.1
