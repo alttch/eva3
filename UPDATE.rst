@@ -27,3 +27,4 @@ Deprecated
 ----------
 
 * RESTful and direct API calls. Use JSON RPC only
+* Read-only file systems
