@@ -44,6 +44,17 @@ def need_tokens_enabled(f):
 
 @need_tokens_enabled
 @tokens_lock
+def list_tokens():
+    result = []
+    for token, info in tokens.items():
+        data = info.copy()
+        data['token'] = token
+        result.append(data)
+    return sorted(result, key=lambda k: k['u'])
+
+
+@need_tokens_enabled
+@tokens_lock
 def append_token(key_id, user=None, utp=None):
     i = 0
     while True:
