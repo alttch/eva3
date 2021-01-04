@@ -64,6 +64,8 @@ Core script globals and functions
     * **product.code** "uc", "lm" or "sfa"
     * **product.build** current EVA ICS build
 
+* **system_name** system name
+
 Core script events
 ==================
 

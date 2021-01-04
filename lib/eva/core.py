@@ -297,11 +297,7 @@ class CoreAction:
 
 
 def action(fn, *args, _wait=None, _name=None, _call_for=None, **kwargs):
-    action = CoreAction(fn,
-                        *args,
-                        _name=_name,
-                        _call_for=_call_for,
-                        **kwargs)
+    action = CoreAction(fn, *args, _name=_name, _call_for=_call_for, **kwargs)
     action.run(wait=_wait)
     return action.serialize()
 
@@ -1213,7 +1209,11 @@ def start(init_db_only=False):
     product.usn = str(
         uuid.uuid5(uuid.NAMESPACE_URL,
                    f'eva://{config.system_name}/{product.code}'))
-    update_corescript_globals({'product': product, 'apikey': eva.apikey})
+    update_corescript_globals({
+        'product': product,
+        'system_name': config.system_name,
+        'apikey': eva.apikey
+    })
 
 
 def handle_corescript_mqtt_event(d, t, qos, retain):
