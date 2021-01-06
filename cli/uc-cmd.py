@@ -1005,7 +1005,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_read.add_argument(
             '-f',
             '--data-type',
-            help='Data type (u16, i16, u32, i32, u64, i64, f64 or bit)',
+            help='Data type (u16, i16, u32, i32, u64, i64, f32 or bit)',
             metavar='TYPE',
             choices=['u16', 'i16', 'u32', 'i32', 'u64', 'i64', 'f32', 'bit'],
             dest='f')
