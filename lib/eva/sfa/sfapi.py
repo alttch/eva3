@@ -12,6 +12,7 @@ import importlib
 import requests
 import yaml
 import base64
+import eva.lang
 
 try:
     yaml.warnings({'YAMLLoadWarning': False})
@@ -1648,7 +1649,15 @@ def serve_json_yml(fname, dts='ui'):
     if cas:
         try:
             data = yaml.load(data)
+            lang = cherrypy.serving.request.params.get('lang')
+            if lang:
+                document_name = fname[1:].rsplit('.')[0]
+                data = eva.lang.convert(data,
+                                        lang,
+                                        document_name=document_name,
+                                        localedir=eva.core.dir_pvt + '/locales')
         except Exception as e:
+            eva.core.log_traceback()
             return _tool_error_response(e)
         if cas == 'json':
             try:
