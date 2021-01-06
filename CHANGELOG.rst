@@ -48,6 +48,7 @@ Common
         * sendmail
     * "set_user_password" SYS API function now allows logged in users to change
       their passwords
+    * "list_tokens"/"drop_tokens" API functions
     * state_history API function can return data for disconnected / deleted
       items
     * new argument for state_history: z (time zone)

@@ -906,6 +906,39 @@ Parameters:
 * **u** user login
 * **p** new password
 
+.. _sysapi_list_tokens:
+
+list_tokens - List active session tokens
+----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/list_tokens.req-jrpc
+    :response: http-examples/jrpc/sysapi/list_tokens.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _sysapi_drop_tokens:
+
+drop_tokens - Drop session token(s)
+-----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/drop_tokens.req-jrpc
+    :response: http-examples/jrpc/sysapi/drop_tokens.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **a** session token or
+* **u** user name or
+* **i** API key id
+
 
 .. _sysapi_cat_notifiers:
 

@@ -1126,6 +1126,34 @@ class UserAPI(object):
         tokens.remove_token(key_id=i)
         return eva.apikey.delete_api_key(i)
 
+    @log_d
+    @api_need_master
+    def list_tokens(self, **kwargs):
+        """
+        List active session tokens
+
+        Args:
+            k: .master
+        """
+        return tokens.list_tokens()
+
+    @log_w
+    @api_need_master
+    def drop_tokens(self, **kwargs):
+        """
+        Drop session token(s)
+
+        Args:
+            k: .master
+            a: session token or
+            u: user name or
+            i: API key id
+        """
+        a, u, i = parse_api_params(kwargs, 'aui', 'sss')
+        if not a and not u and not i:
+            raise InvalidParameter('No drop parameters specified')
+        return tokens.remove_token(token=a, user=u, key_id=i)
+
 
 class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 

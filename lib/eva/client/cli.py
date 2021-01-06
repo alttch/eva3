@@ -106,6 +106,16 @@ class ComplUser(ComplGeneric):
             yield v['user']
 
 
+class ComplToken(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('user tokens')
+        if code:
+            return True
+        for v in data:
+            yield v['token']
+
+
 class ComplCoreScript(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
@@ -156,7 +166,9 @@ class GenericCLI(GCLI):
                 'user:create': 'create_user',
                 'user:password': 'set_user_password',
                 'user:key': 'set_user_key',
-                'user:destroy': 'destroy_user'
+                'user:destroy': 'destroy_user',
+                'user:tokens': 'list_tokens',
+                'user:drop-tokens': 'drop_tokens',
             }
             self.common_pd_cols = {
                 'list_keys': [
@@ -164,6 +176,9 @@ class GenericCLI(GCLI):
                 ],
                 'list_corescript_mqtt_topics': ['topic', 'qos'],
                 'list_users': ['user', 'key_id'],
+                'list_tokens': [
+                    'user', 'type', 'key_id', 'active', 'mode', 'token'
+                ],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'api_log_get': [
                     'time', 'gw', 'ip', 'auth', 'u', 'utp', 'ki', 'status',
@@ -446,6 +461,21 @@ class GenericCLI(GCLI):
                 d['modified'] = time.ctime(d['modified'])
                 result.append(d)
             return result
+        elif api_func == 'list_tokens':
+            from datetime import datetime
+            for d in data:
+                d['user'] = d.get('u', '')
+                d['type'] = d.get('utp')
+                d['key_id'] = d.get('ki')
+                m = d.get('m')
+                if m == 1:
+                    d['mode'] = 'normal'
+                elif m == 2:
+                    d['mode'] = 'readonly'
+                t = d.get('t')
+                if t:
+                    d['active'] = datetime.fromtimestamp(t).isoformat()
+            return data
         else:
             return data
 
@@ -852,6 +882,21 @@ class GenericCLI(GCLI):
         sp_user_destroy = sp_user.add_parser('destroy', help='Delete user')
         sp_user_destroy.add_argument(
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
+
+        sp_user_list_tokens = sp_user.add_parser(
+            'tokens', help='List active session tokens')
+        sp_user_drop_tokens = sp_user.add_parser(
+            'drop-tokens', help='Drop active session token(s)')
+        sp_user_drop_tokens.add_argument('a',
+                                         help='Session token',
+                                         metavar='TOKEN',
+                                         nargs='?').completer = ComplToken(self)
+        sp_user_drop_tokens.add_argument(
+            '-u', '--user', dest='u', help='User login',
+            metavar='LOGIN').completer = ComplUser(self)
+        sp_user_drop_tokens.add_argument(
+            '-i', '--key-id', dest='i', help='API key ID',
+            metavar='APIKEY_ID').completer = ComplKey(self)
 
     def start_interactive(self, reset_sst=True):
         if reset_sst:

@@ -2174,6 +2174,33 @@ Parameters:
 * **p** new password
 
 
+.. _lmapi_restful_list_tokens:
+
+List active session tokens
+--------------------------
+
+
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_drop_tokens:
+
+Drop session token(s)
+---------------------
+
+
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+* **a** session token or
+* **u** user name or
+* **i** API key id
+
+
 
 .. _lmapi_restful_cat_notifiers:
 
