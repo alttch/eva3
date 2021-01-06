@@ -1321,28 +1321,32 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                          'file for upload').format(c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
-                code, ctest = macall({'i': c, 'f': 'test'})
-                if code == apiclient.result_not_found:
-                    raise Exception('Controller {} not found'.format(c))
-                code = ctest.get('code')
-                ctest = ctest.get('data')
-                if code == apiclient.result_not_ready:
-                    raise Exception(
-                        ('Controller {} management API not ready (no ' +
-                         'master access from SFA)').format(c))
-                if code == apiclient.result_forbidden:
-                    raise Exception('Controller {} access forbidden'.format(c))
-                if code != apiclient.result_ok:
-                    raise Exception(
-                        'Controller {} access error, code: {}'.format(c, code))
-                if not ctest.get('acl', {}).get('master'):
-                    raise Exception(
-                        'Controller {} master access is not set up'.format(c))
-                if c in controllers_fm_required and not ctest.get(
-                        'file_management'):
-                    raise Exception(
-                        'Controller {} file management API is disabled'.format(
-                            c))
+                if c != 'local':
+                    code, ctest = macall({'i': c, 'f': 'test'})
+                    if code == apiclient.result_not_found:
+                        raise Exception('Controller {} not found'.format(c))
+                    code = ctest.get('code')
+                    ctest = ctest.get('data')
+                    if code == apiclient.result_not_ready:
+                        raise Exception(
+                            ('Controller {} management API not ready (no ' +
+                             'master access from SFA)').format(c))
+                    if code == apiclient.result_forbidden:
+                        raise Exception(
+                            'Controller {} access forbidden'.format(c))
+                    if code != apiclient.result_ok:
+                        raise Exception(
+                            'Controller {} access error, code: {}'.format(
+                                c, code))
+                    if not ctest.get('acl', {}).get('master'):
+                        raise Exception(
+                            'Controller {} master access is not set up'.format(
+                                c))
+                    if c in controllers_fm_required and not ctest.get(
+                            'file_management'):
+                        raise Exception(
+                            'Controller {} file management API is disabled'.
+                            format(c))
             if test_mode:
                 print('PASSED')
                 return self.local_func_result_ok
@@ -1362,7 +1366,15 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 return params
 
             def execute_custom_tasks(step):
-                for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+                cs = self.dict_safe_get(cfg, 'controller', {}).copy()
+                local = self.dict_safe_get(cs, 'local', {}).copy()
+                if local:
+                    lc = [('local', local)]
+                    del cs['local']
+                else:
+                    lc = []
+                cs_items = [(k, v) for k, v in cs.items()] + lc
+                for c, v in cs_items:
                     if v:
                         for a in self.dict_safe_get(
                                 v, '{}-{}deploy'.format(step,
@@ -1438,14 +1450,18 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     raise RuntimeError(
                                         f'function failed: {result: {result}}')
                             elif 'api' in a:
-                                result = macall({
-                                    'i': c,
-                                    'f': func,
-                                    'p': params,
-                                    't': custom_timeout
-                                })[1]
-                                code = result.get('code')
-                                data = result.get('data', {})
+                                if c == 'local':
+                                    code, data = api.call(
+                                        func, params, timeout=custom_timeout)
+                                else:
+                                    result = macall({
+                                        'i': c,
+                                        'f': func,
+                                        'p': params,
+                                        't': custom_timeout
+                                    })[1]
+                                    code = result.get('code')
+                                    data = result.get('data', {})
                                 if code != apiclient.result_ok:
                                     msg = f'API call failed, code {code}'
                                     if can_pass_err:
@@ -1530,10 +1546,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         'API call failed, code {}'.format(code))
             print('Reloading local SFA')
             for c in controllers:
-                print(' -- {}'.format(c))
-                code = call('reload_controller', {'i': c})[0]
-                if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+                if c != 'local':
+                    print(' -- {}'.format(c))
+                    code = call('reload_controller', {'i': c})[0]
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed

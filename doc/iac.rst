@@ -177,6 +177,12 @@ Before/After deploy
 Remote calls
 ^^^^^^^^^^^^
 
+.. note::
+
+    EVA ICS architecture does not allow Cloud Manager to execute API calls on
+    remote SFAs. Use the remote node UC or LM instance to act as the agent for
+    that.
+
 Controller API calls may be automatically executed after deployment is
 complete:
 
@@ -234,6 +240,20 @@ calls:
                 # just for a test
                 - cm-api: reload_controller
                   i: lm/lm1
+
+The local calls can be also merged into "local" controller section. The section
+can contain any before/after deploy commands, which are executed on local SFA:
+
+.. code:: yaml
+
+    controller:
+      local:
+        after-deploy:
+          - install-pkg: test.tgz
+            o: { x: 2 }
+            w: 5
+
+The "local" section is always executed after all other controllers' sections.
 
 .. _iac_pkg:
 
