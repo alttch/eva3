@@ -91,7 +91,7 @@ discover_on = all
 
 [sysapi]
 ; enable remote file management functions
-;file_management = yes
+file_management = yes
 ; allow entering setup mode
 setup_mode = yes
 
