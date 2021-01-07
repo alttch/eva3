@@ -16,6 +16,9 @@ def _find_el(localedir, lang, document_name=None):
             el = gettext.translation(base,
                                      localedir=localedir,
                                      languages=[lang])
+            import eva.core
+            if eva.core.config.development:
+                clear_cache()
             break
         except FileNotFoundError:
             pass
@@ -67,3 +70,7 @@ def convert(obj,
         return _convert_str(obj, el=_el)
     else:
         return obj
+
+
+def clear_cache():
+    gettext._translations.clear()

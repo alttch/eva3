@@ -202,6 +202,17 @@ Parameters:
 
 * **k** API key with *sysfunc=yes* permissions
 
+.. _sysapi_clear_lang_cache:
+
+clear_lang_cache - Clear language cache
+---------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/clear_lang_cache.req-jrpc
+    :response: http-examples/jrpc/sysapi/clear_lang_cache.resp-jrpc
+
 .. _sysapi_cmd:
 
 cmd - execute a remote system command

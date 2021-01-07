@@ -1513,6 +1513,17 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                     pass
         return True
 
+    @log_i
+    @api_need_master
+    def clear_lang_cache(self, **kwargs):
+        """
+        Clear language cache
+        """
+        parse_api_params(kwargs, '', '')
+        import eva.lang
+        eva.lang.clear_cache()
+        return True
+
 
 class SysHTTP_API_abstract(SysAPI):
 

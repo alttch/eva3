@@ -132,6 +132,14 @@ Parameters:
 * **API Key** API key with *sysfunc=yes* permissions
 
 
+.. _ucapi_restful_clear_lang_cache:
+
+Clear language cache
+--------------------
+
+
+
+
 .. _ucapi_restful_cmd:
 
 execute a remote system command

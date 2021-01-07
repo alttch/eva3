@@ -42,6 +42,9 @@ returns the structured data on every call:
 Multi-language
 ==============
 
+Using
+-----
+
 An additional argument "lang" can be used to apply the chosen locale on **all**
 string fields of structured data file. Multi-line strings are processed
 correctly, string formatting (left and right white spaces) is preserved:
@@ -107,3 +110,37 @@ is served, the message files are looked up in the following order:
 
 (the last file is the standard common message file). If no message file is
 found, the strings are served as-is, without any conversion.
+
+Generating
+----------
+
+To auto-generate / update ".po" files from JSON or YAML strings, a supplied
+tool "gen-intl" can be used (multiple languages can be specified at once):
+
+.. code:: bash
+
+    /opt/eva/bin/gen-intl test.yml -l cs generate
+
+The above command will auto-generate or update "test.po" file and put it to the
+corresponding locale path. E.g. if the file absolute path is
+*/opt/eva/ui/tests/test.yml*, the result ".po" file will be written to
+*/opt/eva/pvt/locales/cs/LC_MESSAGES/tests/test.po*.
+
+After editing, compile ".po" file manually with "msgfmt", or run
+
+.. code:: bash
+
+    /opt/eva/bin/gen-intl test.yml -l cs compile
+
+Locale cache
+------------
+
+Message files are cached by EVA ICS gettext library, until the :doc:`/sfa/sfa`
+server is restarted.
+
+The cache can be turned off by setting development mode (*development = yes*)
+in *[server]* section of :ref:`sfa_ini`.
+
+On production, the API method :ref:`clear_lang_cache <sysapi_clear_lang_cache>`
+can be used, either by calling it manually or during a :doc:`deployment
+</iac>`.

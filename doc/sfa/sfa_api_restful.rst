@@ -132,6 +132,14 @@ Parameters:
 * **API Key** API key with *sysfunc=yes* permissions
 
 
+.. _sfapi_restful_clear_lang_cache:
+
+Clear language cache
+--------------------
+
+
+
+
 .. _sfapi_restful_cmd:
 
 execute a remote system command

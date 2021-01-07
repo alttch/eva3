@@ -1646,10 +1646,10 @@ def serve_json_yml(fname, dts='ui'):
     with open(infile) as fd:
         data = fd.read()
     cas = cherrypy.serving.request.params.get('as')
-    if cas:
+    lang = cherrypy.serving.request.params.get('lang')
+    if cas or lang:
         try:
             data = yaml.load(data)
-            lang = cherrypy.serving.request.params.get('lang')
             if lang:
                 document_name = fname.rsplit('.')[0]
                 if document_name.startswith('/'):
@@ -1661,6 +1661,8 @@ def serve_json_yml(fname, dts='ui'):
         except Exception as e:
             eva.core.log_traceback()
             return _tool_error_response(e)
+        if not cas:
+            cas = fname.rsplit('.', 1)[-1]
         if cas == 'json':
             try:
                 data = format_json(data,
