@@ -16,6 +16,12 @@ execute various actions.
 
 EVA ICS provides the following tools to simplify UI development:
 
+* `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_ - provides
+  high-level JavaScript API with various typical HMI features, such as
+  authentication, data synchronization, events, actions etc.
+
+* :doc:`/sfa/serve_as` in convenient ways.
+
 * :doc:`/sfa/sfa_templates` - server-side templates for HTML, JS and other text
   files.
 
@@ -27,10 +33,6 @@ EVA ICS provides the following tools to simplify UI development:
 * :doc:`api_tokens` - use session-bound tokens to authenticate API calls
 
 * Ready-to-use applications for :doc:`evahi`.
-
-* `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_ - provides
-  high-level JavaScript API with various typical HMI features, such as
-  authentication, data synchronization, events, actions etc.
 
 Some of ready-to-use HMI applications are available at `EVA ICS download page
 <https://www.eva-ics.com/download>`_.
