@@ -86,7 +86,7 @@ or e.g. for Japanese (UTF-8):
     msgstr "これはテストです"
 
 (note that if diacritic is used e.g. in Czech lang messages, the file should
-also specify UTF-8 encoding as well)
+specify UTF-8 encoding as well)
 
 The files can be compiled with "msgfmt" Linux command from "gettext" package
 (installed by default by majority Linux distributions):
