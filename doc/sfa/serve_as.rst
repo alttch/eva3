@@ -39,8 +39,8 @@ returns the structured data on every call:
 
     /ui/filename.yml?as=js&func=myfunc
 
-Locales
-=======
+Locale
+======
 
 An additional argument "lang" can be used to apply locale on **all** string
 fields of structured data file. Multi-line fields are processed correctly,
