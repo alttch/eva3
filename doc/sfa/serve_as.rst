@@ -48,7 +48,7 @@ correctly, string format (left and right white spaces) is preserved:
 
     /ui/test.yml?as=json&lang=LANG
 
-(as seen from the example above, "lang" can be combined with "as").
+(as seen from the above example, "lang" can be combined with "as").
 
 Firstly, a locale file should be created. Create a directory
 *EVA_DIR/pvt/locales* (used for both UI and :doc:`/sfa/sfa_pvt`). After, create
