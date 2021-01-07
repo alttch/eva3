@@ -65,7 +65,7 @@ each one. So the tree should look like e.g. ("cs" is for Czech language):
                 ├── tests
                 └────── test.po
 
-".po" files are standard `Getrext <https://en.wikipedia.org/wiki/Gettext>`_
+".po" files are standard `Gettext <https://en.wikipedia.org/wiki/Gettext>`_
 files, which look like:
 
 .. code::
