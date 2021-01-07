@@ -120,6 +120,7 @@ SFA
     * File uploads
     * connected controllers in "test" API method (*$eva.server_info.connected*
       in EVA JS Framework)
+    * data serve as locale support
     * cloud deploy: "status" and "value" props in deployment files
     * cloud deploy: module uploads and binary files support
     * cloud deploy: skip busy drivers/PHIs during undeployment
