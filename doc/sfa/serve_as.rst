@@ -97,7 +97,7 @@ The files can be compiled with "msgfmt" Linux command from "gettext" package
 
 EVA ICS uses the following strategy to find locale files. E.g. if the document
 
-    /ui/tests/test.yml&as=json&lang=cs
+    /ui/tests/test.yml?as=json&lang=cs
 
 is served, the message files are looked up in the following order:
 
