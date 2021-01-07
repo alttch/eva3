@@ -1,0 +1,36 @@
+UI basics
+*********
+
+HMI applications are served by :doc:`/sfa/sfa` from *EVA_DIR/ui* directory and
+available by default at:
+
+    \http://SFA_IP:8828/ui/
+
+Typically, EVA ICS UI applications are completely written in JavaScript. The
+file, called "ui/index.html" (or "ui/index.j2") should be the application entry
+point.
+
+The applications are usually coded in HTML+JavaScript. The UI applications
+should use :doc:`/sfa/sfa_api` methods to authenticate, obtain data and
+execute various actions.
+
+EVA ICS provides the following tools to simplify UI development:
+
+* :doc:`/sfa/sfa_templates` - server-side templates for HTML, JS or other text
+  files.
+
+* :doc:`/sfa/sfa_pvt` - a special API to keep sensitive information securely
+  and let it be accessible only to authenticated users.
+
+* :doc:`/sfa/upload` - file upload API.
+
+* :doc:`api_tokens` - use session-bound tokens to authenticate API calls
+
+* Ready-to-use applications for :doc:`evahi`.
+
+* `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_ - provides
+  high-level JavaScript API with various typical HMI features, such as
+  authentication, data synchronization, events, actions etc.
+
+Some of ready-to-use HMI applications are available at `EVA ICS download page
+<https://www.eva-ics.com/download>`_.

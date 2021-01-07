@@ -16,7 +16,7 @@ You can use official `EVA ICS Control Center client
     :align: right
 
 The client is evaHI-based application, so it can be `configured in the same way
-<https://github.com/alttch/evaHI#create-configuration-file-on-your-web-server>`_
+<https://github.com/alttch/evaHI#create-configuration-file-on-your-web-server>`_.
 
 :doc:`SFA</sfa/sfa>` automatically maps *ui/.evahi* directory to */.evahi* URI.
 If front-end server is used, URI should be accessible without user

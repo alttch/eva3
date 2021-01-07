@@ -124,6 +124,7 @@ What you get with EVA
     :caption:  Interface development
     :maxdepth: 1
 
+    ui
     sfa/sfa_templates
     sfa/sfa_pvt
     sfa/serve_as
