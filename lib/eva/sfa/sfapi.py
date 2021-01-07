@@ -1651,7 +1651,9 @@ def serve_json_yml(fname, dts='ui'):
             data = yaml.load(data)
             lang = cherrypy.serving.request.params.get('lang')
             if lang:
-                document_name = fname[1:].rsplit('.')[0]
+                document_name = fname.rsplit('.')[0]
+                if document_name.startswith('/'):
+                    document_name = document_name[1:]
                 data = eva.lang.convert(data,
                                         lang,
                                         document_name=document_name,
