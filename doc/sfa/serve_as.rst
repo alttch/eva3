@@ -39,14 +39,14 @@ returns the structured data on every call:
 
     /ui/filename.yml?as=js&func=myfunc
 
-Locale
-======
+Multi-language
+==============
 
-An additional argument "lang" can be used to apply locale on **all** string
-fields of structured data file. Multi-line fields are processed correctly,
-string format (left and right white spaces) is preserved:
+An additional argument "lang" can be used to apply the chosen locale on **all**
+string fields of structured data file. Multi-line strings are processed
+correctly, string format (left and right white spaces) is preserved:
 
-    /ui/test.yml?as=json&lang=cs
+    /ui/test.yml?as=json&lang=LANG
 
 (as seen from the example above, "lang" can be combined with "as").
 
@@ -97,7 +97,7 @@ The files can be compiled with "msgfmt" Linux command from "gettext" package
 
 EVA ICS uses the following strategy to find locale files. E.g. if the document
 
-    /ui/tests/test.yml&as=json&lang=LANG
+    /ui/tests/test.yml&as=json&lang=cs
 
 is served, the message files are looked up in the following order:
 
