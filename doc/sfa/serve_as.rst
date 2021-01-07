@@ -44,7 +44,7 @@ Multi-language
 
 An additional argument "lang" can be used to apply the chosen locale on **all**
 string fields of structured data file. Multi-line strings are processed
-correctly, string format (left and right white spaces) is preserved:
+correctly, string formatting (left and right white spaces) is preserved:
 
     /ui/test.yml?as=json&lang=LANG
 
