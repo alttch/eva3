@@ -106,4 +106,4 @@ is served, the message files are looked up in the following order:
 * EVA_DIR/pvt/locales/cs/LC_MESSAGES/messages.mo
 
 (the last file is the standard common message file). If no message file is
-found, the string is served as-is, without any conversion.
+found, the strings are served as-is, without any conversion.
