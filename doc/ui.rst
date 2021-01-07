@@ -16,7 +16,7 @@ execute various actions.
 
 EVA ICS provides the following tools to simplify UI development:
 
-* :doc:`/sfa/sfa_templates` - server-side templates for HTML, JS or other text
+* :doc:`/sfa/sfa_templates` - server-side templates for HTML, JS and other text
   files.
 
 * :doc:`/sfa/sfa_pvt` - a special API to keep sensitive information securely
