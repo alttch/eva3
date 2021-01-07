@@ -42,8 +42,8 @@ returns the structured data on every call:
 Multi-language
 ==============
 
-Using
------
+General
+-------
 
 An additional argument "lang" can be used to apply the chosen locale on **all**
 string fields of structured data file. Multi-line strings are processed
