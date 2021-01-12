@@ -357,7 +357,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             .g: item group
             .full: return full state
         """
-        k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.sssb')
+        k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.s.sb')
         if is_oid(i):
             _tp, _i = parse_oid(i)
         else:
@@ -381,8 +381,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         result = []
         if isinstance(group, list):
             _group = group
-        else:
+        elif isinstance(group, str):
             _group = str(group).split(',')
+        else:
+            _group = None
         for i, v in gi.copy().items():
             if key_check(k, v, ro_op=True) and \
                     (not group or \
