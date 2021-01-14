@@ -49,6 +49,8 @@ def list_tokens():
     for token, info in tokens.items():
         data = info.copy()
         data['token'] = token
+        if data['u'] is None:
+            data['u'] = ''
         result.append(data)
     return sorted(result, key=lambda k: k['u'])
 
