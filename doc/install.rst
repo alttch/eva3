@@ -866,6 +866,18 @@ in "EXTRA" section of "etc/venv" of the node the mirror is configured on.
 
     After adding extra modules, update mirror with "eva mirror update" command.
 
+If secondary nodes have different Python version than the mirror node, put
+Python versions (comma-separated) into "etc/eva_shell.ini" before creating /
+updating the mirror:
+
+.. code::
+
+    [update]
+    mirror_extra_python_versions = 3.7, 3.9
+
+This will ask "mirror update" to download binary modules for the specified
+Python versions as well.
+
 Configuring secondary nodes
 ---------------------------
 
@@ -882,18 +894,6 @@ If the mirror is set up properly, the following url should display a web page
 with EVA ICS version and build:
 
     \http://<SFA_IP>:<PORT>/mirror/
-
-If secondary nodes have different Python version than the mirror node, put
-Python versions (comma-separated) into "etc/eva_shell.ini" before creating /
-updating the mirror:
-
-.. code::
-
-    [update]
-    mirror_extra_python_versions = 3.7, 3.9
-
-This will ask "mirror update" to download binary modules for the specified
-Python versions as well.
 
 Automatic setup
 ~~~~~~~~~~~~~~~
