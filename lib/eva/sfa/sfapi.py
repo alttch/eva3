@@ -1629,7 +1629,7 @@ def serve_pvt(*args, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
         except cherrypy.HTTPError:
             raise
         except:
-            eva.core.log_taceback()
+            eva.core.log_traceback()
             raise cp_api_error()
     if nocache:
         cp_nocache()
