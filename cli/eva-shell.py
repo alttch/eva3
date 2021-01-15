@@ -987,12 +987,37 @@ sys.argv = {argv}
                 print()
             print(f'Modules: {len(mods)}')
             print(self.colored('-' * 40, color='grey', attrs=[]))
+            # update modules
             for mod in mods:
                 if mod:
                     if os.system(f'{dir_sbin}/pypi-mirror '
                                  f'download -p {pip} -b -d '
                                  f'{dir_mirror_pypi}/downloads {mod}'):
                         return self.local_func_result_failed
+            # update compiled mods for extra Python versions
+            cmods = Path(dir_mirror_pypi).glob(f'**/*-cp*.whl')
+            xmods = set()
+            srcs_req = set()
+            for c in cmods:
+                m = c.name.split('-')
+                mod_name, mod_version = m[0], m[1]
+                xmods.add(f'{mod_name}=={mod_version}')
+            for pyver in mirror_extra_python_versions:
+                for xmod in xmods:
+                    if os.system(f'{dir_sbin}/pypi-mirror '
+                                 f'download -p {pip} -b -d '
+                                 f'{dir_mirror_pypi}/downloads '
+                                 f'--python-version {pyver} {xmod}'):
+                        self.print_warn(f'No binary package for {xmod}, '
+                                        f'will download sources')
+                        srcs_req.add(xmod)
+            # download modules sources for missing binary mods
+            for s in srcs_req:
+                if os.system(f'{dir_sbin}/pypi-mirror '
+                             f'download -p {pip} -d '
+                             f'{dir_mirror_pypi}/downloads {s}'):
+                    return self.local_func_result_failed
+            # update mirror index
             if os.system(f'{dir_sbin}/pypi-mirror '
                          f'create -d {dir_mirror_pypi}/downloads '
                          f'-m {dir_mirror_pypi}/local'):
@@ -1568,6 +1593,16 @@ try:
         update_repo = cfg.get('update', 'url')
     except:
         pass
+    try:
+        mirror_extra_python_versions = cfg.get('update',
+                                               'mirror_extra_python_versions')
+        mirror_extra_python_versions = [
+            x.strip()
+            for x in mirror_extra_python_versions.split(',')
+            if x.strip()
+        ]
+    except:
+        mirror_extra_python_versions = []
     try:
         for c in cfg.options('cmd'):
             if c not in _api_functions:

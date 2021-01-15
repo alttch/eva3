@@ -883,6 +883,18 @@ with EVA ICS version and build:
 
     \http://<SFA_IP>:<PORT>/mirror/
 
+If secondary nodes have different Python version than the mirror node, put
+Python versions (comma-separated) into "etc/eva_shell.ini" before creating /
+updating the mirror:
+
+.. code::
+
+    [update]
+    mirror_extra_python_versions = 3.7, 3.9
+
+This will ask "mirror update" to download binary modules for the specified
+Python versions as well.
+
 Automatic setup
 ~~~~~~~~~~~~~~~
 
