@@ -985,6 +985,13 @@ sys.argv = {argv}
                 mods.append(m)
             if mods_skip or mods_extra:
                 print()
+            print(f'Python version: '
+                  f'{sys.version_info.major}.{sys.version_info.minor}')
+            print(f'CPU architecture: {platform.uname().machine}')
+            if mirror_extra_python_versions:
+                print(f'Extra Python versions: '
+                      f'{", ".join(mirror_extra_python_versions)}')
+            print()
             print(f'Modules: {len(mods)}')
             print(self.colored('-' * 40, color='grey', attrs=[]))
             # update modules
