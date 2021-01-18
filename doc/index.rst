@@ -148,6 +148,7 @@ What you get with EVA
     integrations/denkovi
     integrations/energenie
     integrations/ethernetip
+    integrations/elk
     integrations/gcp
     integrations/grafana
     integrations/hue
