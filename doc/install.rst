@@ -659,6 +659,12 @@ logs:
 Using NGINX as a frontend for SFA interface
 ===========================================
 
+.. note::
+
+    To properly log IP addresses of the requests, make sure the front-end sets
+    *X-Real-IP* header and set *[webapi]/x_real_ip=yes* option in
+    :ref:`sfa_ini`.
+
 External authentication
 -----------------------
 
