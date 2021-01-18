@@ -44,28 +44,48 @@ _d = SimpleNamespace(modified=False)
 
 
 def get_version():
+    """
+    Get DriverAPI version
+    """
     return __api__
 
 
 def get_polldelay():
+    """
+    Get UC poll delay
+    """
     return eva.core.config.polldelay
 
 
 def get_system_name():
+    """
+    Get EVA ICS node name
+    """
     return eva.core.config.system_name
 
 
 def get_sleep_step():
+    """
+    Get the default sleep step
+    """
     return eva.core.sleep_step
 
 
 def get_timeout():
+    """
+    Get the default core timeout
+    """
     return eva.core.config.timeout
 
 
 def transform_value(value, multiply=None, divide=None, round_to=None):
     """
     Generic value transformer
+
+    Args:
+        multiply: multiply the value on
+        divide: divide the value on
+        round_to: round the value to X digits after comma
     """
     if multiply is not None:
         value = value * multiply
@@ -77,14 +97,28 @@ def transform_value(value, multiply=None, divide=None, round_to=None):
 
 
 def critical():
+    """
+    Ask the core to raise critical exception
+    """
     return eva.core.critical(from_driver=True)
 
 
 def log_traceback():
+    """
+    Ask the core to log traceback of the latest error
+    """
     return eva.core.log_traceback()
 
 
 def lock(l, timeout=None, expires=None):
+    """
+    Acquire a core lock
+
+    Args:
+        l: lock ID/name
+        timeout: timeout to acquire the lock
+        expires: lock auto-expiration time
+    """
     import eva.apikey
     import eva.sysapi
     if expires is None:
@@ -106,6 +140,12 @@ def lock(l, timeout=None, expires=None):
 
 
 def unlock(l):
+    """
+    Release a core lock
+
+    Args:
+        l: lock ID/name
+    """
     import eva.apikey
     import eva.sysapi
     return eva.sysapi.api.unlock(eva.apikey.get_masterkey(), l='eva:phi:' + l)
@@ -113,6 +153,15 @@ def unlock(l):
 
 @with_drivers_lock
 def handle_phi_event(phi, port=None, data=None):
+    """
+    Ask the core to handle PHI event
+
+    Args:
+        phi: PHI module the event is from (usually =self)
+        port: the port, where the event is happened
+        data: { port: value } dict with the maximum of state ports available
+              which may be changed because of the event
+    """
     if not data:
         return
     iph = items_by_phi.get(phi.phi_id)
@@ -126,11 +175,17 @@ def handle_phi_event(phi, port=None, data=None):
 
 @with_drivers_lock
 def get_phi(phi_id):
+    """
+    Get PHI module by id
+    """
     return phis.get(phi_id)
 
 
 @with_drivers_lock
 def get_driver(driver_id):
+    """
+    Get driver module by id
+    """
     driver = drivers.get(driver_id)
     if driver:
         driver.phi = get_phi(driver.phi_id)
@@ -138,6 +193,11 @@ def get_driver(driver_id):
 
 
 def phi_constructor(f):
+    """
+    PHI constructor decorator
+
+    Automatically calls parent construction, handles "info_only" module loads
+    """
     from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 
     @wraps(f)
@@ -151,6 +211,11 @@ def phi_constructor(f):
 
 
 def lpi_constructor(f):
+    """
+    LPI constructor decorator
+
+    Automatically calls parent construction, handles "info_only" module loads
+    """
     from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
     @wraps(f)
