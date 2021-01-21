@@ -154,6 +154,7 @@ What you get with EVA
     integrations/hue
     integrations/lora
     integrations/nanoleaf
+    integrations/nodered
     integrations/roboger
     integrations/rpi
     integrations/sonoff
