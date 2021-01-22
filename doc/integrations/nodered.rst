@@ -2,16 +2,16 @@ Node-Red
 ********
 
 `Node-Red <https://nodered.org>`_ is a popular logic / event management
-software, which can be used in EVA ICS together with :doc:`/lm/lm` or replacing
+software, which can be used in EVA ICS together with :doc:`/lm/lm` or replace
 it.
 
-EVA ICS and Node-Red are perfectly compatible, the primary recommended channel
+EVA ICS and Node-Red are perfectly compatible. The primary recommended channel
 for data communication is MQTT server, while EVA ICS :ref:`units<unit>` can be
 controlled either via MQTT or with JSON RPC API (third-party Node-Red component
 required: https://flows.nodered.org/node/node-red-contrib-jsonrpc).
 
-This example considers, the EVA ICS instance / cloud has a :ref:`MQTT
-notifier<mqtt_>` configured and will use MQTT only.
+This example is considered to be correct for the EVA ICS instance / cloud,
+containing at least one :ref:`MQTT notifier<mqtt_>`.
 
 .. youtube:: VT9h1K_D53w
 
@@ -43,8 +43,8 @@ Create a virtual sensor and a virtual unit:
 Collecting events in Node-Red
 =============================
 
-Let's collect events from *sensor:tests/temp* via MQTT. Drop "mqtt in"
-component on the flow:
+Let us collect events from *sensor:tests/temp* via MQTT. Drop "mqtt in"
+component on the flow dashboard:
 
 .. image:: nodered-images/mqtt-in.png
 
@@ -68,7 +68,7 @@ with MQTT input:
 
 .. image:: nodered-images/switch-connect.png
 
-Let's configure the switch to flow the output one if the sensor value is above
+Let us configure the switch to flow the output one if the sensor value is above
 or equal 25 and the output two otherwise.
 
 The serialized sensor MQTT event, sent by :doc:`/uc/uc`, looks like:
@@ -94,11 +94,11 @@ Defining control templates
 ==========================
 
 The next step is to define a control template. Drop "template" component on the
-flow:
+flow dashboard:
 
 .. image:: nodered-images/template-drop.png
 
-Edit the template node. Let's use the template to turn a unit on, by sending an
+Edit the template node. Let us use the template to turn a unit on by sending an
 action to set its status to "1":
 
 * Set name to "ON"
@@ -116,8 +116,8 @@ Controlling equipment
 
 .. note:: 
 
-    In production environments it is better to use Node-Red JSON RPC component
-    calls to control units. MQTT actions do not provide any result / feedback.
+    In production environments it is better to use JSON RPC calls to control
+    units, as MQTT actions do not provide any result / feedback.
 
 Put "mqtt out" component on the flow:
 
