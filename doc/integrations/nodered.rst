@@ -98,8 +98,8 @@ flow:
 
 .. image:: nodered-images/template-drop.png
 
-Edit the template node. Let's use the template to turn a unit on, so send an
-action to send its status to "1":
+Edit the template node. Let's use the template to turn a unit on, by sending an
+action to set its status to "1":
 
 * Set name to "ON"
 
