@@ -244,7 +244,7 @@ class APIKey(object):
             res = []
             for v in val:
                 if v not in res:
-                    res.append(v)
+                    res.append(str(v))
             if self.cdata != res:
                 self.cdata = res
                 self.set_modified(save)
