@@ -255,6 +255,11 @@ can contain any before/after deploy commands, which are executed on local SFA:
 
 The "local" section is always executed after all other controllers' sections.
 
+Additionally, local SFA resources, allowed to be deployed:
+
+* API keys
+* user accounts
+
 .. _iac_pkg:
 
 Installing packages

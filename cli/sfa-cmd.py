@@ -1499,9 +1499,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
-                self._perform_deploy(props, cfg, macall, dirname)
+                self._perform_deploy(props, cfg, call, macall, dirname)
             else:
-                self._perform_undeploy(props, cfg, macall, del_files)
+                self._perform_undeploy(props, cfg, call, macall, del_files)
             # ===== AFTER TASKS =====
             print('Executing commands in after-{}deploy...'.format(
                 'un' if und else ''))
@@ -1510,10 +1510,13 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 print('Saving configurations')
                 for c in controllers:
                     print(' -- {}'.format(c))
-                    code = macall({
-                        'i': c,
-                        'f': 'save',
-                    })[1].get('code')
+                    if c == 'local':
+                        code = call('save')[0]
+                    else:
+                        code = macall({
+                            'i': c,
+                            'f': 'save',
+                        })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
             if ucs_to_reload:
@@ -1586,7 +1589,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             result.append((fname, remote_file))
         return result
 
-    def _perform_deploy(self, props, cfg, macall, dirname):
+    def _perform_deploy(self, props, cfg, call, macall, dirname):
 
         skip_existing = props.get('skip')
         from eva.client import apiclient
@@ -1653,13 +1656,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'key', {}).items():
                     print(' -- {}: {}'.format(c, i))
-                    code = macall({
-                        'i': c,
-                        'f': 'create_key',
-                        'p': {
-                            'i': i
-                        }
-                    })[1].get('code')
+                    if c == 'local':
+                        code = call('create_key', {'i': i})[0]
+                    else:
+                        code = macall({
+                            'i': c,
+                            'f': 'create_key',
+                            'p': {
+                                'i': i
+                            }
+                        })[1].get('code')
                     if code != apiclient.result_ok:
                         if code == apiclient.result_already_exists and \
                                 skip_existing:
@@ -1669,15 +1675,22 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 'API call failed, code {}'.format(code))
                     for prop, value in vv.items():
                         print('     -- {}={}'.format(prop, value))
-                        code = macall({
-                            'i': c,
-                            'f': 'set_key_prop',
-                            'p': {
+                        if c == 'local':
+                            code = call('set_key_prop', {
                                 'i': i,
                                 'p': prop,
                                 'v': value
-                            }
-                        })[1].get('code')
+                            })[0]
+                        else:
+                            code = macall({
+                                'i': c,
+                                'f': 'set_key_prop',
+                                'p': {
+                                    'i': i,
+                                    'p': prop,
+                                    'v': value
+                                }
+                            })[1].get('code')
                         if code != apiclient.result_ok:
                             raise Exception(
                                 'API call failed, code {}'.format(code))
@@ -1686,30 +1699,45 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'user', {}).items():
                     print(' -- {}: {}'.format(c, i))
-                    code = macall({
-                        'i': c,
-                        'f': 'create_user',
-                        'p': {
+                    if c == 'local':
+                        code = call('create_user', {
                             'u': i,
                             'p': vv['password'],
                             'a': vv['key']
-                        }
-                    })[1].get('code')
+                        })[0]
+                    else:
+                        code = macall({
+                            'i': c,
+                            'f': 'create_user',
+                            'p': {
+                                'u': i,
+                                'p': vv['password'],
+                                'a': vv['key']
+                            }
+                        })[1].get('code')
                     if code != apiclient.result_ok:
                         if code == apiclient.result_already_exists and \
                                 skip_existing:
                             print('    [skipped]')
                             for prop, value in vv.items():
                                 print('     -- {}={}'.format(prop, value))
-                                code = macall({
-                                    'i': c,
-                                    'f': 'user.set',
-                                    'p': {
+                                if c == 'local':
+                                    code = call('user.set', {
                                         'u': i,
                                         'p': prop,
                                         'v': value
-                                    }
-                                })[1].get('code')
+                                    })[0]
+
+                                else:
+                                    code = macall({
+                                        'i': c,
+                                        'f': 'user.set',
+                                        'p': {
+                                            'u': i,
+                                            'p': prop,
+                                            'v': value
+                                        }
+                                    })[1].get('code')
                                 if code != apiclient.result_ok:
                                     raise Exception(
                                         'API call failed, code {}'.format(code))
@@ -1989,7 +2017,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             raise Exception(
                                 'API call failed, code {}'.format(code))
 
-    def _perform_undeploy(self, props, cfg, macall, del_files=False):
+    def _perform_undeploy(self, props, cfg, call, macall, del_files=False):
         from eva.client import apiclient
         # ===== JOB DELETION =====
         print('Deleting scheduled jobs...')
@@ -2128,13 +2156,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'user', {}).items():
                     print(' -- {}: {}'.format(c, i))
-                    code = macall({
-                        'i': c,
-                        'f': 'destroy_user',
-                        'p': {
-                            'u': i
-                        }
-                    })[1].get('code')
+                    if c == 'local':
+                        code = call('destroy_user', {'u': i})[0]
+                    else:
+                        code = macall({
+                            'i': c,
+                            'f': 'destroy_user',
+                            'p': {
+                                'u': i
+                            }
+                        })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('User {} not found'.format(i))
                     elif code != apiclient.result_ok:
@@ -2144,13 +2175,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if v:
                 for i, vv in self.dict_safe_get(v, 'key', {}).items():
                     print(' -- {}: {}'.format(c, i))
-                    code = macall({
-                        'i': c,
-                        'f': 'destroy_key',
-                        'p': {
-                            'i': i
-                        }
-                    })[1].get('code')
+                    if c == 'local':
+                        code = call('destroy_key', {'i': i})[0]
+                    else:
+                        code = macall({
+                            'i': c,
+                            'f': 'destroy_key',
+                            'p': {
+                                'i': i
+                            }
+                        })[1].get('code')
                     if code == apiclient.result_not_found:
                         self.print_warn('API key {} not found'.format(i))
                     elif code != apiclient.result_ok:
