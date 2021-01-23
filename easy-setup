@@ -96,7 +96,7 @@ function usage {
     echo "--cloud-manager           set up SFA cloud manager"
     echo
     echo "--feature NAME:PARAMS     Install additional feature, can be specified several times"
-    echo "--deploy FILE             deploy config from YAML file (requires cloud manager"
+    echo "--deploy FILE             deploy config from YAML file (requires cloud manager)"
     echo
 }
 
@@ -1056,7 +1056,7 @@ echo "LINK=$LINK" >> ./etc/easy_setup
 if [ "${DEPLOY_FILE}" ]; then
   P=$(realpath "${DEPLOY_FILE}")
   cd "$(dirname "${P}")" || exit 13
-  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "$(basename "$DEPLOY_FILE")" -u -y
+  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "$(basename "$DEPLOY_FILE")" -s -y
   cd "${EVA_DIR}" || exit 13
 fi
 
