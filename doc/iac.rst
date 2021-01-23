@@ -317,6 +317,10 @@ Deployment files are pre-processed as `Jinja2
 <https://jinja.palletsprojects.com/>`_ templates and may contain any valid
 Jinja2 tags and variables.
 
+The pre-set variable "time_ns" contains current UNIX timestamp (in
+nanoseconds), which can be used e.g. as "no-cache" value for bypassing cache of
+proxied external resources.
+
 It's also possible to import any external Python module with "import_module"
 function:
 
