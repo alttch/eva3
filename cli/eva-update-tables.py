@@ -78,9 +78,9 @@ dbconn = eva.core.userdb()
 
 print('Creating missing table columns')
 
-append_db_column('apikeys', 'i_ro', 'VARCHAR(1024)', dbconn)
-append_db_column('apikeys', 'g_ro', 'VARCHAR(1024)', dbconn)
-append_db_column('apikeys', 'cdata', 'VARCHAR(4096)', dbconn)
+append_db_column('apikeys', 'i_ro', 'VARCHAR(8192)', dbconn)
+append_db_column('apikeys', 'g_ro', 'VARCHAR(8192)', dbconn)
+append_db_column('apikeys', 'cdata', 'VARCHAR(16384)', dbconn)
 
 try:
     dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
