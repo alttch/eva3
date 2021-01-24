@@ -959,7 +959,7 @@ class ActiveItem(Item):
         return ()
 
     def action_before_get_task(self):
-        self.current_action = None
+        pass
 
     def action_after_get_task(self, action):
         pass
