@@ -883,9 +883,10 @@ class ActiveItem(Item):
                     logging.info('termination of %s denied by config' % \
                             self.oid)
                     return False
+                if self.current_action:
+                    logging.info('requesting to terminate action %s' % \
+                            self.current_action.uuid)
                 self.action_xc.terminate()
-                logging.info('requesting to terminate action %s' % \
-                        self.current_action.uuid)
                 return True
             return None
         finally:
@@ -1983,7 +1984,8 @@ def get_state_log(a=None,
     n = eva.notify.get_stats_notifier(a)
     if not n:
         raise ResourceNotFound('notifier')
-    if n.state_storage not in ['sql'] and ('#' in oid or '+' in oid):  #, 'tsdb']:
+    if n.state_storage not in ['sql'] and ('#' in oid or
+                                           '+' in oid):  #, 'tsdb']:
         raise MethodNotImplemented(
             'state log by mask is supported by SQL notifiers only')
 
