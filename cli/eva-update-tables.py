@@ -80,11 +80,15 @@ print('Creating missing table columns')
 
 append_db_column('apikeys', 'i_ro', 'VARCHAR(8192)', dbconn)
 append_db_column('apikeys', 'g_ro', 'VARCHAR(8192)', dbconn)
+append_db_column('apikeys', 'i_deny', 'VARCHAR(8192)', dbconn)
+append_db_column('apikeys', 'g_deny', 'VARCHAR(8192)', dbconn)
 append_db_column('apikeys', 'cdata', 'VARCHAR(16384)', dbconn)
 
 try:
     dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
     dbconn.execute('update apikeys set g_ro = "" where g_ro is null')
+    dbconn.execute('update apikeys set i_deny = "" where i_deny is null')
+    dbconn.execute('update apikeys set g_deny = "" where g_deny is null')
     dbconn.execute('update apikeys set cdata = "" where cdata is null')
 except sqlalchemy.exc.OperationalError as e:
     exc = str(e).lower()

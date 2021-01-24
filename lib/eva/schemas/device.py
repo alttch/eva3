@@ -195,6 +195,9 @@ SCHEMA_DEVICE = {
                                         'groups': {
                                             'type': ['string', 'array']
                                         },
+                                        'groups_deny': {
+                                            'type': ['string', 'array']
+                                        },
                                         'groups_ro': {
                                             'type': ['string', 'array']
                                         },
@@ -205,6 +208,12 @@ SCHEMA_DEVICE = {
                                             'type': ['string', 'array']
                                         },
                                         'items': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'items_deny': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'items_ro': {
                                             'type': ['string', 'array']
                                         },
                                         'key': {

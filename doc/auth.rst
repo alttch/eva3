@@ -68,7 +68,11 @@ API key properties:
   item types). MQTT-style wildcards ('#', '+') are allowed (e.g. "#" = access
   to the all items).
 
-* **groups_ro** same as *groups* but for the read-only access.
+* **groups_deny** comma-separated item groups the key has no access to (e.g.
+  wildcard is used in *groups* but some groups are excluded from ACL). The key
+  still has read-only access if allowed with other ACL properties.
+
+* **groups_ro** same as *groups* but for read-only access.
 
 * **hosts_allow** comma-separated list of hosts/networks the key has the access
   from.
@@ -80,6 +84,8 @@ API key properties:
 
 * **items**, **items_ro** same as groups, but grant an access to the specified
   items. Wildcards aren't possible.
+
+* **items_deny** same as *groups_deny* but for individual items
 
 * **key** key itself (up to 64 characters). Filled with 32 random chars
   automatically after creation
@@ -124,8 +130,9 @@ assigned locally or with :doc:`Active Directory<msad>` groups.
 
 If more than one key (so more than one ACL) is assigned:
 
-* item ACLs, cdata and allow/assign hosts/networks are merged as-is
-  
+* item ACLs, cdata and allow/assign hosts/networks are merged as-is, including
+  deny ACLs
+
 * special ACLs are merged with higher access level (e.g. if one of keys has
   master access, the combined ACL will have master access as well)
 

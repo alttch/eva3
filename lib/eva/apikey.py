@@ -59,6 +59,8 @@ class APIKey(object):
         self.groups = []
         self.item_ids_ro = []
         self.groups_ro = []
+        self.item_ids_deny = []
+        self.groups_deny = []
         self.allow = []
         self.hosts_allow = []
         self.hosts_assign = []
@@ -85,6 +87,8 @@ class APIKey(object):
             'groups': self.groups,
             'items_ro': self.item_ids_ro,
             'groups_ro': self.groups_ro,
+            'items_deny': self.item_ids_deny,
+            'groups_deny': self.groups_deny,
             'allow': self.allow,
             'pvt': self.pvt_files,
             'rpvt': self.rpvt_uris
@@ -170,6 +174,30 @@ class APIKey(object):
                     val = []
             if self.groups_ro != val:
                 self.groups_ro = val
+                self.set_modified(save)
+            return True
+        elif prop == 'items_deny':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.item_ids_deny != val:
+                self.item_ids_deny = val
+                self.set_modified(save)
+            return True
+        elif prop == 'groups_deny':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.groups_deny != val:
+                self.groups_deny = val
                 self.set_modified(save)
             return True
         elif prop == 'allow':
@@ -262,8 +290,9 @@ class APIKey(object):
             return False
         data = self.serialize()
         for d in [
-                'items', 'groups', 'items_ro', 'groups_ro', 'allow',
-                'hosts_allow', 'hosts_assign', 'pvt', 'rpvt', 'cdata'
+                'items', 'groups', 'items_ro', 'groups_ro', 'items_deny',
+                'groups_deny', 'allow', 'hosts_allow', 'hosts_assign', 'pvt',
+                'rpvt', 'cdata'
         ]:
             data[d] = ','.join(data[d])
         dbconn = userdb()
@@ -275,9 +304,11 @@ class APIKey(object):
                                k_id=data['id'])
                 dbconn.execute(sql(
                     'insert into apikeys(k_id, k, m, s, i,'
-                    ' g, i_ro, g_ro, a,hal, has, pvt, rpvt, cdata) values '
-                    '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, '
-                    ':hal, :has, :pvt, :rpvt, :cdata)'),
+                    ' g, i_ro, g_ro, i_deny, g_deny, a, hal, has, pvt, rpvt, '
+                    'cdata) values '
+                    '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, '
+                    ':i_deny, :g_deny,'
+                    ' :a, :hal, :has, :pvt, :rpvt, :cdata)'),
                                k_id=data['id'],
                                k=data['key'],
                                m=1 if data['master'] else 0,
@@ -286,6 +317,8 @@ class APIKey(object):
                                g=data['groups'],
                                i_ro=data['items_ro'],
                                g_ro=data['groups_ro'],
+                               i_deny=data['items_deny'],
+                               g_deny=data['groups_deny'],
                                a=data['allow'],
                                hal=data['hosts_allow'],
                                has=data['hosts_assign'],
@@ -295,15 +328,17 @@ class APIKey(object):
             else:
                 dbconn.execute(sql(
                     'update apikeys set k=:k, s=:s, i=:i, g=:g, '
-                    'i_ro=:i_ro, g_ro=:g_ro, a=:a, '
-                    'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt, cdata=:cdata '
-                    'where k_id=:k_id'),
+                    'i_ro=:i_ro, g_ro=:g_ro, i_deny=:i_deny, g_deny=:g_deny, '
+                    'a=:a, hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt, '
+                    'cdata=:cdata where k_id=:k_id'),
                                k=self.key,
                                s=1 if data['sysfunc'] else 0,
                                i=data['items'],
                                g=data['groups'],
                                i_ro=data['items_ro'],
                                g_ro=data['groups_ro'],
+                               i_deny=data['items_deny'],
+                               g_deny=data['groups_deny'],
                                a=data['allow'],
                                hal=data['hosts_allow'],
                                has=data['hosts_assign'],
@@ -405,6 +440,22 @@ def load(fname=None, load_from_db=True):
                             filter(None, [
                                 x.strip()
                                 for x in cfg.get(ks, 'groups_ro').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.item_ids_deny = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'items_deny').split(',')
+                            ]))
+                    except:
+                        pass
+                    try:
+                        key.groups_deny = list(
+                            filter(None, [
+                                x.strip()
+                                for x in cfg.get(ks, 'groups_deny').split(',')
                             ]))
                     except:
                         pass
@@ -550,6 +601,9 @@ def check(k,
                 grp = item.group
             except:
                 grp = 'nogroup'
+            if not ro_op and eva.item.item_match(item, _k.item_ids_deny,
+                                                 _k.groups_deny):
+                return False
             if not eva.item.item_match(item, _k.item_ids, _k.groups):
                 if ro_op:
                     if not eva.item.item_match(item, _k.item_ids_ro,
@@ -649,6 +703,8 @@ def serialized_acl(k):
     r['groups'] = _k.groups
     r['items_ro'] = _k.item_ids_ro
     r['groups_ro'] = _k.groups_ro
+    r['items_deny'] = _k.item_ids_deny
+    r['groups_deny'] = _k.groups_deny
     if _k.pvt_files:
         r['pvt'] = _k.pvt_files
     if _k.rpvt_uris:
@@ -686,8 +742,9 @@ def _recombine_acl(combined_key):
         combined_key.master = False
         combined_key.sysfunc = False
         for prop in [
-                'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
-                'pvt_files', 'rpvt_uris', 'cdata', 'hosts_allow', 'hosts_assign'
+                'item_ids', 'groups', 'item_ids_ro', 'groups_ro',
+                'item_ids_deny', 'groups_deny', 'allow', 'pvt_files',
+                'rpvt_uris', 'cdata', 'hosts_allow', 'hosts_assign'
         ]:
             a = getattr(combined_key, prop)
             a.clear()
@@ -701,9 +758,9 @@ def _recombine_acl(combined_key):
             if key.sysfunc:
                 combined_key.sysfunc = True
             for prop in [
-                    'item_ids', 'groups', 'item_ids_ro', 'groups_ro', 'allow',
-                    'pvt_files', 'rpvt_uris', 'hosts_allow', 'hosts_assign',
-                    'cdata'
+                    'item_ids', 'groups', 'item_ids_ro', 'groups_ro',
+                    'item_ids_deny', 'groups_deny', 'allow', 'pvt_files',
+                    'rpvt_uris', 'hosts_allow', 'hosts_assign', 'cdata'
             ]:
                 for i in getattr(key, prop):
                     a = getattr(combined_key, prop)
@@ -783,6 +840,8 @@ def load_keys_from_db():
                          sa.Column('g', sa.String(8192)),
                          sa.Column('i_ro', sa.String(8192)),
                          sa.Column('g_ro', sa.String(8192)),
+                         sa.Column('i_deny', sa.String(8192)),
+                         sa.Column('g_deny', sa.String(8192)),
                          sa.Column('a', sa.String(256)),
                          sa.Column('hal', sa.String(8192)),
                          sa.Column('has', sa.String(8192)),
@@ -807,6 +866,8 @@ def load_keys_from_db():
                     'groups': 'g',
                     'item_ids_ro': 'i_ro',
                     'groups_ro': 'g_ro',
+                    'item_ids_deny': 'i_deny',
+                    'groups_deny': 'g_deny',
                     'allow': 'a',
                     'pvt_files': 'pvt',
                     'rpvt_uris': 'rpvt',

@@ -76,6 +76,9 @@ SCHEMA_DEPLOY = {
                                         'groups_ro': {
                                             'type': ['string', 'array']
                                         },
+                                        'groups_deny': {
+                                            'type': ['string', 'array']
+                                        },
                                         'hosts_allow': {
                                             'type': ['string', 'array']
                                         },
@@ -83,6 +86,12 @@ SCHEMA_DEPLOY = {
                                             'type': ['string', 'array']
                                         },
                                         'items': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'items_ro': {
+                                            'type': ['string', 'array']
+                                        },
+                                        'items_deny': {
                                             'type': ['string', 'array']
                                         },
                                         'key': {
