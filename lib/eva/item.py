@@ -883,9 +883,8 @@ class ActiveItem(Item):
                     logging.info('termination of %s denied by config' % \
                             self.oid)
                     return False
-                if self.current_action:
-                    logging.info('requesting to terminate action %s' % \
-                            self.current_action.uuid)
+                logging.info('requesting to terminate action %s' % \
+                        self.current_action.uuid)
                 self.action_xc.terminate()
                 return True
             return None
