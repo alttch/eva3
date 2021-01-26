@@ -649,7 +649,8 @@ class GenericNotifier_Client(GenericNotifier):
         fdata = []
         if subject == 'state':
             for d in data_in:
-                if apikey.check(self.apikey, d, ro_op=True):
+                print(d)
+                if apikey.check(self.apikey, d[0], ro_op=True):
                     fdata.append(d)
         elif subject == 'action':
             for din in data_in:
