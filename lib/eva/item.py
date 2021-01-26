@@ -1695,37 +1695,43 @@ def oid_match(oid, item_ids=None, groups=None):
 
 
 def item_match(item, item_ids, groups=None):
-    if (groups and ('#' in groups) or (item.group in groups)) \
-            or '#' in item_ids or \
-            item.oid in item_ids or \
-            (not eva.core.config.enterprise_layout and \
-            item.item_id in item_ids):
-        return True
-    if groups:
-        for grp in groups:
-            if is_oid(grp):
-                rt, g = parse_oid(grp)
-                if rt != item.item_type:
-                    continue
-            else:
-                g = grp
-            if g == item.group:
-                return True
-            p = g.find('#')
-            if p > -1 and g[:p] == item.group[:p]:
-                return True
-            if g.find('+') > -1:
-                g1 = g.split('/')
-                g2 = item.group.split('/')
-                if len(g1) == len(g2):
-                    match = True
-                    for i in range(0, len(g1)):
-                        if g1[i] != '+' and g1[i] != g2[i]:
-                            match = False
-                            break
-                    if match:
-                        return True
-    return False
+    try:
+        if (groups and ('#' in groups) or (item.group in groups)) \
+                or '#' in item_ids or \
+                item.oid in item_ids or \
+                (not eva.core.config.enterprise_layout and \
+                item.item_id in item_ids):
+            return True
+        if groups:
+            for grp in groups:
+                if is_oid(grp):
+                    rt, g = parse_oid(grp)
+                    if rt != item.item_type:
+                        continue
+                else:
+                    g = grp
+                if g == item.group:
+                    return True
+                p = g.find('#')
+                if p > -1 and g[:p] == item.group[:p]:
+                    return True
+                if g.find('+') > -1:
+                    g1 = g.split('/')
+                    g2 = item.group.split('/')
+                    if len(g1) == len(g2):
+                        match = True
+                        for i in range(0, len(g1)):
+                            if g1[i] != '+' and g1[i] != g2[i]:
+                                match = False
+                                break
+                        if match:
+                            return True
+        return False
+    except:
+        logging.error(
+            f'Item match error, item: {item}, ids: {item_ids}, groups: {groups}'
+        )
+        raise
 
 
 # val_prefixes = {
