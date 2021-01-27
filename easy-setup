@@ -616,11 +616,6 @@ if [ $USE_SUPERVISOR -eq 1 ]; then
   fi
 fi
 
-if [ "${DEPLOY_FILE}" ] && [ ! -f "${DEPLOY_FILE}" ]; then
-    echo "Error: ${DEPLOY_FILE} not found"
-    exit 11
-fi
-
 echo
 
 if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
@@ -1054,9 +1049,12 @@ echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
 echo "LINK=$LINK" >> ./etc/easy_setup
 
 if [ "${DEPLOY_FILE}" ]; then
-  P=$(realpath "${DEPLOY_FILE}")
-  cd "$(dirname "${P}")" || exit 13
-  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "$(basename "$DEPLOY_FILE")" -s -y
+  if ! [[ ${DEPLOY_FILE} == http://* ]] && ! [[ ${DEPLOY_FILE} == https://* ]]; then
+    P=$(realpath "${DEPLOY_FILE}")
+    cd "$(dirname "${P}")" || exit 13
+    DEPLOY_FILE="$(basename "$DEPLOY_FILE")"
+  fi
+  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "${DEPLOY_FILE}" -s -y -c "srv=$(hostname)"
   cd "${EVA_DIR}" || exit 13
 fi
 

@@ -249,7 +249,7 @@ can contain any before/after deploy commands, which are executed on local SFA:
     controller:
       local:
         after-deploy:
-          - install-pkg: test.tgz
+          - install-pkg: test.evapkg
             o: { x: 2 }
             w: 5
 
@@ -274,7 +274,7 @@ Syntax:
     controller:
       uc/uc1:
         after-deploy:
-          - install-pkg: /path/to/package.tgz
+          - install-pkg: /path/to/package.evapkg
             o: { x: 2 }
             w: 5
 

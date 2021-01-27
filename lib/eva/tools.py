@@ -44,18 +44,21 @@ def read_uri(fname, dirname=None, file_read_mode='r', b64=False):
             content = base64.b64encode(content).decode()
         return content
 
-    if fname.startswith('/') or fname.startswith('./'):
-        target = fname
-    else:
-        target = (dirname + '/' + fname) if dirname else fname
-    if target.startswith('http://') or target.startswith('https://'):
+    if dirname and (
+            dirname.startswith('http://') or dirname.startswith('https://')
+    ) and not (fname.startswith('http://') or fname.startswith('https://')):
+        fname = dirname + '/' + fname
+
+    if fname.startswith('http://') or fname.startswith('https://'):
         import requests
-        result = requests.get(target)
+        result = requests.get(fname)
         if not result.ok:
             raise Exception('http code {}'.format(result.status_code))
         return result.text if file_read_mode == 'r' else _encode(result.content)
     else:
-        with open(target, file_read_mode) as fd:
+        if not fname.startswith('/') and not fname.startswith('./') and dirname:
+            fname = dirname + '/' + fname
+        with open(fname, file_read_mode) as fd:
             return _encode(fd.read())
 
 
