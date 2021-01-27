@@ -12,6 +12,8 @@ EVA ICS packages have very simple format:
 
 * The package MUST contain the file, called *setup.py*
 
+* The package SHOULD have the suffix .evapkg
+
 Setting up packages
 ===================
 
