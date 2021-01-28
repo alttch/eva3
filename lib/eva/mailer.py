@@ -122,4 +122,3 @@ def send(subject=None, text=None, rcp=None):
     except Exception as e:
         eva.core.log_traceback()
         raise FunctionFailed(e)
-    return True
