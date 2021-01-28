@@ -769,15 +769,14 @@ def _recombine_acl(combined_key):
 
 
 def create_combined_key(key_ids=[]):
-    _key_ids = sorted(key_ids)
-    _combined_id = ','.join(_key_ids)
     with key_lock:
+        _key_ids = [k for k in sorted(key_ids) if k in keys_by_id]
+        if not _key_ids:
+            raise ValueError(f'no such API keys: {key_ids}')
+        _combined_id = ','.join(_key_ids)
         try:
             return combined_keys_cache[_combined_id]
         except KeyError:
-            for k in key_ids:
-                if k not in keys_by_id:
-                    raise ValueError(f'no such API key: {k}')
             # setup combined key
             ckey_value = gen_random_str(length=64)
             ckey_id = f'comb:{"+".join(_key_ids)}'
@@ -785,7 +784,7 @@ def create_combined_key(key_ids=[]):
             combined_key.master = False
             combined_key.dynamic = True
             combined_key.temporary = True
-            combined_key.combined_from = _key_ids.copy()
+            combined_key.combined_from = _key_ids
             # register
             keys_by_id[ckey_id] = combined_key
             keys[ckey_value] = combined_key
