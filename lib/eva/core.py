@@ -42,7 +42,7 @@ from eva.tools import Locker as GenericLocker
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
 
-from neotasker import g, FunctionCollection, task_supervisor
+from neotasker import g, FunctionCollection, task_supervisor, background_worker
 
 import pyaltt2.logs
 
@@ -142,7 +142,7 @@ dir_runtime = dir_eva + '/runtime'
 
 start_time = time.time()
 
-cs_data = SimpleNamespace(corescripts=[], topics=[])
+cs_data = SimpleNamespace(corescripts=[], topics=[], periodic_iteration=0)
 
 cs_shared_namespace = SimpleNamespace()
 
@@ -151,6 +151,7 @@ CS_EVENT_STATE = 1
 CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
 CS_EVENT_RPC = 4
+CS_EVENT_PERIODIC = 5
 
 CS_EVENT_PKG_INSTALL = 10
 CS_EVENT_PKG_UNINSTALL = 11
@@ -173,6 +174,7 @@ corescript_globals = {
     'CS_EVENT_MQTT': CS_EVENT_MQTT,
     'CS_EVENT_SYSTEM': CS_EVENT_SYSTEM,
     'CS_EVENT_RPC': CS_EVENT_RPC,
+    'CS_EVENT_PERIODIC': CS_EVENT_PERIODIC,
     'CS_EVENT_PKG_INSTALL': CS_EVENT_PKG_INSTALL,
     'CS_EVENT_PKG_UNINSTALL': CS_EVENT_PKG_UNINSTALL
 }
@@ -425,6 +427,7 @@ def block():
     _flags.started.set()
     exec_corescripts(
         event=SimpleNamespace(type=CS_EVENT_SYSTEM, topic='startup'))
+    cs_intervaller.start()
     if _flags.use_reactor:
         from twisted.internet import reactor
         reactor.run(installSignalHandlers=False)
@@ -442,6 +445,7 @@ def is_started():
 
 def core_shutdown():
     _flags.shutdown_requested = True
+    cs_intervaller.stop()
     _t_exec_corescripts(
         event=SimpleNamespace(type=CS_EVENT_SYSTEM, topic='shutdown'))
     shutdown()
@@ -1370,6 +1374,15 @@ def _t_handle_state_event(p, f, source, data):
 
 def register_controller(controller):
     controllers.append(controller)
+
+
+@background_worker(interval=60, on_error=log_traceback)
+async def cs_intervaller(**kwargs):
+    exec_corescripts(event=SimpleNamespace(
+        type=CS_EVENT_PERIODIC, topic='M',
+        iteration=cs_data.periodic_iteration))
+    logging.debug(f'CS periodic, iteration: {cs_data.periodic_iteration}')
+    cs_data.periodic_iteration += 1
 
 
 timeouter.set_default_exception_class(TimeoutException)

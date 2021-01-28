@@ -37,6 +37,7 @@ Common
     * Core scripts:
         * new event CS_EVENT_SYSTEM (invoked on startup / shutdown)
         * new event CS_EVENT_RPC (replaces deprecated CS_EVENT_API)
+        * new event CS_EVENT_PERIODIC
         * logger object
     * Core Plugins API v2, new functions:
         * create_db_engine

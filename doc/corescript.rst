@@ -145,6 +145,31 @@ the params.
 Core scripts can not return API responses. Also note that core scripts should
 handle any authentication by themselves.
 
+Periodic event
+--------------
+
+Periodic events allow core scripts to act as scheduled jobs.
+
+Currently periodic events are launched every minute only. However it is highly
+recommended to check the event topic to have corescripts backward-compatible
+with the future EVA ICS releases.
+
+.. code-block:: python
+
+  event.type == CS_EVENT_PERIODIC
+
+* **event.topic** "M" for every-minute event.
+* **event.iteration** iteration since controller start
+
+Example:
+
+.. code-block:: python
+
+    if event.type == CS_EVENT_PERIODIC and event.topic == 'M':
+        if event.iteration > 0 and not event.iteration % 10:
+            print('another 10 minutes have passed')
+
+
 MQTT event
 ----------
 
