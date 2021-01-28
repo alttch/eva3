@@ -1304,6 +1304,12 @@ def get_corescript_topics():
 
 
 @corescript_lock
+def append_corescript(name):
+    if name not in cs_data.corescripts:
+        cs_data.corescripts.append(f'{name}.py')
+
+
+@corescript_lock
 def reload_corescripts():
     cs = [
         os.path.basename(f)

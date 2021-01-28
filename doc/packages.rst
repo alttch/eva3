@@ -58,6 +58,34 @@ The package setup script SHOULD check event type, as it can be launched with
 other core script events later (functionality is reserved for the further EVA
 ICS versions).
 
+Keeping setup core script after install
+=======================================
+
+Sometimes it is useful to keep setup core script code after the package
+installation is completed. To do that, the function "keep_me()" can be used:
+
+.. code:: python
+
+    # ... perform setup tasks
+    keep_me()
+
+When called, the new core script is created from the setup corescript code, for
+the controller the package is installed on. This can be useful if the package
+requires performing additional tasks, e.g. starts / stops some service at the
+controller startup / shutdown.
+
+Installing additional Python modules
+====================================
+
+The function "pip_install" allows installing additional Python modules, calling
+"pip install" command from EVA ICS venv. Note that modules will not be kept if
+EVA ICS venv is rebuilt from scratch later.
+
+.. code:: python
+
+    # ... perform setup tasks
+    pip_install('flask')
+
 Manipulating with configuration files
 =====================================
 

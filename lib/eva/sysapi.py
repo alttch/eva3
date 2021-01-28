@@ -576,6 +576,19 @@ class FileAPI(object):
         i, m, o, u, w = parse_api_params(kwargs, 'imouw', 'SS.bn')
         import base64
         import tarfile
+
+        def save_corescript(name, code):
+            with open(f'{eva.core.dir_xc}/{eva.core.product.code}/cs/{name}.py',
+                      'w') as fh:
+                fh.write(code)
+            eva.core.append_corescript(name)
+
+        def pip_install(mods):
+            code = os.system(
+                f'{eva.core.dir_eva}/python3/bin/pip install {mods}')
+            if code:
+                raise RuntimeError('pip exited with code {code}')
+
         try:
             raw = base64.b64decode(m)
             from io import BytesIO
@@ -596,6 +609,8 @@ class FileAPI(object):
             'extract_package': partial(pkg.extractall, path=eva.core.dir_eva),
             'ConfigFile': ConfigFile,
             'ShellConfigFile': ShellConfigFile,
+            'pip_install': pip_install,
+            'keep_me': partial(save_corescript, i, code)
         }
         return eva.core.action(eva.core.run_corescript_code,
                                _wait=w,
