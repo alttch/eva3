@@ -365,7 +365,15 @@ def suicide(**kwargs):
         if config.show_traceback:
             faulthandler.dump_traceback()
     finally:
-        os.kill(os.getpid(), signal.SIGKILL)
+        try:
+            parent = psutil.Process(os.getpid())
+            for child in parent.children(recursive=True):
+                try:
+                    child.kill()
+                except:
+                    log_traceback()
+        finally:
+            os.kill(os.getpid(), signal.SIGKILL)
 
 
 def sighandler_term(signum=None, frame=None):
