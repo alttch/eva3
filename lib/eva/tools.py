@@ -36,7 +36,11 @@ schema_lock = threading.RLock()
 SCHEMAS = {}
 
 
-def read_uri(fname, dirname=None, file_read_mode='r', b64=False):
+def read_uri(fname,
+             dirname=None,
+             file_read_mode='r',
+             b64=False,
+             check_only=False):
 
     def _encode(content):
         if b64:
@@ -51,15 +55,18 @@ def read_uri(fname, dirname=None, file_read_mode='r', b64=False):
 
     if fname.startswith('http://') or fname.startswith('https://'):
         import requests
-        result = requests.get(fname)
+        result = requests.head(fname) if check_only else requests.get(fname)
         if not result.ok:
             raise Exception('http code {}'.format(result.status_code))
         return result.text if file_read_mode == 'r' else _encode(result.content)
     else:
         if not fname.startswith('/') and not fname.startswith('./') and dirname:
             fname = dirname + '/' + fname
-        with open(fname, file_read_mode) as fd:
-            return _encode(fd.read())
+        if check_only:
+            return os.path.exists(fname)
+        else:
+            with open(fname, file_read_mode) as fd:
+                return _encode(fd.read())
 
 
 def kb_uri(article_id):

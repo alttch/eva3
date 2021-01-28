@@ -1287,7 +1287,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         if self.dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
-                                    read_uri(v[p][1:], dirname)
+                                    read_uri(v[p][1:], dirname, check_only=True)
                                 except:
                                     raise Exception(
                                         ('{} is defined as {} for {} {}, ' +
@@ -1305,7 +1305,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 fname, remote_file = f.split(':')
                                 if '*' not in fname:
                                     try:
-                                        read_uri(fname, dirname, 'rb')
+                                        read_uri(fname,
+                                                 dirname,
+                                                 'rb',
+                                                 check_only=True)
                                     except:
                                         raise Exception(
                                             ('{}: {} unable to open ' +
@@ -1316,7 +1319,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                                                 {}).items():
                             if 'src' in phi_data:
                                 try:
-                                    read_uri(fname, dirname, 'rb')
+                                    read_uri(fname,
+                                             dirname,
+                                             'rb',
+                                             check_only=True)
                                 except:
                                     raise Exception(
                                         ('{}: {} unable to open ' +
