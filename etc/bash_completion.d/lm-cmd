@@ -102,7 +102,7 @@ _lm-cmd_user() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy drop-tokens key list password tokens' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

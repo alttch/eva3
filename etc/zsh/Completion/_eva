@@ -134,7 +134,7 @@ _eva_sfa_user() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" create destroy key list password
+    compadd "$@" create destroy drop-tokens key list password tokens
   else
     _files
   fi
@@ -301,7 +301,7 @@ _eva_lm_user() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" create destroy key list password
+    compadd "$@" create destroy drop-tokens key list password tokens
   else
     _files
   fi
@@ -518,7 +518,7 @@ _eva_uc_user() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" create destroy key list password
+    compadd "$@" create destroy drop-tokens key list password tokens
   else
     _files
   fi

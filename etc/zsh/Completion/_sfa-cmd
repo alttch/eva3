@@ -104,7 +104,7 @@ _sfa-cmd_user() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" create destroy key list password
+    compadd "$@" create destroy drop-tokens key list password tokens
   else
     _files
   fi

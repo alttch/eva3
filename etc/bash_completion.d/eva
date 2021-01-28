@@ -132,7 +132,7 @@ _eva_sfa_user() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy drop-tokens key list password tokens' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -299,7 +299,7 @@ _eva_lm_user() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy drop-tokens key list password tokens' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -516,7 +516,7 @@ _eva_uc_user() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy drop-tokens key list password tokens' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
