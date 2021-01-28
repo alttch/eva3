@@ -578,12 +578,14 @@ class FileAPI(object):
         import tarfile
 
         def save_corescript(name, code):
+            import eva.core
             with open(f'{eva.core.dir_xc}/{eva.core.product.code}/cs/{name}.py',
                       'w') as fh:
                 fh.write(code)
             eva.core.append_corescript(name)
 
         def pip_install(mods):
+            import os
             code = os.system(
                 f'{eva.core.dir_eva}/python3/bin/pip install {mods}')
             if code:
