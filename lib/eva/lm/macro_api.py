@@ -913,7 +913,6 @@ class MacroAPI(object):
             return result
         except:
             raise FunctionFailed('lvar expire set error')
-        return True
 
     def action(self,
                unit_id,

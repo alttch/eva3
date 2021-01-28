@@ -71,6 +71,7 @@ def exec_shell(cmd, input=None, passthru=False):
 
 
 def eva_jcmd(controller, cmd, input=input, passthru=False):
+    from . import print_err
     p = subprocess.run(f'{dir_eva}/bin/eva {controller} -J {cmd}',
                        shell=True,
                        stdout=subprocess.PIPE,

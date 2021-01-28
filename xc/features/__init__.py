@@ -34,4 +34,4 @@ def print_warn(*args, **kwargs):
 
 
 def print_debug(*args, **kwargs):
-    print(self.colored(*args, color='grey', attrs=['bold']), **kwargs)
+    neotermcolor.cprint(*args, color='grey', attrs=['bold'], **kwargs)
