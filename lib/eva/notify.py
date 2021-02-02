@@ -1729,6 +1729,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  discovery_enabled=None,
                  announce_interval=None,
                  retain_enabled=True,
+                 timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -1759,6 +1760,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.certfile = certfile
         self.keyfile = keyfile
         self.retain_enabled = retain_enabled
+        self.timestamp_enabled = timestamp_enabled
         if ca_certs:
             try:
                 if certfile and keyfile:
@@ -2122,7 +2124,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     dts = ''
                 else:
                     dts = {
-                        't': time.time(),
+                        't': time.time() if self.timestamp_enabled else None,
                         'c': eva.core.config.controller_name
                     }
                     for k in i:
@@ -2140,7 +2142,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else:
                 _retain = False
             for i in data:
-                i['t'] = time.time()
+                i['t'] = time.time() if self.timestamp_enabled else None
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
                         i['item_group'] + '/' + i['item_id'] + '/action',
@@ -2152,7 +2154,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else:
                 _retain = False
             for i in data:
-                i['t'] = time.time()
+                i['t'] = time.time() if self.timestamp_enabled else None
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.log_topic,
                                 format_json(i, unpicklable=False),
@@ -2166,7 +2168,7 @@ class GenericMQTTNotifier(GenericNotifier):
             for i in data:
                 if not isinstance(i, dict):
                     i = {'e': i}
-                i['t'] = time.time()
+                i['t'] = time.time() if self.timestamp_enabled else None
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.server_events_topic,
                                 format_json(i, unpicklable=False),
@@ -2298,6 +2300,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.keyfile or props:
             d['keyfile'] = self.keyfile
         d['retain_enabled'] = self.retain_enabled
+        d['timestamp_enabled'] = self.timestamp_enabled
         d.update(super().serialize(props=props))
         return d
 
@@ -2388,6 +2391,12 @@ class GenericMQTTNotifier(GenericNotifier):
                 return False
             self.retain_enabled = v
             return True
+        elif prop == 'timestamp_enabled':
+            v = val_to_boolean(value)
+            if v is None:
+                return False
+            self.timestamp_enabled = v
+            return True
         elif prop == 'qos':
             if not value:
                 self._qos = None
@@ -2440,6 +2449,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  discovery_enabled=None,
                  announce_interval=None,
                  retain_enabled=True,
+                 timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -2458,6 +2468,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          discovery_enabled=discovery_enabled,
                          announce_interval=announce_interval,
                          retain_enabled=retain_enabled,
+                         timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)
@@ -3004,6 +3015,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         discovery_enabled = ncfg.get('discovery_enabled', False)
         announce_interval = ncfg.get('announce_interval', 0)
         retain_enabled = ncfg.get('retain_enabled', True)
+        timestamp_enabled = ncfg.get('timestamp_enabled', True)
         n = MQTTNotifier(_notifier_id,
                          host=host,
                          port=port,
@@ -3019,6 +3031,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          discovery_enabled=discovery_enabled,
                          announce_interval=announce_interval,
                          retain_enabled=retain_enabled,
+                         timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)
