@@ -65,6 +65,12 @@ class Item(object):
             self.group = group
         else:
             self.group = 'nogroup'
+        if group.startswith('_') or group.endswith('_'):
+            raise FunctionFailed(
+                f'group name can not start / end with underscores: {group}')
+        if '___' in group:
+            raise FunctionFailed(f'group name can not contain triple '
+                             f'underscores (reserved): {group}')
         self.full_id = self.group + '/' + self.item_id
         self.oid = self.item_type + ':' + self.full_id
 
@@ -191,6 +197,7 @@ class Item(object):
         try:
             data = rapidjson.loads(raw)
             if data['id'] != self.item_id:
+                logging.error(f'{data["id"]} != {self.item_id}')
                 raise Exception('id mismatch, file %s' % \
                             fname_full)
             self.update_config(data)
