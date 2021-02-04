@@ -1472,7 +1472,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     data = result.get('data', {})
                                 if code != apiclient.result_ok:
                                     msg = f'API call failed, code {code}'
-                                    if can_pass_err:
+                                    if can_pass_err and \
+                                        code != apiclient.result_server_error:
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
@@ -1480,7 +1481,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                              ] and data.get('exitcode'):
                                     msg = (f'API call failed, '
                                            f'stderr:\n{data.get("err")}')
-                                    if can_pass_err:
+                                    if can_pass_err and \
+                                        code != apiclient.result_server_error:
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
@@ -1490,14 +1492,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                                       timeout=custom_timeout)
                                 if code != apiclient.result_ok:
                                     msg = f'API call failed, code {code}'
-                                    if can_pass_err:
+                                    if can_pass_err and \
+                                        code != apiclient.result_server_error:
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
                                 elif func == 'cmd' and data.get('exitcode'):
                                     msg = (f'cmd call failed, '
                                            f'stderr:\n{data.get("err")}')
-                                    if can_pass_err:
+                                    if can_pass_err and \
+                                        code != apiclient.result_server_error:
                                         self.print_warn(msg)
                                     else:
                                         raise Exception(msg)
