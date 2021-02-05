@@ -1231,8 +1231,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
             from functools import partial
+            timeout = props.get('_timeout', self.default_timeout)
             call = partial(api.call,
-                           timeout=props.get('_timeout', self.default_timeout),
+                           timeout=timeout,
                            _debug=props.get('_debug'))
             code, test = call('test')
             if code != apiclient.result_ok or not test.get('ok'):
@@ -1401,7 +1402,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 try:
                                     func = a['api']
                                     can_pass_err = a.get('_pass')
-                                    custom_timeout = a.get('_timeout')
+                                    custom_timeout = a.get('_timeout', timeout)
                                     params = a.copy()
                                     del params['api']
                                     for p in ['_pass', '_timeout']:
@@ -1419,7 +1420,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 try:
                                     func = a['cm-api']
                                     can_pass_err = a.get('_pass')
-                                    custom_timeout = a.get('_timeout')
+                                    custom_timeout = a.get('_timeout', timeout)
                                     params = a.copy()
                                     del params['cm-api']
                                     for p in ['_pass', '_timeout']:
