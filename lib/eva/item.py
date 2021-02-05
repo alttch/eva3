@@ -70,7 +70,7 @@ class Item(object):
                 f'group name can not start / end with underscores: {group}')
         if '___' in group:
             raise FunctionFailed(f'group name can not contain triple '
-                             f'underscores (reserved): {group}')
+                                 f'underscores (reserved): {group}')
         self.full_id = self.group + '/' + self.item_id
         self.oid = self.item_type + ':' + self.full_id
 
@@ -1722,17 +1722,22 @@ def item_match(item, item_ids, groups=None):
                 p = g.find('#')
                 if p > -1 and g[:p] == item.group[:p]:
                     return True
-                if g.find('+') > -1:
+                if '+' in g:
                     g1 = g.split('/')
                     g2 = item.group.split('/')
-                    if len(g1) == len(g2):
-                        match = True
-                        for i in range(0, len(g1)):
-                            if g1[i] != '+' and g1[i] != g2[i]:
-                                match = False
+                    match = True
+                    for i in range(0, len(g1)):
+                        try:
+                            if g1[i] == '#' and g2[i]:
                                 break
-                        if match:
-                            return True
+                            elif g1[i] != '+' and g1[i] != g2[i]:
+                                raise IndexError
+                            g2[i]
+                        except IndexError:
+                            match = False
+                            break
+                    if match:
+                        return True
         return False
     except:
         logging.error(
