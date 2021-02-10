@@ -1713,6 +1713,18 @@ class GenericMQTTNotifier(GenericNotifier):
                            qos=o.qos['system'],
                            use_space=False)
 
+    class Pinger(BackgroundIntervalWorker):
+
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             **kwargs)
+
+        def run(self, o, **kwargs):
+            if eva.core.is_shutdown_requested():
+                return False
+            o.test()
+
     def __init__(self,
                  notifier_id,
                  host,
@@ -1726,6 +1738,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  timeout=None,
                  collect_logs=None,
                  api_enabled=None,
+                 ping_interval=None,
                  discovery_enabled=None,
                  announce_interval=None,
                  retain_enabled=True,
@@ -1756,6 +1769,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.on_message = self.on_message
         self.username = username
         self.password = password
+        self.ping_interval = ping_interval if ping_interval else 30
         self.ca_certs = ca_certs
         self.certfile = certfile
         self.keyfile = keyfile
@@ -1819,6 +1833,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announce_topic = self.pfx + 'controller/discovery'
         self.announce_msg = eva.core.product.code + \
                             '/' + eva.core.config.system_name
+        self.test_topic = (f'{self.pfx}/controller/{eva.core.product.code}'
+                           f'/{eva.core.config.system_name}/test')
         import eva.api
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.controller_discovery_handler
@@ -1829,17 +1845,23 @@ class GenericMQTTNotifier(GenericNotifier):
                                         self.notifier_id,
                                         o=self,
                                         interval=self.announce_interval)
+        self.pinger = self.Pinger(name='mqtt_pinger:' + self.notifier_id,
+                                  o=self,
+                                  interval=self.ping_interval)
         self.handler_lock = threading.RLock()
 
     def connect(self):
         self.connected = True
         self.check_connection()
+        if not self.test_only_mode:
+            self.pinger.start()
 
     def disconnect(self):
         super().disconnect()
         self.mq.loop_stop()
         self.mq.disconnect()
         self.announcer.stop()
+        self.pinger.stop()
 
     def start_announcer(self):
         eva.core._flags.started.wait(timeout=60)
@@ -2252,7 +2274,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     (self.notifier_id,self.host, self.port))
             if not self.check_connection():
                 return False
-            result = self.mq.publish(self.pfx + 'test',
+            result = self.mq.publish(self.test_topic,
                                      1,
                                      qos=self.qos['system'],
                                      retain=False)
@@ -2293,6 +2315,8 @@ class GenericMQTTNotifier(GenericNotifier):
             d['discovery_enabled'] = self.discovery_enabled
         if self.announce_interval or props:
             d['announce_interval'] = self.announce_interval
+        if self.ping_interval or props:
+            d['ping_interval'] = self.ping_interval
         if self.ca_certs or props:
             d['ca_certs'] = self.ca_certs
         if self.certfile or props:
@@ -2328,6 +2352,18 @@ class GenericMQTTNotifier(GenericNotifier):
             if announce_interval < 0:
                 return False
             self.announce_interval = announce_interval
+            return True
+        elif prop == 'ping_interval':
+            if value is None:
+                ping_interval = 0
+            else:
+                try:
+                    ping_interval = float(value)
+                except:
+                    return False
+            if ping_interval < 0:
+                return False
+            self.ping_interval = ping_interval
             return True
         elif prop == 'ca_certs':
             if value is None:
@@ -2448,6 +2484,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  api_enabled=None,
                  discovery_enabled=None,
                  announce_interval=None,
+                 ping_interval=None,
                  retain_enabled=True,
                  timestamp_enabled=True,
                  ca_certs=None,
@@ -2467,6 +2504,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          api_enabled=api_enabled,
                          discovery_enabled=discovery_enabled,
                          announce_interval=announce_interval,
+                         ping_interval=ping_interval,
                          retain_enabled=retain_enabled,
                          timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
@@ -3014,6 +3052,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         api_enabled = ncfg.get('api_enabled', False)
         discovery_enabled = ncfg.get('discovery_enabled', False)
         announce_interval = ncfg.get('announce_interval', 0)
+        ping_interval = ncfg.get('ping_interval', 30)
         retain_enabled = ncfg.get('retain_enabled', True)
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
         n = MQTTNotifier(_notifier_id,
@@ -3030,6 +3069,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          api_enabled=api_enabled,
                          discovery_enabled=discovery_enabled,
                          announce_interval=announce_interval,
+                         ping_interval=ping_interval,
                          retain_enabled=retain_enabled,
                          timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
