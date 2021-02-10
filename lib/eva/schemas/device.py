@@ -350,7 +350,7 @@ SCHEMA_DEVICE = {
                         },
                         'snmp_trap': {},
                         'status': {
-                            'type': 'integer'
+                            'type': ['integer', 'string']
                         },
                         'update_driver_config': {
                             'type': ['object', 'null']
@@ -467,7 +467,7 @@ SCHEMA_DEVICE = {
                         },
                         'snmp_trap': {},
                         'status': {
-                            'type': 'integer'
+                            'type': ['integer', 'string']
                         },
                         'status_labels': {
                             'type': ['string', 'object']

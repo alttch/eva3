@@ -1901,7 +1901,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 f'setting {prop} for {tp} is unsupported')
                         params = {'i': i}
                         if prop == 'status':
-                            params['s'] = val
+                            if val != 'update':
+                                params['s'] = val
                         else:
                             params['v'] = val
                         if prop == 'value' and tp == 'sensor':

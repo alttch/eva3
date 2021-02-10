@@ -318,7 +318,7 @@ SCHEMA_DEPLOY = {
                             'type': 'string'
                         },
                         'status': {
-                            'type': 'integer'
+                            'type': ['integer', 'string']
                         },
                         'value': {
                             'type': ['number', 'string', 'boolean']
@@ -451,7 +451,7 @@ SCHEMA_DEPLOY = {
                             'type': 'string'
                         },
                         'status': {
-                            'type': 'integer'
+                            'type': ['integer', 'string']
                         },
                         'value': {
                             'type': ['number', 'string', 'boolean']

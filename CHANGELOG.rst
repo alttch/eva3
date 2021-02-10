@@ -125,6 +125,7 @@ SFA
       in EVA JS Framework)
     * data serve as locale support
     * cloud deploy: "status" and "value" props in deployment files
+    * cloud deploy: trigger item update after deployment
     * cloud deploy: module uploads and binary files support
     * cloud deploy: skip busy drivers/PHIs during undeployment
     * cloud deploy: skip existing items during deployment (optionally)

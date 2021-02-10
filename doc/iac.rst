@@ -368,6 +368,17 @@ All child fields specify item properties, except:
 If *action_exec* or *update_exec* values are started with *^* symbol, it tells
 deployment tool to upload local file on the controller.
 
+Setting "status" field to "update" asks the controller to trigger item update
+after deployment:
+
+.. code:: yaml
+
+    unit:
+        group1/u1:
+            controller: uc/uc1
+            # ....
+            status: update
+
 The second example shows how to deploy a sensor and logical variable:
 
 .. code:: yaml
