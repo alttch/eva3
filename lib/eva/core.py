@@ -894,7 +894,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         # init plugins
         for p in config.plugins:
             fname = f'{dir_eva}/plugins/{p}.py'
-            if os.path.isfile(fname):
+            if os.path.exists(fname):
                 try:
                     plugin_modules[p] = importlib.import_module(
                         f'eva.plugins.{p}')
