@@ -104,6 +104,8 @@ eva.apikey.load()
 eva.users.init()
 eva.users.update_config(cfg)
 
+eva.notify.mqtt_global_topics += ['lvar']
+
 eva.notify.init()
 eva.notify.load()
 eva.notify.start()
