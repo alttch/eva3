@@ -71,6 +71,7 @@ Common
     * items_deny / groups_deny key ACL properties
     * Read-only mode for tokens, "set_token_readonly" API function
     * MQTT notifiers: ping interval to auto-restore connection
+    * MQTT notifiers: subscribe_all option
     * db notifiers: simple cleaning
     * signed releases
 

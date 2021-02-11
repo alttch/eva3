@@ -246,6 +246,13 @@ Item's state is stored in a hive with the subject
 *SPACE/item_type/group/item_id* and contains the item state data and some
 configuration params in JSON array.
 
+By default, MQTT notifier creates a subscription per item to avoid processing
+of unnecessary topics. If the cloud contains lots of items which need to be
+synchronized with the local controller, sometimes it is useful to set
+**subscribe_all** notifier option to *true*. If set, notifier is subscribed to
+all possible item state and control topics using wildcards. This may cause more
+overhead on the controller side, but reduces MQTT server load.
+
 MQTT and action notifications
 -----------------------------
 

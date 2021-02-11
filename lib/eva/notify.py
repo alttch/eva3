@@ -18,6 +18,7 @@ import ssl
 import uuid
 import threading
 import sqlalchemy as sa
+
 import pyaltt2.logs
 
 from pyaltt2.converters import mq_topic_match
@@ -68,6 +69,8 @@ _ne_kw = {'notifier': True}
 notify_leave_data = set()
 
 with_notify_lock = eva.core.RLocker('notify')
+
+mqtt_global_topics = ['unit', 'sensor']
 
 
 @with_notify_lock
@@ -1742,6 +1745,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  discovery_enabled=None,
                  announce_interval=None,
                  retain_enabled=True,
+                 subscribe_all=False,
                  timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
@@ -1774,6 +1778,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.certfile = certfile
         self.keyfile = keyfile
         self.retain_enabled = retain_enabled
+        self.subscribe_all = subscribe_all
         self.timestamp_enabled = timestamp_enabled
         if ca_certs:
             try:
@@ -1894,14 +1899,23 @@ class GenericMQTTNotifier(GenericNotifier):
                 client.subscribe(v[0], qos=self.qos['system'])
                 logging.debug('.%s resubscribed to %s q%u API response' % \
                         (self.notifier_id, i, self.qos['system']))
-            for i, v in self.items_to_update_by_topic.copy().items():
-                client.subscribe(i, qos=v.mqtt_update_qos)
-                logging.debug('.%s resubscribed to %s q%u topic' % \
-                        (self.notifier_id, i, v.mqtt_update_qos))
-            for i, v in self.items_to_control_by_topic.copy().items():
-                client.subscribe(i, qos=v.mqtt_control_qos)
-                logging.debug('.%s resubscribed to %s q%u control' % \
-                        (self.notifier_id, i, v.mqtt_control_qos))
+            if self.subscribe_all:
+                for topic in mqtt_global_topics:
+                    if self.pfx:
+                        topic = f'{self.pfx}/{topic}'
+                    topic += '/#'
+                    client.subscribe(topic, self.qos['state'])
+                    logging.debug('.%s resubscribed to %s q%u topic' % \
+                            (self.notifier_id, topic, self.qos['state']))
+            else:
+                for i, v in self.items_to_update_by_topic.copy().items():
+                    client.subscribe(i, qos=v.mqtt_update_qos)
+                    logging.debug('.%s resubscribed to %s q%u topic' % \
+                            (self.notifier_id, i, v.mqtt_update_qos))
+                for i, v in self.items_to_control_by_topic.copy().items():
+                    client.subscribe(i, qos=v.mqtt_control_qos)
+                    logging.debug('.%s resubscribed to %s q%u control' % \
+                            (self.notifier_id, i, v.mqtt_control_qos))
             for i in list(custom_handlers):
                 qos = custom_handlers_qos.get(i)
                 client.subscribe(i, qos=qos)
@@ -1983,9 +1997,10 @@ class GenericMQTTNotifier(GenericNotifier):
             topic = self.pfx + item.item_type + '/' + \
                     item.full_id + (('/' + t) if t else '')
             self.items_to_update_by_topic[topic] = item
-            self.mq.subscribe(topic, qos=item.mqtt_update_qos)
-            logging.debug('.%s subscribed to %s q%u topic' %
-                          (self.notifier_id, topic, item.mqtt_update_qos))
+            if not self.subscribe_all:
+                self.mq.subscribe(topic, qos=item.mqtt_update_qos)
+                logging.debug('.%s subscribed to %s q%u topic' %
+                              (self.notifier_id, topic, item.mqtt_update_qos))
         return True
 
     def control_item_append(self, item):
@@ -1995,9 +2010,11 @@ class GenericMQTTNotifier(GenericNotifier):
                 item.full_id + '/control'
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
-        self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-        logging.debug('.%s subscribed to %s q%u topic' %
-                      (self.notifier_id, topic_control, item.mqtt_control_qos))
+        if not self.subscribe_all:
+            self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
+            logging.debug(
+                '.%s subscribed to %s q%u topic' %
+                (self.notifier_id, topic_control, item.mqtt_control_qos))
         return True
 
     def update_item_remove(self, item):
@@ -2324,6 +2341,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.keyfile or props:
             d['keyfile'] = self.keyfile
         d['retain_enabled'] = self.retain_enabled
+        d['subscribe_all'] = self.subscribe_all
         d['timestamp_enabled'] = self.timestamp_enabled
         d.update(super().serialize(props=props))
         return d
@@ -2427,6 +2445,12 @@ class GenericMQTTNotifier(GenericNotifier):
                 return False
             self.retain_enabled = v
             return True
+        elif prop == 'subscribe_all':
+            v = val_to_boolean(value)
+            if v is None:
+                return False
+            self.subscribe_all = v
+            return True
         elif prop == 'timestamp_enabled':
             v = val_to_boolean(value)
             if v is None:
@@ -2486,6 +2510,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  announce_interval=None,
                  ping_interval=None,
                  retain_enabled=True,
+                 subscribe_all=True,
                  timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
@@ -2506,6 +2531,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          announce_interval=announce_interval,
                          ping_interval=ping_interval,
                          retain_enabled=retain_enabled,
+                         subscribe_all=subscribe_all,
                          timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
                          certfile=certfile,
@@ -3054,6 +3080,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         announce_interval = ncfg.get('announce_interval', 0)
         ping_interval = ncfg.get('ping_interval', 30)
         retain_enabled = ncfg.get('retain_enabled', True)
+        subscribe_all = ncfg.get('subscribe_all', False)
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
         n = MQTTNotifier(_notifier_id,
                          host=host,
@@ -3071,6 +3098,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          announce_interval=announce_interval,
                          ping_interval=ping_interval,
                          retain_enabled=retain_enabled,
+                         subscribe_all=subscribe_all,
                          timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
                          certfile=certfile,
