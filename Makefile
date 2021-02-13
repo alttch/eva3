@@ -80,6 +80,7 @@ update-version:
 	find . -name "*.php" -exec sed -i "s/eva_version = .*/eva_version = '${VERSION}';/g" {} \;
 	find . -name "*.php" -exec sed -i "s/@version .*/@version     ${VERSION}/g" {} \;
 	find . -name "*" ! -name "Makefile" -type f -exec sed -i "s/\((C) 2012-\)[0-9]*/\1`date "+%Y"`/g" {} \;
+	find . -name "*" ! -name "Makefile" -type f -exec sed -i "s/\((c)) [0-9]*/\1`date "+%Y"`/g" {} \;
 	sed -i "s/^VERSION=.*/VERSION=${VERSION}/g" update.sh
 	#sed -i "s/^eva_sfa_framework_version =.*/eva_sfa_framework_version = \"${VERSION}\";/g" ui/js/eva_sfa.js
 

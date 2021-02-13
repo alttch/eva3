@@ -1653,7 +1653,7 @@ banner = """     _______    _____       _______________
   / /___  | |/ / ___ |   _/ // /___ ___/ /
  /_____/  |___/_/  |_|  /___/\____//____/
 
-  www.eva-ics.com (c) 2012-2020 Altertech
+  www.eva-ics.com (c) 2021 Altertech
 """
 if '-I' in sys.argv or '--interactive' in sys.argv:
     print(cli.colored(banner, color='blue'))
