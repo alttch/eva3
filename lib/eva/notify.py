@@ -819,8 +819,6 @@ class SQLANotifier(GenericNotifier):
             q += ' and t>%f' % t_s
         if t_e:
             q += ' and t<=%f' % t_e
-        if l:
-            q += ' order by t desc limit %u' % l
         req_status = False
         req_value = False
         if prop in ['status', 'S']:
@@ -833,6 +831,9 @@ class SQLANotifier(GenericNotifier):
             props = 'status, value'
             req_status = True
             req_value = True
+        q += f' group by {props} order by t desc '
+        if l:
+            q += 'limit %u' % l
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
@@ -851,16 +852,18 @@ class SQLANotifier(GenericNotifier):
             if r:
                 r = (t_s,) + tuple(r)
                 data += [r]
-        data += list(
-            dbconn.execute(
-                sql('select t, ' + props +
-                    ' from state_history where space = :space and oid = :oid' +
-                    q),
-                space=space,
-                oid=oid).fetchall())
-        if l and len(data) > l:
-            data = data[:l]
-        for d in data:
+        stmt = dbconn.execute(
+            sql('select min(t), ' + props +
+                ' from state_history where space = :space and oid = :oid' + q),
+            space=space,
+            oid=oid)
+        while True:
+            d = stmt.fetchone()
+            if not d:
+                try:
+                    d = data.pop()
+                except IndexError:
+                    break
             h = {}
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
@@ -880,7 +883,7 @@ class SQLANotifier(GenericNotifier):
                 except:
                     h['value'] = v if v else None
             result.append(h)
-        return sorted(result, key=lambda k: k['t'])
+        return list(reversed(result))[-1 * l if l is not None else 0:]
 
     def get_state_log(self,
                       oid,
@@ -922,14 +925,15 @@ class SQLANotifier(GenericNotifier):
             q += ' and t>%f' % t_s
         if t_e:
             q += ' and t<=%f' % t_e
-        q += ' order by t desc, oid '
+        q += ' group by status, value order by t desc, oid'
+        if l is not None:
+            q += ' limit %u' % l
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
         if not tz:
             tz = pytz.timezone(time.tzname[0])
         oid = oid.replace('#', '%').replace('+', '%')
-        records = {}
         stmt = dbconn.execute(
             sql('select oid, t, status, value from state_history where '
                 'space = :space and oid like :oid' + q),
@@ -942,15 +946,7 @@ class SQLANotifier(GenericNotifier):
             oid = d[0]
             status = d[2]
             value = d[3]
-            # skip repeating records
-            if records.get(oid) == (status, value):
-                result.pop()
-            else:
-                records[oid] = (status, value)
-                if l is not None and len(records) > l:
-                    break
-            h = {}
-            h['oid'] = oid
+            h = {'oid': oid}
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[1]), tz).isoformat()
             elif time_format == 'dt_utc':
@@ -963,8 +959,7 @@ class SQLANotifier(GenericNotifier):
             except:
                 h['value'] = value if value else None
             result.append(h)
-        return list(reversed(result))[-1 * l:] if l is not None else list(
-            reversed(result))
+        return list(reversed(result))
 
     def connect(self):
         try:
