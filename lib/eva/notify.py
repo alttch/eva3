@@ -922,29 +922,33 @@ class SQLANotifier(GenericNotifier):
             q += ' and t>%f' % t_s
         if t_e:
             q += ' and t<=%f' % t_e
-        q += ' order by t, oid '
+        q += ' order by t desc, oid '
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
         if not tz:
             tz = pytz.timezone(time.tzname[0])
         oid = oid.replace('#', '%').replace('+', '%')
-        data = list(
-            dbconn.execute(
-                sql('select oid, t, status, value from state_history where '
-                    'space = :space and oid like :oid' + q),
-                space=space,
-                oid=oid).fetchall())
         records = {}
-        for d in data:
+        stmt = dbconn.execute(
+            sql('select oid, t, status, value from state_history where '
+                'space = :space and oid like :oid' + q),
+            space=space,
+            oid=oid)
+        while True:
+            d = stmt.fetchone()
+            if not d:
+                break
             oid = d[0]
             status = d[2]
             value = d[3]
             # skip repeating records
             if records.get(oid) == (status, value):
-                continue
+                result.pop()
             else:
                 records[oid] = (status, value)
+                if l is not None and len(records) > l:
+                    break
             h = {}
             h['oid'] = oid
             if time_format == 'iso':
@@ -959,7 +963,8 @@ class SQLANotifier(GenericNotifier):
             except:
                 h['value'] = value if value else None
             result.append(h)
-        return result[-1 * l:] if l is not None else result
+        return list(reversed(result))[-1 * l:] if l is not None else list(
+            reversed(result))
 
     def connect(self):
         try:
