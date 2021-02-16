@@ -934,7 +934,8 @@ class GenericCLI(GCLI):
     def run(self):
         if self.batch_file is not None:
             try:
-                if self.batch_file and self.batch_file != 'stdin':
+                if self.batch_file and self.batch_file != 'stdin' and \
+                        self.batch_file != '-':
                     with open(self.batch_file) as fd:
                         cmds = [x.strip() for x in fd.readlines()]
                 else:
