@@ -119,7 +119,7 @@ Modifiable Parameters:
 
 * **enabled** if *True*, rule is enabled (new rules are disabled by default)
 
-* **for_initial** can be *skip*, *only* or *any* (default is *any*). Indicates
+* **for_initial** can be *skip*, *only* or *any* (default is *skip*). Indicates
   the rule processing algorithm when the server is started and the initial item
   states are received
 
