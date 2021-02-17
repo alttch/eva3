@@ -98,9 +98,9 @@ def update_config(cfg):
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
     try:
-        cache_remote_state = int(cfg.get('plc', 'cache_remote_state'))
+        cache_remote_state = float(cfg.get('plc', 'cache_remote_state'))
     except:
-        cache_remote_state = 0
+        cache_remote_state = 0.0
     logging.debug('plc.cache_remote_state = %u' % cache_remote_state)
     config.cache_remote_state = cache_remote_state
 
@@ -388,12 +388,10 @@ def load_cached_prev_state(item, db=None, ns=False):
         fields += ', nstatus, nvalue'
     try:
         dbconn = db if db else eva.core.db()
-        d = dbconn.execute(sql(
-            f'select {fields} from state_cache where oid=:oid and t > :t'
-        ),
-                           oid=item.oid,
-                           t=time.time() -
-                           config.cache_remote_state).fetchone()
+        d = dbconn.execute(
+            sql(f'select {fields} from state_cache where oid=:oid and t > :t'),
+            oid=item.oid,
+            t=time.time() - config.cache_remote_state).fetchone()
         if d:
             logging.debug(f'loading cached prev. state for {item.oid}')
             item.prv_status = d.status
@@ -474,9 +472,8 @@ def load_lvar_db_state(items, clean=False):
         t_lremote_cache = sa.Table(
             'state_cache', meta,
             sa.Column('oid', sa.String(256), primary_key=True),
-            sa.Column('t', sa.Numeric(20, 8)),
-            sa.Column('status', sa.Integer), sa.Column('value',
-                                                       sa.String(8192)),
+            sa.Column('t', sa.Numeric(20, 8)), sa.Column('status', sa.Integer),
+            sa.Column('value', sa.String(8192)),
             sa.Column('nstatus', sa.Integer),
             sa.Column('nvalue', sa.String(8192)))
         try:
@@ -1396,7 +1393,7 @@ def init():
 async def remote_cache_cleaner(**kwargs):
     logging.debug('cleaning remote cache')
     eva.core.db().execute(sql('delete from state_cache where t < :t'),
-               t=time.time() - config.cache_remote_state)
+                          t=time.time() - config.cache_remote_state)
 
 
 eva.api.controller_discovery_handler = handle_discovered_controller
