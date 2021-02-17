@@ -47,6 +47,8 @@ import rapidjson
 
 from types import SimpleNamespace
 
+from neotasker import background_worker
+
 config = SimpleNamespace(cache_remote_state=0)
 
 lvars_by_id = {}
@@ -81,6 +83,8 @@ DM = eva.lm.dmatrix.DecisionMatrix()
 with_item_lock = eva.core.RLocker('lm/controller')
 with_macro_functions_m_lock = eva.core.RLocker('lm/controller')
 controller_lock = threading.RLock()
+
+remote_cache_clean_delay = 60
 
 
 def update_config(cfg):
@@ -385,7 +389,7 @@ def load_cached_prev_state(item, db=None, ns=False):
     try:
         dbconn = db if db else eva.core.db()
         d = dbconn.execute(sql(
-            f'select {fields} from state_cache where oid=:oid and set_time > :t'
+            f'select {fields} from state_cache where oid=:oid and t > :t'
         ),
                            oid=item.oid,
                            t=time.time() -
@@ -418,7 +422,7 @@ def cache_item_state(item, db=None, ns=False):
         nvalue = None
     try:
         if not dbconn.execute(sql(
-                'update state_cache set set_time=:t, status=:status, '
+                'update state_cache set t=:t, status=:status, '
                 'value=:value, nstatus=:nstatus, nvalue=:nvalue where oid=:oid'
         ),
                               t=time.time(),
@@ -428,7 +432,7 @@ def cache_item_state(item, db=None, ns=False):
                               nvalue=nvalue,
                               oid=item.oid).rowcount:
             dbconn.execute(sql(
-                'insert into state_cache (oid, set_time, status, value,'
+                'insert into state_cache (oid, t, status, value,'
                 ' nstatus, nvalue) values(:oid, :t, :status, :value, '
                 ':nstatus, :nvalue)'),
                            oid=item.oid,
@@ -470,7 +474,7 @@ def load_lvar_db_state(items, clean=False):
         t_lremote_cache = sa.Table(
             'state_cache', meta,
             sa.Column('oid', sa.String(256), primary_key=True),
-            sa.Column('set_time', sa.Numeric(20, 8)),
+            sa.Column('t', sa.Numeric(20, 8)),
             sa.Column('status', sa.Integer), sa.Column('value',
                                                        sa.String(8192)),
             sa.Column('nstatus', sa.Integer),
@@ -1286,6 +1290,8 @@ def start():
             eva.core.log_traceback()
     eva.lm.jobs.scheduler.start()
     eva.core.plugins_exec('start')
+    if config.cache_remote_state:
+        remote_cache_cleaner.start()
 
 
 def connect_remote_controller(v):
@@ -1317,6 +1323,8 @@ def stop():
         Q.stop()
     eva.lm.extapi.stop()
     eva.core.plugins_exec('stop')
+    if config.cache_remote_state:
+        remote_cache_cleaner.stop()
 
 
 def exec_macro(macro,
@@ -1379,6 +1387,16 @@ def dump():
 
 def init():
     eva.lm.macro_api.init()
+
+
+@background_worker(delay=remote_cache_clean_delay,
+                   name='lm:remote_cache_cleaner',
+                   loop='cleaners',
+                   on_error=eva.core.log_traceback)
+async def remote_cache_cleaner(**kwargs):
+    logging.debug('cleaning remote cache')
+    eva.core.db().execute(sql('delete from state_cache where t < :t'),
+               t=time.time() - config.cache_remote_state)
 
 
 eva.api.controller_discovery_handler = handle_discovered_controller
