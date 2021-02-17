@@ -150,15 +150,15 @@ class ConfigFile():
         Set section field value
         """
         try:
-            if self.get(section, name) == value:
+            if self.get(section, name) == str(value):
                 return
         except:
             pass
         try:
-            self.cp[section][name] = value
+            self.cp[section][name] = str(value)
         except:
             self.cp.add_section(section)
-            self.cp[section][name] = value
+            self.cp[section][name] = str(value)
         self._changed = True
 
     def get(self, section, name):
