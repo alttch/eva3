@@ -1,0 +1,11 @@
+description: LM PLC state cache
+help: |
+  Enables state cache for LM PLC, which allows to skip false event triggering
+  for for_initial=any|only rules.
+
+  Can produce additional load if the cloud has lots of events triggered.
+example: {{ setup_cmd }}ttl=86400
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/lm/decision_matrix.html
+setup:
+  mandatory-args:
+    ttl: Cache time-to-live
