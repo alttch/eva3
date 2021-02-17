@@ -81,6 +81,8 @@ layout = enterprise
 ; set "no" to let LM PLC launch macros without thread pool
 ; (e.g. useful for handling rare bulk events), default is "yes"
 ;use_core_pool = yes
+; cache state of remote items into local db (seconds)
+;cache_remote_state = 86400
 
 ;[msad]
 ; user authentication via MS Active Directory

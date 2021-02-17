@@ -45,6 +45,10 @@ from functools import wraps
 
 import rapidjson
 
+from types import SimpleNamespace
+
+config = SimpleNamespace(cache_remote_state=0)
+
 lvars_by_id = {}
 lvars_by_group = {}
 lvars_by_full_id = {}
@@ -89,6 +93,12 @@ def update_config(cfg):
                                 if use_core_pool else 'no'))
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
+    try:
+        cache_remote_state = int(cfg.get('plc', 'cache_remote_state'))
+    except:
+        cache_remote_state = 0
+    logging.debug('plc.cache_remote_state = %u' % cache_remote_state)
+    config.cache_remote_state = cache_remote_state
 
 
 def format_rule_id(r_id):
@@ -366,6 +376,45 @@ def save_lvar_state(item, db=None):
         return False
 
 
+def cache_item_state(item, db=None):
+    if not config.cache_remote_state:
+        return False
+    dbconn = db if db else eva.core.db()
+    try:
+        nstatus = item.nstatus
+        nvalue = item.nvalue
+    except AttributeError:
+        nstatus = None
+        nvalue = None
+    try:
+        if not dbconn.execute(sql(
+                'update state_cache set set_time=:t, status=:status, '
+                'value=:value, nstatus=:nstatus, nvalue=:nvalue where oid=:oid'
+        ),
+                              t=time.time(),
+                              status=item.status,
+                              value=item.value,
+                              nstatus=nstatus,
+                              nvalue=nvalue,
+                              oid=item.oid).rowcount:
+            dbconn.execute(sql(
+                'insert into state_cache (oid, set_time, status, value,'
+                ' nstatus, nvalue) values(:oid, :t, :status, :value, '
+                ':nstatus, :nvalue)'),
+                           oid=item.oid,
+                           t=time.time(),
+                           status=item.status,
+                           value=item.value,
+                           nstatus=nstatus,
+                           nvalue=nvalue)
+        logging.debug('%s state cached in db' % item.oid)
+        return True
+    except:
+        logging.critical('db error')
+        eva.core.critical()
+        return False
+
+
 def load_extensions():
     eva.lm.extapi.load()
 
@@ -390,7 +439,7 @@ def load_lvar_db_state(items, clean=False):
                                                        sa.String(8192)))
         t_lremote_cache = sa.Table(
             'state_cache', meta,
-            sa.Column('id', sa.String(256), primary_key=True),
+            sa.Column('oid', sa.String(256), primary_key=True),
             sa.Column('set_time', sa.Numeric(20, 8)),
             sa.Column('status', sa.Integer), sa.Column('value',
                                                        sa.String(8192)),
