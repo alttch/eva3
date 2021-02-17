@@ -29,8 +29,9 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
         self.prv_nstatus = None
         self.prv_nvalue = None
         super().__init__(remote_uc, state)
+        eva.lm.controller.load_cached_prev_state(self, ns=True)
         if eva.core.config.db_update == 1:
-            eva.lm.controller.cache_item_state(self)
+            eva.lm.controller.cache_item_state(self, ns=True)
 
     def start_processors(self):
         eva.lm.controller.pdme(self)
@@ -94,8 +95,9 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
         self.prv_status = None
         self.prv_value = None
         super().__init__(remote_uc, state)
+        eva.lm.controller.load_cached_prev_state(self, ns=False)
         if eva.core.config.db_update == 1:
-            eva.lm.controller.cache_item_state(self)
+            eva.lm.controller.cache_item_state(self, ns=False)
 
     def start_processors(self):
         eva.lm.controller.pdme(self)

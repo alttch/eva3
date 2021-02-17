@@ -376,14 +376,44 @@ def save_lvar_state(item, db=None):
         return False
 
 
-def cache_item_state(item, db=None):
+def load_cached_prev_state(item, db=None, ns=False):
+    if not config.cache_remote_state:
+        return False
+    fields = 'status, value'
+    if ns:
+        fields += ', nstatus, nvalue'
+    try:
+        dbconn = db if db else eva.core.db()
+        d = dbconn.execute(sql(
+            f'select {fields} from state_cache where oid=:oid and set_time > :t'
+        ),
+                           oid=item.oid,
+                           t=time.time() -
+                           config.cache_remote_state).fetchone()
+        if d:
+            logging.debug(f'loading cached prev. state for {item.oid}')
+            item.prv_status = d.status
+            item.prv_value = d.value
+            if ns:
+                item.prv_nstatus = d.nstatus
+                item.prv_nvalue = d.nvalue
+        else:
+            logging.debug(f'no cached state for {item.oid}')
+    except:
+        logging.critical('db error')
+        eva.core.critical()
+        return False
+    return True
+
+
+def cache_item_state(item, db=None, ns=False):
     if not config.cache_remote_state:
         return False
     dbconn = db if db else eva.core.db()
-    try:
+    if ns:
         nstatus = item.nstatus
         nvalue = item.nvalue
-    except AttributeError:
+    else:
         nstatus = None
         nvalue = None
     try:
