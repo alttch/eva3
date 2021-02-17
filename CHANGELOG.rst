@@ -115,6 +115,7 @@ LM PLC
     * CLI/API option to auto-enable created rules/jobs
     * CLI: quick creation of rules with no condition
     * LVar deletion by group ("destroy_lvar" API method and CLI)
+    * Cache remote state for LM PLC items
 
 SFA
 ---

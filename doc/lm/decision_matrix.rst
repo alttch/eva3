@@ -185,3 +185,17 @@ Tips for rule configuration
 * if the rule has no **in_range_min** and **in_range_max conditions**, it will
   match each time when the item changes its status (for_prop == status) or
   value (for_prop == value)
+
+If rule option **for_initial** is set to *any* or *only*, it is possible to
+cache previous item state to prevent false rule triggering. This may cause
+additional system overload.
+
+To enable state cache, set "cache_remote_state" option in section "plc" of
+:ref:`lm.ini<lm_ini>` to desired cache time-to-live in seconds (e.g. 604800 =
+time-to-live 1 week) and restart the controller.
+
+Or use "feature" command:
+
+.. code:: bash
+
+    eva feature setup lm_state_cache ttl=604800
