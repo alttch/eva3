@@ -540,8 +540,9 @@ class API_Logger(object):
         msg = 'API request '
         auth, ki = self.get_auth(func, params)
         info = self.prepare_info(func, params, fp_hide)
+        ip = http_real_ip(get_gw=True, ip_only=True)
         if auth:
-            msg += auth + ':'
+            msg += (auth if '@' in auth else (auth + '@' + ip)) + ':'
         msg += func
         if info:
             msg += ', '
@@ -561,7 +562,6 @@ class API_Logger(object):
                 auth = get_aci('auth', 'key')
                 u = get_aci('u')
                 utp = get_aci('utp')
-                ip = http_real_ip(get_gw=True, ip_only=True)
                 is_logged = get_aci('logged')
                 if not is_logged:
                     eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func,
@@ -569,8 +569,8 @@ class API_Logger(object):
                     set_aci('logged', True)
 
     def __call__(self, func, params, logger, fp_hide, debug=False):
-        self.log_api_request(func.__name__, params.copy(), logger, fp_hide,
-                             debug)
+        self.log_api_request(func if isinstance(func, str) else func.__name__,
+                             params.copy(), logger, fp_hide, debug)
 
     def prepare_info(self, func, p, fp_hide):
 
@@ -624,6 +624,10 @@ def cp_check_perm(api_key=None, path_info=None):
         return
     if key_check(k, ip=http_real_ip(), ro_op=True):
         return
+    if api:
+        api._log_api_call('', {}, logging.warning, {})
+        logging.warning(f'API call {get_aci("id")} access denied')
+        log_api_call_result('AccessDenied')
     raise cp_forbidden_key()
 
 
@@ -1757,6 +1761,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                             k = key_token_parse(k, _aci=True)
                             p['k'] = k
                         if not key_check(k=k, ip=ip, ro_op=True):
+                            self._log_api_call(f, p, logging.info,
+                                               self._fp_hide_in_log)
                             raise AccessDenied
                     res = f(**p)
                 if isinstance(res, tuple):
@@ -2051,3 +2057,4 @@ api_cp_config = {
 }
 
 jrpc = None
+api = None

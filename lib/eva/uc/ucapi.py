@@ -2743,4 +2743,5 @@ def start():
 
 
 api = UC_API()
+eva.api.api = api
 jrpc = UC_JSONRPC_API()

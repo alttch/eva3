@@ -1865,4 +1865,5 @@ def start():
 
 
 api = LM_API()
+eva.api.api = api
 jrpc = LM_JSONRPC_API()

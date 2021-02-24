@@ -1997,4 +1997,5 @@ def start():
 
 
 api = SFA_API()
+eva.api.api = api
 jrpc = SFA_JSONRPC_API()
