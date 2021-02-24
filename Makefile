@@ -21,6 +21,11 @@ test-build:
 	make test-release
 	jks build get.eva-ics.com
 
+rc-pub:
+	make d
+	make test-release
+	jks build get.eva-ics.com
+
 d:
 	mkdir -p dist
 	@./dev/make-dist
