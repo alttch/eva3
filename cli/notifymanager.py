@@ -361,7 +361,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 if i.space is not None and i.space != '':
                     n['params'] += '/' + i.space
             result.append(n)
-        return 0, result
+        return 0, sorted(result, key=lambda k: k['id'])
 
     def get_notifier(self, notifier_id, pass_errors=False):
         try:
