@@ -18,7 +18,7 @@ from .common import restart_controller, cli_call, eva_jcmd, exec_shell
 
 from .common import ConfigFile, ShellConfigFile
 
-from .common import InvalidParameter
+from .common import InvalidParameter, FunctionFailed
 
 from .common import download_phis, remove_phis
 

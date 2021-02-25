@@ -1,14 +1,16 @@
 from eva.features import OS_LIKE, UnsupportedOS, install_system_packages
 from eva.features import append_python_libraries, remove_python_libraries
-from eva.features import restart_controller
+from eva.features import restart_controller, is_enabled
 
-from eva.features import InvalidParameter
+from eva.features import InvalidParameter, FunctionFailed
 from eva.features import ConfigFile
 
 python_libs = ['easyad==1.0.9']
 
 
 def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
+    if not is_enabled('sfa'):
+        raise FunctionFailed('SFA is not enabled')
     if not host or not domain:
         raise InvalidParameter
     if cache_time:
@@ -36,6 +38,8 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
 
 
 def remove():
+    if not is_enabled('sfa'):
+        raise FunctionFailed('SFA is not enabled')
     with ConfigFile('sfa.ini') as fh:
         fh.remove_section('msad')
     remove_python_libraries(python_libs)

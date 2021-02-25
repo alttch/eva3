@@ -19,6 +19,7 @@ from eva.tools import dict_from_str
 from eva.tools import val_to_boolean
 
 from eva.exceptions import InvalidParameter
+from eva.exceptions import FunctionFailed
 from eva.exceptions import GenericException
 
 

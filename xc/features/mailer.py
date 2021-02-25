@@ -1,6 +1,7 @@
 from eva.features import restart_controller
 from eva.features import InvalidParameter
 from eva.features import ConfigFile
+from eva.features import is_enabled
 
 from eva.tools import val_to_boolean
 
@@ -29,13 +30,15 @@ def setup(smtp=None,
     if password:
         config['password'] = password
     for c in ['uc', 'lm', 'sfa']:
-        with ConfigFile(f'{c}.ini') as fh:
-            fh.replace_section('mailer', config)
-            restart_controller(c)
+        if is_enabled(c):
+            with ConfigFile(f'{c}.ini') as fh:
+                fh.replace_section('mailer', config)
+                restart_controller(c)
 
 
 def remove():
     for c in ['uc', 'lm', 'sfa']:
-        with ConfigFile(f'{c}.ini') as fh:
-            fh.remove_section('mailer')
-            restart_controller(c)
+        if is_enabled(c):
+            with ConfigFile(f'{c}.ini') as fh:
+                fh.remove_section('mailer')
+                restart_controller(c)
