@@ -1,0 +1,17 @@
+description: Setup SMTP mailer
+help: |
+  Setup SMTP mailer for all components
+
+  Automatically restarts all controllers when finished
+
+example: {{ setup_cmd }}smtp=localhost:25,default_from=eva@node1
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/
+setup:
+  mandatory-args:
+    smtp: SMTP host:port
+  optional-args:
+    default_from: Default sender
+    ssl: Enable SSL
+    tls: Enable TLS
+    login: SMTP login
+    password: SMTP password
