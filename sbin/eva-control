@@ -76,6 +76,8 @@ start)
         controller_cmd ${C} start || exit 1
       done
     fi
+    [ "$INVOCATION_ID" ] && $EVA_DIR/sbin/sblock.sh &
+    exit 0
     ;;
 stop)
     if [ $2 ]; then
@@ -86,6 +88,7 @@ stop)
         controller_cmd ${C} stop || exit 1
       done
     fi
+    [ "$INVOCATION_ID" ] && (ps auxw|grep -v grep |grep /opt/eva/sbin/sblock.sh|awk '{ print $2 }')
     exit 0
     ;;
 restart)
