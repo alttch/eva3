@@ -2510,7 +2510,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  announce_interval=None,
                  ping_interval=None,
                  retain_enabled=True,
-                 subscribe_all=True,
+                 subscribe_all=False,
                  timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
