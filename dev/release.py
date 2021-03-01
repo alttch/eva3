@@ -94,8 +94,8 @@ if not a.test:
 
     gsutil(
         f'cp -a public-read '
-        f'gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.version}-{a.build}.json'
-        f' gs://get.eva-ics.com/{a.version}/stable/manifest-{a.version}-{a.build}.json'
+        f'gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.build}.json'
+        f' gs://get.eva-ics.com/{a.version}/stable/manifest-{a.build}.json'
     )
 
 if a.update_info or a.test:
