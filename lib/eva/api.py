@@ -542,7 +542,7 @@ class API_Logger(object):
         info = self.prepare_info(func, params, fp_hide)
         ip = http_real_ip(get_gw=True, ip_only=True)
         if auth:
-            msg += (auth if '@' in auth else (auth + '@' + ip)) + ':'
+            msg += (auth if '@' in auth else (auth + f'@{ip}')) + ':'
         msg += func
         if info:
             msg += ', '
