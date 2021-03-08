@@ -111,6 +111,15 @@ is served, the message files are looked up in the following order:
 (the last file is the standard common message file). If no message file is
 found, the strings are served as-is, without any conversion.
 
+.. note::
+
+    Altrenatively, locale files can be kept in EVA_DIR/ui/locales.
+    :doc:`/sfa/sfa` automatically searches for the locale files in "ui" if no
+    locale files found in "pvt".
+
+    The option "-o EVA_DIR/ui/locales" for gen-intl can be used to
+    automatically generate / compile locale files in EVA_DIR/ui/locales.
+
 Generating
 ----------
 

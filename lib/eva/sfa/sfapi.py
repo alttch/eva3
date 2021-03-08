@@ -1659,7 +1659,10 @@ def serve_json_yml(fname, dts='ui'):
                 data = eva.lang.convert(data,
                                         lang,
                                         document_name=document_name,
-                                        localedir=eva.core.dir_pvt + '/locales')
+                                        localedir=[
+                                            eva.core.dir_pvt + '/locales',
+                                            eva.core.dir_ui + '/locales'
+                                        ])
         except Exception as e:
             eva.core.log_traceback()
             return _tool_error_response(e)

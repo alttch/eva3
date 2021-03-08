@@ -52,11 +52,16 @@ def convert(obj,
             document_name=None,
             localedir=default_localedir,
             _el=None):
+    if not isinstance(localedir, list):
+        localedir = [localedir]
     if _el is None:
-        _el = _find_el(localedir, lang, document_name)
-    if _el is None:
-        return obj
-    elif isinstance(obj, list):
+        for d in localedir:
+            _el = _find_el(d, lang, document_name)
+            if _el:
+                break
+        else:
+            return obj
+    if isinstance(obj, list):
         result = obj.copy()
         for i, v in enumerate(result):
             result[i] = convert(v, lang, _el=_el)
