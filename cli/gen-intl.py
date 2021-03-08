@@ -55,7 +55,7 @@ def parse_content(content):
 parse_content(content)
 
 for lang in a.lang:
-    po_file = a.output_dir / f'{lang}/LC_MESSAGES' / Path(
+    po_file = Path(a.output_dir) / f'{lang}/LC_MESSAGES' / Path(
         a.FILE).absolute().parent.as_posix()[len(eva_dir.as_posix()) +
                                              1:].split('/', 1)[-1] / Path(
                                                  a.FILE).with_suffix('.po').name
