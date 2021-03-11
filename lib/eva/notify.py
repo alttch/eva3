@@ -1015,8 +1015,9 @@ class SQLANotifier(GenericNotifier):
                                    value=v)
             dbt.commit()
             return True
-        except:
+        except Exception as e:
             dbt.rollback()
+            self.log_error(message=str(e))
             raise
 
     def set_prop(self, prop, value):
@@ -1198,10 +1199,14 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         else:
             data_ts = d
             data_ts['data'] = data
-        r = self.rsession().post(self.uri,
-                                 json=data_ts,
-                                 timeout=self.get_timeout(),
-                                 **self.xrargs)
+        try:
+            r = self.rsession().post(self.uri,
+                                     json=data_ts,
+                                     timeout=self.get_timeout(),
+                                     **self.xrargs)
+        except Exception as e:
+            self.log_error(message=str(e))
+            raise
         if self.method == 'jsonrpc':
             if r.ok:
                 return True
@@ -1428,12 +1433,16 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     except:
                         q += ',value="{}"'.format(d['value'])
                 q += ' {}'.format(t)
-                r = self.rsession().post(
-                    url=self.uri + '/write?db={}'.format(self.db),
-                    data=q,
-                    headers={'Content-Type': 'application/octet-stream'},
-                    timeout=self.get_timeout(),
-                    **self.xrargs)
+                try:
+                    r = self.rsession().post(
+                        url=self.uri + '/write?db={}'.format(self.db),
+                        data=q,
+                        headers={'Content-Type': 'application/octet-stream'},
+                        timeout=self.get_timeout(),
+                        **self.xrargs)
+                except Exception as e:
+                    self.log_error(message=str(e))
+                    raise
                 if not r.ok:
                     self.log_error(code=r.status_code)
                     return False
