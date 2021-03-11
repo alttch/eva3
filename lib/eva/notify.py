@@ -1002,17 +1002,19 @@ class SQLANotifier(GenericNotifier):
             if subject == 'state':
                 t = time.time()
                 for d in data:
-                    v = d['value'] if 'value' in d and \
-                            d['value'] != '' else None
-                    space = self.space if self.space is not None else ''
-                    dbconn.execute(sql(
-                        'insert into state_history (space, t, oid, status, ' +
-                        'value) values (:space, :t, :oid, :status, :value)'),
-                                   space=space,
-                                   t=t,
-                                   oid=d['oid'],
-                                   status=d['status'],
-                                   value=v)
+                    if 'status' in d:
+                        v = d['value'] if 'value' in d and \
+                                d['value'] != '' else None
+                        space = self.space if self.space is not None else ''
+                        dbconn.execute(sql(
+                            'insert into state_history (space, t, oid, status, '
+                            'value) values (:space, :t, :oid, :status, :value)'
+                        ),
+                                       space=space,
+                                       t=t,
+                                       oid=d['oid'],
+                                       status=d['status'],
+                                       value=v)
             dbt.commit()
             return True
         except Exception as e:
@@ -1425,27 +1427,30 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         if subject == 'state':
             t = int(time.time() * 1000000000)
             for d in data:
-                q = space + '{} status={}i'.format(d['oid'], d['status'])
-                if d['value'] is not None and d['value'] != '':
+                if 'status' in d:
+                    q = space + '{} status={}i'.format(d['oid'], d['status'])
+                    if d['value'] is not None and d['value'] != '':
+                        try:
+                            value = float(d['value'])
+                            q += ',value={}'.format(value)
+                        except:
+                            q += ',value="{}"'.format(d['value'])
+                    q += ' {}'.format(t)
                     try:
-                        value = float(d['value'])
-                        q += ',value={}'.format(value)
-                    except:
-                        q += ',value="{}"'.format(d['value'])
-                q += ' {}'.format(t)
-                try:
-                    r = self.rsession().post(
-                        url=self.uri + '/write?db={}'.format(self.db),
-                        data=q,
-                        headers={'Content-Type': 'application/octet-stream'},
-                        timeout=self.get_timeout(),
-                        **self.xrargs)
-                except Exception as e:
-                    self.log_error(message=str(e))
-                    raise
-                if not r.ok:
-                    self.log_error(code=r.status_code)
-                    return False
+                        r = self.rsession().post(
+                            url=self.uri + '/write?db={}'.format(self.db),
+                            data=q,
+                            headers={
+                                'Content-Type': 'application/octet-stream'
+                            },
+                            timeout=self.get_timeout(),
+                            **self.xrargs)
+                    except Exception as e:
+                        self.log_error(message=str(e))
+                        raise
+                    if not r.ok:
+                        self.log_error(code=r.status_code)
+                        return False
             return True
 
     def get_state_log(self,
