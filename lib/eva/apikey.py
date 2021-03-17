@@ -77,26 +77,26 @@ class APIKey(object):
         with key_lock:
             if self.combined_from:
                 _recombine_acl(self)
-        result = {
-            'id': self.key_id,
-            'master': self.master,
-            'key': self.key,
-            'sysfunc': self.sysfunc,
-            'cdata': self.cdata,
-            'items': self.item_ids,
-            'groups': self.groups,
-            'items_ro': self.item_ids_ro,
-            'groups_ro': self.groups_ro,
-            'items_deny': self.item_ids_deny,
-            'groups_deny': self.groups_deny,
-            'allow': self.allow,
-            'pvt': self.pvt_files,
-            'rpvt': self.rpvt_uris
-        }
-        result['hosts_allow'] = [str(i) for i in self.hosts_allow]
-        result['hosts_assign'] = [str(i) for i in self.hosts_assign]
-        result['dynamic'] = self.dynamic
-        return result
+            result = {
+                'id': self.key_id,
+                'master': self.master,
+                'key': self.key,
+                'sysfunc': self.sysfunc,
+                'cdata': self.cdata,
+                'items': self.item_ids,
+                'groups': self.groups,
+                'items_ro': self.item_ids_ro,
+                'groups_ro': self.groups_ro,
+                'items_deny': self.item_ids_deny,
+                'groups_deny': self.groups_deny,
+                'allow': self.allow,
+                'pvt': self.pvt_files,
+                'rpvt': self.rpvt_uris
+            }
+            result['hosts_allow'] = [str(i) for i in self.hosts_allow]
+            result['hosts_assign'] = [str(i) for i in self.hosts_assign]
+            result['dynamic'] = self.dynamic
+            return result
 
     def set_key(self, k):
         self.key = k
@@ -105,179 +105,180 @@ class APIKey(object):
         self.ce = Fernet(base64.b64encode(self.private_key))
 
     def set_prop(self, prop, value=None, save=False):
-        if not self.dynamic or self.master:
-            raise FunctionFailed('Master and static keys can not be changed')
-        if prop == 'key':
-            if value is None or value == '' or value.find(
-                    ':') != -1 or value.find('|') != -1:
-                return False
-            if self.key != value:
-                with key_lock:
+        with key_lock:
+            if not self.dynamic or self.master:
+                raise FunctionFailed(
+                    'Master and static keys can not be changed')
+            if prop == 'key':
+                if value is None or value == '' or value.find(
+                        ':') != -1 or value.find('|') != -1:
+                    return False
+                if self.key != value:
                     if value in keys:
                         raise ResourceAlreadyExists('API key')
-                regenerate_key(self.key_id, k=value, save=False)
-                self.set_modified(save)
-            return True
-        elif prop == 'dynamic':
-            return False
-        elif prop == 'sysfunc':
-            val = val_to_boolean(value)
-            if val is None:
+                    regenerate_key(self.key_id, k=value, save=False)
+                    self.set_modified(save)
+                return True
+            elif prop == 'dynamic':
                 return False
-            if self.sysfunc != val:
-                self.sysfunc = val
-                self.set_modified(save)
-            return True
-        elif prop == 'items':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.item_ids != val:
-                self.item_ids = val
-                self.set_modified(save)
-            return True
-        elif prop == 'groups':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.groups != val:
-                self.groups = val
-                self.set_modified(save)
-            return True
-        elif prop == 'items_ro':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.item_ids_ro != val:
-                self.item_ids_ro = val
-                self.set_modified(save)
-            return True
-        elif prop == 'groups_ro':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.groups_ro != val:
-                self.groups_ro = val
-                self.set_modified(save)
-            return True
-        elif prop == 'items_deny':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.item_ids_deny != val:
-                self.item_ids_deny = val
-                self.set_modified(save)
-            return True
-        elif prop == 'groups_deny':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            if self.groups_deny != val:
-                self.groups_deny = val
-                self.set_modified(save)
-            return True
-        elif prop == 'allow':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
-                else:
-                    val = []
-            for v in val:
-                if v not in all_allows:
+            elif prop == 'sysfunc':
+                val = val_to_boolean(value)
+                if val is None:
                     return False
-            if self.allow != val:
-                self.allow = val
-                self.set_modified(save)
-            return True
-        elif prop == 'hosts_allow':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
+                if self.sysfunc != val:
+                    self.sysfunc = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'items':
+                if isinstance(value, list):
+                    val = value
                 else:
-                    val = ['0.0.0.0/0']
-            val = [IPNetwork(h) for h in val]
-            if self.hosts_allow != val:
-                self.hosts_allow = val
-                self.set_modified(save)
-            return True
-        elif prop == 'hosts_assign':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.item_ids != val:
+                    self.item_ids = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'groups':
+                if isinstance(value, list):
+                    val = value
                 else:
-                    val = []
-            val = [IPNetwork(h) for h in val]
-            if self.hosts_assign != val:
-                self.hosts_assign = val
-                self.set_modified(save)
-            return True
-        elif prop == 'pvt':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.groups != val:
+                    self.groups = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'items_ro':
+                if isinstance(value, list):
+                    val = value
                 else:
-                    val = []
-            if self.pvt_files != val:
-                self.pvt_files = val
-                self.set_modified(save)
-            return True
-        elif prop == 'rpvt':
-            if isinstance(value, list):
-                val = value
-            else:
-                if value:
-                    val = value.split(',')
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.item_ids_ro != val:
+                    self.item_ids_ro = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'groups_ro':
+                if isinstance(value, list):
+                    val = value
                 else:
-                    val = []
-            if self.rpvt_uris != val:
-                self.rpvt_uris = val
-                self.set_modified(save)
-            return True
-        elif prop == 'cdata':
-            val = [] if value is None else value
-            if isinstance(val, str):
-                val = val.split(',')
-            res = []
-            for v in val:
-                if v not in res:
-                    res.append(str(v))
-            if self.cdata != res:
-                self.cdata = res
-                self.set_modified(save)
-            return True
-        raise ResourceNotFound('property ' + prop)
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.groups_ro != val:
+                    self.groups_ro = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'items_deny':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.item_ids_deny != val:
+                    self.item_ids_deny = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'groups_deny':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.groups_deny != val:
+                    self.groups_deny = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'allow':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                for v in val:
+                    if v not in all_allows:
+                        return False
+                if self.allow != val:
+                    self.allow = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'hosts_allow':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = ['0.0.0.0/0']
+                val = [IPNetwork(h) for h in val]
+                if self.hosts_allow != val:
+                    self.hosts_allow = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'hosts_assign':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                val = [IPNetwork(h) for h in val]
+                if self.hosts_assign != val:
+                    self.hosts_assign = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'pvt':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.pvt_files != val:
+                    self.pvt_files = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'rpvt':
+                if isinstance(value, list):
+                    val = value
+                else:
+                    if value:
+                        val = value.split(',')
+                    else:
+                        val = []
+                if self.rpvt_uris != val:
+                    self.rpvt_uris = val
+                    self.set_modified(save)
+                return True
+            elif prop == 'cdata':
+                val = [] if value is None else value
+                if isinstance(val, str):
+                    val = val.split(',')
+                res = []
+                for v in val:
+                    if v not in res:
+                        res.append(str(v))
+                if self.cdata != res:
+                    self.cdata = res
+                    self.set_modified(save)
+                return True
+            raise ResourceNotFound('property ' + prop)
 
     def set_modified(self, save):
         if save:
@@ -583,88 +584,90 @@ def check(k,
         _k = keys[k]
         if _k.combined_from:
             _recombine_acl(_k)
-    if ip and not netacl_match(ip, _k.hosts_allow):
-        return False
-    if _k.master:
-        return True
-    if sysfunc and not _k.sysfunc:
-        return False
-    if item:
-        # check access to PHI
-        try:
-            if ('#' not in _k.item_ids and item.phi_id not in _k.item_ids) or \
-                    ('#' not in _k.groups and 'phi' not in _k.groups):
-                return False
-        except:
-            # check access to regular item
+        if ip and not netacl_match(ip, _k.hosts_allow):
+            return False
+        if _k.master:
+            return True
+        if sysfunc and not _k.sysfunc:
+            return False
+        if item:
+            # check access to PHI
             try:
-                grp = item.group
+                if ('#' not in _k.item_ids and item.phi_id
+                        not in _k.item_ids) or ('#' not in _k.groups and
+                                                'phi' not in _k.groups):
+                    return False
             except:
-                grp = 'nogroup'
-            if not ro_op and eva.item.item_match(item, _k.item_ids_deny,
-                                                 _k.groups_deny):
-                return False
-            if not eva.item.item_match(item, _k.item_ids, _k.groups):
+                # check access to regular item
+                try:
+                    grp = item.group
+                except:
+                    grp = 'nogroup'
+                if not ro_op and eva.item.item_match(item, _k.item_ids_deny,
+                                                     _k.groups_deny):
+                    return False
+                if not eva.item.item_match(item, _k.item_ids, _k.groups):
+                    if ro_op:
+                        if not eva.item.item_match(item, _k.item_ids_ro,
+                                                   _k.groups_ro):
+                            return False
+                    else:
+                        return False
+        if oid:
+            if not eva.item.oid_match(oid, _k.item_ids, _k.groups):
                 if ro_op:
-                    if not eva.item.item_match(item, _k.item_ids_ro,
-                                               _k.groups_ro):
+                    if not eva.item.oid_match(oid, _k.item_ids_ro,
+                                              _k.groups_ro):
                         return False
                 else:
                     return False
-    if oid:
-        if not eva.item.oid_match(oid, _k.item_ids, _k.groups):
-            if ro_op:
-                if not eva.item.oid_match(oid, _k.item_ids_ro, _k.groups_ro):
+        if allow:
+            for a in allow:
+                if not a in _k.allow:
                     return False
+        if pvt_file:
+            if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
+                return True
+            for d in _k.pvt_files:
+                p = d.find('#')
+                if p > -1 and d[:p] == pvt_file[:p]:
+                    return True
+                if d.find('+') > -1:
+                    g1 = d.split('/')
+                    g2 = pvt_file.split('/')
+                    if len(g1) == len(g2):
+                        match = True
+                        for i in range(0, len(g1)):
+                            if g1[i] != '+' and g1[i] != g2[i]:
+                                match = False
+                                break
+                        if match:
+                            return True
+            return False
+        if rpvt_uri:
+            if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
+                r = rpvt_uri.split('//', 1)[1]
             else:
-                return False
-    if allow:
-        for a in allow:
-            if not a in _k.allow:
-                return False
-    if pvt_file:
-        if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
-            return True
-        for d in _k.pvt_files:
-            p = d.find('#')
-            if p > -1 and d[:p] == pvt_file[:p]:
+                r = rpvt_uri
+            if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
                 return True
-            if d.find('+') > -1:
-                g1 = d.split('/')
-                g2 = pvt_file.split('/')
-                if len(g1) == len(g2):
-                    match = True
-                    for i in range(0, len(g1)):
-                        if g1[i] != '+' and g1[i] != g2[i]:
-                            match = False
-                            break
-                    if match:
-                        return True
-        return False
-    if rpvt_uri:
-        if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
-            r = rpvt_uri.split('//', 1)[1]
-        else:
-            r = rpvt_uri
-        if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
-            return True
-        for d in _k.rpvt_uris:
-            p = d.find('#')
-            if p > -1 and d[:p] == r[:p]:
-                return True
-            if d.find('+') > -1:
-                g1 = d.split('/')
-                g2 = r.split('/')
-                if len(g1) == len(g2):
-                    match = True
-                    for i in range(0, len(g1)):
-                        if g1[i] != '+' and g1[i] != g2[i]:
-                            match = False
-                            break
-                    if match:
-                        return True
-        return False
-    return True
+            for d in _k.rpvt_uris:
+                p = d.find('#')
+                if p > -1 and d[:p] == r[:p]:
+                    return True
+                if d.find('+') > -1:
+                    g1 = d.split('/')
+                    g2 = r.split('/')
+                    if len(g1) == len(g2):
+                        match = True
+                        for i in range(0, len(g1)):
+                            if g1[i] != '+' and g1[i] != g2[i]:
+                                match = False
+                                break
+                        if match:
+                            return True
+            return False
+        return True
 
 
 def check_master(k):
@@ -685,37 +688,37 @@ def get_masterkey():
 
 
 def serialized_acl(k):
-    r = {'key_id': None, 'master': True}
-    setup_on = eva.core.is_setup_mode()
     with key_lock:
+        r = {'key_id': None, 'master': True}
+        setup_on = eva.core.is_setup_mode()
         if not k or not k in keys:
             return r if setup_on else None
         _k = keys[k]
         if _k.combined_from:
             _recombine_acl(_k)
-    r['key_id'] = _k.key_id
-    r['master'] = _k.master or setup_on
-    r['cdata'] = _k.cdata
-    if _k.master or setup_on:
+        r['key_id'] = _k.key_id
+        r['master'] = _k.master or setup_on
+        r['cdata'] = _k.cdata
+        if _k.master or setup_on:
+            return r
+        r['sysfunc'] = _k.sysfunc
+        r['items'] = _k.item_ids
+        r['groups'] = _k.groups
+        r['items_ro'] = _k.item_ids_ro
+        r['groups_ro'] = _k.groups_ro
+        r['items_deny'] = _k.item_ids_deny
+        r['groups_deny'] = _k.groups_deny
+        if _k.pvt_files:
+            r['pvt'] = _k.pvt_files
+        if _k.rpvt_uris:
+            r['rpvt'] = _k.rpvt_uris
+        r['allow'] = {}
+        r['dynamic'] = _k.dynamic
+        if _k.combined_from:
+            r['combined_from'] = _k.combined_from
+        for a in allows:
+            r['allow'][a] = True if a in _k.allow else False
         return r
-    r['sysfunc'] = _k.sysfunc
-    r['items'] = _k.item_ids
-    r['groups'] = _k.groups
-    r['items_ro'] = _k.item_ids_ro
-    r['groups_ro'] = _k.groups_ro
-    r['items_deny'] = _k.item_ids_deny
-    r['groups_deny'] = _k.groups_deny
-    if _k.pvt_files:
-        r['pvt'] = _k.pvt_files
-    if _k.rpvt_uris:
-        r['rpvt'] = _k.rpvt_uris
-    r['allow'] = {}
-    r['dynamic'] = _k.dynamic
-    if _k.combined_from:
-        r['combined_from'] = _k.combined_from
-    for a in allows:
-        r['allow'][a] = True if a in _k.allow else False
-    return r
 
 
 def add_api_key(key_id=None, save=False):
@@ -734,7 +737,7 @@ def add_api_key(key_id=None, save=False):
         result = key.serialize()
         if key_id in keys_to_delete:
             keys_to_delete.remove(key_id)
-    return result
+        return result
 
 
 def _recombine_acl(combined_key):
