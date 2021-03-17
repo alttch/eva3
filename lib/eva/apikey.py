@@ -749,8 +749,7 @@ def _recombine_acl(combined_key):
                 'item_ids_deny', 'groups_deny', 'allow', 'pvt_files',
                 'rpvt_uris', 'cdata', 'hosts_allow', 'hosts_assign'
         ]:
-            a = getattr(combined_key, prop)
-            a.clear()
+            setattr(combined_key, prop, [])
         for k_id in combined_key.combined_from:
             try:
                 key = keys_by_id[k_id]
