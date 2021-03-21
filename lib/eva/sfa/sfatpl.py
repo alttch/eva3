@@ -116,6 +116,8 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         for n, v in _exposed_sfatpl.items():
             template.globals[n] = v
     try:
+        cherrypy.serving.response.headers[
+            'Content-Type'] = 'text/html;charset=utf-8'
         return template.render(env).encode()
     except:
         eva.core.log_traceback()

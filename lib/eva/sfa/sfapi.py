@@ -1719,6 +1719,13 @@ def j2_hook(*args, **kwargs):
         cherrypy.serving.request.handler = eva.sfa.sfatpl.j2_handler
 
 
+def html_hook(*args, **kwargs):
+    if cherrypy.serving.request.path_info[-4:] == '.htm' or \
+        cherrypy.serving.request.path_info[-5:] == '.html':
+        cherrypy.serving.response.headers[
+            'Content-Type'] = 'text/html;charset=utf-8'
+
+
 def json_yml_hook(*args, **kwargs):
     if cherrypy.serving.request.path_info[-5:] in ['.json', 'yaml'] or \
         cherrypy.serving.request.path_info[-4:] == '.yml':
@@ -1733,6 +1740,7 @@ class UI_ROOT():
     _cp_config = {
         'tools.init_call.on': True,
         'tools.j2.on': True,
+        'tools.html_charset.on': True,
         'tools.jconverter.on': True,
     }
 
@@ -1740,16 +1748,22 @@ class UI_ROOT():
         cherrypy.tools.j2 = cherrypy.Tool('before_handler',
                                           j2_hook,
                                           priority=100)
+        cherrypy.tools.html_charset = cherrypy.Tool('before_handler',
+                                          html_hook,
+                                          priority=100)
         cherrypy.tools.jconverter = cherrypy.Tool('before_handler',
                                                   json_yml_hook,
                                                   priority=100)
 
     @cherrypy.expose
     def index(self, **kwargs):
-        if os.path.isfile(eva.core.dir_eva + '/ui/index.j2'):
+        if os.path.exists(eva.core.dir_eva + '/ui/index.j2'):
             return serve_j2('/index.j2')
-        if os.path.isfile(eva.core.dir_eva + '/ui/index.html'):
-            return serve_file(eva.core.dir_eva + '/ui/index.html')
+        if os.path.exists(f'{eva.core.dir_ui}/index.html'):
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'text/html;charset=utf-8'
+            with open(f'{eva.core.dir_ui}/index.html') as fh:
+                return fh.read()
         raise cp_api_404()
 
 
@@ -1935,6 +1949,52 @@ class SFA_HTTP_Root:
                 result, minimal=not eva.core.config.development).encode()
 
 
+def handle_ui_error(code):
+    if os.path.exists(f'{eva.core.dir_ui}/errors/{code}.j2'):
+        return serve_j2(f'errors/{code}.j2')
+    elif os.path.exists(f'{eva.core.dir_ui}/errors/{code}.html'):
+        cherrypy.serving.response.headers[
+            'Content-Type'] = 'text/html;charset=utf-8'
+        with open(f'{eva.core.dir_ui}/errors/{code}.html') as fh:
+            return fh.read()
+    else:
+        return tiny_httpe[f'error_page.{code}']()
+
+
+def ui_error_page_400(*args, **kwargs):
+    return handle_ui_error('400')
+
+
+def ui_error_page_403(*args, **kwargs):
+    return handle_ui_error('403')
+
+
+def ui_error_page_404(*args, **kwargs):
+    return handle_ui_error('404')
+
+
+def ui_error_page_405(*args, **kwargs):
+    return handle_ui_error('405')
+
+
+def ui_error_page_409(*args, **kwargs):
+    return handle_ui_error('409')
+
+
+def ui_error_page_500(*args, **kwargs):
+    return handle_ui_error('500')
+
+
+ui_httpe = {
+    'error_page.400': ui_error_page_400,
+    'error_page.403': ui_error_page_403,
+    'error_page.404': ui_error_page_404,
+    'error_page.405': ui_error_page_405,
+    'error_page.409': ui_error_page_409,
+    'error_page.500': ui_error_page_500
+}
+
+
 def start():
     http_api = SFA_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
@@ -1993,7 +2053,7 @@ def start():
                         'tools.sessions.on': False,
                         'tools.staticdir.dir': eva.core.dir_eva + '/ui',
                         'tools.staticdir.on': True
-                    }, tiny_httpe)
+                    }, ui_httpe)
         })
     eva.api.jrpc = jrpc
     eva.sfa.cloudmanager.start()
