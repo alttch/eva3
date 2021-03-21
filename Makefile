@@ -21,6 +21,14 @@ test-build:
 	make test-release
 	jks build get.eva-ics.com
 
+test-build-for-stable:
+	make build
+	git commit -a -m 'test build'
+	git push
+	make d
+	make test-release
+	jks build get.eva-ics.com
+
 rc-pub:
 	make d
 	make test-release
