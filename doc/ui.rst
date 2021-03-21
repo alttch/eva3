@@ -14,6 +14,9 @@ The applications are usually coded in HTML+JavaScript. The UI applications
 should use :doc:`/sfa/sfa_api` methods to authenticate, obtain data and
 execute various actions.
 
+Development
+===========
+
 EVA ICS provides the following tools to simplify UI development:
 
 * `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_ - provides
@@ -36,3 +39,14 @@ EVA ICS provides the following tools to simplify UI development:
 
 Some of ready-to-use HMI applications are available at `EVA ICS download page
 <https://www.eva-ics.com/download>`_.
+
+Custom error pages
+==================
+
+HTTP error responses (400, 403, 404, 405, 409 and 500) can be customized with
+custom error pages. To customize an error response, create file
+*EVA_DIR/ui/errors/<code>.html*, e.g. *EVA_DIR/ui/errors/404.html* for HTTP
+Error 404 (Not Found).
+
+Custom error pages can have *.j2* extensions as well. In this case, they are
+processed as :doc:`/sfa/sfa_templates`.
