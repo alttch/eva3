@@ -1299,9 +1299,6 @@ class GenericAPI(API):
             raise FunctionFailed('user is not logged in')
         token_id = get_aci('token')
         t = tokens.get_token(token_id)
-        print(t)
-        print(t['ki'])
-        print(apikey.key_by_id(t['ki']))
         # if apikey.check_master(apikey.key_by_id(t['ki'])):
         # raise MethodNotImplemented('not implemented for master keys')
         if not t:

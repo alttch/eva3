@@ -55,10 +55,13 @@ def parse_content(content):
 parse_content(content)
 
 for lang in a.lang:
-    po_file = Path(a.output_dir) / f'{lang}/LC_MESSAGES' / Path(
-        a.FILE).absolute().parent.as_posix()[len(eva_dir.as_posix()) +
-                                             1:].split('/', 1)[-1] / Path(
-                                                 a.FILE).with_suffix('.po').name
+    po_file = Path(a.output_dir) / f'{lang}/LC_MESSAGES'
+    ldir = Path(
+            a.FILE).absolute().parent.as_posix()[len(eva_dir.as_posix()) +
+                                                 1:]
+    if '/' in ldir:
+        po_file /= ldir.split('/', 1)[-1]
+    po_file /= Path(a.FILE).with_suffix('.po').name
     po_file.parent.mkdir(parents=True, exist_ok=True)
     if po_file.exists():
         pass

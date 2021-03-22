@@ -103,8 +103,11 @@ def api_call(method, key_id=None, **kwargs):
     f = eva.api.jrpc._get_api_function(method)
     if not f:
         raise MethodNotFound
+    auth_bak = get_aci('auth')
+    set_aci('auth', 'key')
     result = f(k=key_by_id(key_id) if key_id is not None else get_masterkey(),
                **kwargs)
+    set_aci('auth', auth_bak)
     if isinstance(result, tuple):
         res, data = result
         if res is True:
