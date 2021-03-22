@@ -64,12 +64,12 @@ def convert(obj,
     if isinstance(obj, list):
         result = obj.copy()
         for i, v in enumerate(result):
-            result[i] = convert(v, lang, _el=_el)
+            result[i] = convert(v, lang, localedir=localedir, _el=_el)
         return result
     elif isinstance(obj, dict):
         result = obj.copy()
         for i, v in result.items():
-            result[i] = convert(v, lang, _el=_el)
+            result[i] = convert(v, lang, localedir=localedir, _el=_el)
         return result
     elif isinstance(obj, str):
         return _convert_str(obj, el=_el)
