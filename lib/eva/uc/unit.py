@@ -354,7 +354,11 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
 
     def action_may_run(self, action):
         nv = action.nvalue
-        return self.action_always_exec or \
+        if not self.is_value_valid(nv):
+            action.set_failed(exitcode=-20, err='value out of range')
+            return False
+        else:
+            return self.action_always_exec or \
             action.nstatus != self.status or \
             (nv is not None and nv != self.value)
 
