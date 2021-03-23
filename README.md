@@ -12,9 +12,13 @@ available under Apache License 2.0.
 
 ![What is EVA ICS](doc/promo/what-is-eva-ics.png?raw=true "What is EVA ICS")
 
-Using MQTT server, EVA ICS allows to set up single IoT/IIoT management node
-and then easily scale it to your own automation Cloud, where nodes and
-components discover each other automatically.
+EVA ICS allows to set up single IoT/IIoT management node and then easily scale
+it to your own private ultra-secure automation Cloud, where nodes and
+components discover each other automatically via the Internet or local
+communications.
+
+The powerful Industry-4.0 deployment system allows quickly setting up new nodes
+and easily switching between pre-production and production configurations.
 
 You design IoT setup. EVA ICS builds it for you.
 
