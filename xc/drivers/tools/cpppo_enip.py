@@ -21,10 +21,13 @@ if not core_config.development:
     for x in ['enip', 'cpppo']:
         logging.getLogger(x).setLevel(logging.WARNING)
 
-from cpppo.server.enip.client import (connector, parse_operations, recycle,
-                                      device)
-
-from cpppo.server.enip.get_attribute import proxy
+try:
+    from cpppo.server.enip.client import (connector, parse_operations, recycle,
+                                          device)
+    from cpppo.server.enip.get_attribute import proxy
+except:
+    logging.error('unable to import cpppo module')
+    log_traceback()
 
 from types import GeneratorType
 
