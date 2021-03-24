@@ -325,6 +325,7 @@ class UpdatableItem(Item):
         super().__init__(item_id, item_type)
         self.update_exec = None
         self.update_interval = 0
+        self.update_delay = 0
         self.update_timeout = eva.core.config.timeout
         self._update_timeout = None
         self.update_processor = BackgroundEventWorker(
@@ -359,6 +360,8 @@ class UpdatableItem(Item):
             self.update_exec = data['update_exec']
         if 'update_interval' in data:
             self.update_interval = data['update_interval']
+        if 'update_delay' in data:
+            self.update_delay = data['update_delay']
         if 'update_timeout' in data:
             self.update_timeout = data['update_timeout']
             self._update_timeout = data['update_timeout']
@@ -423,6 +426,21 @@ class UpdatableItem(Item):
                     self.stop_update_scheduler()
                 else:
                     self.start_update_scheduler()
+            return True
+        elif prop == 'update_delay':
+            if val is None:
+                update_delay = 0
+            else:
+                try:
+                    update_delay = float(val)
+                except:
+                    return False
+            if update_delay < 0:
+                return False
+            if self.update_delay != update_delay:
+                self.update_delay = update_delay
+                self.log_set(prop, update_delay)
+                self.set_modified(save)
             return True
         elif prop == 'update_timeout':
             if val is None:
@@ -600,8 +618,10 @@ class UpdatableItem(Item):
         eva.core.spawn(self._perform_update, **kwargs)
 
     def _perform_update(self, **kwargs):
-        logging.debug('{} updating'.format(self.oid))
+        logging.debug('updating {}'.format(self.oid))
         try:
+            if self.update_delay:
+                time.sleep(self.update_delay)
             self.update_log_run()
             self.update_before_run()
             xc = self.get_update_xc(**kwargs)
@@ -636,7 +656,7 @@ class UpdatableItem(Item):
         return {}
 
     def update_log_run(self):
-        logging.debug('updating %s' % self.oid)
+        logging.debug('performing update for %s' % self.oid)
 
     def update_before_run(self):
         pass
@@ -769,6 +789,8 @@ class UpdatableItem(Item):
                     d['mqtt_update'] = None
             if not config or self.update_interval:
                 d['update_interval'] = self.update_interval
+            if not config or self.update_delay:
+                d['update_delay'] = self.update_delay
             if self._update_timeout:
                 d['update_timeout'] = self._update_timeout
             elif props:

@@ -180,6 +180,8 @@ Unit parameters
 * **snmp_trap** if set, the item can receive active state updates via
   :ref:`snmp_traps`.
 
+* **update_delay** delay in seconds before triggered update is launched
+
 * **update_exec** a :doc:`script</item_scripts>` for passive update of the item
   state, "xc/uc/ITEMID_update" by default.
 
