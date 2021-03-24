@@ -1,6 +1,20 @@
 EVA ICS CHANGELOG
 *****************
 
+3.3.3 (TBA)
+
+UC
+--
+
+   * item "update_delay" property is returned back
+   * unit actions check value ranges if defined
+
+SFA
+---
+
+   * Locale files can be stored in both "pvt" and "ui"
+   * Custom UI error pages
+
 3.3.2 (2021-03-01)
 ==================
 
