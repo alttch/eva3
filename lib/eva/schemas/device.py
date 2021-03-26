@@ -352,6 +352,10 @@ SCHEMA_DEVICE = {
                         'status': {
                             'type': ['integer', 'string']
                         },
+                        'update_delay': {
+                            'minimum': 0,
+                            'type': 'number'
+                        },
                         'update_driver_config': {
                             'type': ['object', 'null']
                         },

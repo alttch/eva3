@@ -396,6 +396,10 @@ SCHEMA_DEPLOY = {
                         'term_kill_interval': {
                             'type': ['number', 'null']
                         },
+                        'update_delay': {
+                            'type': 'number',
+                            'minimum': 0
+                        },
                         'update_driver_config': {
                             'type': ['object', 'null']
                         },
@@ -409,10 +413,6 @@ SCHEMA_DEPLOY = {
                             'type': 'boolean'
                         },
                         'update_interval': {
-                            'type': 'number',
-                            'minimum': 0
-                        },
-                        'update_delay': {
                             'type': 'number',
                             'minimum': 0
                         },
@@ -495,6 +495,10 @@ SCHEMA_DEPLOY = {
                             'enum': [0, 1, 2]
                         },
                         'snmp_trap': {},
+                        'update_delay': {
+                            'type': 'number',
+                            'minimum': 0
+                        },
                         'update_driver_config': {
                             'type': ['object', 'null']
                         },
