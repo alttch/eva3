@@ -412,6 +412,10 @@ SCHEMA_DEPLOY = {
                             'type': 'number',
                             'minimum': 0
                         },
+                        'update_delay': {
+                            'type': 'number',
+                            'minimum': 0
+                        },
                         'update_state_after_action': {
                             'type': 'boolean'
                         },
