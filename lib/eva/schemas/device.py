@@ -475,6 +475,10 @@ SCHEMA_DEVICE = {
                         'term_kill_interval': {
                             'type': ['number', 'null']
                         },
+                        'update_delay': {
+                            'minimum': 0,
+                            'type': 'number'
+                        },
                         'update_driver_config': {
                             'type': ['object', 'null']
                         },
