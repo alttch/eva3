@@ -652,7 +652,6 @@ class GenericNotifier_Client(GenericNotifier):
         fdata = []
         if subject == 'state':
             for d in data_in:
-                print(d)
                 if apikey.check(self.apikey, d[0], ro_op=True):
                     fdata.append(d)
         elif subject == 'action':
@@ -1531,7 +1530,6 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             t = d[0] / 1000
             status = d[1]
             value = d[2]
-            print(t)
             # skip repeating records
             if records.get(oid) == (status, value):
                 continue
