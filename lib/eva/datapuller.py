@@ -199,8 +199,8 @@ class DataPuller:
             if self.serr.poll(self.polldelay):
                 process_stderr(get_line(self.p.stderr))
                 ns = False
-            if ns:
-                time.sleep(self.polldelay)
+            if not ns:
+                continue
             if self.p.poll() is not None:
                 if not eva.core.is_shutdown_requested() and self.active:
                     out, err = self.p.communicate()
