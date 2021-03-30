@@ -452,28 +452,20 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if status is not None:
             if self.status != status:
                 need_notify = True
-            self.status = status
+                self.status = status
             self.start_auto_processor()
         if value is not None:
-            if value == '':
-                v = ''
-            else:
-                v = value
-            if self.value != v:
+            if self.value != value:
                 need_notify = True
-            self.value = v
+                self.value = value
         if nstatus is not None:
             if self.nstatus != nstatus:
                 need_notify = True
-            self.nstatus = nstatus
+                self.nstatus = nstatus
         if nvalue is not None:
-            if nvalue == '':
-                nv = ''
-            else:
-                nv = nvalue
-            if self.nvalue != nv:
+            if self.nvalue != nvalue:
                 need_notify = True
-            self.nvalue = nv
+                self.nvalue = nvalue
         if need_notify:
             logging.debug(
                 '%s%s status = %u, value = "%s", nstatus = %u, nvalue = "%s"' %\
