@@ -687,28 +687,30 @@ class UpdatableItem(Item):
         return self.update_set_state(status, value)
 
     def mqtt_set_state(self, topic, data):
-        try:
-            if topic.endswith('/status'):
-                self.update_set_state(status=data)
-            elif topic.endswith('/value'):
-                self.update_set_state(value=data)
-            elif topic == self.item_type + '/' + self.full_id:
-                if not data:
-                    return
-                j = rapidjson.loads(data)
-                t = j.get('t', time.time())
-                remote_controller = j.get('c')
-                if (not self.allow_mqtt_updates_from_controllers and
-                        remote_controller
-                   ) or remote_controller == eva.core.config.controller_name:
-                    return None
-                if not self.set_state_from_serialized(
-                        j, from_mqtt=True, timestamp=t):
-                    return None
-                else:
-                    return j
-        except:
-            eva.core.log_traceback()
+        with self.update_lock:
+            try:
+                if topic.endswith('/status'):
+                    self.update_set_state(status=data)
+                elif topic.endswith('/value'):
+                    self.update_set_state(value=data)
+                elif topic == self.item_type + '/' + self.full_id:
+                    if not data:
+                        return
+                    j = rapidjson.loads(data)
+                    t = j.get('t', time.time())
+                    remote_controller = j.get('c')
+                    if (
+                            not self.allow_mqtt_updates_from_controllers and
+                            remote_controller
+                    ) or remote_controller == eva.core.config.controller_name:
+                        return None
+                    if not self.set_state_from_serialized(
+                            j, from_mqtt=True, timestamp=t):
+                        return None
+                    else:
+                        return j
+            except:
+                eva.core.log_traceback()
 
     def set_state_from_serialized(self,
                                   data,

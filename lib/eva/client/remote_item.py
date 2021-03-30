@@ -159,26 +159,27 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
         return True
 
     def mqtt_set_state(self, topic, data):
-        j = super().mqtt_set_state(topic, data)
-        if j:
-            try:
-                if 'nstatus' in j:
-                    s = j['nstatus']
-                else:
-                    s = None
-                if 'nvalue' in j:
-                    v = j['nvalue']
-                else:
-                    v = None
-                if s is not None or v is not None:
-                    self.update_nstate(nstatus=s, nvalue=v)
-                if 'action_enabled' in j:
-                    val = eva.tools.val_to_boolean(j['action_enabled'])
-                    if self.action_enabled != val:
-                        self.action_enabled = val
-                        self.notify()
-            except:
-                eva.core.log_traceback()
+        with self.remote_update_lock:
+            j = super().mqtt_set_state(topic, data)
+            if j:
+                try:
+                    if 'nstatus' in j:
+                        s = j['nstatus']
+                    else:
+                        s = None
+                    if 'nvalue' in j:
+                        v = j['nvalue']
+                    else:
+                        v = None
+                    if s is not None or v is not None:
+                        self.update_nstate(nstatus=s, nvalue=v)
+                    if 'action_enabled' in j:
+                        val = eva.tools.val_to_boolean(j['action_enabled'])
+                        if self.action_enabled != val:
+                            self.action_enabled = val
+                            self.notify()
+                except:
+                    eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
