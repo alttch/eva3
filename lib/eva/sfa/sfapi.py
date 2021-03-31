@@ -1749,8 +1749,8 @@ class UI_ROOT():
                                           j2_hook,
                                           priority=100)
         cherrypy.tools.html_charset = cherrypy.Tool('before_handler',
-                                          html_hook,
-                                          priority=100)
+                                                    html_hook,
+                                                    priority=100)
         cherrypy.tools.jconverter = cherrypy.Tool('before_handler',
                                                   json_yml_hook,
                                                   priority=100)
@@ -1790,6 +1790,17 @@ class SFA_HTTP_Root:
         if q:
             q = '?' + q
         raise cherrypy.HTTPRedirect('/ui/' + q)
+
+    @cherrypy.expose
+    def favicon_ico(self):
+        ico_file = eva.core.dir_ui + '/favicon.ico'
+        if not os.path.exists(ico_file):
+            ico_file = eva.core.dir_lib + '/eva/i/favicon.ico'
+        if not os.path.exists(ico_file):
+            raise cp_api_404()
+        cherrypy.serving.response.headers['Content-Type'] = 'image/x-icon'
+        with open(ico_file, 'rb') as fh:
+            return fh.read()
 
     @cherrypy.expose
     def rpvt(self, k=None, f=None, ic=None, nocache=None):
@@ -2019,12 +2030,6 @@ def start():
                 'tools.staticdir.dir': eva.core.dir_eva + '/ui/.evahi',
                 'tools.staticdir.on': True
             },
-            '/favicon.ico': {
-                'tools.staticfile.on':
-                    True,
-                'tools.staticfile.filename':
-                    eva.core.dir_eva + '/lib/eva/i/favicon.ico'
-            }
         })
 
     dir_mirror = eva.core.dir_eva + '/mirror'
