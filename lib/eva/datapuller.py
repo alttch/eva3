@@ -194,7 +194,7 @@ class DataPuller:
                 logging.error(f'data puller {self.name} {data}')
 
         def _t_line_processor():
-            while True:
+            while self.active:
                 line = line_q.get()
                 if line is None:
                     break
