@@ -50,3 +50,9 @@ Error 404 (Not Found).
 
 Custom error pages can have *.j2* extensions as well. In this case, they are
 processed as :doc:`/sfa/sfa_templates`.
+
+UI Favicon
+==========
+
+If there is no way to define icon path with "link" HTML tag, put a file named
+"favicon.ico" in EVA_DIR/ui/ directory to override the default favicon.
