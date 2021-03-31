@@ -3,17 +3,21 @@ __copyright__ = "Copyright (C) 2012-2021 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.2"
 
-import subprocess
-import select
-import threading
-import time
-import logging
-import psutil
 import eva.core
-import queue
+import asyncio
+import logging
+import time
+import psutil
+
+from neotasker import task_supervisor
+from neotasker.supervisor import ACancelledError
 
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import MethodNotImplemented
+
+from types import SimpleNamespace
+
+_d = SimpleNamespace()
 
 datapullers = {}
 
@@ -35,6 +39,7 @@ def append_data_puller(name, cmd):
 
 
 def start():
+    _d.loop = task_supervisor.create_aloop('datapullers')
     for i, v in datapullers.items():
         v.start()
 
@@ -55,7 +60,6 @@ class DataPuller:
         self.name = name
         self.cmd = cmd
         self.p = None
-        self.active = False
         self.polldelay = polldelay
         self.tki = tki
         self.executor = None
@@ -66,47 +70,54 @@ class DataPuller:
         return {
             'name': self.name,
             'cmd': self.cmd,
-            'active': self.active,
-            'pid': self.p.pid if self.p and self.active else None
+            'active': self.executor is not None,
+            'pid': self.p.pid if self.p and self.executor is not None else None
         }
 
     def start(self, auto=False):
 
-        def _start(delay=True):
+        async def _start(delay=True):
             try:
                 logging.info(f'data puller {self.name} is starting')
                 if delay:
-                    time.sleep(1)
+                    await asyncio.sleep(1)
                 if eva.core.is_shutdown_requested():
                     return
                 env = {}
                 env.update(eva.core.env)
                 env.update(eva.core.cvars)
-                self.p = subprocess.Popen([
+                self.p = await asyncio.create_subprocess_shell(
                     self.cmd if self.cmd.startswith('/') else
-                    f'{eva.core.dir_eva}/{self.cmd}'
-                ],
-                                          shell=True,
-                                          env=env,
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE)
-                self.sout = select.poll()
-                self.serr = select.poll()
-                self.sout.register(self.p.stdout)
-                self.serr.register(self.p.stderr)
-                self.executor = threading.Thread(target=self._t_run,
-                                                 daemon=False,
-                                                 name=f'datapuller_{self.name}')
-                self.executor.start()
+                    f'{eva.core.dir_eva}/{self.cmd}',
+                    env=env,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE)
+                await asyncio.gather(self.read_stream(self.p.stdout, False),
+                                     self.read_stream(self.p.stderr, True),
+                                     self.process_guard())
+            except ACancelledError:
+                pass
             except:
                 eva.core.log_traceback()
 
-        if not self.active:
-            self.active = True
-            eva.core.spawn(_start, delay=auto)
+        if not self.executor:
+            self.executor = _d.loop.spawn_coroutine_threadsafe(
+                _start(delay=auto))
         else:
             logging.warning(
                 f'data puller {self.name} is already active, skipping start')
+
+    def process_stdout(self, data):
+        try:
+            self.process_data(data)
+        except:
+            logging.error(f'data puller {self.name} unable '
+                          f'to process data: {data}')
+            eva.core.log_traceback()
+
+    def process_stderr(self, data):
+        if data:
+            logging.error(f'data puller {self.name} {data}')
 
     def process_data(self, data):
         if eva.core.is_shutdown_requested():
@@ -168,87 +179,57 @@ class DataPuller:
         self.stop()
         self.start(auto=auto)
 
-    def _t_run(self):
-
-        line_q = queue.Queue()
-
-        def get_line(pipe):
-            self.last_activity = time.perf_counter()
-            try:
-                return pipe.readline().decode().strip()
-            except Exception as e:
-                logging.error(
-                    f'data puller {self.name} unable to decode data: {e}')
-                eva.core.log_traceback()
-
-        def process_stdout(data):
-            try:
-                self.process_data(data)
-            except:
-                logging.error(f'data puller {self.name} unable '
-                              f'to process data: {data}')
-                eva.core.log_traceback()
-
-        def process_stderr(data):
-            if data:
-                logging.error(f'data puller {self.name} {data}')
-
-        def _t_line_processor():
-            while self.active:
-                line = line_q.get()
-                if line is None:
-                    break
-                if line[0] == 1:
-                    process_stdout(line[1])
-                else:
-                    process_stderr(line[1])
-
+    def process_line(self, line, err=False):
         self.last_activity = time.perf_counter()
-
-        line_processor = threading.Thread(
-            target=_t_line_processor,
-            name=f'datapuller_{self.name}_line_processor')
-        line_processor.start()
-
         try:
-            while self.active:
-                ns = True
-                if self.sout.poll(self.polldelay):
-                    line_q.put((1, get_line(self.p.stdout)))
-                    ns = False
-                if self.serr.poll(self.polldelay):
-                    line_q.put((2, get_line(self.p.stderr)))
-                    ns = False
-                if not ns:
-                    continue
-                if self.p.poll() is not None:
-                    if not eva.core.is_shutdown_requested() and self.active:
-                        out, err = self.p.communicate()
-                        for d in out.decode().strip().split('\n'):
-                            d = d.strip()
-                            if d:
-                                process_stdout(d)
-                        for d in err.decode().strip().split('\n'):
-                            d = d.strip()
-                            if d:
-                                process_stderr(d)
-                        logging.error(f'data puller {self.name} exited with '
-                                      f'code {self.p.returncode}. restarting')
-                        self.restart(auto=True)
-                    break
-                if self.last_activity + self.timeout < time.perf_counter():
-                    if not eva.core.is_shutdown_requested() and self.active:
-                        logging.error(
-                            f'data puller {self.name} timed out. restarting')
-                        self.restart(auto=True)
-                    break
-        finally:
-            line_q.put(None)
-            line_processor.join()
+            d = line.decode().strip().split('\n')
+        except Exception as e:
+            logging.error(f'data puller {self.name} unable to decode data: {e}')
+            eva.core.log_traceback()
+            return
+        if err:
+            for l in d:
+                self.process_stderr(l)
+        else:
+            for l in d:
+                self.process_stdout(l)
+
+    async def read_stream(self, pipe, err=False):
+        while True:
+            line = await pipe.readline()
+            if line:
+                self.process_line(line, err)
+            else:
+                break
+
+    async def process_guard(self):
+        self.last_activity = time.perf_counter()
+        while True:
+            if self.p.returncode is not None:
+                if not eva.core.is_shutdown_requested():
+                    out, err = await self.p.communicate()
+                    for d in out.decode().strip().split('\n'):
+                        d = d.strip()
+                        if d:
+                            process_stdout(d)
+                    for d in err.decode().strip().split('\n'):
+                        d = d.strip()
+                        if d:
+                            process_stderr(d)
+                    logging.error(f'data puller {self.name} exited with '
+                                  f'code {self.p.returncode}. restarting')
+                    self.restart(auto=True)
+                break
+            if self.last_activity + self.timeout < time.perf_counter():
+                if not eva.core.is_shutdown_requested():
+                    logging.error(
+                        f'data puller {self.name} timed out. restarting')
+                    self.restart(auto=True)
+                break
+            await asyncio.sleep(eva.core.config.polldelay)
 
     def stop(self):
         logging.info(f'data puller {self.name} is stopping')
-        self.active = False
         if self.p:
             try:
                 pp = psutil.Process(self.p.pid)
@@ -276,11 +257,13 @@ class DataPuller:
                         c.kill()
                     except:
                         pass
-            except:
+            except psutil.NoSuchProcess:
                 pass
+            except:
+                eva.core.log_traceback()
         if self.executor:
             try:
-                self.executor.join()
+                self.executor.cancel()
             except RuntimeError:
                 pass
             finally:
