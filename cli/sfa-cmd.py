@@ -221,8 +221,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         for d in data.copy():
             if itype == 'action' or api_func == 'result':
                 from datetime import datetime
-                d['time'] = datetime.fromtimestamp(
-                    d['time']['created']).isoformat()
+                import pytz
+                tz = pytz.timezone(time.tzname[0])
+                d['time'] = datetime.fromtimestamp(d['time']['created'],
+                                                   tz).isoformat()
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
                 d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
@@ -235,7 +237,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             elif itype == 'state':
                 try:
                     from datetime import datetime
-                    d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
+                    import pytz
+                    tz = pytz.timezone(time.tzname[0])
+                    d['set'] = datetime.fromtimestamp(d['set_time'],
+                                                      tz).isoformat()
                     if d['expires']:
                         if d['status'] == 0:
                             d['exp_in'] = 'S'
@@ -275,8 +280,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         elif api_func == 'result' and 'created' in data:
             from datetime import datetime
             for x in data.keys():
-                data[x] = '{:.7f} | {}'.format(data[x],
-                                               datetime.fromtimestamp(data[x]))
+                import pytz
+                tz = pytz.timezone(time.tzname[0])
+                data[x] = '{:.7f} | {}'.format(
+                    data[x],
+                    datetime.fromtimestamp(data[x], tz).isoformat())
             return super().prepare_result_dict(data, api_func, itype)
         else:
             return super().prepare_result_dict(data, api_func, itype)
