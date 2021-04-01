@@ -453,12 +453,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
             elif api_func == 'result':
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(d['time']['created'],
                                                    tz).isoformat()
             elif itype == 'state':
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 from datetime import datetime
                 d['set'] = datetime.fromtimestamp(d['set_time'], tz).isoformat()
@@ -503,6 +505,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             from datetime import datetime
             for x in data.keys():
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 data[x] = '{:.7f} | {}'.format(
                     data[x],
