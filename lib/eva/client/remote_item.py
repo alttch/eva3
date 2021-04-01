@@ -10,6 +10,8 @@ import eva.tools
 import logging
 import threading
 
+import time
+
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
 
@@ -24,6 +26,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.update_config(cfg)
         self.status = state['status']
         self.value = state.get('value')
+        self.set_time = state.get('set_time', time.time())
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
         self.remote_update_lock = threading.RLock()
@@ -71,16 +74,14 @@ class RemoteLVar(RemoteUpdatableItem):
     def __init__(self, remote_lm, state):
         super().__init__('lvar', remote_lm, state)
         self.expires = state.get('expires')
-        self.set_time = state.get('set_time')
 
-    def set_state_from_serialized(self, data, from_mqtt=False, timestamp=None):
+    def set_state_from_serialized(self, data, from_mqtt=False):
         with self.remote_update_lock:
             need_notify = False
             try:
                 if super().set_state_from_serialized(data,
                                                      from_mqtt=from_mqtt,
-                                                     force_notify=need_notify,
-                                                     timestamp=timestamp):
+                                                     force_notify=need_notify):
                     if 'expires' in data:
                         try:
                             expires = float(data['expires'])
@@ -88,14 +89,6 @@ class RemoteLVar(RemoteUpdatableItem):
                                 self.expires = expires
                                 need_notify = True
                             need_notify = True
-                        except:
-                            pass
-                    if 'set_time' in data:
-                        try:
-                            set_time = float(data['set_time'])
-                            if self.set_time != set_time:
-                                self.set_time = set_time
-                                need_notify = True
                         except:
                             pass
             except:
@@ -113,7 +106,6 @@ class RemoteLVar(RemoteUpdatableItem):
                               props=props,
                               notify=notify)
         d['expires'] = self.expires
-        d['set_time'] = self.set_time
         return d
 
 
@@ -270,24 +262,27 @@ class RemoteCycle(RemoteUpdatableItem):
         super().notify(skip_subscribed_mqtt=True)
 
     def mqtt_set_state(self, topic, data):
-        j = super().mqtt_set_state(topic, data)
-        if j:
-            need_notify = False
-            if 'interval' in j:
-                try:
-                    d = float(j['interval'])
-                    if self.interval != d:
-                        self.interval = d
-                        need_notify = True
-                except:
-                    eva.core.log_traceback()
-            if 'iterations' in j:
-                try:
-                    d = int(j['iterations'])
-                    if self.iterations != d:
-                        self.iterations = d
-                        need_notify = True
-                except:
-                    eva.core.log_traceback()
-            if need_notify:
-                self.notify()
+        with self.remote_update_lock:
+            j = super().mqtt_set_state(topic, data)
+            if j:
+                need_notify = False
+                if 'interval' in j:
+                    try:
+                        d = float(j['interval'])
+                        if self.interval != d:
+                            self.interval = d
+                            need_notify = True
+                    except:
+                        eva.core.log_traceback()
+                if 'iterations' in j:
+                    try:
+                        d = int(j['iterations'])
+                        if self.iterations != d:
+                            self.iterations = d
+                            need_notify = True
+                    except:
+                        eva.core.log_traceback()
+                if 'set_time' in j:
+                    self.set_time = j['set_time']
+                if need_notify:
+                    self.notify()

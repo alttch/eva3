@@ -343,6 +343,7 @@ class UpdatableItem(Item):
         self.status = 0
         self.value = ''
         self.set_time = time.time()
+        self.state_set_time = time.time()
         self.expires = 0
         self.mqtt_update = None
         self.mqtt_update_notifier = None
@@ -351,7 +352,6 @@ class UpdatableItem(Item):
         self._mqtt_updates_allowed = True
         self._expire_on_any = False
         self.allow_mqtt_updates_from_controllers = False
-        self.remote_update_timestamp = 0
 
     def update_config(self, data):
         if 'expires' in data:
@@ -601,7 +601,7 @@ class UpdatableItem(Item):
         self.set_expired()
 
     def is_expired(self):
-        return time.time() - self.set_time > self.expires \
+        return time.time() - self.state_set_time > self.expires \
                 if self.expires else False
 
     def set_expired(self):
@@ -662,7 +662,7 @@ class UpdatableItem(Item):
         pass
 
     def update_expiration(self):
-        self.set_time = time.time()
+        self.state_set_time = time.time()
         self.start_expiration_checker()
 
     def update_after_run(self, update_out):
@@ -697,15 +697,13 @@ class UpdatableItem(Item):
                     if not data:
                         return
                     j = rapidjson.loads(data)
-                    t = j.get('t', time.time())
                     remote_controller = j.get('c')
                     if (
                             not self.allow_mqtt_updates_from_controllers and
                             remote_controller
                     ) or remote_controller == eva.core.config.controller_name:
                         return None
-                    if not self.set_state_from_serialized(
-                            j, from_mqtt=True, timestamp=t):
+                    if not self.set_state_from_serialized(j, from_mqtt=True):
                         return None
                     else:
                         return j
@@ -715,23 +713,21 @@ class UpdatableItem(Item):
     def set_state_from_serialized(self,
                                   data,
                                   from_mqtt=False,
-                                  force_notify=False,
-                                  timestamp=None):
+                                  force_notify=False):
         try:
-            if 'status' in data:
-                s = data['status']
-            else:
-                s = None
-            if 'value' in data:
-                v = data['value']
-            else:
-                v = None
+            s = data.get('status')
+            v = data.get('value')
             if s is not None or v is not None:
+                t = data.get('set_time', data.get('t'))
+                if t:
+                    t = float(t)
+                else:
+                    t = time.time()
                 return self.update_set_state(status=s,
                                              value=v,
                                              from_mqtt=from_mqtt,
                                              force_notify=force_notify,
-                                             timestamp=timestamp)
+                                             timestamp=t)
         except:
             eva.core.log_traceback()
 
@@ -744,10 +740,10 @@ class UpdatableItem(Item):
                          timestamp=None):
         with self.update_lock:
             if timestamp is not None:
-                if timestamp <= self.remote_update_timestamp:
+                if timestamp < self.set_time:
                     return False
-                else:
-                    self.remote_update_timestamp = timestamp
+                elif timestamp == self.set_time:
+                    return True
             need_notify = False
             if status is not None and status != '':
                 try:
@@ -767,6 +763,7 @@ class UpdatableItem(Item):
             if update_expiration:
                 self.update_expiration()
             if need_notify or force_notify:
+                self.set_time = timestamp if timestamp else time.time()
                 self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
@@ -800,6 +797,7 @@ class UpdatableItem(Item):
         elif not info:
             d['status'] = self.status
             d['value'] = self.value
+            d['set_time'] = self.set_time
         d.update(super().serialize(full=full,
                                    config=config,
                                    info=info,
@@ -1280,6 +1278,7 @@ class ActiveItem(Item):
         if not self.action_enabled:
             return True
         self.update_config({'action_enabled': False})
+        self.set_time = time.time()
         logging.info('%s actions disabled' % self.oid)
         self.notify()
         if eva.core.config.db_update == 1:
@@ -1290,6 +1289,7 @@ class ActiveItem(Item):
         if self.action_enabled:
             return True
         self.update_config({'action_enabled': True})
+        self.set_time = time.time()
         logging.info('%s actions enabled' % self.oid)
         self.notify()
         if eva.core.config.db_update == 1:
@@ -1617,10 +1617,12 @@ class VariableItem(UpdatableItem):
             return False
         with self.update_lock:
             if timestamp is not None:
-                if timestamp <= self.remote_update_timestamp:
+                if timestamp < self.set_time:
                     return False
+                elif timestamp == self.set_time:
+                    return True
                 else:
-                    self.remote_update_timestamp = timestamp
+                    self.set_time = timestamp
             try:
                 if status is not None:
                     _status = int(status)
@@ -1650,6 +1652,7 @@ class VariableItem(UpdatableItem):
             if update_expiration:
                 self.update_expiration()
             if need_notify or force_notify:
+                self.set_time = timestamp if timestamp else time.time()
                 logging.debug(
                     '%s status = %u, value = "%s"' % \
                             (self.oid, self.status, self.value))
