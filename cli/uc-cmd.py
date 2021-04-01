@@ -322,6 +322,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
                     del d['attrs']
             elif itype == 'action':
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(d['time']['created'],
@@ -391,6 +392,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return self.prepare_controller_status_dict(data)
         elif api_func == 'result' and 'created' in data:
             import pytz
+            import time
             tz = pytz.timezone(time.tzname[0])
             from datetime import datetime
             for x in data.keys():

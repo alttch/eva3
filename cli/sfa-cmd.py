@@ -222,6 +222,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if itype == 'action' or api_func == 'result':
                 from datetime import datetime
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 d['time'] = datetime.fromtimestamp(d['time']['created'],
                                                    tz).isoformat()
@@ -238,6 +239,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 try:
                     from datetime import datetime
                     import pytz
+                    import time
                     tz = pytz.timezone(time.tzname[0])
                     d['set'] = datetime.fromtimestamp(d['set_time'],
                                                       tz).isoformat()
@@ -281,6 +283,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             from datetime import datetime
             for x in data.keys():
                 import pytz
+                import time
                 tz = pytz.timezone(time.tzname[0])
                 data[x] = '{:.7f} | {}'.format(
                     data[x],
