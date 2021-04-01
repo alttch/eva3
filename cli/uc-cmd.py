@@ -311,10 +311,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                                 d['bin'] = bin(d['value'])
                         except:
                             pass
-            return sorted(
-
-                    sorted(data, key=lambda k: k.get('_s', k['addr']))
-                    ,key=lambda k: k['reg'])
+            return sorted(sorted(data, key=lambda k: k.get('_s', k['addr'])),
+                          key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
@@ -323,9 +321,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 if 'attrs' in d:
                     del d['attrs']
             elif itype == 'action':
+                import pytz
+                tz = pytz.timezone(time.tzname[0])
                 from datetime import datetime
-                d['time'] = datetime.fromtimestamp(
-                    d['time']['created']).isoformat()
+                d['time'] = datetime.fromtimestamp(d['time']['created'],
+                                                   tz).isoformat()
             elif itype == 'driver':
                 if 'phi' in d:
                     d['phi_mod'] = d['phi'].get('mod')
@@ -390,10 +390,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if api_func == 'status_controller':
             return self.prepare_controller_status_dict(data)
         elif api_func == 'result' and 'created' in data:
+            import pytz
+            tz = pytz.timezone(time.tzname[0])
             from datetime import datetime
             for x in data.keys():
-                data[x] = '{:.7f} | {}'.format(data[x],
-                                               datetime.fromtimestamp(data[x]))
+                data[x] = '{:.7f} | {}'.format(
+                    data[x],
+                    datetime.fromtimestamp(data[x], tz).isoformat())
             return super().prepare_result_dict(data, api_func, itype)
         else:
             return super().prepare_result_dict(data, api_func, itype)
