@@ -523,6 +523,7 @@ class Cycle(eva.item.Item):
         self.cycle_enabled = False
         self.cycle_status = 0
         self.iterations = 0
+        self.set_time = time.time()
 
     def update_config(self, data):
         if 'macro' in data:
@@ -701,6 +702,7 @@ class Cycle(eva.item.Item):
     def _t_cycle(self):
         logging.debug('%s cycle started' % self.full_id)
         self.cycle_status = 1
+        self.set_time = time.time()
         self.notify()
         self.c = 0
         scheduled = time.perf_counter()
@@ -713,6 +715,7 @@ class Cycle(eva.item.Item):
                     self.c = 0
                 if self.macro:
                     self.iterations += 1
+                    self.set_time = time.time()
                     try:
                         result = eva.lm.controller.exec_macro(
                             self.macro,
@@ -759,6 +762,7 @@ class Cycle(eva.item.Item):
                 eva.core.log_traceback()
         logging.debug('%s cycle stopped' % self.full_id)
         self.cycle_status = 0
+        self.set_time = time.time()
         self.notify()
 
     def start(self, autostart=False):
@@ -782,6 +786,7 @@ class Cycle(eva.item.Item):
                     f_wait = self.cycle_future.result
                 if f_is_running():
                     self.cycle_status = 2
+                    self.set_time = time.time()
                     self.notify()
                     self.cycle_enabled = False
                     if wait or True:
@@ -796,6 +801,7 @@ class Cycle(eva.item.Item):
     def reset_stats(self):
         self.iterations = 0
         self.c = 0
+        self.set_time = time.time()
         self.notify()
         return True
 
@@ -821,6 +827,7 @@ class Cycle(eva.item.Item):
         if not config and not props:
             d['status'] = self.cycle_status
             d['iterations'] = self.iterations
+            d['set_time'] = self.set_time
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None

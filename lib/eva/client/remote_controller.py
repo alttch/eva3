@@ -1070,7 +1070,8 @@ class RemoteUCPool(RemoteControllerPool):
                         if self.units[s['full_id']].update_set_state(
                                 status=s['status'],
                                 value=s['value'],
-                                timestamp=timestamp):
+                                timestamp=s.get('set_time',
+                                                s.get('t', timestamp))):
                             self.units[s['full_id']].update_nstate(
                                 nstatus=s['nstatus'], nvalue=s['nvalue'])
                             self.units[s['full_id']].action_enabled = s[
@@ -1084,7 +1085,7 @@ class RemoteUCPool(RemoteControllerPool):
                         self.sensors[s['full_id']].update_set_state(
                             status=s['status'],
                             value=s['value'],
-                            timestamp=timestamp)
+                            timestamp=s.get('set_time', s.get('t', timestamp)))
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1320,7 +1321,8 @@ class RemoteUCPool(RemoteControllerPool):
                         unit = self.units[u.full_id]
                         if unit.update_set_state(status=u.status,
                                                  value=u.value,
-                                                 timestamp=timestamp):
+                                                 timestamp=u.set_time
+                                                 if u.set_time else timestamp):
                             unit.update_nstate(nstatus=u.nstatus,
                                                nvalue=u.nvalue)
                             unit.action_enabled = u.action_enabled
@@ -1360,7 +1362,9 @@ class RemoteUCPool(RemoteControllerPool):
                         u.notify(skip_subscribed_mqtt=True)
                     else:
                         self.sensors[u.full_id].update_set_state(
-                            status=u.status, value=u.value, timestamp=timestamp)
+                            status=u.status,
+                            value=u.value,
+                            timestamp=u.set_time if u.set_time else timestamp)
                     p[u.full_id] = u
                     _u = self.get_sensor(u.full_id)
                     if _u:
@@ -1490,14 +1494,13 @@ class RemoteLMPool(RemoteControllerPool):
             logging.critical('RemoteLMPool::process_state locking broken')
             eva.core.critical()
             return False
-        timestamp = time.time()
         try:
             for s in states if isinstance(states, list) else [states]:
                 if s['type'] == 'lvar':
                     _u = self.get_lvar(s['full_id'])
                     if _u:
                         _u.update_config(s)
-                        _u.set_state_from_serialized(s, timestamp=timestamp)
+                        _u.set_state_from_serialized(s)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1506,7 +1509,7 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_cycle(s['full_id'])
                     if _u:
                         _u.update_config(s)
-                        _u.set_state_from_serialized(s, timestamp=timestamp)
+                        _u.set_state_from_serialized(s)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1732,8 +1735,7 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_lvar(u.full_id)
                     if _u:
                         _u.update_config(u.serialize(config=True))
-                        _u.set_state_from_serialized(u.serialize(),
-                                                     timestamp=timestamp)
+                        _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.lvars_by_controller:
                     for i in self.lvars_by_controller[controller_id].copy(
                     ).keys():

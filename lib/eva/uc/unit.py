@@ -398,10 +398,10 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             if not self.updates_allowed():
                 return False
             if timestamp is not None:
-                if timestamp <= self.remote_update_timestamp:
+                if timestamp <= self.set_time:
                     return False
                 else:
-                    self.remote_update_timestamp = timestamp
+                    self.set_time = timestamp
             if self.is_maintenance_mode():
                 logging.info('Ignoring {} update in maintenance mode'.format(
                     self.oid))
@@ -474,6 +474,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                             self.nstatus, self.nvalue))
             if self.status == -1:
                 logging.error('%s status is -1 (failed)' % self.oid)
+            self.set_time = time.time()
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
