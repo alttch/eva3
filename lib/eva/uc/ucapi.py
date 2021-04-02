@@ -438,7 +438,8 @@ class UC_API(GenericAPI):
         elif not key_check(k, item):
             raise AccessDenied
         if s is not None or v is not None:
-            return item.update_set_state(status=s, value=v)
+            result = item.update_set_state(status=s, value=v)
+            return True if result == 1 else result
         else:
             item.update_processor.trigger_threadsafe(force=True)
             return True, api_result_accepted
