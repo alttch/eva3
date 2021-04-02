@@ -3,6 +3,11 @@ EVA ICS CHANGELOG
 
 3.3.3 (TBA)
 
+Common
+------
+
+   * Next-generation event replication engine
+
 UC
 --
 
