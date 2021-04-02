@@ -112,7 +112,10 @@ class LVar(eva.item.VariableItem):
             return True
         elif super().set_prop(prop=prop, val=val, save=save):
             if prop == 'expires':
+                self.ieid = eva.core.generate_ieid()
                 self.notify()
+                if eva.core.config.db_update == 1:
+                    self.save()
             return True
         return False
 
