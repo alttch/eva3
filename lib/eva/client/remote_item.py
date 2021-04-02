@@ -26,7 +26,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.update_config(cfg)
         self.status = state['status']
         self.value = state.get('value')
-        self.set_time = state.get('set_time', time.time())
+        self.set_time = float(state.get('set_time', time.time()))
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
         self.remote_update_lock = threading.RLock()
