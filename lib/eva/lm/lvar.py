@@ -64,16 +64,6 @@ class LVar(eva.item.VariableItem):
         if eva.core.config.db_update == 1:
             eva.lm.controller.save_lvar_state(self)
 
-    def mqtt_set_state(self, topic, data):
-        j = super().mqtt_set_state(topic, data)
-        if j[0]:
-            try:
-                if 'set_time' in j[1]:
-                    self.set_time = float(j[1]['set_time'])
-                    self.notify(skip_subscribed_mqtt=True)
-            except:
-                eva.core.log_traceback()
-
     def update_set_state(self,
                          status=None,
                          value=None,
