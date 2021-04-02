@@ -366,7 +366,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             dest='z')
         sp_history.add_argument('-l',
                                 '--limit',
-                                help='Records limit (doesn\'t work with fill)',
+                                help='Records limit',
                                 metavar='N',
                                 dest='l')
         sp_history.add_argument('-x',
