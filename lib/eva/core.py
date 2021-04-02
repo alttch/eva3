@@ -26,6 +26,12 @@ import glob
 import importlib
 import yaml
 
+# python 3.6 compat
+try:
+    time.perf_counter_ns()
+except:
+    time.perf_counter_ns = lambda: int(time.perf_counter() * 1000000000)
+
 try:
     yaml.warnings({'YAMLLoadWarning': False})
 except:
@@ -73,6 +79,7 @@ _flags = SimpleNamespace(ignore_critical=False,
                          cvars_modified=False,
                          cs_modified=False,
                          setup_mode=0,
+                         boot_id=0,
                          use_reactor=False)
 
 product = SimpleNamespace(name='', code='', build=None, usn='')
@@ -394,6 +401,56 @@ def sighandler_term(signum=None, frame=None):
 
 def sighandler_int(signum, frame):
     pass
+
+
+def parse_ieid(ieid):
+    if ieid is not None:
+        ieid[0] = int(ieid[0])
+        ieid[1] = int(ieid[1])
+    return ieid
+
+
+def is_ieid_gt(id1, id2):
+    return (id1 is not None and
+            id2 is None) or id1[0] > id2[0] or (id1[0] == id2[0] and
+                                                id1[1] > id2[1])
+
+
+def generate_ieid():
+    return [_flags.boot_id, time.perf_counter_ns()]
+
+
+def generate_boot_id():
+
+    def _save_boot_id(boot_id, fname):
+        try:
+            with open(fname, 'w') as fh:
+                fh.write(str(boot_id))
+                fh.flush()
+                os.fsync(fh.fileno())
+            dirfd = os.open(dir_runtime, os.O_DIRECTORY | os.O_RDONLY)
+            os.fsync(dirfd)
+            os.close(dirfd)
+            return True
+        except:
+            log_traceback()
+            return False
+
+    boot_id = 0
+    boot_id_file = f'{dir_runtime}/{product.code}_bootid'
+    try:
+        with open(boot_id_file) as fh:
+            boot_id = int(fh.read().strip())
+    except FileNotFoundError:
+        pass
+    except:
+        logging.error('Unable to load boot id')
+        log_traceback()
+    _flags.boot_id = boot_id + 1
+    logging.debug(f'boot id set: {_flags.boot_id}')
+    if not prepare_save() or not _save_boot_id(
+            _flags.boot_id, boot_id_file) or not finish_save():
+        logging.error('unable to save boot id')
 
 
 def prepare_save():
@@ -1218,6 +1275,7 @@ def start(init_db_only=False):
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
+    generate_boot_id()
     product.usn = str(
         uuid.uuid5(uuid.NAMESPACE_URL,
                    f'eva://{config.system_name}/{product.code}'))

@@ -66,10 +66,10 @@ class LVar(eva.item.VariableItem):
 
     def mqtt_set_state(self, topic, data):
         j = super().mqtt_set_state(topic, data)
-        if j:
+        if j[0]:
             try:
-                if 'set_time' in j:
-                    self.set_time = float(j['set_time'])
+                if 'set_time' in j[1]:
+                    self.set_time = float(j[1]['set_time'])
                     self.notify(skip_subscribed_mqtt=True)
             except:
                 eva.core.log_traceback()
@@ -79,6 +79,7 @@ class LVar(eva.item.VariableItem):
                          value=None,
                          from_mqtt=False,
                          force_notify=False,
+                         notify=True,
                          timestamp=None):
         if not self.status and status != 1 and self.logic != LOGIC_SIMPLE:
             return False
@@ -87,7 +88,6 @@ class LVar(eva.item.VariableItem):
             eva.core.critical()
             return False
         try:
-            t = self.set_time
             _status = self.status
             _value = self.value
             if super().update_set_state(status=status,
@@ -95,9 +95,8 @@ class LVar(eva.item.VariableItem):
                                         from_mqtt=from_mqtt,
                                         force_notify=force_notify,
                                         force_update=self.logic == LOGIC_SIMPLE,
+                                        notify=notify,
                                         timestamp=timestamp):
-                if t != self.set_time:
-                    self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status
                 self.prv_value = _value
                 eva.lm.controller.pdme(self)

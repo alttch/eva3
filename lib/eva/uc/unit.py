@@ -278,6 +278,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             self.status_labels = val
             self.log_set(prop, 'dict')
             self.set_modified(save)
+            self.ieid = eva.core.generate_ieid()
             return True
         elif prop[:7] == 'status:':
             try:
@@ -290,20 +291,25 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                     self.status_labels['0'] = status_label_off
                     self.log_set('status_labels[0]', status_label_off)
                     self.set_modified(save)
+                    self.ieid = eva.core.generate_ieid()
             elif s == '1' and (val is None or val == ''):
                 if self.status_labels['1'] != status_label_on:
                     self.status_labels['1'] = status_label_on
                     self.log_set('status_labels[1]', status_label_on)
                     self.set_modified(save)
+                    self.ieid = eva.core.generate_ieid()
             elif val is not None and val != '':
                 if not s in self.status_labels or self.status_labels[s] != val:
                     self.status_labels[s] = val
                     self.log_set('status_labels[' + s + ']', val)
                     self.set_modified(save)
+                    self.ieid = eva.core.generate_ieid()
             else:
                 if not s in self.status_labels:
                     return False
                 del self.status_labels[s]
+                self.set_modified(save)
+                self.ieid = eva.core.generate_ieid()
             return True
         else:
             return super().set_prop(prop, val, save)
@@ -391,21 +397,27 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                          value=None,
                          from_mqtt=False,
                          force_notify=False,
-                         timestamp=None):
+                         timestamp=None,
+                         ieid=None):
         if self._destroyed:
             return False
         with self.update_lock:
             if not self.updates_allowed():
                 return False
-            if timestamp is not None:
-                if timestamp <= self.set_time:
-                    return False
-                else:
-                    self.set_time = timestamp
             if self.is_maintenance_mode():
                 logging.info('Ignoring {} update in maintenance mode'.format(
                     self.oid))
                 return False
+            if ieid is not None:
+                if ieid == self.ieid:
+                    return True
+                elif not eva.core.is_ieid_gt(ieid, self.ieid):
+                    return False
+            elif timestamp is not None:
+                if timestamp < self.set_time:
+                    return False
+                elif timestamp == self.set_time:
+                    return True
             try:
                 if status is not None:
                     _status = int(status)
@@ -436,7 +448,9 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                            value=value,
                            nstatus=nstatus,
                            nvalue=nvalue,
-                           from_mqtt=from_mqtt)
+                           from_mqtt=from_mqtt,
+                           timestamp=timestamp,
+                           ieid=ieid)
             self.queue_lock.release()
             return True
 
@@ -445,7 +459,9 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                   value=None,
                   nstatus=None,
                   nvalue=None,
-                  from_mqtt=False):
+                  from_mqtt=False,
+                  timestamp=None,
+                  ieid=None):
         if self._destroyed:
             return False
         need_notify = False
@@ -474,7 +490,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                             self.nstatus, self.nvalue))
             if self.status == -1:
                 logging.error('%s status is -1 (failed)' % self.oid)
-            self.set_time = time.time()
+            self.set_time = timestamp if timestamp else time.time()
+            self.ieid = ieid if ieid else eva.core.generate_ieid()
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 

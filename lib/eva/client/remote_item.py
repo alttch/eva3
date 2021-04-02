@@ -27,6 +27,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.status = state['status']
         self.value = state.get('value')
         self.set_time = float(state.get('set_time', time.time()))
+        self.ieid = eva.core.parse_ieid(state.get('ieid'))
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
         self.remote_update_lock = threading.RLock()
@@ -75,22 +76,25 @@ class RemoteLVar(RemoteUpdatableItem):
         super().__init__('lvar', remote_lm, state)
         self.expires = state.get('expires')
 
-    def set_state_from_serialized(self, data, from_mqtt=False):
+    def set_state_from_serialized(self, data, from_mqtt=False, notify=True):
         with self.remote_update_lock:
-            need_notify = False
             try:
-                if super().set_state_from_serialized(data,
-                                                     from_mqtt=from_mqtt,
-                                                     force_notify=need_notify):
+                result = super().set_state_from_serialized(data,
+                                                           from_mqtt=from_mqtt,
+                                                           notify=False)
+                if result:
+                    need_notify = False
                     if 'expires' in data:
                         try:
                             expires = float(data['expires'])
                             if self.expires != expires:
                                 self.expires = expires
                                 need_notify = True
-                            need_notify = True
                         except:
                             pass
+                    if (result == 1 or need_notify) and notify:
+                        self.notify()
+
             except:
                 eva.core.log_traceback()
 
@@ -146,30 +150,31 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
             if self.nvalue != nv:
                 self.nvalue = nv
                 need_notify = True
-        if need_notify:
-            self.notify()
-        return True
+        return need_notify
 
     def mqtt_set_state(self, topic, data):
         with self.remote_update_lock:
-            j = super().mqtt_set_state(topic, data)
-            if j:
+            j = super().mqtt_set_state(topic, data, notify=False)
+            if j[0]:
+                need_notify = False
                 try:
-                    if 'nstatus' in j:
-                        s = j['nstatus']
+                    if 'nstatus' in j[1]:
+                        s = j[1]['nstatus']
                     else:
                         s = None
-                    if 'nvalue' in j:
-                        v = j['nvalue']
+                    if 'nvalue' in j[1]:
+                        v = j[1]['nvalue']
                     else:
                         v = None
                     if s is not None or v is not None:
-                        self.update_nstate(nstatus=s, nvalue=v)
-                    if 'action_enabled' in j:
-                        val = eva.tools.val_to_boolean(j['action_enabled'])
+                        need_notify = self.update_nstate(nstatus=s, nvalue=v)
+                    if 'action_enabled' in j[1]:
+                        val = eva.tools.val_to_boolean(j[1]['action_enabled'])
                         if self.action_enabled != val:
                             self.action_enabled = val
-                            self.notify()
+                            need_notify = True
+                    if j[0] == 1 or need_notify:
+                        self.notify()
                 except:
                     eva.core.log_traceback()
 
@@ -264,25 +269,27 @@ class RemoteCycle(RemoteUpdatableItem):
     def mqtt_set_state(self, topic, data):
         with self.remote_update_lock:
             j = super().mqtt_set_state(topic, data)
-            if j:
+            if j[0]:
                 need_notify = False
-                if 'interval' in j:
+                if 'interval' in j[1]:
                     try:
-                        d = float(j['interval'])
+                        d = float(j[1]['interval'])
                         if self.interval != d:
                             self.interval = d
                             need_notify = True
                     except:
                         eva.core.log_traceback()
-                if 'iterations' in j:
+                if 'iterations' in j[1]:
                     try:
-                        d = int(j['iterations'])
+                        d = int(j[1]['iterations'])
                         if self.iterations != d:
                             self.iterations = d
                             need_notify = True
                     except:
                         eva.core.log_traceback()
-                if 'set_time' in j:
-                    self.set_time = j['set_time']
+                if 'set_time' in j[1]:
+                    self.set_time = j[1]['set_time']
+                if 'ieid' in j[1]:
+                    self.ieid = eva.core.parse_ieid(j['ieid'])
                 if need_notify:
                     self.notify()

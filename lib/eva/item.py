@@ -344,6 +344,7 @@ class UpdatableItem(Item):
         self.value = ''
         self.set_time = time.time()
         self.state_set_time = time.perf_counter()
+        self.ieid = [0, 0]
         self.expires = 0
         self.mqtt_update = None
         self.mqtt_update_notifier = None
@@ -686,7 +687,7 @@ class UpdatableItem(Item):
             return False
         return self.update_set_state(status, value)
 
-    def mqtt_set_state(self, topic, data):
+    def mqtt_set_state(self, topic, data, notify=True):
         with self.update_lock:
             try:
                 if topic.endswith('/status'):
@@ -703,16 +704,20 @@ class UpdatableItem(Item):
                             remote_controller
                     ) or remote_controller == eva.core.config.controller_name:
                         return None
-                    if not self.set_state_from_serialized(j, from_mqtt=True):
-                        return None
+                    result = self.set_state_from_serialized(j,
+                                                            from_mqtt=True,
+                                                            notify=notify)
+                    if not result:
+                        return False, None
                     else:
-                        return j
+                        return result, j
             except:
                 eva.core.log_traceback()
 
     def set_state_from_serialized(self,
                                   data,
                                   from_mqtt=False,
+                                  notify=True,
                                   force_notify=False):
         try:
             s = data.get('status')
@@ -723,11 +728,14 @@ class UpdatableItem(Item):
                     t = float(t)
                 else:
                     t = time.time()
+                ieid = eva.core.parse_ieid(data.get('ieid'))
                 return self.update_set_state(status=s,
                                              value=v,
                                              from_mqtt=from_mqtt,
+                                             notify=notify,
                                              force_notify=force_notify,
-                                             timestamp=t)
+                                             timestamp=t,
+                                             ieid=ieid)
         except:
             eva.core.log_traceback()
 
@@ -735,11 +743,18 @@ class UpdatableItem(Item):
                          status=None,
                          value=None,
                          from_mqtt=False,
+                         notify=True,
                          force_notify=False,
                          update_expiration=True,
-                         timestamp=None):
+                         timestamp=None,
+                         ieid=None):
         with self.update_lock:
-            if timestamp is not None:
+            if ieid is not None:
+                if ieid == self.ieid:
+                    return True
+                elif not eva.core.is_ieid_gt(ieid, self.ieid):
+                    return False
+            elif timestamp is not None:
                 if timestamp < self.set_time:
                     return False
                 elif timestamp == self.set_time:
@@ -760,11 +775,14 @@ class UpdatableItem(Item):
                 if self.value != value:
                     need_notify = True
                     self.value = value
+            self.ieid = ieid if ieid is not None else eva.core.generate_ieid()
             if update_expiration:
                 self.update_expiration()
-            if need_notify or force_notify:
+            if need_notify:
                 self.set_time = timestamp if timestamp else time.time()
+            if (need_notify and notify) or force_notify:
                 self.notify(skip_subscribed_mqtt=from_mqtt)
+                return 1
         return True
 
     def serialize(self,
@@ -798,6 +816,7 @@ class UpdatableItem(Item):
             d['status'] = self.status
             d['value'] = self.value
             d['set_time'] = self.set_time
+            d['ieid'] = self.ieid
         d.update(super().serialize(full=full,
                                    config=config,
                                    info=info,
@@ -1278,7 +1297,7 @@ class ActiveItem(Item):
         if not self.action_enabled:
             return True
         self.update_config({'action_enabled': False})
-        self.set_time = time.time()
+        self.ieid = eva.core.generate_ieid()
         logging.info('%s actions disabled' % self.oid)
         self.notify()
         if eva.core.config.db_update == 1:
@@ -1289,7 +1308,7 @@ class ActiveItem(Item):
         if self.action_enabled:
             return True
         self.update_config({'action_enabled': True})
-        self.set_time = time.time()
+        self.ieid = eva.core.generate_ieid()
         logging.info('%s actions enabled' % self.oid)
         self.notify()
         if eva.core.config.db_update == 1:
@@ -1612,11 +1631,18 @@ class VariableItem(UpdatableItem):
                          force_notify=False,
                          force_update=False,
                          update_expiration=True,
-                         timestamp=None):
+                         notify=True,
+                         timestamp=None,
+                         ieid=None):
         if self._destroyed:
             return False
         with self.update_lock:
-            if timestamp is not None:
+            if ieid is not None:
+                if ieid == self.ieid:
+                    return True
+                elif not eva.core.is_ieid_gt(ieid, self.ieid):
+                    return False
+            elif timestamp is not None:
                 if timestamp < self.set_time:
                     return False
                 elif timestamp == self.set_time:
@@ -1649,14 +1675,17 @@ class VariableItem(UpdatableItem):
                         value != '' and not force_update:
                     self.status = 1
                     need_notify = True
+            self.ieid = ieid if ieid is not None else eva.core.generate_ieid()
             if update_expiration:
                 self.update_expiration()
-            if need_notify or force_notify:
+            if need_notify:
                 self.set_time = timestamp if timestamp else time.time()
+            if (need_notify and notify) or force_notify:
                 logging.debug(
                     '%s status = %u, value = "%s"' % \
                             (self.oid, self.status, self.value))
                 self.notify(skip_subscribed_mqtt=from_mqtt)
+                return 1
             return True
 
     def is_expired(self):
