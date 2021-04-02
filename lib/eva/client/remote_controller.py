@@ -1067,16 +1067,22 @@ class RemoteUCPool(RemoteControllerPool):
             for s in states if isinstance(states, list) else [states]:
                 if s['type'] == 'unit':
                     if s['full_id'] in self.units:
-                        if self.units[s['full_id']].update_set_state(
-                                status=s['status'],
-                                value=s['value'],
-                                timestamp=float(
-                                    s.get('set_time', s.get('t', timestamp))),
-                                ieid=eva.core.parse_ieid(s.get('ieid'))):
-                            self.units[s['full_id']].update_nstate(
-                                nstatus=s['nstatus'], nvalue=s['nvalue'])
-                            self.units[s['full_id']].action_enabled = s[
-                                'action_enabled']
+                        u = self.units[s['full_id']]
+                        result = u.update_set_state(
+                            status=s['status'],
+                            value=s['value'],
+                            notify=False,
+                            timestamp=float(
+                                s.get('set_time', s.get('t', timestamp))),
+                            ieid=eva.core.parse_ieid(s.get('ieid')))
+                        if result:
+                            need_notify = u.update_nstate(nstatus=s['nstatus'],
+                                                          nvalue=s['nvalue'])
+                            if u.action_enabled != s['action_enabled']:
+                                u.action_enabled = s['action_enabled']
+                                need_notify = True
+                            if result == 1 or need_notify:
+                                u.notify()
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1322,14 +1328,20 @@ class RemoteUCPool(RemoteControllerPool):
                         u.notify(skip_subscribed_mqtt=True)
                     else:
                         unit = self.units[u.full_id]
-                        if unit.update_set_state(status=u.status,
-                                                 value=u.value,
-                                                 timestamp=u.set_time
-                                                 if u.set_time else timestamp,
-                                                 ieid=u.ieid):
-                            unit.update_nstate(nstatus=u.nstatus,
-                                               nvalue=u.nvalue)
-                            unit.action_enabled = u.action_enabled
+                        result = unit.update_set_state(
+                            status=u.status,
+                            value=u.value,
+                            notify=False,
+                            timestamp=u.set_time if u.set_time else timestamp,
+                            ieid=u.ieid)
+                        if result:
+                            need_notify = unit.update_nstate(nstatus=u.nstatus,
+                                                             nvalue=u.nvalue)
+                            if unit.action_enabled != u.action_enabled:
+                                unit.action_enabled = u.action_enabled
+                                need_notify = True
+                            if need_notify or result == 1:
+                                unit.notify()
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
                     if _u:
