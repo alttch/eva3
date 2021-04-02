@@ -64,6 +64,12 @@ class LVar(eva.item.VariableItem):
         if eva.core.config.db_update == 1:
             eva.lm.controller.save_lvar_state(self)
 
+    def update_expiration(self):
+        if self.expires:
+            self.set_time = time.time()
+            self.ieid = eva.core.generate_ieid()
+        super().update_expiration()
+
     def update_set_state(self,
                          status=None,
                          value=None,
@@ -83,7 +89,8 @@ class LVar(eva.item.VariableItem):
             if super().update_set_state(status=status,
                                         value=value,
                                         from_mqtt=from_mqtt,
-                                        force_notify=force_notify,
+                                        force_notify=force_notify or
+                                        self.expires,
                                         force_update=self.logic == LOGIC_SIMPLE,
                                         notify=notify,
                                         timestamp=timestamp):

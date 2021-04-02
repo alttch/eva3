@@ -775,11 +775,17 @@ class UpdatableItem(Item):
                 if self.value != value:
                     need_notify = True
                     self.value = value
-            self.ieid = ieid if ieid is not None else eva.core.generate_ieid()
             if update_expiration:
                 self.update_expiration()
             if need_notify:
-                self.set_time = timestamp if timestamp else time.time()
+                if not timestamp:
+                    self.set_time = timestamp
+                if not ieid:
+                    self.ieid = eva.core.generate_ieid()
+            if timestamp:
+                self.set_time = timestamp
+            if ieid:
+                self.ieid = ieid
             if (need_notify and notify) or force_notify:
                 self.notify(skip_subscribed_mqtt=from_mqtt)
                 return 1
@@ -1675,11 +1681,14 @@ class VariableItem(UpdatableItem):
                         value != '' and not force_update:
                     self.status = 1
                     need_notify = True
-            self.ieid = ieid if ieid is not None else eva.core.generate_ieid()
             if update_expiration:
                 self.update_expiration()
             if need_notify:
                 self.set_time = timestamp if timestamp else time.time()
+                if ieid is None:
+                    self.ieid = eva.core.generate_ieid()
+            if ieid:
+                self.ieid = ieid
             if (need_notify and notify) or force_notify:
                 logging.debug(
                     '%s status = %u, value = "%s"' % \

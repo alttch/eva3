@@ -465,14 +465,17 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if self._destroyed:
             return False
         need_notify = False
+        state_changed = False
         if status is not None:
             if self.status != status:
                 need_notify = True
+                state_changed = True
                 self.status = status
             self.start_auto_processor()
         if value is not None:
             if self.value != value:
                 need_notify = True
+                state_changed = True
                 self.value = value
         if nstatus is not None:
             if self.nstatus != nstatus:
@@ -490,7 +493,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                             self.nstatus, self.nvalue))
             if self.status == -1:
                 logging.error('%s status is -1 (failed)' % self.oid)
-            self.set_time = timestamp if timestamp else time.time()
+            if state_changed:
+                self.set_time = timestamp if timestamp else time.time()
             self.ieid = ieid if ieid else eva.core.generate_ieid()
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
