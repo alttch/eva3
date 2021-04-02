@@ -1851,7 +1851,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announce_topic = self.pfx + 'controller/discovery'
         self.announce_msg = eva.core.product.code + \
                             '/' + eva.core.config.system_name
-        self.test_topic = (f'{self.pfx}/controller/{eva.core.product.code}'
+        self.test_topic = (f'{self.pfx}controller/{eva.core.product.code}'
                            f'/{eva.core.config.system_name}/test')
         import eva.api
         self.api_handler = eva.api.mqtt_api_handler
@@ -1915,7 +1915,7 @@ class GenericMQTTNotifier(GenericNotifier):
             if self.subscribe_all:
                 for topic in mqtt_global_topics:
                     if self.pfx:
-                        topic = f'{self.pfx}/{topic}'
+                        topic = f'{self.pfx}{topic}'
                     topic += '/#'
                     client.subscribe(topic, self.qos['state'])
                     logging.debug('.%s resubscribed to %s q%u topic' % \
