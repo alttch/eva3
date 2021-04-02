@@ -500,6 +500,7 @@ def load_lvar_db_state(items, clean=False):
                     eva.core.log_traceback()
                     items[d.id].status = 0
                 items[d.id].value = d.value if d.value != 'null' else ''
+                items[d.id].ieid = eva.core.generate_ieid()
                 _db_loaded_ids.append(d.id)
                 logging.debug(
                     '{} state loaded, set_time={}, status={}, value="{}"'.

@@ -1070,8 +1070,9 @@ class RemoteUCPool(RemoteControllerPool):
                         if self.units[s['full_id']].update_set_state(
                                 status=s['status'],
                                 value=s['value'],
-                                timestamp=s.get('set_time',
-                                                s.get('t', timestamp))):
+                                timestamp=float(
+                                    s.get('set_time', s.get('t', timestamp))),
+                                ieid=eva.core.parse_ieid(s.get('ieid'))):
                             self.units[s['full_id']].update_nstate(
                                 nstatus=s['nstatus'], nvalue=s['nvalue'])
                             self.units[s['full_id']].action_enabled = s[
@@ -1085,7 +1086,9 @@ class RemoteUCPool(RemoteControllerPool):
                         self.sensors[s['full_id']].update_set_state(
                             status=s['status'],
                             value=s['value'],
-                            timestamp=s.get('set_time', s.get('t', timestamp)))
+                            timestamp=float(
+                                s.get('set_time', s.get('t', timestamp))),
+                            ieid=eva.core.parse_ieid(s.get('ieid')))
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1322,7 +1325,8 @@ class RemoteUCPool(RemoteControllerPool):
                         if unit.update_set_state(status=u.status,
                                                  value=u.value,
                                                  timestamp=u.set_time
-                                                 if u.set_time else timestamp):
+                                                 if u.set_time else timestamp,
+                                                 ieid=u.ieid):
                             unit.update_nstate(nstatus=u.nstatus,
                                                nvalue=u.nvalue)
                             unit.action_enabled = u.action_enabled
@@ -1364,7 +1368,8 @@ class RemoteUCPool(RemoteControllerPool):
                         self.sensors[u.full_id].update_set_state(
                             status=u.status,
                             value=u.value,
-                            timestamp=u.set_time if u.set_time else timestamp)
+                            timestamp=u.set_time if u.set_time else timestamp,
+                            ieid=u.ieid)
                     p[u.full_id] = u
                     _u = self.get_sensor(u.full_id)
                     if _u:

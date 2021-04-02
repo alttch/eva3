@@ -524,6 +524,7 @@ class Cycle(eva.item.Item):
         self.cycle_status = 0
         self.iterations = 0
         self.set_time = time.time()
+        self.ieid = [0, 0]
 
     def update_config(self, data):
         if 'macro' in data:
@@ -703,6 +704,7 @@ class Cycle(eva.item.Item):
         logging.debug('%s cycle started' % self.full_id)
         self.cycle_status = 1
         self.set_time = time.time()
+        self.ieid = eva.core.generate_ieid()
         self.notify()
         self.c = 0
         scheduled = time.perf_counter()
@@ -716,6 +718,7 @@ class Cycle(eva.item.Item):
                 if self.macro:
                     self.iterations += 1
                     self.set_time = time.time()
+                    self.ieid = eva.core.generate_ieid()
                     try:
                         result = eva.lm.controller.exec_macro(
                             self.macro,
@@ -763,6 +766,7 @@ class Cycle(eva.item.Item):
         logging.debug('%s cycle stopped' % self.full_id)
         self.cycle_status = 0
         self.set_time = time.time()
+        self.ieid = eva.core.generate_ieid()
         self.notify()
 
     def start(self, autostart=False):
@@ -787,6 +791,7 @@ class Cycle(eva.item.Item):
                 if f_is_running():
                     self.cycle_status = 2
                     self.set_time = time.time()
+                    self.ieid = eva.core.generate_ieid()
                     self.notify()
                     self.cycle_enabled = False
                     if wait or True:
@@ -802,6 +807,7 @@ class Cycle(eva.item.Item):
         self.iterations = 0
         self.c = 0
         self.set_time = time.time()
+        self.ieid = eva.core.generate_ieid()
         self.notify()
         return True
 
@@ -828,6 +834,7 @@ class Cycle(eva.item.Item):
             d['status'] = self.cycle_status
             d['iterations'] = self.iterations
             d['set_time'] = self.set_time
+            d['ieid'] = self.ieid
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None

@@ -352,6 +352,7 @@ def load_db_state(items, item_type, clean=False):
                 if item_type == 'U':
                     items[d.id].nstatus = items[d.id].status
                     items[d.id].nvalue = items[d.id].value
+                items[d.id].ieid = eva.core.generate_ieid()
                 _db_loaded_ids.append(d.id)
                 logging.debug(
                     '{}:{} state loaded, status={}, value="{}"'.format(

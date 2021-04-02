@@ -42,7 +42,9 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
                          value=None,
                          from_mqtt=False,
                          force_notify=False,
-                         timestamp=None):
+                         notify=True,
+                         timestamp=None,
+                         ieid=None):
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LRemoteUnit::update_set_state locking broken')
             eva.core.critical()
@@ -54,7 +56,9 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
                                         value=value,
                                         from_mqtt=from_mqtt,
                                         force_notify=force_notify,
-                                        timestamp=timestamp):
+                                        notify=notify,
+                                        timestamp=timestamp,
+                                        ieid=ieid):
                 self.prv_status = _status
                 self.prv_value = _value
                 if eva.core.config.db_update == 1:
@@ -108,7 +112,9 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
                          value=None,
                          from_mqtt=False,
                          force_notify=False,
-                         timestamp=None):
+                         notify=True,
+                         timestamp=None,
+                         ieid=None):
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LRemoteSensor::update_set_state locking broken')
             eva.core.critical()
@@ -120,7 +126,9 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
                                         value=value,
                                         from_mqtt=from_mqtt,
                                         force_notify=force_notify,
-                                        timestamp=timestamp):
+                                        notify=notify,
+                                        timestamp=timestamp,
+                                        ieid=ieid):
                 self.prv_status = _status
                 self.prv_value = _value
                 if eva.core.config.db_update == 1:
