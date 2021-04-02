@@ -343,7 +343,7 @@ class UpdatableItem(Item):
         self.status = 0
         self.value = ''
         self.set_time = time.time()
-        self.state_set_time = time.time()
+        self.state_set_time = time.perf_counter()
         self.expires = 0
         self.mqtt_update = None
         self.mqtt_update_notifier = None
@@ -601,7 +601,7 @@ class UpdatableItem(Item):
         self.set_expired()
 
     def is_expired(self):
-        return time.time() - self.state_set_time > self.expires \
+        return time.perf_counter() - self.state_set_time > self.expires \
                 if self.expires else False
 
     def set_expired(self):
@@ -662,7 +662,7 @@ class UpdatableItem(Item):
         pass
 
     def update_expiration(self):
-        self.state_set_time = time.time()
+        self.state_set_time = time.perf_counter()
         self.start_expiration_checker()
 
     def update_after_run(self, update_out):
