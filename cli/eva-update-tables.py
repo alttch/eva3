@@ -84,6 +84,14 @@ append_db_column('apikeys', 'i_deny', 'VARCHAR(8192)', dbconn)
 append_db_column('apikeys', 'g_deny', 'VARCHAR(8192)', dbconn)
 append_db_column('apikeys', 'cdata', 'VARCHAR(16384)', dbconn)
 
+if product_code == 'uc':
+    append_db_column('state', 'set_time', 'NUMERIC(20,8)', dbconn)
+
+if product_code in ['uc', 'lm']:
+    tbl = 'state' if product_code == 'uc' else 'lvar_state'
+    append_db_column(tbl, 'ieid_b', 'NUMERIC(38,0)', dbconn)
+    append_db_column(tbl, 'ieid_i', 'NUMERIC(38,0)', dbconn)
+
 try:
     dbconn.execute('update apikeys set i_ro = "" where i_ro is null')
     dbconn.execute('update apikeys set g_ro = "" where g_ro is null')

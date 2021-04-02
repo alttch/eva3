@@ -357,21 +357,27 @@ def save_lvar_state(item, db=None):
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
-        if dbconn.execute(sql('update lvar_state set set_time=:t,' +
-                              ' status=:status, value=:value where id=:id'),
+        if dbconn.execute(sql('update lvar_state set set_time=:t, '
+                              'ieid_b=:ieid_b, ieid_i=:ieid_i, '
+                              'status=:status, value=:value where id=:id'),
                           t=item.set_time,
+                          ieid_b=item.ieid[0],
+                          ieid_i=item.ieid[1],
                           status=item.status,
                           value=item.value,
                           id=_id).rowcount:
             logging.debug('%s state updated in db' % item.oid)
         else:
-            dbconn.execute(
-                sql('insert into lvar_state (id, set_time, status, value) ' +
-                    'values(:id, :t, :status, :value)'),
-                id=_id,
-                t=item.set_time,
-                status=item.status,
-                value=item.value)
+            dbconn.execute(sql(
+                'insert into lvar_state (id, set_time, '
+                'ieid_b, ieid_i, status, value) '
+                'values(:id, :set_time, :ieid_b, :ieid_i, :status, :value)'),
+                           id=_id,
+                           set_time=item.set_time,
+                           ieid_b=item.ieid[0],
+                           ieid_i=item.ieid[1],
+                           status=item.status,
+                           value=item.value)
             logging.debug('{} state inserted into db'.format(item.oid))
         return True
     except:
@@ -467,6 +473,8 @@ def load_lvar_db_state(items, clean=False):
                                           sa.String(256),
                                           primary_key=True),
             sa.Column('set_time', sa.Numeric(20, 8)),
+            sa.Column('ieid_b', sa.Numeric(38, 0)),
+            sa.Column('ieid_i', sa.Numeric(38, 0)),
             sa.Column('status', sa.Integer), sa.Column('value',
                                                        sa.String(8192)))
         t_lremote_cache = sa.Table(
@@ -483,7 +491,8 @@ def load_lvar_db_state(items, clean=False):
             eva.core.critical()
             return False
         r = dbconn.execute(
-            sql('select id, set_time, status, value from lvar_state'))
+            sql('select id, set_time, ieid_b, ieid_i,'
+                ' status, value from lvar_state'))
         while True:
             d = r.fetchone()
             if not d:
@@ -493,14 +502,22 @@ def load_lvar_db_state(items, clean=False):
                     items[d.id].set_time = float(d.set_time)
                 except:
                     eva.core.log_traceback()
-                    items[d.id].set_time = None
+                    items[d.id].set_time = time.time()
                 try:
                     items[d.id].status = int(d.status)
                 except:
                     eva.core.log_traceback()
                     items[d.id].status = 0
                 items[d.id].value = d.value if d.value != 'null' else ''
-                items[d.id].ieid = eva.core.generate_ieid()
+                try:
+                    if d.ieid_b is not None and d.ieid_i is not None:
+                        items[d.id].ieid = eva.core.parse_ieid(
+                            [d.ieid_b, d.ieid_i])
+                    else:
+                        items[d.id].ieid = eva.core.generate_ieid()
+                except:
+                    eva.core.log_traceback()
+                    items[d.id].ieid = eva.core.generate_ieid()
                 _db_loaded_ids.append(d.id)
                 logging.debug(
                     '{} state loaded, set_time={}, status={}, value="{}"'.

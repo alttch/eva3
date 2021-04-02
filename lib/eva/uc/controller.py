@@ -283,8 +283,12 @@ def save_item_state(item, db=None):
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
-        if dbconn.execute(sql(
-                'update state set status=:status, value=:value where id=:id'),
+        if dbconn.execute(sql('update state set status=:status, value=:value, '
+                              'set_time=:set_time, '
+                              'ieid_b=:ieid_b, ieid_i=:ieid_i where id=:id'),
+                          set_time=item.set_time,
+                          ieid_b=item.ieid[0],
+                          ieid_i=item.ieid[1],
                           status=item.status,
                           value=item.value,
                           id=_id).rowcount:
@@ -295,10 +299,16 @@ def save_item_state(item, db=None):
                 tp = 'U'
             elif item.item_type == 'sensor':
                 tp = 'S'
-            dbconn.execute(sql('insert into state (id, tp, status, value) ' +
-                               'values(:id, :tp, :status, :value)'),
+            dbconn.execute(sql(
+                'insert into state (id, tp, set_time,'
+                ' ieid_b, ieid_i, status, value) '
+                'values(:id, :tp, :set_time, :ieid_b, :ieid_i, :status, :value)'
+            ),
                            id=_id,
                            tp=tp,
+                           set_time=item.set_time,
+                           ieid_b=item.ieid[0],
+                           ieid_i=item.ieid[1],
                            status=item.status,
                            value=item.value)
             logging.debug('{} state inserted into db'.format(item.oid))
@@ -327,17 +337,22 @@ def load_db_state(items, item_type, clean=False):
         meta = sa.MetaData()
         t_state_history = sa.Table(
             'state', meta, sa.Column('id', sa.String(256), primary_key=True),
-            sa.Column('tp', sa.String(10)), sa.Column('status', sa.Integer),
-            sa.Column('value', sa.String(8192)))
+            sa.Column('tp', sa.String(10)),
+            sa.Column('set_time', sa.Numeric(20, 8)),
+            sa.Column('ieid_b', sa.Numeric(38, 0)),
+            sa.Column('ieid_i', sa.Numeric(38, 0)),
+            sa.Column('status', sa.Integer), sa.Column('value',
+                                                       sa.String(8192)))
         try:
             meta.create_all(dbconn)
         except:
             logging.critical('Failed to create state table')
             eva.core.critical()
             return False
-        r = dbconn.execute(
-            sql('select id, status, value from state where tp = :tp'),
-            tp=item_type)
+        r = dbconn.execute(sql(
+            'select id, set_time, ieid_b, ieid_i, status, value'
+            ' from state where tp = :tp'),
+                           tp=item_type)
         while True:
             d = r.fetchone()
             if not d:
@@ -352,7 +367,21 @@ def load_db_state(items, item_type, clean=False):
                 if item_type == 'U':
                     items[d.id].nstatus = items[d.id].status
                     items[d.id].nvalue = items[d.id].value
-                items[d.id].ieid = eva.core.generate_ieid()
+                if d.set_time:
+                    try:
+                        items[d.id].set_time = float(d.set_time)
+                    except:
+                        eva.core.log_traceback()
+                        items[d.id].set_time = time.time()
+                try:
+                    if d.ieid_b is not None and d.ieid_i is not None:
+                        items[d.id].ieid = eva.core.parse_ieid(
+                            [d.ieid_b, d.ieid_i])
+                    else:
+                        items[d.id].ieid = eva.core.generate_ieid()
+                except:
+                    eva.core.log_traceback()
+                    items[d.id].ieid = eva.core.generate_ieid()
                 _db_loaded_ids.append(d.id)
                 logging.debug(
                     '{}:{} state loaded, status={}, value="{}"'.format(
@@ -362,11 +391,16 @@ def load_db_state(items, item_type, clean=False):
         for i, v in items.items():
             if i not in _db_loaded_ids:
                 dbconn.execute(
-                    sql('insert into state (id, tp, status, value) ' +
-                        'values (:id, :tp, :status, :value)'),
+                    sql('insert into state (id, tp, '
+                        'set_time, ieid_b, ieid_i, status, value) '
+                        'values (:id, :tp, :set_time,'
+                        ' :ieid_b, :ieid_i, :status, :value)'),
                     id=v.full_id if \
                             eva.core.config.enterprise_layout else v.item_id,
                     tp=item_type,
+                    set_time=v.set_time,
+                    ieid_b=v.ieid[0],
+                    ieid_i=v.ieid[1],
                     status=v.status,
                     value=v.value)
                 logging.debug('{} state inserted into db'.format(v.oid))
