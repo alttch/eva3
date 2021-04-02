@@ -830,7 +830,7 @@ class SQLANotifier(GenericNotifier):
             props = 'status, value'
             req_status = True
             req_value = True
-        q += f' group by {props} order by t desc '
+        q += f' group by {props}, t order by t desc '
         if l:
             q += 'limit %u' % l
         dbconn = self.db()
@@ -924,7 +924,7 @@ class SQLANotifier(GenericNotifier):
             q += ' and t>%f' % t_s
         if t_e:
             q += ' and t<=%f' % t_e
-        q += ' group by status, value order by t desc, oid'
+        q += ' group by status, value, t order by t desc, oid'
         if l is not None:
             q += ' limit %u' % l
         dbconn = self.db()
@@ -996,28 +996,29 @@ class SQLANotifier(GenericNotifier):
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         dbconn = self.db()
-        dbt = dbconn.begin()
         try:
             if subject == 'state':
-                t = time.time()
                 for d in data:
                     if 'status' in d:
                         v = d['value'] if 'value' in d and \
                                 d['value'] != '' else None
                         space = self.space if self.space is not None else ''
-                        dbconn.execute(sql(
-                            'insert into state_history (space, t, oid, status, '
-                            'value) values (:space, :t, :oid, :status, :value)'
-                        ),
-                                       space=space,
-                                       t=t,
-                                       oid=d['oid'],
-                                       status=d['status'],
-                                       value=v)
-            dbt.commit()
+                        try:
+                            dbconn.execute(sql('insert into state_history '
+                                               '(space, t, oid, status, '
+                                               'value) values (:space, :t, '
+                                               ':oid, :status, :value)'),
+                                           space=space,
+                                           t=d['set_time'],
+                                           oid=d['oid'],
+                                           status=d['status'],
+                                           value=v)
+                        except sa.exc.IntegrityError:
+                            pass
+                        except:
+                            raise
             return True
         except Exception as e:
-            dbt.rollback()
             self.log_error(message=str(e))
             raise
 
@@ -1424,9 +1425,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         space = (self.space + '/') if self.space is not None else ''
         if subject == 'state':
-            t = int(time.time() * 1000000000)
             for d in data:
                 if 'status' in d:
+                    t = int(d['set_time'] * 1000000000)
                     q = space + '{} status={}i'.format(d['oid'], d['status'])
                     if d['value'] is not None and d['value'] != '':
                         try:
@@ -1505,7 +1506,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                      '/query?db={}'.format(self.db),
                                      data={
                                          'q': q,
-                                         'epoch': 'ms'
+                                         'epoch': 'ns'
                                      },
                                      timeout=self.get_timeout(),
                                      **self.xrargs)
@@ -1527,7 +1528,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         records = {}
         result = []
         for d in data:
-            t = d[0] / 1000
+            t = d[0] / 1000000000
             status = d[1]
             value = d[2]
             # skip repeating records
