@@ -1179,6 +1179,28 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         return update_result
 
     @staticmethod
+    def _api_error(code):
+        api_errors = {
+            1: 'Resource not found',
+            2: 'Access denied',
+            3: 'API client error',
+            4: 'Uknown error',
+            5: 'API not ready',
+            6: 'Function unknown',
+            7: 'Server error',
+            8: 'Server timeout',
+            9: 'Invalid request data',
+            10: 'Function failed, please read controller logs',
+            11: 'Invalid function params',
+            12: 'Resource already exists',
+            13: 'Resource busy',
+            14: 'Method not implemented',
+            15: 'Token restricted'
+        }
+        error = api_errors.get(code, 'Unlisted error')
+        return f'API call failed, code: {code} ({error})'
+
+    @staticmethod
     def _read_stdin(props):
         if props.get('f') == '-':
             props['__stdin'] = sys.stdin.read()
@@ -1248,8 +1270,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                            _debug=props.get('_debug'))
             code, test = call('test')
             if code != apiclient.result_ok or not test.get('ok'):
-                raise Exception(
-                    'SFA API is inaccessible, code: {}'.format(code))
+                raise Exception('SFA API is inaccessible, ' +
+                                self._api_error(code))
             if not test.get('acl', {}).get('master'):
                 self.print_err('Masterkey is required')
             if not test.get('cloud_manager'):
@@ -1355,9 +1377,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         raise Exception(
                             'Controller {} access forbidden'.format(c))
                     if code != apiclient.result_ok:
-                        raise Exception(
-                            'Controller {} access error, code: {}'.format(
-                                c, code))
+                        raise Exception(f'Controller {c} ' +
+                                        self._api_error(code))
                     if not ctest.get('acl', {}).get('master'):
                         raise Exception(
                             'Controller {} master access is not set up'.format(
@@ -1483,7 +1504,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     code = result.get('code')
                                     data = result.get('data', {})
                                 if code != apiclient.result_ok:
-                                    msg = f'API call failed, code {code}'
+                                    msg = self._api_error(code)
                                     if can_pass_err and \
                                         code != apiclient.result_server_error:
                                         self.print_warn(msg)
@@ -1503,7 +1524,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                                       params,
                                                       timeout=custom_timeout)
                                 if code != apiclient.result_ok:
-                                    msg = f'API call failed, code {code}'
+                                    msg = self._api_error(code)
                                     if can_pass_err and \
                                         code != apiclient.result_server_error:
                                         self.print_warn(msg)
@@ -1542,7 +1563,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             'f': 'save',
                         })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
             if ucs_to_reload:
                 print('Reloading LM PLCs')
                 for c in controllers:
@@ -1555,8 +1576,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         code = result.get('code')
                         data = result.get('data')
                         if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
                         for d in data:
                             cid = d['full_id']
                             if cid in ucs_to_reload:
@@ -1569,15 +1589,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     }
                                 })[1].get('code')
                                 if code != apiclient.result_ok:
-                                    raise Exception(
-                                        'API call failed, code {}'.format(code))
+                                    raise Exception(self._api_error(code))
             print('Reloading local SFA')
             for c in controllers:
                 if c != 'local':
                     print(' -- {}'.format(c))
                     code = call('reload_controller', {'i': c})[0]
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
@@ -1673,7 +1692,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== API Keys =====
         print('Creating API keys...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1695,8 +1714,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 skip_existing:
                             print('    [skipped]')
                         else:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
                     for prop, value in vv.items():
                         print('     -- {}={}'.format(prop, value))
                         if c == 'local':
@@ -1716,8 +1734,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 }
                             })[1].get('code')
                         if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
         print('Creating local users...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
@@ -1763,11 +1780,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         }
                                     })[1].get('code')
                                 if code != apiclient.result_ok:
-                                    raise Exception(
-                                        'API call failed, code {}'.format(code))
+                                    raise Exception(self._api_error(code))
                         else:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
         # ===== PHI =====
         print('Loading PHIs...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1787,8 +1802,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
                     code = macall({
                         'i': c,
                         'f': 'load_phi',
@@ -1799,7 +1813,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== DRIVERS =====
         print('Loading drivers...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1821,7 +1835,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== EXT =====
         print('Loading extensions...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -1838,7 +1852,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== ITEM AND MACRO CREATION =====
         for tp in ['unit', 'sensor', 'lvar', 'lmacro', 'lcycle']:
             print('Creating {}s...'.format(tp))
@@ -1871,7 +1885,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             skip_existing:
                         print('    [skipped]')
                     else:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
                 if 'driver' in v:
                     print('     - driver {} -> {}'.format(
                         v['driver'].get('id'), i))
@@ -1885,9 +1899,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         }
                     })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception(
-                            'Driver assign API call failed, code {}'.format(
-                                code))
+                        raise Exception('Driver assign ' +
+                                        self._api_error(code))
                 for prop, val in item_props.items():
                     if prop in ['action_exec', 'update_exec'
                                ] and val.startswith('^'):
@@ -1938,7 +1951,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             }
                         })[1].get('code')
                     if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
                     if file2u:
                         if tp == 'lmacro' and 'action_exec' not in item_props:
                             fx = os.path.basename(file2u)
@@ -1995,7 +2008,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if code == apiclient.result_already_exists and skip_existing:
                     print('    [skipped]')
                 else:
-                    raise Exception('API call failed, code {}'.format(code))
+                    raise Exception(self._api_error(code))
         # ===== JOB CREATION =====
         print('Creating scheduled jobs...')
         for i, v in self.dict_safe_get(cfg, 'job', {}).items():
@@ -2016,7 +2029,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if code == apiclient.result_already_exists and skip_existing:
                     print('    [skipped]')
                 else:
-                    raise Exception('API call failed, code {}'.format(code))
+                    raise Exception(self._api_error(code))
         # ===== Plugin deployment =====
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
@@ -2039,8 +2052,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 skip_existing:
                             print('    [skipped]')
                         else:
-                            raise Exception(
-                                'API call failed, code {}'.format(code))
+                            raise Exception(self._api_error(code))
 
     def _perform_undeploy(self, props, cfg, call, macall, del_files=False):
         from eva.client import apiclient
@@ -2059,7 +2071,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if code == apiclient.result_not_found:
                 self.print_warn('Job not found')
             elif code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                raise Exception(self._api_error(code))
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
         for i, v in self.dict_safe_get(
@@ -2077,7 +2089,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             if code == apiclient.result_not_found:
                 self.print_warn('Rule not found')
             elif code != apiclient.result_ok:
-                raise Exception('API call failed, code {}'.format(code))
+                raise Exception(self._api_error(code))
         # ===== ITEM AND MACRO DELETION =====
         for tp in ['lcycle', 'lmacro', 'lvar', 'sensor', 'unit']:
             print('Deleting {}s...'.format(tp))
@@ -2095,7 +2107,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if code == apiclient.result_not_found:
                     self.print_warn('{} {} not found'.format(tp, i))
                 elif code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+                    raise Exception(self._api_error(code))
                 if del_files:
                     for prop, val in v.items():
                         if prop in ['action_exec', 'update_exec'
@@ -2137,7 +2149,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code == apiclient.result_not_found:
                         self.print_warn('Extension {} not found'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== DRIVERS UNLOAD =====
         print('Unloading drivers...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -2156,7 +2168,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     elif code == apiclient.result_busy:
                         self.print_warn('Driver {} is in use'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== PHI UNLOAD =====
         print('Unloading PHIs...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -2175,7 +2187,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     elif code == apiclient.result_busy:
                         self.print_warn('PHI {} is in use'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         print('Deleting local users...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
@@ -2194,7 +2206,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code == apiclient.result_not_found:
                         self.print_warn('User {} not found'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         print('Deleting API keys...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
@@ -2213,7 +2225,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code == apiclient.result_not_found:
                         self.print_warn('API key {} not found'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== CVARS =====
         print('Deleting cvars...')
         for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -2230,7 +2242,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     if code == apiclient.result_not_found:
                         self.print_warn('CVAR {} not found'.format(i))
                     elif code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+                        raise Exception(self._api_error(code))
         # ===== FILE DELETION =====
         if del_files:
             print('Deleting uploaded files...')
