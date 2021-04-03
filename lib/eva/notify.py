@@ -830,7 +830,7 @@ class SQLANotifier(GenericNotifier):
             props = 'status, value'
             req_status = True
             req_value = True
-        q += f' group by {props}, t order by t desc '
+        q += f' order by t desc '
         if l:
             q += 'limit %u' % l
         dbconn = self.db()
@@ -852,7 +852,7 @@ class SQLANotifier(GenericNotifier):
                 r = (t_s,) + tuple(r)
                 data += [r]
         stmt = dbconn.execute(
-            sql('select min(t), ' + props +
+            sql('select t, ' + props +
                 ' from state_history where space = :space and oid = :oid' + q),
             space=space,
             oid=oid)
@@ -924,7 +924,7 @@ class SQLANotifier(GenericNotifier):
             q += ' and t>%f' % t_s
         if t_e:
             q += ' and t<=%f' % t_e
-        q += ' group by status, value, t order by t desc, oid'
+        q += ' order by t desc, oid'
         if l is not None:
             q += ' limit %u' % l
         dbconn = self.db()
