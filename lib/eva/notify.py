@@ -241,7 +241,9 @@ class GenericNotifier(object):
                                             or v.item_type in e.item_types) \
                                             and eva.item.item_match(v,
                                                     e.item_ids, e.groups):
-                                dts.append(v.serialize(notify=True))
+                                data = v.serialize(notify=True)
+                                data['set_time'] = time.time()
+                                dts.append(data)
                         if dts:
                             await o.notifier_worker.put(
                                 ('state', dts, False, False))
