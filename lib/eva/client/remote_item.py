@@ -92,7 +92,7 @@ class RemoteLVar(RemoteUpdatableItem):
                                 need_notify = True
                         except:
                             pass
-                    if (result == 1 or need_notify) and notify:
+                    if (result == 2 or need_notify) and notify:
                         self.notify()
 
             except:
@@ -173,7 +173,7 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                         if self.action_enabled != val:
                             self.action_enabled = val
                             need_notify = True
-                    if j[0] == 1 or need_notify:
+                    if j[0] == 2 or need_notify:
                         self.notify()
                 except:
                     eva.core.log_traceback()
@@ -266,30 +266,35 @@ class RemoteCycle(RemoteUpdatableItem):
     def notify(self, retain=None, skip_subscribed_mqtt=False):
         super().notify(skip_subscribed_mqtt=True)
 
-    def mqtt_set_state(self, topic, data):
+    def set_state_from_serialized(self, data, from_mqtt=False, notify=True):
         with self.remote_update_lock:
-            j = super().mqtt_set_state(topic, data)
-            if j[0]:
-                need_notify = False
-                if 'interval' in j[1]:
-                    try:
-                        d = float(j[1]['interval'])
-                        if self.interval != d:
-                            self.interval = d
-                            need_notify = True
-                    except:
-                        eva.core.log_traceback()
-                if 'iterations' in j[1]:
-                    try:
-                        d = int(j[1]['iterations'])
-                        if self.iterations != d:
-                            self.iterations = d
-                            need_notify = True
-                    except:
-                        eva.core.log_traceback()
-                if 'set_time' in j[1]:
-                    self.set_time = j[1]['set_time']
-                if 'ieid' in j[1]:
-                    self.ieid = eva.core.parse_ieid(j['ieid'])
-                if need_notify:
-                    self.notify()
+            try:
+                result = super().set_state_from_serialized(data,
+                                                           from_mqtt=from_mqtt,
+                                                           notify=False)
+                if result:
+                    need_notify = False
+                    if 'interval' in data:
+                        try:
+                            d = float(data['interval'])
+                            if self.interval != d:
+                                self.interval = d
+                                need_notify = True
+                        except:
+                            eva.core.log_traceback()
+                    if 'iterations' in data:
+                        try:
+                            d = int(data['iterations'])
+                            if self.iterations != d:
+                                self.iterations = d
+                                need_notify = True
+                        except:
+                            eva.core.log_traceback()
+                    if 'set_time' in data:
+                        self.set_time = data['set_time']
+                    if 'ieid' in data:
+                        self.ieid = eva.core.parse_ieid(data['ieid'])
+                    if (result == 2 or need_notify) and notify:
+                        self.notify()
+            except:
+                eva.core.log_traceback()
