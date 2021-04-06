@@ -696,14 +696,14 @@ class UpdatableItem(Item):
                     self.update_set_state(value=data)
                 elif topic == self.item_type + '/' + self.full_id:
                     if not data:
-                        return
+                        return False, None
                     j = rapidjson.loads(data)
                     remote_controller = j.get('c')
                     if (
                             not self.allow_mqtt_updates_from_controllers and
                             remote_controller
                     ) or remote_controller == eva.core.config.controller_name:
-                        return None
+                        return None, None
                     result = self.set_state_from_serialized(j,
                                                             from_mqtt=True,
                                                             notify=notify)
@@ -748,6 +748,9 @@ class UpdatableItem(Item):
                          update_expiration=True,
                          timestamp=None,
                          ieid=None):
+        # returns 2 if need_notify but notify is disabled
+        # returns True if updated and notified
+        # returns False if update cancelled
         with self.update_lock:
             if ieid is not None:
                 if ieid == self.ieid:
@@ -788,7 +791,8 @@ class UpdatableItem(Item):
                 self.ieid = ieid
             if (need_notify and notify) or force_notify:
                 self.notify(skip_subscribed_mqtt=from_mqtt)
-                return 1
+            elif need_notify:
+                return 2
         return True
 
     def serialize(self,
@@ -1640,6 +1644,9 @@ class VariableItem(UpdatableItem):
                          notify=True,
                          timestamp=None,
                          ieid=None):
+        # returns 2 if need_notify but notify is disabled
+        # returns True if updated and notified
+        # returns False if update cancelled
         if self._destroyed:
             return False
         with self.update_lock:
@@ -1694,7 +1701,8 @@ class VariableItem(UpdatableItem):
                     '%s status = %u, value = "%s"' % \
                             (self.oid, self.status, self.value))
                 self.notify(skip_subscribed_mqtt=from_mqtt)
-                return 1
+            elif need_notify:
+                return 2
             return True
 
     def is_expired(self):

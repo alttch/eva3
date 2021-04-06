@@ -1081,7 +1081,7 @@ class RemoteUCPool(RemoteControllerPool):
                             if u.action_enabled != s['action_enabled']:
                                 u.action_enabled = s['action_enabled']
                                 need_notify = True
-                            if result == 1 or need_notify:
+                            if result == 2 or need_notify:
                                 u.notify()
                     else:
                         logging.debug(
@@ -1340,7 +1340,7 @@ class RemoteUCPool(RemoteControllerPool):
                             if unit.action_enabled != u.action_enabled:
                                 unit.action_enabled = u.action_enabled
                                 need_notify = True
-                            if need_notify or result == 1:
+                            if result == 2 or need_notify:
                                 unit.notify()
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
@@ -1516,7 +1516,6 @@ class RemoteLMPool(RemoteControllerPool):
                 if s['type'] == 'lvar':
                     _u = self.get_lvar(s['full_id'])
                     if _u:
-                        _u.update_config(s)
                         _u.set_state_from_serialized(s)
                     else:
                         logging.debug(
@@ -1525,7 +1524,6 @@ class RemoteLMPool(RemoteControllerPool):
                 elif s['type'] == 'lcycle':
                     _u = self.get_cycle(s['full_id'])
                     if _u:
-                        _u.update_config(s)
                         _u.set_state_from_serialized(s)
                     else:
                         logging.debug(
@@ -1751,7 +1749,6 @@ class RemoteLMPool(RemoteControllerPool):
                     p[u.full_id] = u
                     _u = self.get_lvar(u.full_id)
                     if _u:
-                        _u.update_config(u.serialize(config=True))
                         _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.lvars_by_controller:
                     for i in self.lvars_by_controller[controller_id].copy(
@@ -1821,7 +1818,6 @@ class RemoteLMPool(RemoteControllerPool):
                     p[u.full_id] = u
                     _u = self.get_cycle(u.full_id)
                     if _u:
-                        _u.update_config(u.serialize(config=True))
                         _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.cycles_by_controller:
                     for i in self.cycles_by_controller[controller_id].copy(
