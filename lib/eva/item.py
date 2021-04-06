@@ -401,6 +401,7 @@ class UpdatableItem(Item):
                 if not expires:
                     self.stop_expiration_checker()
                 else:
+                    self.set_time = time.time()
                     self.start_expiration_checker()
             return True
         elif prop == 'update_exec':
