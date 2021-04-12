@@ -1306,6 +1306,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  db=None,
                  username=None,
                  password=None,
+                 token=None,
                  method=None,
                  notify_key=None,
                  space=None,
@@ -1325,6 +1326,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         self.notifier_type = 'influxdb'
         self.db = db
         self.state_storage = 'tsdb'
+        self.headers = {'Content-Type': 'application/octet-stream'}
+        self.auth_headers = None
+        self.token = token
+        if token:
+            self.auth_headers = {'Authorization': f'Token {token}'}
+            self.headers.update(self.auth_headers)
 
     __fills = {'S': 's', 'T': 'm', 'H': 'h', 'D': 'd', 'w': 'w'}
 
@@ -1400,6 +1407,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                          'q': q,
                                          'epoch': 'ms'
                                      },
+                                     headers=self.auth_headers,
                                      timeout=self.get_timeout(),
                                      **self.xrargs)
             if not r.ok:
@@ -1439,14 +1447,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                             q += ',value="{}"'.format(d['value'])
                     q += ' {}'.format(t)
                     try:
-                        r = self.rsession().post(
-                            url=self.uri + '/write?db={}'.format(self.db),
-                            data=q,
-                            headers={
-                                'Content-Type': 'application/octet-stream'
-                            },
-                            timeout=self.get_timeout(),
-                            **self.xrargs)
+                        r = self.rsession().post(url=self.uri +
+                                                 '/write?db={}'.format(self.db),
+                                                 data=q,
+                                                 headers=self.headers,
+                                                 timeout=self.get_timeout(),
+                                                 **self.xrargs)
                     except Exception as e:
                         self.log_error(message=str(e))
                         raise
@@ -1510,6 +1516,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                          'q': q,
                                          'epoch': 'ns'
                                      },
+                                     headers=self.auth_headers,
                                      timeout=self.get_timeout(),
                                      **self.xrargs)
             if not r.ok:
@@ -1570,7 +1577,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             r = self.rsession().post(
                 url=self.uri + '/write?db={}'.format(self.db),
                 data=space + ':eva_test test="passed"',
-                headers={'Content-Type': 'application/octet-stream'},
+                headers=self.headers,
                 timeout=self.get_timeout(),
                 **self.xrargs)
             if r.ok:
@@ -1587,12 +1594,16 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         if self.method or props:
             d['method'] = self.method
         d['db'] = self.db
+        d['token'] = self.token
         d.update(super().serialize(props=props))
         return d
 
     def set_prop(self, prop, value):
         if prop == 'db':
             self.db = value
+            return True
+        elif prop == 'token':
+            self.token = value
             return True
         else:
             return super().set_prop(prop, value)
@@ -3189,12 +3200,14 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
+        token = ncfg.get('token')
         n = InfluxDB_Notifier(_notifier_id,
                               ssl_verify=ssl_verify,
                               uri=uri,
                               db=db,
                               username=username,
                               password=password,
+                              token=token,
                               method=method,
                               space=space,
                               interval=interval,
