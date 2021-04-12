@@ -204,6 +204,17 @@ class GenericCLI(GCLI):
         self.api_functions = self.common_api_functions
         self.api_cmds_timeout_correction = []
         self.setup_parser()
+        import pwd
+        dir_owner = os.stat(dir_eva + '/runtime').st_uid
+        try:
+            dir_owner = pwd.getpwuid(dir_owner).pw_name
+        except KeyError:
+            dir_owner = f'uid {dir_owner}'
+        current_user = pwd.getpwuid(os.getuid()).pw_name
+        if dir_owner != current_user:
+            self.print_warn(f'EVA ICS seems to be configured to work under '
+                            f'{dir_owner}, current CLI user: {current_user}')
+            self.print_warn('This may cause serious permission problems')
 
     def get_prompt(self):
         if self.prompt:
