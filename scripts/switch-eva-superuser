@@ -69,7 +69,7 @@ if [ -f "$SYSTEMD_FILE" ]; then
  fi
  else
  echo "Starting EVA ICS..."
- if ! "$EVA_DIR/sbin/eva-control" stop; then
+ if ! "$EVA_DIR/sbin/eva-control" start; then
    echo "Unable to start EVA ICS"
    exit 3
  fi
