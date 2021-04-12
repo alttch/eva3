@@ -1,0 +1,76 @@
+#!/bin/sh
+
+if [ "$(id -u)" != "0" ]; then
+    echo "Please run this script as root"
+    exit 1
+fi
+
+USER=$1
+
+SYSTEMD_FILE=/etc/systemd/system/eva-ics.service
+
+if [ -z "$USER" ]; then
+    echo "Usage: $0 <username>"
+    exit 1
+fi
+
+if ! id "$USER" > /dev/null 2>&1 ; then
+  echo "User $USER does not exist"
+  exit 2
+fi
+
+[ -z "$EVA_DIR" ] && EVA_DIR=/opt/eva
+
+if [ ! -d $EVA_DIR ] ; then
+  echo "Directory $EVA_DIR does not exist"
+  echo "To specify custom directory, run the script as EVA_DIR=/path/to/eva/dir $0"
+  exit 2
+fi
+
+if [ -f "$SYSTEMD_FILE" ]; then
+ echo "Stopping EVA ICS via systemctl..."
+ if ! systemctl stop eva-ics; then
+   echo "Unable to stop EVA ICS"
+   exit 3
+ fi
+ else
+ echo "Stopping EVA ICS..."
+ if ! "$EVA_DIR/sbin/eva-control" stop; then
+   echo "Unable to stop EVA ICS"
+   exit 3
+ fi
+fi
+
+echo "Changing ownership of $EVA_DIR to $USER..."
+
+if ! chown -R "$USER" "$EVA_DIR"; then
+   echo "Unable to chown"
+   exit 4
+fi
+
+if [ -f "$SYSTEMD_FILE" ]; then
+  echo "Changing systemd user for EVA ICS..."
+  if ! sed -i "s/^User=.*/User=$USER/g" "$SYSTEMD_FILE"; then
+   echo "Unable to change systemd user"
+   exit 5
+  fi
+  echo "Reloading systemd..."
+  if ! systemctl daemon-reload; then
+   echo "Unable to reload systemd"
+   exit 6
+  fi
+fi
+
+if [ -f "$SYSTEMD_FILE" ]; then
+ echo "Starting EVA ICS via systemctl..."
+ if ! systemctl start eva-ics; then
+   echo "Unable to start EVA ICS"
+   exit 3
+ fi
+ else
+ echo "Starting EVA ICS..."
+ if ! "$EVA_DIR/sbin/eva-control" stop; then
+   echo "Unable to start EVA ICS"
+   exit 3
+ fi
+fi
