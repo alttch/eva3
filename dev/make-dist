@@ -44,6 +44,7 @@ rm -f .gitignore
 rm -f TODO
 rm -f update.sh
 rm -rf install/demos
+rm -rf scripts
 
 grep -Rl " ipdb" *
 if [ $? -eq 0 ]; then
