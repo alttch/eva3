@@ -1573,8 +1573,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 headers={'Content-Type': 'application/octet-stream'},
                 timeout=self.get_timeout(),
                 **self.xrargs)
-            return r.ok
-        except:
+            if r.ok:
+                return True
+            else:
+                self.log_error(code=r.status_code, message=r.text)
+                return False
+        except Exception:
             eva.core.log_traceback(notifier=True)
             return False
 
@@ -2156,7 +2160,8 @@ class GenericMQTTNotifier(GenericNotifier):
                                 keepalive=self.keepalive)
                 self.mq.loop_start()
             return True
-        except:
+        except Exception as e:
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
             return False
 

@@ -18,6 +18,13 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
+from pyaltt2 import logs
+
+import logging
+
+logs.init(formatter=logging.Formatter('%(message)s'),
+          level=logging.WARNING, tracebacks=True)
+
 
 class NotifierCLI(GenericCLI, ControllerCLI):
 
@@ -52,6 +59,10 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     def setup_parser(self):
         super().setup_parser()
         self.enable_controller_management_functions(eva.core.product.code)
+
+    def prepare_run(self, *args, **kwargs):
+        from pyaltt2 import logs
+        logs.config.colorize = self.can_colorize()
 
     def prepare_result_dict(self, data, api_func, itype):
         if api_func != 'status_controller':
