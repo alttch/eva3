@@ -145,9 +145,9 @@ units
 
 * **[space/]unit/<group>/<unit_id>/status**  unit status, integer
 * **[space/]unit/<group>/<unit_id>/value**  unit value
-* **[space/]unit/<group>/<unit_id>/nstatus**  new unit status (different from
-  status if action is started), integer
-* **[space/]unit/<group>/<unit_id>/nvalue** new unit value
+* **[space/]unit/<group>/<unit_id>/nstatus**  next unit status (different from
+  status if action is being executed), integer
+* **[space/]unit/<group>/<unit_id>/nvalue** next unit value
 * **[space/]unit/<group>/<unit_id>/action_enabled** are actions enabled for the
   unit or not (boolean, True/False)
 

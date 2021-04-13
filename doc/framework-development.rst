@@ -64,7 +64,7 @@ where KEY is either API key (not recommended) or a session token (preferred).
 Web socket session are used to:
 
 * obtain changed states of :doc:`control and monitoring items<items>` without
-  performing additional API calls.
+  performing additional API calls
 
 * receive special server events
 
@@ -224,9 +224,9 @@ Web socket heartbeat
 --------------------
 
 The client MUST send JSON ping-frame every N seconds, where N is less or equal
-to :doc:`/sfa/sfa` default server timeout. If the server does not receive
-heartbeat frame from the client within the timeout interval, it may drop the
-web socket session.
+to :doc:`/sfa/sfa` default server timeout (default: 5 seconds). If the server
+does not receive heartbeat frame from the client within the timeout interval,
+it may drop the web socket session.
 
 To notify the server, the client sends the following frame:
 
@@ -355,3 +355,26 @@ the existing one, is:
     processing conflicts. However, in the versions above 3.3.2, IEIDs are
     permanent for the current states and stored in local state databases,
     unless the node works on read-only mode storage device.
+
+Actions
+=======
+
+* :ref:`Unit<unit>` and :doc:`macro</lm/macros>` actions SHOULD be usually
+  performed without "w" param to let API call be executed instantly.
+
+* The action state can be obtained later with :ref:`"result"<sfapi_result>` API
+  method.
+
+* The client SHOULD consider any action can be failed or refused and keep the
+  local item state until the new state event is received from the server.
+
+* The client MAY use units' fields "nstatus" and "nvalue" from received state
+  events:
+
+    * If "nstatus" != "status" OR "nvalue" != "value" - the unit is busy and
+      executing action, targeting to the next status = "nstatus" and next value
+      = "value".
+      
+    * The interface application can use the above e.g. to block the button
+      until the action is finished, unless the unit has action queue enabled
+      and the interface has a feature to put new actions into it.
