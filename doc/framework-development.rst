@@ -27,12 +27,12 @@ If the session is dropped, the client SHOULD either try to login again (if user
 credentials or API key are stored) or show login form to the user to obtain
 them.
 
-The session is considered to be dropped if:
+The session is considered to be dropped, when:
 
 * API call failed because of either network error or with "access denied"
   response code (3).
 
-* The server is failed to respond on heartbeat within the required interval.
+* The server failed to respond on heartbeat within the required interval.
 
 * The user asked application to perform logout procedure.
 
