@@ -389,15 +389,15 @@ the following formula may be used (example for JavaScript):
 
 .. code:: javascript
 
-    // server_time - "time" field in the result of "test" API call
-    // Timestamp difference is usually re-calculated at every heartbeat,
-    // the local timestamp is divided by 1000 as JavaScript getTime() function
-    // returns milliseconds
+    /* server_time - "time" field in the result of "test" API call
+       Timestamp difference is usually re-calculated at every heartbeat,
+       the local timestamp is divided by 1000 as JavaScript getTime() function
+       returns milliseconds */
     let tsdiff = new Date().getTime() / 1000 - server_time;
 
-    // calculate expiration time for a lvar timer
-    // lvar.expires and lvar.set_time - fields from lvar state event
+    /* Calculate expiration time for a lvar timer
+      lvar.expires and lvar.set_time - fields from lvar state event */
     let expires_in = lvar.expires - new Date().getTime() / 1000 + lvar.set_time;
-    // correct expiration time with tsdiff
+    /* Correct expiration time with tsdiff */
     expires_in += tsdiff;
 
