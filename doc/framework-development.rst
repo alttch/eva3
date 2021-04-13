@@ -129,7 +129,7 @@ frame to web socket (requires either master key or "sysfunc" key permission):
 Where "l" is the desired minimal log message level (10=DEBUG, 20=INFO,
 30=WARNING, 40=ERROR, 50=CRITICAL)
 
-The log event looks like:
+A log event looks like:
 
 .. code:: json
 
