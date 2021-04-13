@@ -29,7 +29,7 @@ them.
 
 The session is considered to be dropped if:
 
-* An API call failed because of either network error or with "access denied"
+* API call failed because of either network error or with "access denied"
   response code (3).
 
 * The server is failed to respond on heartbeat within the required interval.
