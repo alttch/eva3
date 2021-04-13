@@ -399,5 +399,5 @@ the following formula may be used (example for JavaScript):
     // lvar.expires and lvar.set_time - fields from lvar state event
     let expires_in = lvar.expires - new Date().getTime() / 1000 + lvar.set_time;
     // correct expiration time with tsdiff
-    expires_in += tsdiff
+    expires_in += tsdiff;
 
