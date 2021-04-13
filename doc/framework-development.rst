@@ -396,7 +396,7 @@ the following formula may be used (example for JavaScript):
     let tsdiff = new Date().getTime() / 1000 - server_time;
 
     /* Calculate expiration time for a lvar timer
-      lvar.expires and lvar.set_time - fields from lvar state event */
+       lvar.expires and lvar.set_time - fields from lvar state event */
     let expires_in = lvar.expires - new Date().getTime() / 1000 + lvar.set_time;
     /* Correct expiration time with tsdiff */
     expires_in += tsdiff;
