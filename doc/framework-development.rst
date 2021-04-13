@@ -275,7 +275,7 @@ The client SHOULD use both pull (via "state" API method) and push (via web
 socket session) to replicate item states from the server.
 
 For :doc:`/sfa/sfa`, a special API method "state_all" may be used to obtain
-states of all desired item types within the one API call. The method accepts
+states of all desired item types within the single API call. The method accepts
 the following parameters:
 
 * **k** API key or token
@@ -313,8 +313,8 @@ recommended:
 
 * Else, if the state frame contains "set_time" field - use the state with the
   max "set_time" (not recommended as the primary method, as time on different
-  nodes may go backwards). If the client has the stored stat with newer "ieid"
-  - drop the incoming (or use it as the archived data).
+  nodes may go backwards). If the client has the stored stat with newer
+  "set_time" - drop the incoming (or use it as the archived data).
 
 * If none of the above conditions are met - accept the incoming state.
 
@@ -323,7 +323,7 @@ Using IEID
 
 Starting from EVA ICS 3.3.2, item states are replicated between nodes and
 client/server with "IEID" (Incremental Event Identifier). IEID is always
-incrementing and it is the most reliable way in EVA ICS to handle item state
+incremental and it is the most reliable way in EVA ICS to handle item state
 events.
 
 All serialized item states have "ieid" field, which is changed only when either
