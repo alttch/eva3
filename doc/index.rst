@@ -185,3 +185,9 @@ What you get with EVA
     Logic macro extensions <lm/ext>
     plugins
     packages
+
+.. toctree::
+    :caption:  Advanced development
+    :maxdepth: 1
+
+    framework-development
