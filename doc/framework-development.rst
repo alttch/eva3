@@ -174,13 +174,13 @@ Here is the table of server events:
 ================== ======= ============================================
 "s"                "d"        Description
 ================== ======= ============================================
-
 reload             asap    Server asked clients to reload interface
 server             restart Server is being restarted
 server             <EVENT> Other custom server events (reserved)
 supervisor.lock    *       A supervisor user performed exclusive-lock
 supervisor.message *       A broadcast message from supervisor user
 supervisor.unlock          A supervisor user exited exclusive mode
+================== ======= ============================================
 
 Supervisor lock events contain the following block in "d" field:
 
