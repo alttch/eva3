@@ -303,13 +303,12 @@ recommended:
 
 * Else, if the state frame "controller_id" field does not match the
   "controller_id" field of the stored item state - accept the incoming state
-  (happens rarely, when the system administrator desires to move the item from
+  (happens rarely, when the system administrator decides to move the item from
   one EVA ICS node to another).
 
-* Else, if the state frame contains "ieid" field (see below) - use it to
-  consider is the incoming state newer than existing. If the client has the
-  stored stat with newer "ieid" - drop the incoming (or use it as the archived
-  data).
+* Else, if the state contains "ieid" field (see below) - use it to consider is
+  the incoming state newer than existing. If the client has the stored stat
+  with newer "ieid" - drop the incoming (or use it as the archived data).
 
 * Else, if the state frame contains "set_time" field - use the state with the
   max "set_time" (not recommended as the primary method, as time on different
@@ -321,10 +320,10 @@ recommended:
 Using IEID
 ~~~~~~~~~~
 
-Starting from EVA ICS 3.3.2, item states are replicated between nodes and
-client/server with "IEID" (Incremental Event Identifier). IEID is always
-incremental and it is the most reliable way in EVA ICS to handle item state
-events.
+Starting from EVA ICS 3.3.2, item states are replicated between EVA ICS nodes
+and between client applications and server back-end with "IEID" (Incremental
+Event Identifier). IEID is always incremental and it is the most reliable way
+in EVA ICS to handle item state events.
 
 All serialized item states have "ieid" field, which is changed only when either
 item state or some special item parameters (e.g. "action_enabled" for units or
@@ -347,3 +346,12 @@ the existing one, is:
   the incoming state.
 
 * Else: Drop the incoming state or use it as the archived data.
+
+.. note::
+
+    In EVA ICS 3.3.2 IEIDs are not kept between the controller reboots. The new
+    IEIDs are generated automatically at every controller startup, which should
+    not be confusing, as the main idea of IEID is to prevent push/pull event
+    processing conflicts. However, in the versions above 3.3.2, IEIDs are
+    permanent for the current states and stored in local state databases,
+    unless the node works on read-only mode storage device.
