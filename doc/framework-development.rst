@@ -307,12 +307,12 @@ recommended:
   one EVA ICS node to another).
 
 * Else, if the state contains "ieid" field (see below) - use it to consider is
-  the incoming state newer than existing. If the client has the stored stat
-  with newer "ieid" - drop the incoming (or use it as the archived data).
+  the incoming state newer than existing. If the client has got the stored
+  state with newer "ieid" - drop the incoming (or use it as the archived data).
 
 * Else, if the state frame contains "set_time" field - use the state with the
   max "set_time" (not recommended as the primary method, as time on different
-  nodes may go backwards). If the client has the stored stat with newer
+  nodes may go backwards). If the client has got the stored state with newer
   "set_time" - drop the incoming (or use it as the archived data).
 
 * If none of the above conditions are met - accept the incoming state.
