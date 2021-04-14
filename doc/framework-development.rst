@@ -9,7 +9,7 @@ However, sometimes it is necessary to develop a framework for unsupported
 platform / programming language. This document describes the process and best
 practices.
 
-The described approach is common for developing interfaces and customs
+The described approach is common for developing interfaces and custom
 applications for all EVA ICS components, however the best practice is to
 develop applications for :doc:`/sfa/sfa` only.
 
@@ -19,22 +19,22 @@ Sessions
 ========
 
 The client SHOULD not use API keys directly. Instead, login / logout mechanism
-SHOULD be implemented and the client SHOULD always use the token, provided with
+SHOULD be used and the client SHOULD always use the token, provided with
 :ref:`"login"<sysapi_login>` API method for all API calls and web socket
 connections.
 
 If the session is dropped, the client SHOULD either try to login again (if user
-credentials or API key are stored) or show login form to the user to obtain
+credentials or API key are stored) or show a login form to the user to obtain
 them.
 
 The session is considered to be dropped, when:
 
-* API call failed because of either network error or with "access denied"
+* API call fails because of either network error or with "access denied"
   response code (3).
 
-* The server failed to respond on heartbeat within the required interval.
+* The server fails to respond on heartbeat within the required interval.
 
-* The user asked application to perform logout procedure.
+* The user asks the application to perform logout procedure.
 
 API calls
 =========
@@ -43,11 +43,11 @@ API calls are performed via EVA ICS API, the client SHOULD use session tokens
 to authenticate itself.
 
 Usually, it is a good practice to perform short API calls, without using "wait"
-API method parameters. For actions, API call results can be obtained later,
+API method parameter. For actions, API call results can be obtained later,
 using action UUID.
 
-If the long API call still need to be preformed, do not forget to increase
-client timeout.
+If a long API call still need to be performed, do not forget to increase client
+timeout.
 
 Starting from EVA ICS 3.3.2, it is highly recommended to use JSON RPC API calls
 only.
@@ -55,13 +55,13 @@ only.
 Web socket sessions
 ===================
 
-Web socket session can be opened by connecting web socket client to:
+A web socket session can be opened by connecting web socket client to:
 
     \http(s)://CONTROLLER_IP:PORT/ws?k=KEY
 
 where KEY is either API key (not recommended) or a session token (preferred).
 
-Web socket session are used to:
+Web socket sessions are used to:
 
 * obtain changed states of :doc:`control and monitoring items<items>` without
   performing additional API calls
@@ -75,7 +75,7 @@ Item events
 -----------
 
 The client can subscribe to item events by sending the following JSON frame to
-web socket:
+the web socket:
 
 .. code:: json
 
@@ -86,7 +86,7 @@ web socket:
         "i": ["array_of_individual_item_ids"]
     }
 
-To subscribe client to events from all items, use the following frame:
+To subscribe the client to events from all items, use the following frame:
 
 .. code:: json
 
@@ -96,7 +96,7 @@ To subscribe client to events from all items, use the following frame:
         "tp": "#"
     }
 
-The item events are received serialized in JSON, the format is equal of
+JSON-serialized item events are received in the format, equal to
 :ref:`state<sfapi_state>` API function:
 
 .. code:: json
@@ -109,15 +109,15 @@ The item events are received serialized in JSON, the format is equal of
 The client MUST be able to process serialized item states ("d" field) both as a
 single event (dict) or as a group of events (array of dicts).
 
-The client MUST send subscribe frame every time a new web socket is connected.
-If another subscribe frame is sent later during the session, it overrides the
-previous one.
+The client MUST send a subscribe frame every time a new web socket is
+connected. If another subscribe frame is sent later during the session, it
+overrides the previous one.
 
 Log events
 ----------
 
-The client can subscribe to the server log events by sending the following JSON
-frame to web socket (requires either master key or "sysfunc" key permission):
+The client can subscribe to server log events by sending the following JSON
+frame to a web socket (requires either master key or "sysfunc" key permission):
 
 .. code:: json
 
@@ -126,7 +126,7 @@ frame to web socket (requires either master key or "sysfunc" key permission):
         "l": 20
     }
 
-Where "l" is the desired minimal log message level (10=DEBUG, 20=INFO,
+where "l" is the desired minimal log message level (10=DEBUG, 20=INFO,
 30=WARNING, 40=ERROR, 50=CRITICAL)
 
 A log event looks like:
@@ -159,8 +159,10 @@ previous one.
 Special server events
 ---------------------
 
-The events are automatically sent to all clients with web socket sessions
-opened. The client MUST either process events or ignore them:
+The special server events are automatically sent to all clients with web socket
+sessions opened. The client MUST either process events or ignore them.
+
+A server event looks like:
 
 .. code:: json
     
@@ -169,17 +171,17 @@ opened. The client MUST either process events or ignore them:
         "d": "<event_data_field>"
     }
 
-Here is the table of server events:
+The table of server events:
 
 ================== ======= ============================================
 "s"                "d"        Description
 ================== ======= ============================================
-reload             asap    Server asked clients to reload interface
+reload             asap    Server asks clients to reload the interface
 server             restart Server is being restarted
 server             <EVENT> Other custom server events (reserved)
-supervisor.lock    *       A supervisor user performed exclusive-lock
+supervisor.lock    *       A supervisor user performs exclusive-lock
 supervisor.message *       A broadcast message from supervisor user
-supervisor.unlock          A supervisor user exited exclusive mode
+supervisor.unlock          A supervisor user leaves exclusive mode
 ================== ======= ============================================
 
 Supervisor lock events contain the following block in "d" field:
@@ -203,7 +205,7 @@ Where scopes are:
 
 * **null** any supervisor can pass the scope
 * **k** any user with the same API key can pass the scope
-* **u** only lock owner can pass the scope
+* **u** only the lock owner can pass the scope
 
 Supervisor message events contain the following block in "d" field:
 
@@ -225,7 +227,7 @@ Web socket heartbeat
 
 The client MUST send JSON ping-frame every N seconds, where N is less or equal
 to :doc:`/sfa/sfa` default server timeout (default: 5 seconds). If the server
-does not receive heartbeat frame from the client within the timeout interval,
+does not receive a heartbeat frame from the client within the timeout interval,
 it may drop the web socket session.
 
 To notify the server, the client sends the following frame:
@@ -256,14 +258,14 @@ It is a good practice to use API calls for both :ref:`"test"<sysapi_test>` and
 states.
 
 If the server does not respond to any method within the client timeout interval
-or API method returned an error, the client SHOULD consider the session is
-dropped and perform re-login to obtain new API token.
+or API method returns an error, the client SHOULD consider the session is
+dropped and perform re-login to obtain a new API token.
 
 .. note::
 
     There is a special parameter "icvars=1" for "test" API method of
-    :doc:`/sfa/sfa`, which allows to receive from the server all custom
-    variables as well.
+    :doc:`/sfa/sfa`, which allows to receive all custom variables from the
+    server variables as well.
 
 Item state replication
 ======================
