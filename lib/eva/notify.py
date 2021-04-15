@@ -1502,7 +1502,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                         t_prev = None
                         for d in csv.split('\n'):
                             d = d.strip()
-                            if d:
+                            if d and not d.startswith('#'):
                                 d = d.split(',')
                                 t = dateutil.parser.parse(
                                     d[timecol]).timestamp()
@@ -1720,7 +1720,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                         valuecol = header.index('_value')
                         for d in csv.split('\n'):
                             d = d.strip()
-                            if d:
+                            if d and not d.startswith('#'):
                                 d = d.split(',')
                                 t = dateutil.parser.parse(
                                     d[timecol]).timestamp()
