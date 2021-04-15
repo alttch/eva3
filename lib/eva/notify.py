@@ -1314,6 +1314,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  token=None,
                  method=None,
                  notify_key=None,
+                 v2_afixes=True,
                  space=None,
                  interval=None,
                  timeout=None,
@@ -1336,6 +1337,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         self.headers = {'Content-Type': 'application/octet-stream'}
         self.auth_headers = None
         self.token = token
+        self.v2_afixes = v2_afixes
         self.flux_query_headers = {
             'Content-type': 'application/vnd.flux',
             'Accept': 'application/csv'
@@ -1496,40 +1498,64 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                         timecol = header.index('_time')
                         fieldcol = header.index('_field')
                         valuecol = header.index('_value')
+                        t_prev = None
                         for d in csv.split('\n'):
                             d = d.strip()
                             if d:
                                 d = d.split(',')
                                 t = dateutil.parser.parse(
                                     d[timecol]).timestamp()
-                                if t not in result:
-                                    result[t] = {}
-                                    times.append(t)
-                                result[t][d[fieldcol]] = d[valuecol]
-                for t in times[:len(times) if t_e or not fill else (
-                        -1 if prop else -2)]:
-                    status = result[t].get('status')
-                    try:
-                        status = round(float(status))
-                    except:
-                        status = None
-                    value = result[t].get('value')
-                    try:
-                        value = float(value)
-                        if value == int(value):
-                            value = int(value)
-                    except:
+                                if prop:
+                                    val = d[valuecol]
+                                    try:
+                                        val = float(val)
+                                        if val == int(val):
+                                            val = int(val)
+                                    except:
+                                        if fill:
+                                            val = None
+                                    if self.v2_afixes:
+                                        if t_prev:
+                                            data.append([t_prev, val])
+                                        t_prev = t
+                                    else:
+                                        data.append([t, val])
+                                else:
+                                    if t not in result:
+                                        result[t] = {}
+                                        times.append(t)
+                                    result[t][d[fieldcol]] = d[valuecol]
+                if not prop:
+                    for i, t in enumerate(times):
+                        # v2 fill fix
                         if fill:
-                            value = None
-                    rl = [t]
-                    if prop in ['S', 'status']:
+                            if i == 0:
+                                continue
+                        status = result[t].get('status')
+                        try:
+                            status = round(float(status))
+                        except:
+                            status = None
+                        value = result[t].get('value')
+                        try:
+                            value = float(value)
+                            if value == int(value):
+                                value = int(value)
+                        except:
+                            if fill:
+                                value = None
+                        # v2 fill fix
+                        if fill and self.v2_afixes:
+                            rl = [times[i - 1]]
+                        else:
+                            rl = [t]
                         rl.append(status)
-                    elif prop in ['V', 'value']:
                         rl.append(value)
-                    else:
-                        rl.append(status)
-                        rl.append(value)
-                    data.append(rl)
+                        data.append(rl)
+                    # v2 merge fix
+                    if fill and data[-1][1] is None and len(data) > 1:
+                        data[-2][2] = data[-1][2]
+                        del data[-1]
         except:
             eva.core.log_traceback()
             self.log_error(message='unable to get state for {}'.format(oid))
@@ -1794,6 +1820,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         d['api_version'] = self.api_version
         d['org'] = self.org
         d['token'] = self.token
+        d['v2_afixes'] = self.v2_afixes
         d.update(super().serialize(props=props))
         return d
 
@@ -1803,6 +1830,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             return True
         elif prop == 'token':
             self.token = value
+            return True
+        elif prop == 'v2_afixes':
+            self.v2_afixes = False if value is None else val_to_boolean(value)
             return True
         elif prop == 'org':
             self.org = value
@@ -3416,6 +3446,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         username = ncfg.get('username')
         password = ncfg.get('password')
         token = ncfg.get('token')
+        v2_afixes = ncfg.get('v2_afixes')
         n = InfluxDB_Notifier(_notifier_id,
                               ssl_verify=ssl_verify,
                               uri=uri,
@@ -3425,6 +3456,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               username=username,
                               password=password,
                               token=token,
+                              v2_afixes=v2_afixes,
                               method=method,
                               space=space,
                               interval=interval,
