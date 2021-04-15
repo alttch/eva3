@@ -1349,6 +1349,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
 
     __fills = {'S': 's', 'T': 'm', 'H': 'h', 'D': 'd', 'w': 'w'}
 
+    __fill_periods = {'S': 1, 'T': 60, 'H': 3600, 'D': 86400, 'W': 604800}
+
     def get_state(self,
                   oid,
                   t_start=None,
@@ -1364,7 +1366,6 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         import dateutil.parser
         import eva.item
         from datetime import datetime
-        # TODO: v2 API support
         l = int(limit) if limit else None
         sfr = False
         if t_start:
@@ -1420,6 +1421,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         elif self.api_version == 2:
             q += f'from(bucket:"{self.db}")\n'
             if t_s or t_e:
+                if self.v2_afixes and fill:
+                    t_s -= self.__fill_periods[fill[-1]] * int(fill[:-1])
                 q += ' |> range('
                 if t_s:
                     q += f'start:{t_s:.0f},'
@@ -1515,6 +1518,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                     except:
                                         if fill:
                                             val = None
+                                    # v2 fill fix
                                     if self.v2_afixes:
                                         if t_prev:
                                             data.append([t_prev, val])
@@ -1529,7 +1533,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 if not prop:
                     for i, t in enumerate(times):
                         # v2 fill fix
-                        if fill:
+                        if fill and self.v2_afixes:
                             if i == 0:
                                 continue
                         status = result[t].get('status')
