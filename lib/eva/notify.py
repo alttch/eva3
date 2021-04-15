@@ -1559,7 +1559,6 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                          timeout=self.get_timeout(),
                                          **self.xrargs)
             elif self.api_version == 2:
-                print(q)
                 r = self.rsession().post(
                     url=self.uri + '/api/v2/query?org={}'.format(self.org),
                     data=q,
