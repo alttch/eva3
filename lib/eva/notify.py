@@ -992,7 +992,8 @@ class SQLANotifier(GenericNotifier):
                 self.connected = True
             else:
                 self.connected = False
-        except:
+        except Exception as e:
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
             self.connected = False
 
@@ -1259,6 +1260,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                                      timeout=self.get_timeout(),
                                      **self.xrargs)
             if not r.ok:
+                self.log_error(code=r.status_code, message=r.text)
                 return False
             elif r.status_code == 202 or len(r.content) == 0:
                 return True
@@ -1271,7 +1273,8 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 elif not result.get('ok'):
                     return False
                 return True
-        except:
+        except Exception as e:
+            sel.log_error(message=e)
             eva.core.log_traceback(notifier=True)
             return False
 
@@ -1574,12 +1577,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         try:
             logging.debug('.Testing influxdb notifier %s (%s)' % \
                     (self.notifier_id,self.uri))
-            r = self.rsession().post(
-                url=self.uri + '/write?db={}'.format(self.db),
-                data=space + ':eva_test test="passed"',
-                headers=self.headers,
-                timeout=self.get_timeout(),
-                **self.xrargs)
+            r = self.rsession().post(url=self.uri +
+                                     '/write?db={}'.format(self.db),
+                                     data=space + ':eva_test test="passed"',
+                                     headers=self.headers,
+                                     timeout=self.get_timeout(),
+                                     **self.xrargs)
             if r.ok:
                 return True
             else:
