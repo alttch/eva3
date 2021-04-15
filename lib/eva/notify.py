@@ -3446,7 +3446,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         username = ncfg.get('username')
         password = ncfg.get('password')
         token = ncfg.get('token')
-        v2_afixes = ncfg.get('v2_afixes')
+        v2_afixes = ncfg.get('v2_afixes', True)
         n = InfluxDB_Notifier(_notifier_id,
                               ssl_verify=ssl_verify,
                               uri=uri,
