@@ -23,7 +23,8 @@ from pyaltt2 import logs
 import logging
 
 logs.init(formatter=logging.Formatter('%(message)s'),
-          level=logging.WARNING, tracebacks=True)
+          level=logging.WARNING,
+          tracebacks=True)
 
 
 class NotifierCLI(GenericCLI, ControllerCLI):
@@ -89,7 +90,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             mqtt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
-            influxdb:http(s)://uri#database
+            influxdb:http(s)://uri#[org/]database
             prometheus:'''),
                                metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument('-s',
@@ -289,9 +290,17 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             else:
                 self.print_err('database not specified')
                 return self.local_func_result_failed
+            if '/' in db:
+                org, db = db.split('/', 1)
+                api_version = 2
+            else:
+                org = None
+                api_version = 1
             n = eva.notify.InfluxDB_Notifier(notifier_id=notifier_id,
                                              uri=uri,
                                              db=db,
+                                             org=org,
+                                             api_version=api_version,
                                              space=space,
                                              timeout=timeout)
         elif p[0] == 'mqtt':
@@ -361,7 +370,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             elif isinstance(i, eva.notify.SQLANotifier):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
-                n['params'] = 'uri: {}, db: {}'.format(i.uri, i.db)
+                n['params'] = 'uri: {}, db: {}, api: v{}'.format(
+                    i.uri, i.db if i.api_version == 1 else f'{i.org}/{i.db}',
+                    i.api_version)
             elif isinstance(i, eva.notify.GCP_IoT):
                 n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
             elif isinstance(i, eva.notify.MQTTNotifier):

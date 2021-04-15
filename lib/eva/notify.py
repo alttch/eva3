@@ -1307,6 +1307,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  notifier_id,
                  uri,
                  db=None,
+                 api_version=1,
+                 org='',
                  username=None,
                  password=None,
                  token=None,
@@ -1327,14 +1329,21 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         self.method = method
         self.notify_key = notify_key
         self.notifier_type = 'influxdb'
-        self.db = db
+        self.db = db if db else ''
+        self.api_version = api_version
+        self.org = org if org else ''
         self.state_storage = 'tsdb'
         self.headers = {'Content-Type': 'application/octet-stream'}
         self.auth_headers = None
         self.token = token
+        self.flux_query_headers = {
+            'Content-type': 'application/vnd.flux',
+            'Accept': 'application/csv'
+        }
         if token:
             self.auth_headers = {'Authorization': f'Token {token}'}
             self.headers.update(self.auth_headers)
+            self.flux_query_headers.update(self.auth_headers)
 
     __fills = {'S': 's', 'T': 'm', 'H': 'h', 'D': 'd', 'w': 'w'}
 
@@ -1353,6 +1362,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         import dateutil.parser
         import eva.item
         from datetime import datetime
+        # TODO: v2 API support
         l = int(limit) if limit else None
         sfr = False
         if t_start:
@@ -1450,12 +1460,22 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                             q += ',value="{}"'.format(d['value'])
                     q += ' {}'.format(t)
                     try:
-                        r = self.rsession().post(url=self.uri +
-                                                 '/write?db={}'.format(self.db),
-                                                 data=q,
-                                                 headers=self.headers,
-                                                 timeout=self.get_timeout(),
-                                                 **self.xrargs)
+                        if self.api_version == 1:
+                            r = self.rsession().post(
+                                url=self.uri + '/write?db={}'.format(self.db),
+                                data=q,
+                                headers=self.headers,
+                                timeout=self.get_timeout(),
+                                **self.xrargs)
+                        elif self.api_version == 2:
+                            r = self.rsession().post(
+                                url=self.uri +
+                                '/api/v2/write?bucket={}&org={}&precision=ns'.
+                                format(self.db, self.org),
+                                data=q,
+                                headers=self.headers,
+                                timeout=self.get_timeout(),
+                                **self.xrargs)
                     except Exception as e:
                         self.log_error(message=str(e))
                         raise
@@ -1501,38 +1521,95 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             t_e = None
         q = ''
         rp = ''
-        if xopts and 'rp' in xopts:
-            rp = '"{}".'.format(xopts['rp'])
-        if t_s:
-            q += ' where time>%u' % (t_s * 1000000000)
-        if t_e:
-            q += ' and time<=%f' % (t_e * 1000000000)
         data = []
         space = (self.space + '/') if self.space is not None else ''
-        if time_format == 'iso' and not tz:
-            tz = pytz.timezone(time.tzname[0])
-        q = 'select status,value from {}"{}" {}'.format(rp, oid, q)
+        if self.api_version == 1:
+            if xopts and 'rp' in xopts:
+                rp = '"{}".'.format(xopts['rp'])
+            if t_s:
+                q += ' where time>%u' % (t_s * 1000000000)
+            if t_e:
+                q += ' and time<=%u' % (t_e * 1000000000)
+            if time_format == 'iso' and not tz:
+                tz = pytz.timezone(time.tzname[0])
+            q = 'select status,value from {}"{}" {}'.format(rp, space + oid, q)
+        elif self.api_version == 2:
+            q += f'from(bucket:"{self.db}")\n'
+            if t_s or t_e:
+                q += ' |> range('
+                if t_s:
+                    q += f'start:{t_s:.0f},'
+                else:
+                    q += f'start:-7d,'
+                if t_e:
+                    q += f'stop:{t_e:.0f}'
+                q += ')\n'
+            else:
+                q += ' |> range(start:-7d)\n'
+            q += f'|> filter(fn: (r) => r._measurement == "{space}{oid}" )\n'
         try:
-            r = self.rsession().post(url=self.uri +
-                                     '/query?db={}'.format(self.db),
-                                     data={
-                                         'q': q,
-                                         'epoch': 'ns'
-                                     },
-                                     headers=self.auth_headers,
-                                     timeout=self.get_timeout(),
-                                     **self.xrargs)
+            if self.api_version == 1:
+                r = self.rsession().post(url=self.uri +
+                                         '/query?db={}'.format(self.db),
+                                         data={
+                                             'q': q,
+                                             'epoch': 'ns'
+                                         },
+                                         headers=self.auth_headers,
+                                         timeout=self.get_timeout(),
+                                         **self.xrargs)
+            elif self.api_version == 2:
+                print(q)
+                r = self.rsession().post(
+                    url=self.uri + '/api/v2/query?org={}'.format(self.org),
+                    data=q,
+                    headers=self.flux_query_headers,
+                    timeout=self.get_timeout(),
+                    **self.xrargs)
             if not r.ok:
+                self.log_error(code=r.status_code, message=r.text)
                 raise Exception('influxdb server error HTTP code {}'.format(
                     r.status_code))
-            data = r.json()
-            if 'error' in data['results'][0]:
-                self.log_error(message=data['results'][0]['error'])
-                raise Exception
-            if not data['results'][0] or 'series' not in data['results'][0]:
-                return []
-            else:
-                data = data['results'][0]['series'][0]['values']
+            if self.api_version == 1:
+                data = r.json()
+                if 'error' in data['results'][0]:
+                    self.log_error(message=data['results'][0]['error'])
+                    raise Exception
+                if not data['results'][0] or 'series' not in data['results'][0]:
+                    return []
+                else:
+                    data = data['results'][0]['series'][0]['values']
+            elif self.api_version == 2:
+                result = {}
+                times = []
+                res = r.text.replace('\r', '').strip()
+                if not res:
+                    return []
+                for block in res.split('\n\n'):
+                    if block:
+                        header, csv = block.split('\n', 1)
+                        header = header.split(',')
+                        timecol = header.index('_time')
+                        fieldcol = header.index('_field')
+                        valuecol = header.index('_value')
+                        for d in csv.split('\n'):
+                            d = d.strip()
+                            if d:
+                                d = d.split(',')
+                                t = dateutil.parser.parse(
+                                    d[timecol]).timestamp()
+                                if t not in result:
+                                    result[t] = {}
+                                    times.append(t)
+                                result[t][d[fieldcol]] = d[valuecol]
+                for t in times:
+                    status = result[t].get('status')
+                    try:
+                        status = int(status)
+                    except:
+                        status = None
+                    value = result[t].get('value')
+                    data.append((t, status, value))
         except:
             eva.core.log_traceback()
             self.log_error(message='unable to get state for {}'.format(oid))
@@ -1540,9 +1617,18 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         records = {}
         result = []
         for d in data:
-            t = d[0] / 1000000000
-            status = d[1]
-            value = d[2]
+            if self.api_version == 1:
+                t = d[0] / 1000000000
+            else:
+                t = d[0]
+            try:
+                status = d[1]
+            except IndexError:
+                status = None
+            try:
+                value = d[2]
+            except IndexError:
+                value = None
             # skip repeating records
             if records.get(oid) == (status, value):
                 continue
@@ -1577,12 +1663,21 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         try:
             logging.debug('.Testing influxdb notifier %s (%s)' % \
                     (self.notifier_id,self.uri))
-            r = self.rsession().post(url=self.uri +
-                                     '/write?db={}'.format(self.db),
-                                     data=space + ':eva_test test="passed"',
-                                     headers=self.headers,
-                                     timeout=self.get_timeout(),
-                                     **self.xrargs)
+            if self.api_version == 1:
+                r = self.rsession().post(url=self.uri +
+                                         '/write?db={}'.format(self.db),
+                                         data=space + ':eva_test test="passed"',
+                                         headers=self.headers,
+                                         timeout=self.get_timeout(),
+                                         **self.xrargs)
+            elif self.api_version == 2:
+                r = self.rsession().post(
+                    url=self.uri +
+                    '/api/v2/write?bucket={}&org={}'.format(self.db, self.org),
+                    data=space + ':eva_test test="passed"',
+                    headers=self.headers,
+                    timeout=self.get_timeout(),
+                    **self.xrargs)
             if r.ok:
                 return True
             else:
@@ -1597,6 +1692,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         if self.method or props:
             d['method'] = self.method
         d['db'] = self.db
+        d['api_version'] = self.api_version
+        d['org'] = self.org
         d['token'] = self.token
         d.update(super().serialize(props=props))
         return d
@@ -1608,6 +1705,20 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         elif prop == 'token':
             self.token = value
             return True
+        elif prop == 'org':
+            self.org = value
+            return True
+        elif prop == 'api_version':
+            try:
+                ver = int(value)
+                if ver not in [1, 2]:
+                    raise RuntimeError('Unsupported API version')
+                self.api_version = ver
+                return True
+            except Exception as e:
+                self.log_error(message=e)
+                eva.core.log_traceback(notifier=True)
+                return False
         else:
             return super().set_prop(prop, value)
 
@@ -3196,6 +3307,8 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     elif ncfg['type'] == 'influxdb':
         space = ncfg.get('space')
         db = ncfg.get('db')
+        api_version = ncfg.get('api_version')
+        org = ncfg.get('org')
         ssl_verify = ncfg.get('ssl_verify')
         uri = ncfg.get('uri')
         timeout = ncfg.get('timeout')
@@ -3208,6 +3321,8 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               ssl_verify=ssl_verify,
                               uri=uri,
                               db=db,
+                              api_version=api_version,
+                              org=org,
                               username=username,
                               password=password,
                               token=token,
