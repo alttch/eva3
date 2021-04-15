@@ -1448,9 +1448,11 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             elif self.api_version == 2:
 
                 def _query_prop(q, p):
-                    req_q = (
-                        q + f' |> filter(fn: (r) => '
-                        f'r._measurement == "{oid}" and r._field == "{p}")\n')
+                    req_q = (q + f' |> filter(fn: (r) => '
+                             f'r._measurement == "{oid}"')
+                    if p is not None:
+                        req_q += f' and r._field == "{p}"'
+                    req_q += ')\n'
                     if fill:
                         req_q += (' |> aggregateWindow(every: {}{}, fn: mean)\n'
                                   .format(fill[:-1],
@@ -1474,8 +1476,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 elif prop in ['V', 'value']:
                     r_data = _query_prop(q, 'value')
                 else:
-                    r_data = _query_prop(q, 'status') + '\n\n' + _query_prop(
-                        q, 'value')
+                    r_data = _query_prop(q, None)
             if self.api_version == 1:
                 data = r.json()
                 if 'error' in data['results'][0]:
