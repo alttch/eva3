@@ -561,22 +561,23 @@ InfluxDB version 2 setup is easy as well:
     influx user create -n eva -p verysecretpassword
     # create authentication policy, copy the auth token
     influx auth create -u eva --read-buckets eva --write-buckets eva
+
     # creave v1 dbrp mappings (optional)
     influx v1 dbrp create --bucket-id <id_of_eva_bucket> --db eva --default --rp default
 
 EVA ICS notifiers for InfluxDB v2.x are similar to v1.x, except:
 
-* Token authentication is preferred (set "token" property of the notifier) and
-  can be used for both v1 and v2 InfluxDB API.
-
 * EVA ICS can work with InfluxDB v2 both via v1 dbrp mappings and with new v2
   API.
+
+* Token authentication is preferred (set "token" property of the notifier) and
+  can be used for both v1 and v2 InfluxDB API.
 
 * When EVA ICS notifier is created as:
 
   .. code:: bash
 
-    eva ns sfa create influx_local 'influxdb:http://127.0.0.1:8086#orgname/eva'
+    eva ns sfa create influx_local 'influxdb:http://127.0.0.1:8086#orgname/bucket'
 
   v2 API is automatically used.
 
