@@ -8,6 +8,7 @@ Common
 
    * Next-generation event replication engine
    * InfluxDB v2 support (v1 API via dbrp and v2 API)
+   * "connected" property of the remote items in LM PLC and SFA
 
 UC
 --

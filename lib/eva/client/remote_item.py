@@ -63,6 +63,8 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
                               props=props,
                               notify=notify)
         d['controller_id'] = self.controller.full_id
+        d['connected'] = self.controller.connected if \
+                self.controller.enabled else False
         try:
             del d['config_changed']
         except:
@@ -224,6 +226,8 @@ class RemoteMacro(eva.item.Item):
                               props=props,
                               notify=notify)
         d['controller_id'] = self.controller.full_id
+        d['connected'] = self.controller.connected if \
+                self.controller.enabled else False
         d['action_enabled'] = self.action_enabled
         return d
 
@@ -259,6 +263,8 @@ class RemoteCycle(RemoteUpdatableItem):
                               props=props,
                               notify=notify)
         d['controller_id'] = self.controller.full_id
+        d['connected'] = self.controller.connected if \
+                self.controller.enabled else False
         d['interval'] = self.interval
         d['iterations'] = self.iterations
         return d
