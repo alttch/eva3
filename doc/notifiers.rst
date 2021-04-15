@@ -495,6 +495,9 @@ or put these options to database server configuration file.
 InfluxDB
 --------
 
+Version 1
+~~~~~~~~~
+
 Item state metrics can be stored to `InfluxDB <https://www.influxdata.com/>`_
 time series database.
 
@@ -542,6 +545,51 @@ parameter *o={ "rp": "daily" }*.
     handle states for the rarely updated items.
 
 .. _prometheus_:
+
+Version 2
+~~~~~~~~~
+
+InfluxDB version 2 setup is easy as well:
+
+.. code:: bash
+
+    # setup the defaults
+    influx setup
+    # create a bucket
+    influx bucket create -n eva
+    # create a user
+    influx user create -n eva -p verysecretpassword
+    # create authentication policy, copy the auth token
+    influx auth create -u eva --read-buckets eva --write-buckets eva
+    # creave v1 dbrp mappings (optional)
+    influx v1 dbrp create --bucket-id <id_of_eva_bucket> --db eva --default --rp default
+
+EVA ICS notifiers for InfluxDB v2.x are similar to v1.x, except:
+
+* Token authentication is preferred (set "token" property of the notifier) and
+  can be used for both v1 and v2 InfluxDB API.
+
+* EVA ICS can work with InfluxDB v2 both via v1 dbrp mappings and with new v2
+  API.
+
+* When EVA ICS notifier is created as:
+
+  .. code:: bash
+
+    eva ns sfa create influx_local 'influxdb:http://127.0.0.1:8086#orgname/eva'
+
+  v2 API is automatically used.
+
+* API can be switched on-the-flow by setting "api_version" property of the
+  notifier (EVA ICS controller needs to be restarted).
+
+* For v2 API, "org" property of the notifier MUST be filled.
+
+* As v2 API returns data in the own flux-csv format, using v1 API is slightly
+  more resource-optimized.
+
+* Some v2 functions (e.g. "mean") changed its behavior, so historical data
+  results for InfluxDB v1 and v2 may be slightly different.
 
 Prometheus
 ----------
