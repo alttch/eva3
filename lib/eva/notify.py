@@ -1390,59 +1390,159 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             t_e = None
         q = ''
         rp = ''
-        if xopts and 'rp' in xopts:
-            rp = '"{}".'.format(xopts['rp'])
-        if t_s:
-            q += 'where time>%u' % (t_s * 1000000000)
-        if t_e:
-            q += ' and' if q else 'where'
-            q += ' time<=%u' % (t_e * 1000000000)
-        if prop in ['status', 'S']:
-            props = 'status' if not fill else 'mode(status)'
-        elif prop in ['value', 'V']:
-            props = 'value' if not fill else 'mean(value)'
-        else:
-            props = 'status,value' if not fill else 'mode(status),mean(value)'
         data = []
         space = (self.space + '/') if self.space is not None else ''
         if time_format == 'iso' and not tz:
             tz = pytz.timezone(time.tzname[0])
-        q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
-        try:
+        if self.api_version == 1:
+            if xopts and 'rp' in xopts:
+                rp = '"{}".'.format(xopts['rp'])
+            if t_s:
+                q += 'where time>%u' % (t_s * 1000000000)
+            if t_e:
+                q += ' and' if q else 'where'
+                q += ' time<=%u' % (t_e * 1000000000)
+            if prop in ['status', 'S']:
+                props = 'status' if not fill else 'mode(status)'
+            elif prop in ['value', 'V']:
+                props = 'value' if not fill else 'mean(value)'
+            else:
+                props = 'status,value' if not fill \
+                        else 'mode(status),mean(value)'
+            q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
             if fill:
                 q += ' group by time({}{}) fill(previous)'.format(
                     fill[:-1], self.__fills[fill[-1].upper()])
             if l:
                 q += ' limit %u' % l
-            r = self.rsession().post(url=self.uri +
-                                     '/query?db={}'.format(self.db),
-                                     data={
-                                         'q': q,
-                                         'epoch': 'ns'
-                                     },
-                                     headers=self.auth_headers,
-                                     timeout=self.get_timeout(),
-                                     **self.xrargs)
-            if not r.ok:
-                raise Exception('influxdb server error HTTP code {}'.format(
-                    r.status_code))
-            data = r.json()
-            if 'error' in data['results'][0]:
-                self.log_error(message=data['results'][0]['error'])
-                raise Exception
-            if not data['results'][0] or 'series' not in data['results'][0]:
-                return []
+        elif self.api_version == 2:
+            q += f'from(bucket:"{self.db}")\n'
+            if t_s or t_e:
+                q += ' |> range('
+                if t_s:
+                    q += f'start:{t_s:.0f},'
+                else:
+                    q += f'start:-7d,'
+                if t_e:
+                    q += f'stop:{t_e:.0f}'
+                q += ')\n'
             else:
-                data = data['results'][0]['series'][0]['values']
+                q += f' |> range(start:-7d,stop:{time.time():.0f})\n'
+        try:
+            if self.api_version == 1:
+                r = self.rsession().post(url=self.uri +
+                                         '/query?db={}'.format(self.db),
+                                         data={
+                                             'q': q,
+                                             'epoch': 'ns'
+                                         },
+                                         headers=self.auth_headers,
+                                         timeout=self.get_timeout(),
+                                         **self.xrargs)
+                if not r.ok:
+                    self.log_error(code=r.status_code, message=r.text)
+                    raise Exception('influxdb server error HTTP code {}'.format(
+                        r.status_code))
+            elif self.api_version == 2:
+
+                def _query_prop(q, p):
+                    req_q = (
+                        q + f' |> filter(fn: (r) => '
+                        f'r._measurement == "{oid}" and r._field == "{p}")\n')
+                    if fill:
+                        req_q += (' |> aggregateWindow(every: {}{}, fn: mean)\n'
+                                  .format(fill[:-1],
+                                          self.__fills[fill[-1].upper()]))
+                        req_q += ' |> fill(usePrevious: true)\n'
+                    r = self.rsession().post(
+                        url=self.uri + '/api/v2/query?org={}'.format(self.org),
+                        data=req_q,
+                        headers=self.flux_query_headers,
+                        timeout=self.get_timeout(),
+                        **self.xrargs)
+                    if not r.ok:
+                        self.log_error(code=r.status_code, message=r.text)
+                        raise Exception(
+                            'influxdb server error HTTP code {}'.format(
+                                r.status_code))
+                    return r.text
+
+                if prop in ['S', 'status']:
+                    r_data = _query_prop(q, 'status')
+                elif prop in ['V', 'value']:
+                    r_data = _query_prop(q, 'value')
+                else:
+                    r_data = _query_prop(q, 'status') + '\n\n' + _query_prop(
+                        q, 'value')
+            if self.api_version == 1:
+                data = r.json()
+                if 'error' in data['results'][0]:
+                    self.log_error(message=data['results'][0]['error'])
+                    raise Exception
+                if not data['results'][0] or 'series' not in data['results'][0]:
+                    return []
+                else:
+                    data = data['results'][0]['series'][0]['values']
+            elif self.api_version == 2:
+                result = {}
+                times = []
+                res = r_data.replace('\r', '').strip()
+                if not res:
+                    return []
+                for block in res.split('\n\n'):
+                    if block:
+                        header, csv = block.split('\n', 1)
+                        header = header.split(',')
+                        timecol = header.index('_time')
+                        fieldcol = header.index('_field')
+                        valuecol = header.index('_value')
+                        for d in csv.split('\n'):
+                            d = d.strip()
+                            if d:
+                                d = d.split(',')
+                                t = dateutil.parser.parse(
+                                    d[timecol]).timestamp()
+                                if t not in result:
+                                    result[t] = {}
+                                    times.append(t)
+                                result[t][d[fieldcol]] = d[valuecol]
+                for t in times[:len(times) if t_e or not fill else (
+                        -1 if prop else -2)]:
+                    status = result[t].get('status')
+                    try:
+                        status = round(float(status))
+                    except:
+                        status = None
+                    value = result[t].get('value')
+                    try:
+                        value = float(value)
+                        if value == int(value):
+                            value = int(value)
+                    except:
+                        if fill:
+                            value = None
+                    rl = [t]
+                    if prop in ['S', 'status']:
+                        rl.append(status)
+                    elif prop in ['V', 'value']:
+                        rl.append(value)
+                    else:
+                        rl.append(status)
+                        rl.append(value)
+                    data.append(rl)
         except:
             eva.core.log_traceback()
             self.log_error(message='unable to get state for {}'.format(oid))
             raise
         for d in data[1:] if sfr else data:
-            if time_format == 'iso':
-                d[0] = datetime.fromtimestamp(d[0] / 1000000000, tz).isoformat()
+            if self.api_version == 1:
+                t = d[0] / 1000000000
             else:
-                d[0] = d[0] / 1000000000
+                t = d[0]
+            if time_format == 'iso':
+                d[0] = datetime.fromtimestamp(t, tz).isoformat()
+            elif self.api_version == 1:
+                d[0] = t
         return data[1:] if sfr else data
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
@@ -1523,6 +1623,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         rp = ''
         data = []
         space = (self.space + '/') if self.space is not None else ''
+        if time_format == 'iso' and not tz:
+            tz = pytz.timezone(time.tzname[0])
         if self.api_version == 1:
             if xopts and 'rp' in xopts:
                 rp = '"{}".'.format(xopts['rp'])
@@ -1530,8 +1632,6 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 q += ' where time>%u' % (t_s * 1000000000)
             if t_e:
                 q += ' and time<=%u' % (t_e * 1000000000)
-            if time_format == 'iso' and not tz:
-                tz = pytz.timezone(time.tzname[0])
             q = 'select status,value from {}"{}" {}'.format(rp, space + oid, q)
         elif self.api_version == 2:
             q += f'from(bucket:"{self.db}")\n'
@@ -1546,7 +1646,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 q += ')\n'
             else:
                 q += ' |> range(start:-7d)\n'
-            q += f'|> filter(fn: (r) => r._measurement == "{space}{oid}" )\n'
+            q += f' |> filter(fn: (r) => r._measurement == "{space}{oid}" )\n'
         try:
             if self.api_version == 1:
                 r = self.rsession().post(url=self.uri +
@@ -1622,7 +1722,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 t = d[0]
             try:
                 status = d[1]
-            except IndexError:
+            except:
                 status = None
             try:
                 value = d[2]
