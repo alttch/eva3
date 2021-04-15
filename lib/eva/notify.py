@@ -1418,7 +1418,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                                      '/query?db={}'.format(self.db),
                                      data={
                                          'q': q,
-                                         'epoch': 'ms'
+                                         'epoch': 'ns'
                                      },
                                      headers=self.auth_headers,
                                      timeout=self.get_timeout(),
@@ -1440,9 +1440,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             raise
         for d in data[1:] if sfr else data:
             if time_format == 'iso':
-                d[0] = datetime.fromtimestamp(d[0] / 1000, tz).isoformat()
+                d[0] = datetime.fromtimestamp(d[0] / 1000000000, tz).isoformat()
             else:
-                d[0] = d[0] / 1000
+                d[0] = d[0] / 1000000000
         return data[1:] if sfr else data
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
