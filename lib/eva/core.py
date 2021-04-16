@@ -608,6 +608,7 @@ def serialize():
         d['threads'][t.name]['daemon'] = t.daemon
         d['threads'][t.name]['alive'] = t.is_alive()
     d.update(pyaltt2.logs.serialize())
+    d['neotasker'] = {'supervisor': task_supervisor.get_info()}
     return d
 
 
