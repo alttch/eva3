@@ -484,8 +484,8 @@ def update_config(cfg):
         config.ssl_cert = cfg.get('webapi', 'ssl_cert')
         if config.ssl_cert[0] != '/':
             config.ssl_cert = eva.core.dir_etc + '/' + config.ssl_cert
-        ssl_key = cfg.get('webapi', 'ssl_key')
-        if ssl_key[0] != '/':
+        config.ssl_key = cfg.get('webapi', 'ssl_key')
+        if config.ssl_key[0] != '/':
             config.ssl_key = eva.core.dir_etc + '/' + config.ssl_key
         logging.debug('webapi.ssl_listen = %s:%u' %
                       (config.ssl_host, config.ssl_port))
