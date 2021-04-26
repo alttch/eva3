@@ -76,7 +76,25 @@ def _t_dispatcher(host, port):
                     state = msg['d']
                     for s in [state] if isinstance(state, dict) else state:
                         item = controller.get_item(s['oid'])
-                        item.set_state_from_serialized(s)
+                        if item:
+                            if s['type'] == 'unit':
+                                result = item.set_state_from_serialized(
+                                    s, notify=False)
+                                if result:
+                                    need_notify = item.update_nstate(
+                                        nstatus=s['nstatus'],
+                                        nvalue=s['nvalue'])
+                                    if item.action_enabled != s[
+                                            'action_enabled']:
+                                        item.action_enabled = s[
+                                            'action_enabled']
+                                        need_notify = True
+                                    if result == 2 or need_notify:
+                                        item.notify()
+                            else:
+                                item.set_state_from_serialized(s)
+                        else:
+                            logging.debug(f'LURP item not found: {s["oid"]}')
             except Exception as e:
                 logging.error(
                     f'LURP message from {address} processing failed: {e}')
