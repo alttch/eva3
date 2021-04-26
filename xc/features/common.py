@@ -158,6 +158,7 @@ def remove_python_libraries(libs, rebuild_venv=True):
 
 
 def cli_call(controller, cmd, return_result=False):
+    from . import print_err
     import subprocess
     dcmd = controller
     if dcmd:
