@@ -86,7 +86,7 @@ layout = enterprise
 
 ; LURP replication
 ;[lurp]
-;listen = 127.0.0.1:8801
+;listen = 127.0.0.1:8911
 ;buffer = 32768
 
 ;[msad]
