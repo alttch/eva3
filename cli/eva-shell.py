@@ -1459,7 +1459,11 @@ sys.argv = {argv}
         for f in files:
             name = f.rsplit('/', 1)[-1].rsplit('.', 1)[0]
             info = self._feature_info(name)
-            result.append({'name': name, 'description': info['description']})
+            if not info.get('wip'):
+                result.append({
+                    'name': name,
+                    'description': info['description']
+                })
         return 0, sorted(result, key=lambda k: k['name'])
 
     def feature_help(self, params):
