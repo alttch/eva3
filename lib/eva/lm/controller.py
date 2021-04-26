@@ -143,7 +143,11 @@ def get_item(item_id):
     else:
         i = item_id
         tp = None
-    if tp == 'lmacro':
+    if tp == 'unit':
+        return eva.lm.controller.uc_pool.units.get(i)
+    elif tp == 'sensor':
+        return eva.lm.controller.uc_pool.sensors.get(i)
+    elif tp == 'lmacro':
         return get_macro(i)
     elif tp == 'lcycle':
         return get_cycle(i)
