@@ -90,6 +90,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             mqtt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
+            udp:host:port
             influxdb:http(s)://uri#[org/]database
             prometheus:'''),
                                metavar='PROPS').completer = self.ComplNProto()
@@ -332,6 +333,16 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                         db_uri=db_uri,
                                         keep=None,
                                         space=space)
+        elif p[0] == 'udp':
+            if len(p) > 3:
+                return self.local_func_result_failed
+            try:
+                port = int(p[2])
+            except:
+                return self.local_func_result_failed
+            n = eva.notify.UDPNotifier(notifier_id=notifier_id,
+                                       host=p[1],
+                                       port=port)
         elif p[0] == 'gcpiot':
             try:
                 project, region, registry = ':'.join(p[1:]).split('/')
