@@ -124,15 +124,16 @@ class WebSocketWorker(BackgroundWorker):
                 sslopt={"cert_reqs": ssl.CERT_NONE}
                 if not controller.api._ssl_verify else None)
             ws.settimeout(5 + eva.core.config.timeout)
-            try:
-                ws.send(eva.client.apiclient.pack_msgpack({'s': 'state'}),
-                        opcode=0x2)
-            except:
+            if controller.ws_state_events:
                 try:
-                    ws.close()
+                    ws.send(eva.client.apiclient.pack_msgpack({'s': 'state'}),
+                            opcode=0x2)
                 except:
-                    pass
-                raise
+                    try:
+                        ws.close()
+                    except:
+                        pass
+                    raise
             logging.debug('WS {}: connected'.format(controller.oid))
             return ws
 
@@ -214,7 +215,7 @@ class RemoteController(eva.item.Item):
                  api=None,
                  mqtt_update=None,
                  static=True,
-                 enabled=True):
+                 enabled=True, ws_state_events=True):
         if item_id == None:
             item_id = ''
         super().__init__(item_id, item_type)
@@ -240,6 +241,7 @@ class RemoteController(eva.item.Item):
         self.wait_for_autoremove = False
         self.last_reload_time = 0
         self.set_mqtt_notifier()
+        self.ws_state_events = ws_state_events
 
     def set_connected(self, state, graceful_shutdown=False):
         if graceful_shutdown:
@@ -445,6 +447,8 @@ class RemoteController(eva.item.Item):
             self.reload_interval = data['reload_interval']
         if 'enabled' in data:
             self.enabled = data['enabled']
+        if 'ws_state_events' in data:
+            self.ws_state_events = data['ws_state_events']
         super().update_config(data)
 
     def set_modified(self, save):
@@ -514,6 +518,19 @@ class RemoteController(eva.item.Item):
                 if self.static != True:
                     self.static = True
                     self.log_set(prop, True)
+                    self.set_modified(save)
+                return True
+            except:
+                return False
+        elif prop == 'ws_state_events':
+            try:
+                v = eva.tools.val_to_boolean(val)
+                if self.ws_state_events != v:
+                    self.ws_state_events = v
+                    if self.pool:
+                        self.pool.remove(self.item_id)
+                        self.pool.append(self)
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             except:
@@ -611,6 +628,7 @@ class RemoteController(eva.item.Item):
             if cloud_manager:
                 d['masterkey'] = self._masterkey if \
                         self._masterkey is not None else ''
+            d['ws_state_events'] = self.ws_state_events
         if info:
             d['connected'] = self.connected if self.enabled else False
             d['managed'] = True if cloud_manager and self.masterkey else False
