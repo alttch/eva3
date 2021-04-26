@@ -525,6 +525,8 @@ class RemoteController(eva.item.Item):
         elif prop == 'ws_state_events':
             try:
                 v = eva.tools.val_to_boolean(val)
+                if v is None:
+                    v = True
                 if self.ws_state_events != v:
                     self.ws_state_events = v
                     if self.pool:
