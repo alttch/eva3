@@ -158,17 +158,23 @@ def remove_python_libraries(libs, rebuild_venv=True):
 
 
 def cli_call(controller, cmd, return_result=False):
-    from . import cli
+    import subprocess
     dcmd = controller
     if dcmd:
         dcmd += ' '
     dcmd += cmd
-    cmd = controller + (' -J --quiet ' if return_result else ' ') + cmd
-    code, data = cli.call(cmd)
-    if code:
-        raise RuntimeError(f'Command failed: "eva {dcmd}"')
+    cmd = f'{dir_eva}/bin/eva {controller}' + (' -J --quiet '
+                                               if return_result else ' ') + cmd
+    p = subprocess.run(cmd,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+    if p.returncode != 0:
+        print_err('FAILED')
+        print_err(p.stderr.decode(), end='')
+        raise RuntimeError(f'command failed: {cmd}')
     else:
-        return data
+        return p.stdout.decode()
 
 
 def download_phis(phis):
