@@ -74,11 +74,6 @@ timeout = 5
 ; plugins, comma separated
 ;plugins =
 
-; LURP replication
-;[lurp]
-;listen = 127.0.0.1:8921
-;buffer = 32768
-
 ;[msad]
 ; user authentication via MS Active Directory
 ;host = ad.yourdomain.com
