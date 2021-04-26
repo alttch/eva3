@@ -12,6 +12,7 @@ sys.path.insert(0, (Path(__file__).parent.parent / 'lib').as_posix())
 
 import eva.core
 import eva.notify
+import eva.lurp
 import eva.api
 import eva.tokens
 import eva.apikey
@@ -85,6 +86,7 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.lurp.update_config(cfg)
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
@@ -119,6 +121,7 @@ eva.sfa.controller.load_remote_lms()
 eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
+eva.lurp.start()
 eva.upnp.start()
 import eva.sfa.sfapi
 eva.sfa.sfapi.start()

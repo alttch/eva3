@@ -14,6 +14,7 @@ import eva.core
 import eva.sysapi
 import eva.upnp
 import eva.notify
+import eva.lurp
 import eva.api
 import eva.apikey
 import eva.users
@@ -84,6 +85,7 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.lurp.update_config(cfg)
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1917
@@ -122,6 +124,7 @@ eva.lm.controller.load_jobs()
 eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
+eva.lurp.start()
 eva.upnp.start()
 import eva.lm.lmapi
 eva.lm.lmapi.start()
