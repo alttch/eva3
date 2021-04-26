@@ -61,6 +61,8 @@ def get_item(i):
         gi = eva.sfa.controller.uc_pool.sensors
     elif _tp == 'lvar':
         gi = eva.sfa.controller.lm_pool.lvars
+    elif _tp == 'lcycle':
+        gi = eva.sfa.controller.lm_pool.cycles
     else:
         return None
     if not _i in gi:
