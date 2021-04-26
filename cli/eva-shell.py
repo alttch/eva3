@@ -1499,6 +1499,16 @@ sys.argv = {argv}
         except FileNotFoundError:
             self.print_err(f'Feature not found: {params["i"]}')
             return self.local_func_result_failed
+        if info.get('wip'):
+            self.print_warn(
+                'WARNING! THIS FEATURE IS UNSTABLE AND MAY BREAK THE SYSTEM!')
+            self.print_warn('Press Ctrl+C to abort ', end='', flush=True)
+            for _ in range(5):
+                print(self.colored('.', color='yellow', attrs=['bold']),
+                      end='',
+                      flush=True)
+                time.sleep(1)
+            print()
         try:
             c = dict_from_str(params['c'])
         except:
