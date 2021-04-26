@@ -17,6 +17,7 @@ import sys
 import ssl
 import uuid
 import threading
+import socket
 import sqlalchemy as sa
 
 import pyaltt2.logs
@@ -2553,6 +2554,85 @@ class MQTTNotifier(GenericMQTTNotifier):
                          keyfile=keyfile)
 
 
+class UDPNotifier(GenericNotifier):
+
+    def __init__(self,
+                 notifier_id,
+                 interval=None,
+                 fmt='msgpack',
+                 host=None,
+                 port=None):
+
+        notifier_type = 'udp'
+        super().__init__(notifier_id=notifier_id,
+                         notifier_type=notifier_type,
+                         timeout=None,
+                         interval=interval)
+        self.fmt = fmt
+        if fmt == 'msgpack':
+            self.serializer = msgpack
+            self._serializer_id = b'\x02'
+        else:
+            self.serializer = rapidjson
+            self._serializer_id = b'\x01'
+        self.host = host
+        self.port = port
+        self._header = b'\x01' + self._serializer_id
+
+    def connect(self):
+        self.connected = True
+
+    def disconnect(self):
+        self.connected = False
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        frame = self.serializer.dumps({'s': subject, 'd': data})
+        if isinstance(frame, str):
+            frame = frame.encode()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(self._header + frame, (self.host, self.port))
+
+    def test(self):
+        try:
+            self.send_notification('test', None)
+            return True
+        except Exception as e:
+            self.log_error(e)
+            eva.core.log_traceback()
+            return False
+
+    def serialize(self, props=False):
+        d = super().serialize(props=props)
+        d['host'] = self.host
+        d['port'] = self.port
+        d['fmt'] = self.fmt
+        if 'space' in d:
+            del d['space']
+        if 'timeout' in d:
+            del d['timeout']
+        return d
+
+    def set_prop(self, prop, value):
+        if prop == 'host':
+            if not value:
+                return False
+            self.host = value
+            return True
+        elif prop == 'port':
+            try:
+                self.port = int(value)
+                return True
+            except:
+                return False
+        elif prop == 'fmt':
+            if value not in ['json', 'msgpack']:
+                return False
+            self.fmt = value
+            return True
+        else:
+            return super().set_prop(prop, value)
+
+
 class GCP_IoT(GenericNotifier):
 
     def __init__(self,
@@ -3118,6 +3198,16 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)
+    elif ncfg['type'] == 'udp':
+        interval = ncfg.get('interval')
+        fmt = ncfg.get('fmt')
+        host = ncfg.get('host')
+        port = ncfg.get('port')
+        n = UDPNotifier(_notifier_id,
+                        interval=interval,
+                        fmt=fmt,
+                        host=host,
+                        port=port)
     elif ncfg['type'] == 'gcpiot':
         keepalive = ncfg.get('keepalive')
         timeout = ncfg.get('timeout')
