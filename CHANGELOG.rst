@@ -9,12 +9,16 @@ Common
    * Next-generation event replication engine
    * InfluxDB v2 support (v1 API via dbrp and v2 API)
    * "connected" property of the remote items in LM PLC and SFA
+   * UDP Notifiers
+   * LURP event replication protocol
+   * Notifier event buffering
 
 UC
 --
 
    * item "update_delay" property is returned back
    * unit actions check value ranges if defined
+   * "randomize" and "increment" auto modify for virtual sensor driver
 
 SFA
 ---
