@@ -230,8 +230,9 @@ class GenericNotifier(object):
             for c in o.event_topics:
                 if o.buf[c]:
                     with o.buf_lock:
-                        o.send_notification(subject=c, data=o.buf[c])
-                        o.buf[c].clear()
+                        buf = o.buf[c]
+                        o.buf[c] = []
+                    o.send_notification(subject=c, data=buf)
 
     class ScheduledNotifyWorker(BackgroundIntervalWorker):
 
