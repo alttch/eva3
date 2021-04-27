@@ -19,7 +19,7 @@ from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 class WS_API(object):
 
     @cherrypy.expose
-    def default(self, k=None, c=CT_JSON):
+    def default(self, k=None, c=CT_JSON, buf_ttl=0):
         _k = cp_client_key(k)
         if not apikey.check(_k, ip=http_real_ip()):
             raise cp_forbidden_key()
@@ -28,7 +28,7 @@ class WS_API(object):
         client = WSNotifier_Client('ws_' + eva.core.product.code + '_' + \
                 cherrypy.request.remote.ip + '_' + \
                 str(cherrypy.request.remote.port), _k, token, handler,
-                ct=int(c))
+                ct=int(c), buf_ttl=float(buf_ttl))
         handler.notifier = client
         client.start()
 

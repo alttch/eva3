@@ -219,7 +219,7 @@ class GenericNotifier(object):
                                 retain=event[2],
                                 unpicklable=event[3])
 
-    class ScheduledSenderWorker(BackgroundIntervalWorker):
+    class BufSenderWorker(BackgroundIntervalWorker):
 
         def __init__(self, **kwargs):
             super().__init__(on_error=eva.core.log_traceback,
@@ -306,7 +306,7 @@ class GenericNotifier(object):
                 name='notifier:' + self.notifier_id + ':scheduled',
                 interval=self.interval)
         if self.buf_ttl and self.buf is not None:
-            self.notifier_worker = self.ScheduledSenderWorker(
+            self.notifier_worker = self.BufSenderWorker(
                 o=self,
                 name='notifier:' + self.notifier_id + ':bufsender',
                 interval=self.buf_ttl)
@@ -677,7 +677,8 @@ class GenericNotifier_Client(GenericNotifier):
                  notifier_id=None,
                  notifier_subtype=None,
                  apikey=None,
-                 token=None):
+                 token=None,
+                 buf_ttl=0):
         if not notifier_id:
             _id = str(uuid.uuid4())
         else:
@@ -687,7 +688,7 @@ class GenericNotifier_Client(GenericNotifier):
             _tp += notifier_subtype
         else:
             _tp += 'generic'
-        super().__init__(_id, _tp)
+        super().__init__(_id, _tp, buf_ttl=buf_ttl)
         self.nt_client = True
         self.enabled = True
         self.apikey = apikey
@@ -3328,8 +3329,10 @@ class WSNotifier_Client(GenericNotifier_Client):
                  apikey=None,
                  token=None,
                  ws=None,
-                 ct=CT_JSON):
-        super().__init__(notifier_id, 'ws', apikey, token)
+                 ct=CT_JSON,
+                 buf_ttl=0):
+        self.buf = {}
+        super().__init__(notifier_id, 'ws', apikey, token, buf_ttl=buf_ttl)
         self.ws = ws
         pm = {'s': 'pong'}
         self.ws.pong_message = rapidjson.dumps(
