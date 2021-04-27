@@ -19,6 +19,7 @@ UC
    * item "update_delay" property is returned back
    * unit actions check value ranges if defined
    * "randomize" and "increment" auto modify for virtual sensor driver
+   * data puller states
 
 SFA
 ---

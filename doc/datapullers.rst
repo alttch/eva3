@@ -115,6 +115,18 @@ critical, first letter is enough e.g. *w* for warning).
 Data puller can also print messages to STDERR, they will be automatically
 logged with *error* level.
 
+State reporting
+---------------
+
+Data puller can report custom state messages (e.g. "loading", "working",
+"having a problem") with lines starting with ".state":
+
+.. code::
+
+    .state <message>
+    # e.g.
+    .state almost ready
+
 Environment variables
 ---------------------
 

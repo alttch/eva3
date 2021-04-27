@@ -61,12 +61,14 @@ class DataPuller:
         self.executor = None
         self.last_activity = None
         self.timeout = eva.core.config.timeout
+        self.state = ''
 
     def serialize(self):
         return {
             'name': self.name,
             'cmd': self.cmd,
             'active': self.active,
+            'state': self.state,
             'pid': self.p.pid if self.p and self.active else None
         }
 
@@ -134,6 +136,8 @@ class DataPuller:
                 logging.critical(msg)
             else:
                 logging.info(msg)
+        elif cmd == '.state':
+            self.state = args
         else:
             i = cmd
             x = args.split(maxsplit=2)
