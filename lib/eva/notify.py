@@ -3593,7 +3593,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     elif ncfg['type'] == 'influxdb':
         space = ncfg.get('space')
         db = ncfg.get('db')
-        api_version = ncfg.get('api_version')
+        api_version = ncfg.get('api_version', 1)
         org = ncfg.get('org')
         ssl_verify = ncfg.get('ssl_verify')
         uri = ncfg.get('uri')
