@@ -386,6 +386,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                     i.api_version)
             elif isinstance(i, eva.notify.GCP_IoT):
                 n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
+            elif isinstance(i, eva.notify.UDPNotifier):
+                n['params'] = '{}:{} ({})'.format(i.host, i.port, i.fmt)
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username,
