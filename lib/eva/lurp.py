@@ -16,7 +16,7 @@ from eva.tools import parse_host_port
 
 from types import SimpleNamespace
 
-config = SimpleNamespace(host=None, port=None, buf=16384)
+config = SimpleNamespace(host=None, port=None, buf=32768)
 
 _flags = SimpleNamespace(dispatcher_active=False)
 
