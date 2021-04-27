@@ -1501,7 +1501,7 @@ sys.argv = {argv}
             return self.local_func_result_failed
         if info.get('wip'):
             self.print_warn(
-                'WARNING! THIS FEATURE IS UNSTABLE AND MAY BREAK THE SYSTEM!')
+                'THIS FEATURE IS UNSTABLE AND MAY BREAK THE SYSTEM!')
             self.print_warn('Press Ctrl+C to abort ', end='', flush=True)
             for _ in range(5):
                 print(self.colored('.', color='yellow', attrs=['bold']),
