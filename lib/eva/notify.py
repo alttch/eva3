@@ -219,6 +219,20 @@ class GenericNotifier(object):
                                 retain=event[2],
                                 unpicklable=event[3])
 
+    class ScheduledSenderWorker(BackgroundIntervalWorker):
+
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             **kwargs)
+
+        def run(self, o, **kwargs):
+            for c in o.event_topics:
+                if o.buf[c]:
+                    with o.buf_lock:
+                        o.send_notification(subject=c, data=o.buf[c])
+                        o.buf[c].clear()
+
     class ScheduledNotifyWorker(BackgroundIntervalWorker):
 
         def __init__(self, o, **kwargs):
@@ -246,17 +260,24 @@ class GenericNotifier(object):
                                 data['set_time'] = time.time()
                                 dts.append(data)
                         if dts:
-                            await o.notifier_worker.put(
-                                ('state', dts, False, False))
+                            if o._use_buffer:
+                                with o.buf_lock:
+                                    o.buf['state'] += dts
+                            else:
+                                await o.notifier_worker.put(
+                                    ('state', dts, False, False))
 
                 else:
                     self.need_notify = True
+
+    event_topics = ['state', 'action', 'log', 'server']
 
     def __init__(self,
                  notifier_id,
                  notifier_type=None,
                  space=None,
                  interval=None,
+                 buf_ttl=0,
                  timeout=None):
         self.notifier_id = notifier_id
         self.notifier_type = notifier_type
@@ -268,17 +289,31 @@ class GenericNotifier(object):
         self.test_only_mode = False
         self.connected = False
         self.nt_client = False
+        self.buf_ttl = buf_ttl
         self._skip_test = None
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
-        self.notifier_worker = self.NotifierWorker(o=self,
-                                                   name='notifier:' +
-                                                   self.notifier_id + ':queue')
+        self.buf_lock = threading.RLock()
+        try:
+            for c in self.event_topics:
+                self.buf[c] = []
+        except AttributeError:
+            self.buf = None
         if self.interval:
             self.scheduled_notify_worker = self.ScheduledNotifyWorker(
                 o=self,
                 name='notifier:' + self.notifier_id + ':scheduled',
                 interval=self.interval)
+        if self.buf_ttl and self.buf is not None:
+            self.notifier_worker = self.ScheduledSenderWorker(
+                o=self,
+                name='notifier:' + self.notifier_id + ':bufsender',
+                interval=self.buf_ttl)
+            self._use_buffer = True
+        else:
+            self.notifier_worker = self.NotifierWorker(
+                o=self, name='notifier:' + self.notifier_id + ':queue')
+            self._use_buffer = False
         self.state_storage = None
 
     def subscribe(self,
@@ -492,8 +527,15 @@ class GenericNotifier(object):
         if not data_to_send:
             return None
         self.log_notify()
-        self.notifier_worker.put_threadsafe(
-            (subject, data_to_send, retain, unpicklable))
+        if self._use_buffer:
+            with self.buf_lock:
+                if isinstance(data, list):
+                    self.buf[subject] += [d[1] for d in data]
+                else:
+                    self.buf[subject].append(data[1])
+        else:
+            self.notifier_worker.put_threadsafe(
+                (subject, data_to_send, retain, unpicklable))
         return True
 
     def serialize(self, props=False):
@@ -514,6 +556,8 @@ class GenericNotifier(object):
         d['enabled'] = self.enabled
         if self.timeout or props:
             d['timeout'] = self.timeout
+        if self.buf is not None:
+            d['buf_ttl'] = self.buf_ttl
         return d
 
     def set_prop(self, prop, value):
@@ -553,6 +597,18 @@ class GenericNotifier(object):
                 return True
             try:
                 self.timeout = float(value)
+            except:
+                return False
+            return True
+        elif prop == 'buf_ttl' and self.buf is not None:
+            if not value:
+                self.buf_ttl = 0
+                return True
+            try:
+                v = float(value)
+                if v < 0:
+                    raise ValueError
+                self.buf_ttl = v
             except:
                 return False
             return True
@@ -2823,14 +2879,17 @@ class UDPNotifier(GenericNotifier):
     def __init__(self,
                  notifier_id,
                  interval=None,
+                 buf_ttl=0,
                  fmt='msgpack',
                  host=None,
                  port=None):
 
         notifier_type = 'udp'
+        self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          timeout=None,
+                         buf_ttl=buf_ttl,
                          interval=interval)
         self.fmt = fmt
         if fmt == 'msgpack':
@@ -3464,11 +3523,13 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          keyfile=keyfile)
     elif ncfg['type'] == 'udp':
         interval = ncfg.get('interval')
+        buf_ttl = ncfg.get('buf_ttl')
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
         port = ncfg.get('port')
         n = UDPNotifier(_notifier_id,
                         interval=interval,
+                        buf_ttl=buf_ttl,
                         fmt=fmt,
                         host=host,
                         port=port)
