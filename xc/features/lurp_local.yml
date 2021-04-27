@@ -4,3 +4,6 @@ help: |
 example: {{ setup_cmd }}
 doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/lurp.html
 wip: true
+setup:
+  optional-args:
+    buffer: LURP buffer size

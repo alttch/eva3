@@ -3,7 +3,7 @@ from eva.features import cli_call, is_enabled, exec_shell, restart_controller
 from eva.features import eva_jcmd
 
 
-def setup():
+def setup(buffer=None):
     if is_enabled('uc'):
         if is_enabled('lm'):
             nid = 'lurp_local_lm'
@@ -28,9 +28,18 @@ def setup():
                      f'enable {nid} -p "#" -g "#"',
                      return_result=True)
         restart_controller('uc')
+    if buffer:
+        buf = int(buffer)
+        if buf <= 1024:
+            raise ValueError('Buffer too small')
+        buf_cfg = {'buffer': buf}
+    else:
+        buf_cfg = {}
     if is_enabled('lm'):
         with ConfigFile('lm.ini') as fh:
-            fh.replace_section('lurp', {'listen': '127.0.0.1:8911'})
+            cfg = {'listen': '127.0.0.1:8911'}
+            cfg.update(buf_cfg)
+            fh.replace_section('lurp', cfg)
         if is_enabled('sfa'):
             nid = 'lurp_local_sfa'
             cli_call(f'ns lm',
@@ -50,7 +59,9 @@ def setup():
                      return_result=True)
     if is_enabled('sfa'):
         with ConfigFile('sfa.ini') as fh:
-            fh.replace_section('lurp', {'listen': '127.0.0.1:8921'})
+            cfg = {'listen': '127.0.0.1:8921'}
+            cfg.update(buf_cfg)
+            fh.replace_section('lurp', cfg)
         restart_controller('sfa')
         for c in ['uc', 'lm']:
             if is_enabled(c):
