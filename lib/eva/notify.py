@@ -788,11 +788,14 @@ class SQLANotifier(GenericNotifier):
                  keep=None,
                  simple_cleaning=None,
                  space=None,
+                 buf_ttl=0,
                  interval=None):
         notifier_type = 'db'
+        self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
+                         buf_ttl=buf_ttl,
                          interval=interval)
         self.state_storage = 'sql'
         self.keep = keep if keep else \
@@ -1060,25 +1063,30 @@ class SQLANotifier(GenericNotifier):
         dbconn = self.db()
         try:
             if subject == 'state':
-                for d in data:
-                    if 'status' in d:
-                        v = d['value'] if 'value' in d and \
-                                d['value'] != '' else None
-                        space = self.space if self.space is not None else ''
-                        try:
-                            dbconn.execute(sql('insert into state_history '
-                                               '(space, t, oid, status, '
-                                               'value) values (:space, :t, '
-                                               ':oid, :status, :value)'),
-                                           space=space,
-                                           t=d['set_time'],
-                                           oid=d['oid'],
-                                           status=d['status'],
-                                           value=v)
-                        except sa.exc.IntegrityError:
-                            pass
-                        except:
-                            raise
+                try:
+                    dbt = dbconn.begin()
+                    for d in data:
+                        if 'status' in d:
+                            v = d['value'] if 'value' in d and \
+                                    d['value'] != '' else None
+                            space = self.space if self.space is not None else ''
+                            try:
+                                dbconn.execute(sql('insert into state_history '
+                                                   '(space, t, oid, status, '
+                                                   'value) values (:space, :t, '
+                                                   ':oid, :status, :value)'),
+                                               space=space,
+                                               t=d['set_time'],
+                                               oid=d['oid'],
+                                               status=d['status'],
+                                               value=v)
+                            except sa.exc.IntegrityError:
+                                pass
+                            except:
+                                raise
+                    dbt.commit()
+                except:
+                    dbt.rollback()
             return True
         except Exception as e:
             self.log_error(message=str(e))
@@ -3572,6 +3580,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         db = ncfg.get('db')
         keep = ncfg.get('keep')
         space = ncfg.get('space')
+        buf_ttl = ncfg.get('buf_ttl')
         interval = ncfg.get('interval')
         simple_cleaning = ncfg.get('simple_cleaning')
         n = SQLANotifier(_notifier_id,
@@ -3579,6 +3588,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          keep=keep,
                          simple_cleaning=simple_cleaning,
                          space=space,
+                         buf_ttl=buf_ttl,
                          interval=interval)
     elif ncfg['type'] == 'http-json':
         space = ncfg.get('space')
