@@ -1,4 +1,4 @@
-VERSION=3.3.2
+VERSION=3.3.3
 
 all:
 	@echo "Branch: `git branch|grep ^*`"
@@ -83,17 +83,18 @@ restart:
 ver: build-increase update-version
 
 update-version:
-	find bin -name "*" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	find cli -name "*" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	find sbin -name "*" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	find lib -name "*.py" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	find doc -name "*.py" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	find xc/drivers/tools -name "*.py" -type f -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	find bin -name "*" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	find cli -name "*" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	find sbin -name "*" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	find lib -name "*.py" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	find doc -name "*.py" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
+	sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" xc/features/common.py
+	sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" xc/features/__init__.py
 	find . -name "*.js" ! -name "chart.min.js" -exec sed -i "s/* Version: .*/* Version: ${VERSION}/g" {} \;
 	find . -name "*.php" -exec sed -i "s/eva_version = .*/eva_version = '${VERSION}';/g" {} \;
 	find . -name "*.php" -exec sed -i "s/@version .*/@version     ${VERSION}/g" {} \;
-	find . -name "*" ! -name "Makefile" -type f -exec sed -i "s/\((C) 2012-\)[0-9]*/\1`date "+%Y"`/g" {} \;
-	find . -name "*" ! -name "Makefile" -type f -exec sed -i "s/\((c)) [0-9]*/\1`date "+%Y"`/g" {} \;
+	find . -name "*" ! -name "Makefile" -type f -not -path "*/.git/*" -exec sed -i "s/\((C) 2012-\)[0-9]*/\1`date "+%Y"`/g" {} \;
+	#find . -name "*" ! -name "Makefile" -type f -not -path "*/.git/*" -exec sed -i "s/\((c)) [0-9]*/\1`date "+%Y"`/g" {} \;
 	sed -i "s/^VERSION=.*/VERSION=${VERSION}/g" update.sh
 	#sed -i "s/^eva_sfa_framework_version =.*/eva_sfa_framework_version = \"${VERSION}\";/g" ui/js/eva_sfa.js
 
