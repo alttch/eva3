@@ -1140,6 +1140,7 @@ class GenericHTTPNotifier(GenericNotifier):
                  password=None,
                  space=None,
                  interval=None,
+                 buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
         notifier_type = 'http'
@@ -1149,6 +1150,7 @@ class GenericHTTPNotifier(GenericNotifier):
                          notifier_type=notifier_type,
                          space=space,
                          interval=interval,
+                         buf_ttl=buf_ttl,
                          timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
@@ -1225,8 +1227,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                  notify_key=None,
                  space=None,
                  interval=None,
+                 buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
+        self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_subtype='json',
                          ssl_verify=ssl_verify,
@@ -1235,6 +1239,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                          password=password,
                          space=space,
                          interval=interval,
+                         buf_ttl=buf_ttl,
                          timeout=timeout)
         self.method = method
         self.notify_key = notify_key
@@ -1248,21 +1253,14 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         if self.space:
             d['space'] = self.space
         if self.method == 'jsonrpc':
-            data_ts = []
-            for dd in data:
-                dts = {'jsonrpc': '2.0', 'method': self.method}
-                p = d.copy()
-                p['data'] = dd
-                dts['params'] = p
-                if len(data) == 1:
-                    data_ts = dts
-                    break
-                data_ts.append(dts)
+            p = {'data': data}
+            p.update(d)
+            data_ts = {'jsonrpc': '2.0', 'method': self.method, 'params': p}
         elif self.method == 'list':
             data_ts = [{**d, **v} for v in data]
         else:
-            data_ts = d
-            data_ts['data'] = data
+            data_ts = {'data': data}
+            data_ts.update(d)
         try:
             r = self.rsession().post(self.uri,
                                      json=data_ts,
@@ -1376,8 +1374,10 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  v2_afixes=True,
                  space=None,
                  interval=None,
+                 buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
+        self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          ssl_verify=ssl_verify,
                          uri=uri,
@@ -1385,6 +1385,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                          password=password,
                          space=space,
                          interval=interval,
+                         buf_ttl=buf_ttl,
                          timeout=timeout)
         self.method = method
         self.notify_key = notify_key
@@ -1637,6 +1638,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         space = (self.space + '/') if self.space is not None else ''
+        batch_q = ''
         if subject == 'state':
             for d in data:
                 if 'status' in d:
@@ -1649,30 +1651,35 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                         except:
                             q += ',value="{}"'.format(d['value'])
                     q += ' {}'.format(t)
-                    try:
-                        if self.api_version == 1:
-                            r = self.rsession().post(
-                                url=self.uri + '/write?db={}'.format(self.db),
-                                data=q,
-                                headers=self.headers,
-                                timeout=self.get_timeout(),
-                                **self.xrargs)
-                        elif self.api_version == 2:
-                            r = self.rsession().post(
-                                url=self.uri +
-                                '/api/v2/write?bucket={}&org={}&precision=ns'.
-                                format(self.db, self.org),
-                                data=q,
-                                headers=self.headers,
-                                timeout=self.get_timeout(),
-                                **self.xrargs)
-                    except Exception as e:
-                        self.log_error(message=str(e))
-                        raise
-                    if not r.ok:
-                        self.log_error(code=r.status_code)
-                        return False
+                    if batch_q:
+                        batch_q += '\n'
+                    batch_q += q
+            try:
+                if self.api_version == 1:
+                    r = self.rsession().post(url=self.uri +
+                                             '/write?db={}'.format(self.db),
+                                             data=q,
+                                             headers=self.headers,
+                                             timeout=self.get_timeout(),
+                                             **self.xrargs)
+                elif self.api_version == 2:
+                    r = self.rsession().post(
+                        url=self.uri +
+                        '/api/v2/write?bucket={}&org={}&precision=ns'.format(
+                            self.db, self.org),
+                        data=q,
+                        headers=self.headers,
+                        timeout=self.get_timeout(),
+                        **self.xrargs)
+            except Exception as e:
+                self.log_error(message=str(e))
+                raise
+            if not r.ok:
+                self.log_error(code=r.status_code)
+                return False
             return True
+        else:
+            return False
 
     def get_state_log(self,
                       oid,
@@ -3580,6 +3587,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         notify_key = ncfg.get('notify_key')
         timeout = ncfg.get('timeout')
         interval = ncfg.get('interval')
+        buf_ttl = ncfg.get('buf_ttl')
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
@@ -3592,6 +3600,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               notify_key=notify_key,
                               space=space,
                               interval=interval,
+                              buf_ttl=buf_ttl,
                               timeout=timeout)
     elif ncfg['type'] == 'influxdb':
         space = ncfg.get('space')
@@ -3602,6 +3611,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         uri = ncfg.get('uri')
         timeout = ncfg.get('timeout')
         interval = ncfg.get('interval')
+        buf_ttl = ncfg.get('buf_ttl')
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
@@ -3620,6 +3630,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               method=method,
                               space=space,
                               interval=interval,
+                              buf_ttl=buf_ttl,
                               timeout=timeout)
     elif ncfg['type'] == 'prometheus':
         space = ncfg.get('space')
