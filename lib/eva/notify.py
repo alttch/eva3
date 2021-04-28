@@ -1662,29 +1662,30 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     if batch_q:
                         batch_q += '\n'
                     batch_q += q
-            try:
-                if self.api_version == 1:
-                    r = self.rsession().post(url=self.uri +
-                                             '/write?db={}'.format(self.db),
-                                             data=q,
-                                             headers=self.headers,
-                                             timeout=self.get_timeout(),
-                                             **self.xrargs)
-                elif self.api_version == 2:
-                    r = self.rsession().post(
-                        url=self.uri +
-                        '/api/v2/write?bucket={}&org={}&precision=ns'.format(
-                            self.db, self.org),
-                        data=q,
-                        headers=self.headers,
-                        timeout=self.get_timeout(),
-                        **self.xrargs)
-            except Exception as e:
-                self.log_error(message=str(e))
-                raise
-            if not r.ok:
-                self.log_error(code=r.status_code)
-                return False
+            if batch_q:
+                try:
+                    if self.api_version == 1:
+                        r = self.rsession().post(url=self.uri +
+                                                 '/write?db={}'.format(self.db),
+                                                 data=batch_q,
+                                                 headers=self.headers,
+                                                 timeout=self.get_timeout(),
+                                                 **self.xrargs)
+                    elif self.api_version == 2:
+                        r = self.rsession().post(
+                            url=self.uri +
+                            '/api/v2/write?bucket={}&org={}&precision=ns'.
+                            format(self.db, self.org),
+                            data=batch_q,
+                            headers=self.headers,
+                            timeout=self.get_timeout(),
+                            **self.xrargs)
+                except Exception as e:
+                    self.log_error(message=str(e))
+                    raise
+                if not r.ok:
+                    self.log_error(code=r.status_code)
+                    return False
             return True
         else:
             return False
