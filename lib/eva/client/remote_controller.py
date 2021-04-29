@@ -1001,12 +1001,13 @@ class RemoteControllerPool(object):
         if controller_id == 'ALL':
             success = True
             for c in self.controllers.copy():
-                try:
-                    if not self.reload_controller(c):
-                        raise Exception('reload error')
-                except:
-                    eva.core.log_traceback()
-                    success = False
+                if self.controllers[c].enabled:
+                    try:
+                        if not self.reload_controller(c):
+                            raise Exception('reload error')
+                    except:
+                        eva.core.log_traceback()
+                        success = False
             return success
         if not controller_id in self.controllers:
             return None
