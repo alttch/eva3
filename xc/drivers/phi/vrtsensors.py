@@ -25,7 +25,7 @@ __get_help__ = []
 __set_help__ = []
 __help__ = """
 Simple virtual sensor controller, may be used for the various tests/debugging.
-When loaded, simulates sensors with ports 1000..1010, which may be extended,
+When loaded, simulates sensors with ports 1000..1015, which may be extended,
 also any labels for the sensors (including strings) may be used. Virtual
 sensors can be set to float values only.
 """
@@ -57,12 +57,12 @@ class PHI(GenericPHI):
         self.data = {}
         if self.auto_modify == 'increment' and d is None:
             d = 0
-        for i in range(1000, 1011):
+        for i in range(1000, 1016):
             self.data[str(i)] = d
 
     def get_ports(self):
         return self.generate_port_list(port_min=1000,
-                                       port_max=1010,
+                                       port_max=1015,
                                        description='virtual sensor port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
