@@ -531,9 +531,12 @@ class GenericNotifier(object):
         if self._use_buffer:
             with self.buf_lock:
                 if isinstance(data, list):
-                    self.buf[subject] += [d[1] for d in data]
+                    self.buf[subject] += [
+                        d[1] if isinstance(d, tuple) else d for d in data
+                    ]
                 else:
-                    self.buf[subject].append(data[1])
+                    self.buf[subject].append(
+                        data[1] if isinstance(data, tuple) else data)
         else:
             self.notifier_worker.put_threadsafe(
                 (subject, data_to_send, retain, unpicklable))
@@ -2106,8 +2109,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  certfile=None,
                  keyfile=None):
         notifier_type = 'mqtt'
-        if bulk_topic:
-            self.buf = {}
+        self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
@@ -2478,14 +2480,14 @@ class GenericMQTTNotifier(GenericNotifier):
                                msg.retain)
             if self.collect_logs and t == self.log_topic:
                 records = rapidjson.loads(d)
-                if isinstance(records, list):
+                if isinstance(records, list) or 'd' not in records:
                     for r in records if isinstance(records,
                                                    list) else [records]:
                         if r['h'] != eva.core.config.system_name or \
                                 r['p'] != eva.core.product.code:
                             pyaltt2.logs.append(rd=r, skip_mqtt=True)
-                    else:
-                        break
+                        else:
+                            break
                 else:
                     if records['c'] != eva.core.config.controller_name:
                         for r in records['d']:
@@ -2533,14 +2535,14 @@ class GenericMQTTNotifier(GenericNotifier):
                 _retain = retain
             else:
                 _retain = True if self.retain_enabled else False
-            if self.buf_topic_state:
+            if self.bulk_topic_state:
                 dts = {
                     't': time.time() if self.timestamp_enabled else None,
                     'c': eva.core.config.controller_name,
                     'd': data
                 }
                 self.mq.publish(self.bulk_topic_state,
-                                format_json(i, unpicklable=unpicklable),
+                                format_json(dts, unpicklable=unpicklable),
                                 qos,
                                 retain=False)
             else:
@@ -2577,7 +2579,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     'd': data
                 }
                 self.mq.publish(self.bulk_topic_action,
-                                format_json(i, unpicklable=unpicklable),
+                                format_json(dts, unpicklable=unpicklable),
                                 qos,
                                 retain=False)
             else:
@@ -2600,7 +2602,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     'd': data
                 }
                 self.mq.publish(self.log_topic,
-                                format_json(i, unpicklable=False),
+                                format_json(dts, unpicklable=False),
                                 qos,
                                 retain=_retain)
             else:
@@ -2765,7 +2767,7 @@ class GenericMQTTNotifier(GenericNotifier):
             self.collect_logs = v
             return True
         elif prop == 'bulk_topic':
-            self.bulk_topic = v
+            self.bulk_topic = str(value) if value is not None else None
             return True
         elif prop == 'api_enabled':
             v = eva.tools.val_to_boolean(value)
@@ -2915,6 +2917,8 @@ class MQTTNotifier(GenericMQTTNotifier):
                  port=None,
                  space=None,
                  interval=None,
+                 buf_ttl=0,
+                 bulk_topic=None,
                  username=None,
                  password=None,
                  qos=None,
@@ -2936,6 +2940,8 @@ class MQTTNotifier(GenericMQTTNotifier):
                          port=port,
                          space=space,
                          interval=interval,
+                         buf_ttl=buf_ttl,
+                         bulk_topic=bulk_topic,
                          username=username,
                          password=password,
                          qos=qos,
