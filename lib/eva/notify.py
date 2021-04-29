@@ -2100,16 +2100,22 @@ class GenericMQTTNotifier(GenericNotifier):
                  retain_enabled=True,
                  subscribe_all=False,
                  timestamp_enabled=True,
+                 buf_ttl=0,
+                 bulk_topic=None,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
         notifier_type = 'mqtt'
+        if bulk_topic:
+            self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
                          interval=interval,
+                         buf_ttl=buf_ttl,
                          timeout=timeout)
         self.host = host
+        self.bulk_topic = bulk_topic
         if port:
             self.port = port
         else:
@@ -2179,6 +2185,12 @@ class GenericMQTTNotifier(GenericNotifier):
         self.pfx = pfx
         self.pfx_api_response = pfx + 'controller/'
         self.log_topic = pfx + 'log'
+        if self.bulk_topic:
+            self.bulk_topic_action = pfx + f'action/{bulk_topic}'
+            self.bulk_topic_state = pfx + f'state/{bulk_topic}'
+        else:
+            self.bulk_topic_action = None
+            self.bulk_topic_state = None
         self.api_enabled = api_enabled
         self.discovery_enabled = discovery_enabled
         self.announce_interval = announce_interval
@@ -2465,10 +2477,19 @@ class GenericMQTTNotifier(GenericNotifier):
                 eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
                                msg.retain)
             if self.collect_logs and t == self.log_topic:
-                r = rapidjson.loads(d)
-                if r['h'] != eva.core.config.system_name or \
-                        r['p'] != eva.core.product.code:
-                    pyaltt2.logs.append(rd=r, skip_mqtt=True)
+                records = rapidjson.loads(d)
+                if isinstance(records, list):
+                    for r in records if isinstance(records,
+                                                   list) else [records]:
+                        if r['h'] != eva.core.config.system_name or \
+                                r['p'] != eva.core.product.code:
+                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
+                    else:
+                        break
+                else:
+                    if records['c'] != eva.core.config.controller_name:
+                        for r in records['d']:
+                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
             elif t in self.items_to_update_by_topic:
                 i = self.items_to_update_by_topic[t]
                 i.mqtt_set_state(
@@ -2512,47 +2533,84 @@ class GenericMQTTNotifier(GenericNotifier):
                 _retain = retain
             else:
                 _retain = True if self.retain_enabled else False
-            for i in data:
-                if i.get('destroyed'):
-                    dts = ''
-                else:
-                    dts = {
-                        't': time.time() if self.timestamp_enabled else None,
-                        'c': eva.core.config.controller_name
-                    }
-                    for k in i:
-                        if not k in ['id', 'group', 'type', 'full_id', 'oid']:
-                            dts[k] = i[k]
-                    dts = format_json(dts)
-                self.mq.publish(self.pfx + i['type'] + '/' + i['group'] + '/' +
-                                i['id'],
-                                dts,
+            if self.buf_topic_state:
+                dts = {
+                    't': time.time() if self.timestamp_enabled else None,
+                    'c': eva.core.config.controller_name,
+                    'd': data
+                }
+                self.mq.publish(self.bulk_topic_state,
+                                format_json(i, unpicklable=unpicklable),
                                 qos,
-                                retain=_retain)
+                                retain=False)
+            else:
+                for i in data:
+                    if i.get('destroyed'):
+                        dts = ''
+                    else:
+                        dts = {
+                            't':
+                                time.time() if self.timestamp_enabled else None,
+                            'c':
+                                eva.core.config.controller_name
+                        }
+                        for k in i:
+                            if not k in [
+                                    'id', 'group', 'type', 'full_id', 'oid'
+                            ]:
+                                dts[k] = i[k]
+                        dts = format_json(dts)
+                    self.mq.publish(self.pfx + i['type'] + '/' + i['group'] +
+                                    '/' + i['id'],
+                                    dts,
+                                    qos,
+                                    retain=_retain)
         elif subject == 'action':
             if retain is not None and self.retain_enabled:
                 _retain = retain
             else:
                 _retain = False
-            for i in data:
-                i['t'] = time.time() if self.timestamp_enabled else None
-                i['c'] = eva.core.config.controller_name
-                self.mq.publish(self.pfx + i['item_type'] + '/' + \
-                        i['item_group'] + '/' + i['item_id'] + '/action',
-                    format_json(i, unpicklable=unpicklable),
-                    qos, retain = _retain)
+            if self.bulk_topic_action:
+                dts = {
+                    't': time.time() if self.timestamp_enabled else None,
+                    'c': eva.core.config.controller_name,
+                    'd': data
+                }
+                self.mq.publish(self.bulk_topic_action,
+                                format_json(i, unpicklable=unpicklable),
+                                qos,
+                                retain=False)
+            else:
+                for i in data:
+                    i['t'] = time.time() if self.timestamp_enabled else None
+                    i['c'] = eva.core.config.controller_name
+                    self.mq.publish(self.pfx + i['item_type'] + '/' + \
+                            i['item_group'] + '/' + i['item_id'] + '/action',
+                        format_json(i, unpicklable=unpicklable),
+                        qos, retain = _retain)
         elif subject == 'log':
             if retain is not None and self.retain_enabled:
                 _retain = retain
             else:
                 _retain = False
-            for i in data:
-                i['t'] = time.time() if self.timestamp_enabled else None
-                i['c'] = eva.core.config.controller_name
+            if self._use_buffer:
+                dts = {
+                    't': time.time() if self.timestamp_enabled else None,
+                    'c': eva.core.config.controller_name,
+                    'd': data
+                }
                 self.mq.publish(self.log_topic,
                                 format_json(i, unpicklable=False),
                                 qos,
                                 retain=_retain)
+            else:
+                for i in data:
+                    i['t'] = time.time() if self.timestamp_enabled else None
+                    i['c'] = eva.core.config.controller_name
+                    self.mq.publish(self.log_topic,
+                                    format_json(i, unpicklable=False),
+                                    qos,
+                                    retain=_retain)
         elif subject == 'server':
             if retain is not None and self.retain_enabled:
                 _retain = retain
@@ -2697,6 +2755,7 @@ class GenericMQTTNotifier(GenericNotifier):
         d['retain_enabled'] = self.retain_enabled
         d['subscribe_all'] = self.subscribe_all
         d['timestamp_enabled'] = self.timestamp_enabled
+        d['bulk_topic'] = self.bulk_topic
         d.update(super().serialize(props=props))
         return d
 
@@ -2704,6 +2763,9 @@ class GenericMQTTNotifier(GenericNotifier):
         if prop == 'collect_logs':
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
+            return True
+        elif prop == 'bulk_topic':
+            self.bulk_topic = v
             return True
         elif prop == 'api_enabled':
             v = eva.tools.val_to_boolean(value)
@@ -3511,6 +3573,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         qos = ncfg.get('qos')
         keepalive = ncfg.get('keepalive')
         timeout = ncfg.get('timeout')
+        buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
         collect_logs = ncfg.get('collect_logs', False)
         api_enabled = ncfg.get('api_enabled', False)
@@ -3520,6 +3583,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         retain_enabled = ncfg.get('retain_enabled', True)
         subscribe_all = ncfg.get('subscribe_all', False)
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
+        bulk_topic = ncfg.get('bulk_topic')
         n = MQTTNotifier(_notifier_id,
                          host=host,
                          port=port,
@@ -3530,6 +3594,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          qos=qos,
                          keepalive=keepalive,
                          timeout=timeout,
+                         buf_ttl=buf_ttl,
                          collect_logs=collect_logs,
                          api_enabled=api_enabled,
                          discovery_enabled=discovery_enabled,
@@ -3538,6 +3603,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          retain_enabled=retain_enabled,
                          subscribe_all=subscribe_all,
                          timestamp_enabled=timestamp_enabled,
+                         bulk_topic=bulk_topic,
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)
