@@ -2105,6 +2105,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  timestamp_enabled=True,
                  buf_ttl=0,
                  bulk_topic=None,
+                 bulk_subscribe=None,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -2118,6 +2119,7 @@ class GenericMQTTNotifier(GenericNotifier):
                          timeout=timeout)
         self.host = host
         self.bulk_topic = bulk_topic
+        self.bulk_subscribe = bulk_subscribe
         if port:
             self.port = port
         else:
@@ -2187,6 +2189,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.pfx = pfx
         self.pfx_api_response = pfx + 'controller/'
         self.log_topic = pfx + 'log'
+        self.bulk_collect_state_topic = pfx + 'state/'
         if self.bulk_topic:
             self.bulk_topic_action = pfx + f'action/{bulk_topic}'
             self.bulk_topic_state = pfx + f'state/{bulk_topic}'
@@ -2283,6 +2286,12 @@ class GenericMQTTNotifier(GenericNotifier):
                     client.subscribe(i, qos=v.mqtt_control_qos)
                     logging.debug('.%s resubscribed to %s q%u control' % \
                             (self.notifier_id, i, v.mqtt_control_qos))
+            if self.bulk_subscribe:
+                for topic in self.bulk_subscribe:
+                    topic = f'{self.bulk_collect_state_topic}{topic}'
+                    client.subscribe(topic, self.qos['state'])
+                    logging.debug('.%s resubscribed to %s q%u topic' % \
+                            (self.notifier_id, topic, self.qos['state']))
             for i in list(custom_handlers):
                 qos = custom_handlers_qos.get(i)
                 client.subscribe(i, qos=qos)
@@ -2290,15 +2299,15 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id, i, qos))
             if self.collect_logs:
                 client.subscribe(self.log_topic, qos=self.qos['log'])
-                logging.debug('.%s subscribed to %s' % \
+                logging.debug('.%s resubscribed to %s' % \
                         (self.notifier_id, self.log_topic))
             if self.api_enabled:
                 client.subscribe(self.api_request_topic, qos=self.qos['system'])
-                logging.debug('.%s subscribed to %s' % \
+                logging.debug('.%s resubscribed to %s' % \
                         (self.notifier_id, self.api_request_topic))
             if self.discovery_enabled:
                 client.subscribe(self.announce_topic, qos=self.qos['system'])
-                logging.debug('.%s subscribed to %s' % \
+                logging.debug('.%s resubscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
         except:
             eva.core.log_traceback(notifier=True)
@@ -2499,6 +2508,18 @@ class GenericMQTTNotifier(GenericNotifier):
             elif t in self.items_to_control_by_topic:
                 i = self.items_to_control_by_topic[t]
                 i.mqtt_action(msg=d)
+            elif t.startswith(self.bulk_collect_state_topic):
+                data = rapidjson.loads(d)
+                t = data.get('t')
+                c = data.get('c')
+                for frame in data['d']:
+                    frame['t'] = t
+                    frame['c'] = c
+                    item = eva.core.controllers[0].get_item(frame['oid'])
+                    if item:
+                        item.mqtt_set_state(None, frame)
+                    else:
+                        logging.info(f'.{self.notifier_id} skipped {frame[oid]} state in bulk update')
         except:
             eva.core.log_traceback(notifier=True)
 
@@ -2758,6 +2779,7 @@ class GenericMQTTNotifier(GenericNotifier):
         d['subscribe_all'] = self.subscribe_all
         d['timestamp_enabled'] = self.timestamp_enabled
         d['bulk_topic'] = self.bulk_topic
+        d['bulk_subscribe'] = self.bulk_subscribe
         d.update(super().serialize(props=props))
         return d
 
@@ -2768,6 +2790,14 @@ class GenericMQTTNotifier(GenericNotifier):
             return True
         elif prop == 'bulk_topic':
             self.bulk_topic = str(value) if value is not None else None
+            return True
+        elif prop == 'bulk_subscribe':
+            if value is None:
+                self.bulk_subscribe = None
+            elif isinstance(value, list):
+                self.bulk_subscribe = value
+            else:
+                self.bulk_subscribe = str(value).split(',')
             return True
         elif prop == 'api_enabled':
             v = eva.tools.val_to_boolean(value)
@@ -2919,6 +2949,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  interval=None,
                  buf_ttl=0,
                  bulk_topic=None,
+                 bulk_subscribe=None,
                  username=None,
                  password=None,
                  qos=None,
@@ -2942,6 +2973,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          interval=interval,
                          buf_ttl=buf_ttl,
                          bulk_topic=bulk_topic,
+                         bulk_subscribe=bulk_subscribe,
                          username=username,
                          password=password,
                          qos=qos,
@@ -3590,6 +3622,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         subscribe_all = ncfg.get('subscribe_all', False)
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
         bulk_topic = ncfg.get('bulk_topic')
+        bulk_subscribe = ncfg.get('bulk_subscribe')
         n = MQTTNotifier(_notifier_id,
                          host=host,
                          port=port,
@@ -3610,6 +3643,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          subscribe_all=subscribe_all,
                          timestamp_enabled=timestamp_enabled,
                          bulk_topic=bulk_topic,
+                         bulk_subscribe=bulk_subscribe,
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)

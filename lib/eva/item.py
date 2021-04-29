@@ -691,14 +691,14 @@ class UpdatableItem(Item):
     def mqtt_set_state(self, topic, data, notify=True):
         with self.update_lock:
             try:
-                if topic.endswith('/status'):
-                    self.update_set_state(status=data)
-                elif topic.endswith('/value'):
-                    self.update_set_state(value=data)
-                elif topic == self.item_type + '/' + self.full_id:
+                if topic is None or \
+                        topic == self.item_type + '/' + self.full_id:
                     if not data:
                         return False, None
-                    j = rapidjson.loads(data)
+                    if isinstance(data, str):
+                        j = rapidjson.loads(data)
+                    else:
+                        j = data
                     remote_controller = j.get('c')
                     if (
                             not self.allow_mqtt_updates_from_controllers and
@@ -712,6 +712,10 @@ class UpdatableItem(Item):
                         return False, None
                     else:
                         return result, j
+                elif topic.endswith('/status'):
+                    self.update_set_state(status=data)
+                elif topic.endswith('/value'):
+                    self.update_set_state(value=data)
             except:
                 eva.core.log_traceback()
 
