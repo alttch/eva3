@@ -4,19 +4,21 @@ __license__ = "Apache License 2.0"
 __version__ = "3.3.3"
 
 import subprocess
-import select
 import threading
 import time
 import logging
 import psutil
 import eva.core
 import queue
+import signal
 
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import MethodNotImplemented
 
 datapullers = {}
 
+def preexec_function():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 def update_config(cfg):
     try:
@@ -90,6 +92,7 @@ class DataPuller:
                 ],
                                           shell=True,
                                           env=env,
+                                          preexec_fn = preexec_function,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
                 self.executor = threading.Thread(target=self._t_run,
