@@ -200,7 +200,7 @@ def critical(log=True, from_driver=False):
     except:
         caller_info = ''
     if log:
-        log_traceback(force=True)
+        log_traceback(force=True, critical=True)
     if config.dump_on_critical:
         _flags.ignore_critical = True
         logging.critical('critical exception. dump file: %s' %
