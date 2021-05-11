@@ -1,0 +1,21 @@
+#!/bin/sh
+
+PLATFORMS="arm-musleabihf i686-musl x86_64-musl"
+VERSION=$1
+
+if [ -z "$VERSION" ]; then
+  echo "version not specified"
+  exit 1
+fi
+
+for platform in $PLATFORMS; do
+  echo "----- ${platform} -----"
+  FNAME="yedb-${VERSION}-${platform}.tar.gz"
+  wget "https://github.com/alttch/yedb-rs/releases/download/v${VERSION}/${FNAME}" -O "/tmp/${FNAME}" || exit 2
+  gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}"
+  rm -f "/tmp/${FNAME}" || exit 2
+done
+
+echo "================================"
+echo "v${VERSION} UPLOADED"
+exit 0
