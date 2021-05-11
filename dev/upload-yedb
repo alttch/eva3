@@ -16,6 +16,7 @@ for platform in $PLATFORMS; do
   rm -f "/tmp/${FNAME}" || exit 2
 done
 
+jks build get.eva-ics.com || exit 3
 echo "================================"
 echo "v${VERSION} UPLOADED"
 exit 0
