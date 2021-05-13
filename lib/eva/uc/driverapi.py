@@ -170,7 +170,7 @@ def handle_phi_event(phi, port=None, data=None):
             if i.updates_allowed() and not i.is_destroyed():
                 logging.debug('event on PHI %s, port %s, updating item %s' %
                               (phi.phi_id, port, i.full_id))
-                eva.core.spawn(update_item, i, data)
+                i.update(driver_state_in=data)
 
 
 @with_drivers_lock
@@ -491,10 +491,6 @@ def unregister_item_update(i):
     except:
         eva.core.log_traceback()
         return False
-
-
-def update_item(i, data):
-    i.update(driver_state_in=data)
 
 
 @with_drivers_lock
