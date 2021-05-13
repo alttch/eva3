@@ -22,6 +22,9 @@ class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
         if super().set_expired():
             logging.error('%s status is -1 (failed)' % self.oid)
 
+    def updates_allowed(self):
+        return self.status != 0 and super().updates_allowed()
+
     def update_set_state(self,
                          status=None,
                          value=None,
