@@ -152,6 +152,10 @@ def unlock(l):
 
 
 @with_drivers_lock
+def get_phi_items(phi_id):
+    return items_by_phi.get(phi_id)
+
+
 def handle_phi_event(phi, port=None, data=None):
     """
     Ask the core to handle PHI event
@@ -164,7 +168,7 @@ def handle_phi_event(phi, port=None, data=None):
     """
     if not data:
         return
-    iph = items_by_phi.get(phi.phi_id)
+    iph = get_phi_items(phi.phi_id)
     if iph:
         for i in iph:
             if i.updates_allowed() and not i.is_destroyed():
