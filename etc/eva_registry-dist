@@ -1,0 +1,2 @@
+WORKERS=4
+SOCKET=/tmp/yedb.sock
