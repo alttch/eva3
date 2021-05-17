@@ -888,6 +888,7 @@ def load_keys_from_db():
             key.in_db = True
             _keys[key.key] = key
             _keys_by_id[key.key_id] = key
+        dbconn.close()
     except:
         eva.core.report_userdb_error(raise_exeption=False)
     return _keys, _keys_by_id
