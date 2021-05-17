@@ -12,9 +12,18 @@ for platform in $PLATFORMS; do
   echo "----- ${platform} -----"
   FNAME="yedb-${VERSION}-${platform}.tar.gz"
   wget "https://github.com/alttch/yedb-rs/releases/download/v${VERSION}/${FNAME}" -O "/tmp/${FNAME}" || exit 2
-  gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}"
+  gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}" || exit 3
+done
+
+./generate-yedb-manifest.py "${VERSION}" "/tmp/yedb-manifest-${VERSION}.json" || exit 3
+gsutil cp -a public-read "/tmp/yedb-manifest-${VERSION}.json" \
+  "gs://get.eva-ics.com/yedb/yedb-manifest-${VERSION}.json" || exit 3
+
+for platform in $PLATFORMS; do
   rm -f "/tmp/${FNAME}" || exit 2
 done
+
+rm -f "/tmp/yedb-manifest-${VERSION}.json"
 
 jks build get.eva-ics.com || exit 3
 echo "================================"

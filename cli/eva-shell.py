@@ -929,6 +929,7 @@ sys.argv = {argv}
         return self.local_func_result_ok
 
     def update_mirror(self, params):
+        from eva.tools import ShellConfigFile
         try:
             from configparser import ConfigParser
             cp = ConfigParser(inline_comment_prefixes=';')
@@ -992,44 +993,45 @@ sys.argv = {argv}
                 print(f'Extra Python versions: '
                       f'{", ".join(mirror_extra_python_versions)}')
             print()
-            print(f'Modules: {len(mods)}')
-            print(self.colored('-' * 40, color='grey', attrs=[]))
-            # update modules
-            for mod in mods:
-                if mod:
+            if os.getenv('SKIP_PYTHON_MODULES') != '1':
+                print(f'Modules: {len(mods)}')
+                print(self.colored('-' * 40, color='grey', attrs=[]))
+                # update modules
+                for mod in mods:
+                    if mod:
+                        if os.system(f'{dir_sbin}/pypi-mirror '
+                                     f'download -p {pip} -b -d '
+                                     f'{dir_mirror_pypi}/downloads {mod}'):
+                            return self.local_func_result_failed
+                # update compiled mods for extra Python versions
+                cmods = Path(dir_mirror_pypi).glob(f'**/*-cp*.whl')
+                xmods = set()
+                srcs_req = set()
+                for c in cmods:
+                    m = c.name.split('-')
+                    mod_name, mod_version = m[0], m[1]
+                    xmods.add(f'{mod_name}=={mod_version}')
+                for pyver in mirror_extra_python_versions:
+                    for xmod in xmods:
+                        if os.system(f'{dir_sbin}/pypi-mirror '
+                                     f'download -p {pip} -b -d '
+                                     f'{dir_mirror_pypi}/downloads '
+                                     f'--python-version {pyver} {xmod}'):
+                            self.print_warn(f'No binary package for {xmod}, '
+                                            f'will download sources')
+                            srcs_req.add(xmod)
+                # download modules sources for missing binary mods
+                for s in srcs_req:
                     if os.system(f'{dir_sbin}/pypi-mirror '
-                                 f'download -p {pip} -b -d '
-                                 f'{dir_mirror_pypi}/downloads {mod}'):
+                                 f'download -p {pip} -d '
+                                 f'{dir_mirror_pypi}/downloads {s}'):
                         return self.local_func_result_failed
-            # update compiled mods for extra Python versions
-            cmods = Path(dir_mirror_pypi).glob(f'**/*-cp*.whl')
-            xmods = set()
-            srcs_req = set()
-            for c in cmods:
-                m = c.name.split('-')
-                mod_name, mod_version = m[0], m[1]
-                xmods.add(f'{mod_name}=={mod_version}')
-            for pyver in mirror_extra_python_versions:
-                for xmod in xmods:
-                    if os.system(f'{dir_sbin}/pypi-mirror '
-                                 f'download -p {pip} -b -d '
-                                 f'{dir_mirror_pypi}/downloads '
-                                 f'--python-version {pyver} {xmod}'):
-                        self.print_warn(f'No binary package for {xmod}, '
-                                        f'will download sources')
-                        srcs_req.add(xmod)
-            # download modules sources for missing binary mods
-            for s in srcs_req:
+                # update mirror index
                 if os.system(f'{dir_sbin}/pypi-mirror '
-                             f'download -p {pip} -d '
-                             f'{dir_mirror_pypi}/downloads {s}'):
+                             f'create -d {dir_mirror_pypi}/downloads '
+                             f'-m {dir_mirror_pypi}/local'):
                     return self.local_func_result_failed
-            # update mirror index
-            if os.system(f'{dir_sbin}/pypi-mirror '
-                         f'create -d {dir_mirror_pypi}/downloads '
-                         f'-m {dir_mirror_pypi}/local'):
-                return self.local_func_result_failed
-            print(self.colored('-' * 40, color='grey', attrs=[]))
+                print(self.colored('-' * 40, color='grey', attrs=[]))
             print('Updating EVA ICS mirror')
             print()
             build = self._get_build()
@@ -1037,7 +1039,8 @@ sys.argv = {argv}
             _update_repo = params.get('u')
             for d in [
                     dir_mirror_eva, f'{dir_mirror_eva}/{version}',
-                    f'{dir_mirror_eva}/{version}/nightly'
+                    f'{dir_mirror_eva}/{version}/nightly',
+                    f'{dir_mirror_eva}/yedb'
             ]:
                 try:
                     os.mkdir(d)
@@ -1046,27 +1049,35 @@ sys.argv = {argv}
             if not _update_repo:
                 _update_repo = update_repo
             manifest = None
+            yedb_manifest = None
+            with ShellConfigFile(f'{dir_lib}/eva/registry/required') as fh:
+                YEDB_VERSION = fh.get('YEDB')
+            yedb_uris = [f'yedb/yedb-manifest-{YEDB_VERSION}.json']
+            for yedb_arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
+                yedb_uris.append(f'yedb/yedb-{YEDB_VERSION}-{yedb_arch}.tar.gz')
             for idx, f in enumerate([
                     f'{version}/nightly/manifest-{build}.json',
                     f'{version}/nightly/UPDATE.rst',
                     f'{version}/nightly/eva-{version}-{build}.tgz',
                     f'{version}/nightly/update-{build}.sh'
-            ]):
+            ] + yedb_uris):
                 if idx != 1 and os.path.isfile(f'{dir_mirror_eva}/{f}'):
                     print(self.colored(f'- [exists] {f}', color='grey'))
-                    if idx == 0:
+                    if idx == 0 or f.startswith('yedb/yedb-manifest'):
                         with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
                             content = fh.read()
                 else:
                     content = safe_download(
                         f'{_update_repo}/{f}',
-                        manifest=manifest
-                        if not f.endswith('/UPDATE.rst') else None)
+                        manifest=yedb_manifest if f.startswith('yedb/') else
+                        manifest if not f.endswith('/UPDATE.rst') else None)
                     print(self.colored(f'+ [downloaded] {f}', color='green'))
                     with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
                         fh.write(content)
                 if idx == 0:
                     manifest = rapidjson.loads(content)
+                elif f.startswith('yedb/yedb-manifest'):
+                    yedb_manifest = rapidjson.loads(content)
             with open(f'{dir_mirror_eva}/update_info.json', 'w') as fh:
                 fh.write(
                     rapidjson.dumps(dict(version=str(version),
