@@ -408,6 +408,7 @@ def load_db_state(items, item_type, clean=False):
             for i in _db_to_clean_ids:
                 dbconn.execute(sql('delete from state where id=:id'), id=i)
                 logging.debug('{} state removed from db'.format(i))
+        dbconn.close()
     except:
         logging.critical('db error')
         eva.core.critical()
