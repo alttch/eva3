@@ -49,6 +49,7 @@ function on_exit {
   if [ $err -ne 0 ]; then
     echo
     ./sbin/eva-control stop
+    ./sbin/registry-control stop
     echo
     echo "SETUP FAILED, CODE: $err"
   fi
@@ -654,7 +655,7 @@ EOF
     echo
 fi
 
-[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && ./sbin/eva-control stop
+[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/registry-control stop ; ./sbin/eva-control stop )
 
 if [ $CLEAR -eq 1 ]; then
   rm -rf runtime/* || exit 1
@@ -721,6 +722,10 @@ else
     echo "UC is already installed. Skipping"
     INSTALL_UC=0
 fi
+
+setup_supervisor registry root || exit 2
+
+./sbin/registry-control start || exit 1
 
 echo
 
