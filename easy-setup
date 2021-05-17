@@ -2,6 +2,8 @@
 
 [ "${debug}" ] && set -o xtrace
 
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+
 PYTHON3_MIN=6
 
 UC_ENABLED=
