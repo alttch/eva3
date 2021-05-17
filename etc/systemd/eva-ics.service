@@ -1,6 +1,7 @@
 [Unit]
 Description=EVA ICS
-After=network.target
+Wants=eva-ics-registry.service
+After=eva-ics-registry.service
 
 [Service]
 Type=forking
