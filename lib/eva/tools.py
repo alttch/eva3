@@ -287,11 +287,17 @@ class ShellConfigFile():
             self._data[name] = value
             self._changed = True
 
-    def get(self, name):
+    def get(self, name, default=KeyError):
         """
         Get field value
         """
-        return self._data[name]
+        try:
+            return self._data[name]
+        except KeyError:
+            if default is KeyError:
+                raise
+            else:
+                return default
 
     def delete(self, name):
         """
