@@ -3,6 +3,7 @@
 [ "${debug}" ] && set -o xtrace
 
 [ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+export EVA_REPOSITORY_URL
 
 PYTHON3_MIN=6
 
@@ -707,6 +708,12 @@ fi
 
 [ $USE_SUPERVISOR -ne 1 ] && [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
+./sbin/install-yedb || exit 3
+
+setup_supervisor registry root || exit 2
+
+./sbin/registry-control start || exit 1
+
 # INSTALL UC
 
 if [ "$UC_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
@@ -724,10 +731,6 @@ else
     echo "UC is already installed. Skipping"
     INSTALL_UC=0
 fi
-
-setup_supervisor registry root || exit 2
-
-./sbin/registry-control start || exit 1
 
 echo
 

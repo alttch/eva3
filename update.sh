@@ -12,6 +12,8 @@ fi
 
 [ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
+export $EVA_REPOSITORY_URL
+
 OBS=""
 
 UC_NEW_CFG="runtime/uc_cs.json"
@@ -77,6 +79,11 @@ cd ..
 echo "- Stopping everything"
 
 ./sbin/eva-control stop
+./sbin/registry-control stop
+
+./sbin/install-yedb || exit 2
+
+./sbin/registry-control start || exit 2
 
 echo "- Installing missing modules"
 
