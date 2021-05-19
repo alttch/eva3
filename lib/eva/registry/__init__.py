@@ -1,35 +1,35 @@
 PFX = 'eva3'
 
-import sys
-import os
-import eva.core
+import platform
 
 from eva.tools import ShellConfigFile
 from yedb import YEDB
 
-config_file = f'{eva.core.dir_etc}/eva_registry'
-socket_path = f'{eva.core.dir_var}/registry.sock'
+from pathlib import Path
 
-if os.path.exists(config_file):
-    with ShellConfigFile(config_file) as cf:
-        try:
-            socket_path = cf.get('SOCKET')
-        except KeyError:
-            pass
+EVA_DIR = Path(__file__).parents[3].absolute()
+
+config_file = EVA_DIR / 'etc/eva_config'
+
+if config_file.exists():
+    with ShellConfigFile(config_file.as_posix()) as cf:
+        socket_path = cf.get('SOCKET', EVA_DIR / 'var/registry.sock')
+        SYSTEM_NAME = cf.get('SYSTEM_NAME', platform.node())
+
 
 db = YEDB(socket_path)
 
 
 def key_get(name):
-    return db.key_get(key=f'{PFX}/{eva.core.config.system_name}/{name}')
+    return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{name}')
 
 
 def key_get_recursive(name):
     return db.key_get_recursive(
-        key=f'{PFX}/{eva.core.config.system_name}/{name}')
+        key=f'{PFX}/{SYSTEM_NAME}/{name}')
 
 
 def key_set(name, value, **kwargs):
-    return db.key_set(key=f'{PFX}/{eva.core.config.system_name}/{name}',
+    return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}',
                       value=value,
                       **kwargs)

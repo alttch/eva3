@@ -1,4 +1,0 @@
-#REGISTRY_DIR=/opt/eva/runtime/registry
-#SOCKET=/opt/eva/var/registry.sock
-#AUTO_BAK=5
-#WORKERS=2

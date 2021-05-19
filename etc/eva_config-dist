@@ -1,0 +1,6 @@
+#SYSTEM_NAME=nodename
+#YEDB_REGISTRY_DIR=/opt/eva/runtime/registry
+#YEDB_SOCKET=/opt/eva/var/registry.sock
+#YEDB_AUTO_BAK=5
+#YEDB_WORKERS=2
+#YEDB_CACHE_SIZE=10000

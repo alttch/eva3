@@ -8,16 +8,18 @@ MAX_START_WAIT=10 # sec * 2 before kill -KILL
 
 export EVA_DIR=`pwd`
 
-[ -f ./etc/eva_registry ] && source ./etc/eva_registry
+[ -f ./etc/eva_config ] && source ./etc/eva_config
 
-[ -z ${REGISTRY_DIR} ] && REGISTRY_DIR=${EVA_DIR}/runtime/registry
-[ -z ${SOCKET} ] && SOCKET=${EVA_DIR}/var/registry.sock
-[ -z ${AUTO_BAK} ] && AUTO_BAK=10
-[ -z ${WORKERS} ] && WORKERS=2
+[ -z ${YEDB_REGISTRY_DIR} ] && YEDB_REGISTRY_DIR=${EVA_DIR}/runtime/registry
+[ -z ${YEDB_SOCKET} ] && YEDB_SOCKET=${EVA_DIR}/var/registry.sock
+[ -z ${YEDB_AUTO_BAK} ] && YEDB_AUTO_BAK=10
+[ -z ${YEDB_WORKERS} ] && YEDB_WORKERS=2
+[ -z ${YEDB_CACHE_SIZE} ] && YEDB_CACHE_SIZE=1000
 
 REGISTRY=${EVA_DIR}/yedb/yedb-server
 PIDFILE=${EVA_DIR}/var/registry.pid
-REGISTRY_ARGS="${REGISTRY_DIR} --bind ${SOCKET} --pid-file ${PIDFILE} --auto-bak ${AUTO_BAK} --workers ${WORKERS} --default-fmt json"
+LOCKFILE=${EVA_DIR}/var/registry.lock
+REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE}"
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 TEST=${EVA_DIR}/yedb/yedb-cli test
