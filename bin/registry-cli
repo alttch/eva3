@@ -5,8 +5,18 @@ EVA_DIR=`dirname ${D}`/..
 
 REGISTRY_INI=${EVA_DIR}/etc/eva_config
 
-[ -f ${REGISTRY_INI} ] && source ${REGISTRY_INI}
+CMD=$1
+shift
+KEY=$1
+shift
 
+[ -f ${REGISTRY_INI} ] && source ${REGISTRY_INI}
 [ -z ${SOCKET} ] && SOCKET=$EVA_DIR/var/registry.sock
 
-$EVA_DIR/yedb/yedb-cli -C $SOCKET $@
+if [ "$AUTO_PREFIX" = "1" ]; then
+  [ -z ${SYSTEM_NAME} ] && SYSTEM_NAME=$(hostname)
+  KEY=eva3/${SYSTEM_NAME}/${KEY}
+fi
+
+
+$EVA_DIR/yedb/yedb-cli -C $SOCKET $CMD $KEY $@
