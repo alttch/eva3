@@ -1,0 +1,34 @@
+server:
+  polldelay: 0.01
+  pid-file: var/uc.pid
+  log-file: log/uc.log
+  syslog: false
+  db-update: instant
+  db-file: runtime/db/uc.db
+  keep-action-history: 86400
+  keep-logmem: 86400
+  notify-on-start: true
+  debug: false
+  dump-on-critical: true
+  stop-on-critical: always
+  timeout: 5
+  layout: enterprise
+upnp:
+  listen: 0.0.0.0
+sysapi:
+  setup-mode: true
+  rpvt: false
+webapi:
+  listen: 0.0.0.0:8812
+  session-timeout: 3600
+snmptrap:
+  listen: 127.0.0.1:162
+  community: eva
+  hosts-allow:
+    - 127.0.0.1/8
+udpapi:
+  listen: 127.0.0.1:8881
+  hosts-allow:
+    - 127.0.0.1/8
+  hosts-allow-encrypted:
+    - 0.0.0.0/0
