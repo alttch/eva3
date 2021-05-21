@@ -20,7 +20,7 @@ for platform in $PLATFORMS; do
   gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}" || exit 3
 done
 
-./generate-yedb-manifest.py "${YEDB_VERSION}" "/tmp/yedb-manifest-${YEDB_VERSION}.json" || exit 3
+./dev/generate-yedb-manifest.py "${YEDB_VERSION}" "/tmp/yedb-manifest-${YEDB_VERSION}.json" || exit 3
 gsutil cp -a public-read "/tmp/yedb-manifest-${YEDB_VERSION}.json" \
   "gs://get.eva-ics.com/yedb/yedb-manifest-${YEDB_VERSION}.json" || exit 3
 
