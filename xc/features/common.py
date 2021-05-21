@@ -124,6 +124,7 @@ def restart_controller(controller=''):
 
 def append_python_libraries(libs, rebuild_venv=True):
     import eva.registry as registry
+    need_modify = False
     with registry.key_as_dict('config/venv') as venv:
         extra = venv.get('extra', [])
         for lib in libs:
@@ -132,15 +133,23 @@ def append_python_libraries(libs, rebuild_venv=True):
             for x in extra.copy():
                 x_id = x.split('=', 1)[0]
                 if x_id == lib_id:
-                    extra.remove(x)
-            extra.append(lib)
-        venv.set_modified()
-    if rebuild_venv:
+                    if x != lib:
+                        need_modify = True
+                        extra.remove(x)
+                if x == lib:
+                    break
+            else:
+                extra.append(lib)
+                need_modify = True
+        if need_modify:
+            venv.set_modified()
+    if need_modify and rebuild_venv:
         rebuild_python_venv()
 
 
 def remove_python_libraries(libs, rebuild_venv=True):
     import eva.registry as registry
+    need_modify = False
     with registry.key_as_dict('config/venv') as venv:
         extra = venv.get('extra', [])
         for lib in libs:
@@ -148,9 +157,10 @@ def remove_python_libraries(libs, rebuild_venv=True):
             try:
                 extra.remove(lib)
                 venv.set_modified()
+                need_modify = True
             except ValueError:
                 pass
-    if rebuild_venv:
+    if need_modify and rebuild_venv:
         rebuild_python_venv()
 
 
