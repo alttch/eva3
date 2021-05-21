@@ -708,7 +708,7 @@ fi
 
 [ $USE_SUPERVISOR -ne 1 ] && [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
-./sbin/install-yedb || exit 3
+./install/install-yedb || exit 3
 
 setup_supervisor registry root || exit 2
 

@@ -81,7 +81,7 @@ echo "- Stopping everything"
 ./sbin/eva-control stop
 ./sbin/registry-control stop
 
-./sbin/install-yedb || exit 2
+./install/install-yedb || exit 2
 
 ./sbin/registry-control start || exit 2
 

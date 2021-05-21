@@ -7,7 +7,7 @@ cd `dirname ${D}`/..
 
 source ./lib/eva/registry/info
 
-if [ ! -x ./yedb/yedb-cli ]; then
+if [ ! -x ./yedb/yedb-cli ] || [ "${YEDB_FORCE_REINSTALL}" ]; then
   mkdir -p ./yedb
   if [ "${YEDB_TARBALL_PATH}" ]; then
     echo "Extracting YEDB from ${YEDB_TARBALL_PATH}"
@@ -45,7 +45,12 @@ YEDB_VERSION_HAS_C=$(echo -n $YEDB_VERSION_HAS|sed 's/^/10/'|sed 's/\./10/g')
 
 if [ ${YEDB_VERSION_HAS_C} -lt ${YEDB_VERSION_C} ]; then
   echo "YEDB version: ${YEDB_VERSION_HAS}, required: ${YEDB_VERSION}"
-  exit 3
+  if [ "${YEDB_FORCE_REINSTALL}" ]; then
+    exit 3
+  else
+    YEDB_FORCE_REINSTALL=1 $0
+    exit $?
+  fi
 fi
 
 echo "YEDB installed, version: ${YEDB_VERSION}"
