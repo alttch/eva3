@@ -126,7 +126,6 @@ def append_python_libraries(libs, rebuild_venv=True):
     import eva.registry as registry
     with registry.key_as_dict('config/venv') as venv:
         extra = venv.get('extra', [])
-        print(extra)
         for lib in libs:
             lib_id = lib.split('=', 1)[0]
             print(f'Adding extra Python library dependency: {lib}')
@@ -135,7 +134,6 @@ def append_python_libraries(libs, rebuild_venv=True):
                 if x_id == lib_id:
                     extra.remove(x)
             extra.append(lib)
-        print(extra)
         venv.set_modified()
     if rebuild_venv:
         rebuild_python_venv()
