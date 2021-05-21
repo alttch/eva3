@@ -36,6 +36,10 @@ def key_set(name, value, **kwargs):
     return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}', value=value, **kwargs)
 
 
+def key_as_dict(name, **kwargs):
+    return db.key_as_dict(key=f'{PFX}/{SYSTEM_NAME}/{name}', **kwargs)
+
+
 def init_defaults(skip_existing=True):
     import yaml
     l = len(DEFAULTS_DIR.as_posix()) + 1
