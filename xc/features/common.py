@@ -123,36 +123,35 @@ def restart_controller(controller=''):
 
 
 def append_python_libraries(libs, rebuild_venv=True):
-    with ShellConfigFile('venv', init_if_missing=True) as fh:
+    import eva.registry as registry
+    with registry.key_as_dict('config/venv') as venv:
+        extra = venv.get('extra', [])
+        print(extra)
         for lib in libs:
             lib_id = lib.split('=', 1)[0]
             print(f'Adding extra Python library dependency: {lib}')
-            need_to_set = False
-            try:
-                xtra = fh.get('EXTRA')
-                new_xtra = []
-                need_to_set = True
-                for x in xtra.split():
-                    x_id = x.split('=', 1)[0]
-                    if x_id != lib_id or x == lib:
-                        new_xtra.append(x)
-                    elif x == lib:
-                        need_to_set = False
-                if need_to_set:
-                    fh.set('EXTRA', ' '.join(new_xtra))
-            except KeyError:
-                need_to_set = True
-            if need_to_set:
-                fh.append('EXTRA', lib)
+            for x in extra.copy():
+                x_id = x.split('=', 1)[0]
+                if x_id == lib_id:
+                    extra.remove(x)
+            extra.append(lib)
+        print(extra)
+        venv.set_modified()
     if rebuild_venv:
         rebuild_python_venv()
 
 
 def remove_python_libraries(libs, rebuild_venv=True):
-    with ShellConfigFile('venv', init_if_missing=True) as fh:
+    import eva.registry as registry
+    with registry.key_as_dict('config/venv') as venv:
+        extra = venv.get('extra', [])
         for lib in libs:
             print(f'Removing extra Python library dependency: {lib}')
-            fh.remove('EXTRA', lib)
+            try:
+                extra.remove(lib)
+                venv.set_modified()
+            except ValueError:
+                pass
     if rebuild_venv:
         rebuild_python_venv()
 
