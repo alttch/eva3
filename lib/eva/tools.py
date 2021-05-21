@@ -223,8 +223,8 @@ class ShellConfigFile():
 
     Example:
 
-        with ShellConfigFile('venv') as cf:
-            cf.set('SYSTEM_SITE_PACKAGES', 0)
+        with ShellConfigFile('eva_config') as cf:
+            cf.set('KEYNAME', 0)
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
