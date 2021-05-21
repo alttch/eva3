@@ -8,7 +8,7 @@ PROCESS=$2
 D=$(realpath "$0")
 cd "$(dirname "${D}")/.." || exit 1
 
-source <(./sbin/key-as-source config/watchdog)
+source <(./sbin/key-as-source config/watchdog WATCHDOG)
 
 if [ -z "$WATCHDOG_INTERVAL" ]; then
     ( >&2 echo "WARNING: watchdog not configured" )
