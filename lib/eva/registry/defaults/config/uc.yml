@@ -14,7 +14,7 @@ server:
   # logging to remote syslog
   #syslog: hostname:514
   # custom syslog format
-  #syslog-format: EVA: '{ "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
+  #syslog-format: 'EVA: { "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
   # db updates - instant, manual or on-exit
   db-update: instant
   db-file: runtime/db/uc.db
