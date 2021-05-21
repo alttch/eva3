@@ -68,6 +68,16 @@ server:
   #
   # default mqtt notifier for updates for new items
   #mqtt-update-default: "eva_1:2"
+plc:
+# set "false" to let LM PLC launch macros without thread pool
+# (e.g. useful for handling rare bulk events), default is "true"
+  use-core-pool: true
+# cache state of remote items into local db (seconds ttl), off by default
+cache-remote-state: 0
+#lurp:
+# LURP replication
+#  listen: 127.0.0.1:8911
+#  buffer: 32768
 #msad:
   # user authentication via MS Active Directory
   #host: ad.yourdomain.com
@@ -81,6 +91,8 @@ server:
 upnp:
   # allow UPnP discovery of this controller
   listen: 0.0.0.0
+  # discover controllers via UPnP on all interfaces, or list
+  discover-on: all
 sysapi:
   # enable remote file management functions
   file-management: yes
@@ -106,38 +118,6 @@ webapi:
   #ei-enabled: false
   # use frontend X-Real-IP header to get client real IP address
   #x-real-ip: true
-snmptrap:
-  # snmp trap handler, default community is eva
-  listen: 127.0.0.1:162
-  community: eva
-  # hosts, allowed to send snmp traps
-  hosts-allow:
-    - 127.0.0.1/8
-udpapi:
-  # UDP API
-  listen: 127.0.0.1:8881
-  # hosts, allowed to send UDP commands
-  hosts-allow:
-    - 127.0.0.1/8
-  hosts-allow-encrypted:
-    - 0.0.0.0/0
-#modbus:
-# modbus slave configuration
-# modbus slave memory space size: 10000 registers (starting from 0) for each
-# type (holding, input, coils, discrete inputs)
-#- proto: tcp # udp
-#  unit: "0x01"
-#  listen: 0.0.0.0:502
-# framer for serial: rtu, ascii or binary
-#- proto: rtu
-#  unit: "0x01"
-#  listen: /dev/ttyS0:9600:8:N:1
-#datapullers:
-# dp1:
-#   cmd: /opt/dp/datapuller1 -c /opt/dp/config.yml
-#   timeout: 10 # override default timeout
-#   event-timeout: 60 # restart if no events within specified interval
-# dp2:
-#   cmd: /opt/dp2/datapuller2
-# dp3:
-#   cmd: datapuller3 -c /etc/dp3.ini
+cloud:
+  # default API key ID
+  default-key: default
