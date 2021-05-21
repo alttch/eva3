@@ -21,7 +21,6 @@ else:
     socket_path = EVA_DIR / 'var/registry.sock'
     SYSTEM_NAME = platform.node()
 
-
 db = YEDB(socket_path)
 
 
@@ -30,20 +29,18 @@ def key_get(name):
 
 
 def key_get_recursive(name):
-    return db.key_get_recursive(
-        key=f'{PFX}/{SYSTEM_NAME}/{name}')
+    return db.key_get_recursive(key=f'{PFX}/{SYSTEM_NAME}/{name}')
 
 
 def key_set(name, value, **kwargs):
-    return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}',
-                      value=value,
-                      **kwargs)
+    return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}', value=value, **kwargs)
+
 
 def init_defaults(skip_existing=True):
     import yaml
     l = len(DEFAULTS_DIR.as_posix()) + 1
     for f in DEFAULTS_DIR.glob('**/*.yml'):
-        key = f.as_posix()[l:]
+        key = f.as_posix()[l:].rsplit('.', 1)[0]
         need_rewrite = True
         if skip_existing:
             try:
