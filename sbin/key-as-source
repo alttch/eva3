@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+D=$(realpath "$0")
+AUTO_PREFIX=1 "$(dirname "${D}")/../bin/eva-registry-cli" source "$1" --prefix WATCHDOG --convert-bool one
