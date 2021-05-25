@@ -3,6 +3,8 @@
 D=$(realpath "$0")
 cd "$(dirname "${D}")/.." || exit 1
 
+EVA_DIR=$(pwd)
+
 MAX_START_WAIT=180
 
 source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
