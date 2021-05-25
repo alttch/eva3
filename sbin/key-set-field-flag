@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+VALUE=$2
+
+[ -z "$VALUE" ] && exit 2
+
+if [ "$VALUE" = "1" ]; then
+  VALUE=true
+elif [ "$VALUE" = "0" ]; then
+  VALUE=false
+fi
+
+D=$(realpath "$0")
+AUTO_PREFIX=1 "$(dirname "${D}")/eva-registry-cli" set "$1" "$VALUE" -p boolean || exit 1
