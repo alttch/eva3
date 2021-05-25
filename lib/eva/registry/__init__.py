@@ -5,7 +5,7 @@ import logging
 import sys
 
 from eva.tools import ShellConfigFile
-from yedb import YEDB
+from yedb import YEDB, FieldNotFound
 
 from pathlib import Path
 
@@ -33,7 +33,7 @@ def safe(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, FieldNotFound):
             raise
         except:
             if 'eva.core' in sys.modules:
