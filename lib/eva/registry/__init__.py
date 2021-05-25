@@ -2,6 +2,7 @@ PFX = 'eva3'
 
 import platform
 import logging
+import sys
 
 from eva.tools import ShellConfigFile
 from yedb import YEDB
@@ -35,9 +36,14 @@ def safe(func):
         except (KeyError, ValueError):
             raise
         except:
-            from neotermcolor import cprint
-            cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
-            raise
+            if 'eva.core' in sys.modules:
+                import eva.core
+                logging.crticial('REGISTRY SERVER ERROR')
+                eva.core.critical()
+            else:
+                from neotermcolor import cprint
+                cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
+                raise
 
     return wrapper
 
