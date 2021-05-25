@@ -23,7 +23,26 @@ else:
 
 db = YEDB(socket_path)
 
+from functools import wraps
 
+
+def safe(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except (KeyError, ValueError):
+            raise
+        except:
+            from neotermcolor import cprint
+            cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
+            raise
+
+    return wrapper
+
+
+@safe
 def key_get(name, default=KeyError):
     try:
         return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{name}')
@@ -34,6 +53,7 @@ def key_get(name, default=KeyError):
             return default
 
 
+@safe
 def key_get_field(name, field, default=KeyError):
     try:
         return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{name}', field=field)
@@ -44,14 +64,17 @@ def key_get_field(name, field, default=KeyError):
             return default
 
 
+@safe
 def key_get_recursive(name):
     return db.key_get_recursive(key=f'{PFX}/{SYSTEM_NAME}/{name}')
 
 
+@safe
 def key_set(name, value, **kwargs):
     return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}', value=value, **kwargs)
 
 
+@safe
 def key_set_field(name, field, value, **kwargs):
     return db.key_set_field(key=f'{PFX}/{SYSTEM_NAME}/{name}',
                             field=field,
@@ -59,6 +82,7 @@ def key_set_field(name, field, value, **kwargs):
                             **kwargs)
 
 
+@safe
 def key_as_dict(name, **kwargs):
     return db.key_as_dict(key=f'{PFX}/{SYSTEM_NAME}/{name}', **kwargs)
 
