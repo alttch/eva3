@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import rapidjson
+import eva.registry
 
 from pathlib import Path
 
@@ -201,8 +202,4 @@ def remove_phis(phis):
 
 
 def is_enabled(p):
-    with ShellConfigFile('eva_servers') as fh:
-        try:
-            return val_to_boolean(fh.get(f'{p.upper()}_ENABLED'))
-        except KeyError:
-            return False
+    return eva.registry.key_get_field(f'config/{p}', 'service/enabled')
