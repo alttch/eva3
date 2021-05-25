@@ -10,7 +10,6 @@ import platform
 import os
 import stat
 import logging
-import configparser
 import traceback
 import time
 import rapidjson
@@ -51,6 +50,8 @@ from eva.exceptions import TimeoutException
 from neotasker import g, FunctionCollection, task_supervisor, background_worker
 
 import pyaltt2.logs
+
+import eva.registry
 
 version = __version__
 
@@ -675,7 +676,7 @@ def userdb():
         return g.userdb
 
 
-def load(fname=None, initial=False, init_log=True, check_pid=True):
+def load(initial=False, init_log=True, check_pid=True):
 
     def secure_file(f):
         fn = dir_eva + '/' + f
@@ -685,296 +686,285 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
 
     from eva.logs import log_levels_by_name, init as init_logs
     fname_full = format_cfg_fname(fname)
-    cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
-        cfg.read(fname_full)
-        if initial:
-            try:
-                config.pid_file = cfg.get('server', 'pid_file')
-                if config.pid_file and config.pid_file[0] != '/':
-                    config.pid_file = dir_eva + '/' + config.pid_file
-            except:
-                pass
-            try:
-                if not check_pid:
-                    raise Exception('no check required')
-                with open(config.pid_file) as fd:
-                    pid = int(fd.readline().strip())
-                p = psutil.Process(pid)
-                print('Can not start %s with config %s. ' % \
-                        (product.name, fname_full), end = '')
-                print('Another process is already running')
-                return None
-            except:
-                pass
-            if not os.environ.get('EVA_CORE_LOG_STDOUT'):
-                try:
-                    config.log_file = cfg.get('server', 'log_file')
-                except:
-                    config.log_file = None
-            if config.log_file and config.log_file[0] != '/':
-                config.log_file = dir_eva + '/' + config.log_file
-            try:
-                config.syslog = cfg.get('server', 'syslog')
-                if config.syslog == 'yes':
-                    config.syslog = '/dev/log'
-            except:
-                pass
-            try:
-                config.log_format = cfg.get('server', 'log_format').strip()
-            except:
-                pass
-            try:
-                config.syslog_format = cfg.get('server',
-                                               'syslog_format').strip()
-            except:
-                pass
-            try:
-                log_level = cfg.get('server', 'logging_level')
-                if log_level in log_levels_by_name:
-                    config.default_log_level_name = log_level
-                    config.default_log_level_id = log_levels_by_name.get(
-                        log_level)
-                    config.default_log_level = getattr(logging,
-                                                       log_level.upper())
-            except:
-                pass
-            if init_log:
-                init_logs()
-            try:
-                config.development = (cfg.get('server', 'development') == 'yes')
-            except:
-                config.development = False
-            if config.development:
-                config.show_traceback = True
-                pyaltt2.logs.config.tracebacks = True,
-                debug_on()
-                logging.critical('DEVELOPMENT MODE STARTED')
-                config.debug = True
-            else:
-                try:
-                    config.show_traceback = (cfg.get('server',
-                                                     'show_traceback') == 'yes')
-                except:
-                    config.show_traceback = False
-            if not config.development and not config.debug:
-                try:
-                    if os.environ.get('EVA_CORE_DEBUG') == '1':
-                        config.debug = True
-                        config.show_traceback = True
-                    else:
-                        config.debug = (cfg.get('server', 'debug') == 'yes')
-                    if config.debug:
-                        debug_on()
-                except:
-                    pass
-                if not config.debug:
-                    logging.basicConfig(level=config.default_log_level)
-                    if log_engine.logger:
-                        log_engine.logger.setLevel(config.default_log_level)
-            if config.show_traceback:
-                pyaltt2.logs.config.tracebacks = True
-            try:
-                config.system_name = cfg.get('server', 'name')
-                update_controller_name()
-            except:
-                pass
-            logging.info('Loading server config')
-            logging.debug('server.pid_file = %s' % config.pid_file)
-            logging.debug('server.logging_level = %s' %
-                          config.default_log_level_name)
-            try:
-                config.notify_on_start = (cfg.get('server',
-                                                  'notify_on_start') == 'yes')
-            except:
-                pass
-            logging.debug('server.notify_on_start = %s' % ('yes' \
-                                        if config.notify_on_start else 'no'))
-            try:
-                config.stop_on_critical = (cfg.get('server',
-                                                   'stop_on_critical'))
-            except:
-                pass
-            if config.stop_on_critical == 'yes':
-                config.stop_on_critical = 'always'
-            elif config.stop_on_critical not in ['no', 'always', 'core']:
-                stop_on_critical = 'no'
-            logging.debug('server.stop_on_critical = %s' %
-                          config.stop_on_critical)
-            try:
-                config.dump_on_critical = (cfg.get('server',
-                                                   'dump_on_critical') == 'yes')
-            except:
-                pass
-            logging.debug('server.dump_on_critical = %s' % ('yes' \
-                                        if config.dump_on_critical else 'no'))
-            prepare_save()
-            try:
-                db_file = cfg.get('server', 'db_file')
-                secure_file(db_file)
-            except:
-                db_file = None
-            try:
-                db_uri = cfg.get('server', 'db')
-            except:
-                if db_file:
-                    db_uri = db_file
-            config.db_uri = format_db_uri(db_uri)
-            logging.debug('server.db = %s' % config.db_uri)
-            try:
-                userdb_file = cfg.get('server', 'userdb_file')
-                secure_file(userdb_file)
-            except:
-                userdb_file = None
-            finish_save()
-            try:
-                userdb_uri = cfg.get('server', 'userdb')
-            except:
-                if userdb_file:
-                    userdb_uri = userdb_file
-                else:
-                    userdb_uri = None
-            if userdb_uri:
-                config.userdb_uri = format_db_uri(userdb_uri)
-            else:
-                config.userdb_uri = config.db_uri
-            logging.debug('server.userdb = %s' % config.userdb_uri)
-            try:
-                uh = cfg.get('server', 'user_hook')
-                if not uh.startswith('/'):
-                    uh = dir_eva + '/' + uh
-                config.user_hook = uh.split()
-            except:
-                pass
-            _uh = ' '.join(config.user_hook) if config.user_hook else None
-            logging.debug('server.user_hook = %s' % _uh)
-            try:
-                config.enterprise_layout = (cfg.get('server', 'layout') !=
-                                            'simple')
-            except:
-                pass
-            logging.debug('server.layout = %s' % ('enterprise' \
-                                    if config.enterprise_layout else 'simple'))
-        try:
-            config.polldelay = float(cfg.get('server', 'polldelay'))
-        except:
-            pass
-        try:
-            config.timeout = float(cfg.get('server', 'timeout'))
-        except:
-            pass
-        if not config.polldelay:
-            config.polldelay = 0.01
-        logging.debug('server.timeout = %s' % config.timeout)
-        logging.debug('server.polldelay = %s  ( %s msec )' % \
-                            (config.polldelay, int(config.polldelay * 1000)))
-        try:
-            config.pool_min_size = int(cfg.get('server', 'pool_min_size'))
-        except:
-            pass
-        logging.debug('server.pool_min_size = %s' % config.pool_min_size)
-        try:
-            config.pool_max_size = int(cfg.get('server', 'pool_max_size'))
-        except:
-            pass
-        logging.debug('server.pool_max_size = %s' %
-                      (config.pool_max_size
-                       if config.pool_max_size is not None else 'auto'))
-        try:
-            config.reactor_thread_pool = int(
-                cfg.get('server', 'reactor_thread_pool'))
-        except:
-            pass
-        logging.debug('server.reactor_thread_pool = %s' %
-                      config.reactor_thread_pool)
-        try:
-            config.db_update = db_update_codes.index(
-                cfg.get('server', 'db_update'))
-        except:
-            pass
-        logging.debug('server.db_update = %s' %
-                      db_update_codes[config.db_update])
-        try:
-            config.keep_action_history = int(
-                cfg.get('server', 'keep_action_history'))
-        except:
-            pass
-        logging.debug('server.keep_action_history = %s sec' % \
-                config.keep_action_history)
-        try:
-            config.action_cleaner_interval = int(
-                cfg.get('server', 'action_cleaner_interval'))
-            if config.action_cleaner_interval < 0:
-                raise Exception('invalid interval')
-        except:
-            config.action_cleaner_interval = default_action_cleaner_interval
-        logging.debug('server.action_cleaner_interval = %s sec' % \
-                config.action_cleaner_interval)
-        try:
-            config.keep_logmem = int(cfg.get('server', 'keep_logmem'))
-        except:
-            pass
-        logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
-        try:
-            config.keep_api_log = int(cfg.get('server', 'keep_api_log'))
-        except:
-            pass
-        logging.debug('server.keep_api_log = %s sec' % config.keep_api_log)
-        try:
-            config.exec_before_save = cfg.get('server', 'exec_before_save')
-        except:
-            pass
-        logging.debug('server.exec_before_save = %s' % config.exec_before_save)
-        try:
-            config.exec_after_save = cfg.get('server', 'exec_after_save')
-        except:
-            pass
-        logging.debug('server.exec_after_save = %s' % config.exec_after_save)
-        try:
-            config.mqtt_update_default = cfg.get('server',
-                                                 'mqtt_update_default')
-        except:
-            pass
-        logging.debug('server.mqtt_update_default = %s' %
-                      config.mqtt_update_default)
-        try:
-            config.plugins = [
-                x.strip() for x in cfg.get('server', 'plugins').split(',')
-            ]
-        except:
-            pass
-        logging.debug('server.plugins = %s' % ', '.join(config.plugins))
-        try:
-            config.default_cloud_key = cfg.get('cloud', 'default_key')
-        except:
-            pass
-        logging.debug('cloud.default_key = %s' % config.default_cloud_key)
-        # init plugins
-        for p in config.plugins:
-            fname = f'{dir_eva}/plugins/{p}.py'
-            if os.path.exists(fname):
-                try:
-                    plugin_modules[p] = importlib.import_module(
-                        f'eva.plugins.{p}')
-                except:
-                    logging.error(f'unable to load plugin {p} ({fname})')
-                    log_traceback()
-                    continue
-            else:
-                try:
-                    modname = f'evacontrib.{p}'
-                    plugin_modules[p] = importlib.import_module(modname)
-                except:
-                    logging.error(f'unable to load plugin {p} ({modname})')
-                    log_traceback()
-                    continue
-            logging.info(f'+ plugin {p}')
-        load_plugin_config(cfg)
-        return cfg
+        cfg = eva.registry.get(f'config/{product.code}')
     except:
-        print('Can not read primary config %s' % fname_full)
-        log_traceback(display=True)
-    return False
+        critical()
+        raise
+    if initial:
+        try:
+            config.pid_file = cfg.get('server', 'pid_file')
+            if config.pid_file and config.pid_file[0] != '/':
+                config.pid_file = dir_eva + '/' + config.pid_file
+        except:
+            pass
+        try:
+            if not check_pid:
+                raise Exception('no check required')
+            with open(config.pid_file) as fd:
+                pid = int(fd.readline().strip())
+            p = psutil.Process(pid)
+            print('Can not start %s with config %s. ' % \
+                    (product.name, fname_full), end = '')
+            print('Another process is already running')
+            return None
+        except:
+            pass
+        if not os.environ.get('EVA_CORE_LOG_STDOUT'):
+            try:
+                config.log_file = cfg.get('server', 'log_file')
+            except:
+                config.log_file = None
+        if config.log_file and config.log_file[0] != '/':
+            config.log_file = dir_eva + '/' + config.log_file
+        try:
+            config.syslog = cfg.get('server', 'syslog')
+            if config.syslog == 'yes':
+                config.syslog = '/dev/log'
+        except:
+            pass
+        try:
+            config.log_format = cfg.get('server', 'log_format').strip()
+        except:
+            pass
+        try:
+            config.syslog_format = cfg.get('server', 'syslog_format').strip()
+        except:
+            pass
+        try:
+            log_level = cfg.get('server', 'logging_level')
+            if log_level in log_levels_by_name:
+                config.default_log_level_name = log_level
+                config.default_log_level_id = log_levels_by_name.get(log_level)
+                config.default_log_level = getattr(logging, log_level.upper())
+        except:
+            pass
+        if init_log:
+            init_logs()
+        try:
+            config.development = (cfg.get('server', 'development') == 'yes')
+        except:
+            config.development = False
+        if config.development:
+            config.show_traceback = True
+            pyaltt2.logs.config.tracebacks = True,
+            debug_on()
+            logging.critical('DEVELOPMENT MODE STARTED')
+            config.debug = True
+        else:
+            try:
+                config.show_traceback = (cfg.get('server',
+                                                 'show_traceback') == 'yes')
+            except:
+                config.show_traceback = False
+        if not config.development and not config.debug:
+            try:
+                if os.environ.get('EVA_CORE_DEBUG') == '1':
+                    config.debug = True
+                    config.show_traceback = True
+                else:
+                    config.debug = (cfg.get('server', 'debug') == 'yes')
+                if config.debug:
+                    debug_on()
+            except:
+                pass
+            if not config.debug:
+                logging.basicConfig(level=config.default_log_level)
+                if log_engine.logger:
+                    log_engine.logger.setLevel(config.default_log_level)
+        if config.show_traceback:
+            pyaltt2.logs.config.tracebacks = True
+        try:
+            config.system_name = cfg.get('server', 'name')
+            update_controller_name()
+        except:
+            pass
+        logging.info('Loading server config')
+        logging.debug('server.pid_file = %s' % config.pid_file)
+        logging.debug('server.logging_level = %s' %
+                      config.default_log_level_name)
+        try:
+            config.notify_on_start = (cfg.get('server',
+                                              'notify_on_start') == 'yes')
+        except:
+            pass
+        logging.debug('server.notify_on_start = %s' % ('yes' \
+                                    if config.notify_on_start else 'no'))
+        try:
+            config.stop_on_critical = (cfg.get('server', 'stop_on_critical'))
+        except:
+            pass
+        if config.stop_on_critical == 'yes':
+            config.stop_on_critical = 'always'
+        elif config.stop_on_critical not in ['no', 'always', 'core']:
+            stop_on_critical = 'no'
+        logging.debug('server.stop_on_critical = %s' % config.stop_on_critical)
+        try:
+            config.dump_on_critical = (cfg.get('server',
+                                               'dump_on_critical') == 'yes')
+        except:
+            pass
+        logging.debug('server.dump_on_critical = %s' % ('yes' \
+                                    if config.dump_on_critical else 'no'))
+        prepare_save()
+        try:
+            db_file = cfg.get('server', 'db_file')
+            secure_file(db_file)
+        except:
+            db_file = None
+        try:
+            db_uri = cfg.get('server', 'db')
+        except:
+            if db_file:
+                db_uri = db_file
+        config.db_uri = format_db_uri(db_uri)
+        logging.debug('server.db = %s' % config.db_uri)
+        try:
+            userdb_file = cfg.get('server', 'userdb_file')
+            secure_file(userdb_file)
+        except:
+            userdb_file = None
+        finish_save()
+        try:
+            userdb_uri = cfg.get('server', 'userdb')
+        except:
+            if userdb_file:
+                userdb_uri = userdb_file
+            else:
+                userdb_uri = None
+        if userdb_uri:
+            config.userdb_uri = format_db_uri(userdb_uri)
+        else:
+            config.userdb_uri = config.db_uri
+        logging.debug('server.userdb = %s' % config.userdb_uri)
+        try:
+            uh = cfg.get('server', 'user_hook')
+            if not uh.startswith('/'):
+                uh = dir_eva + '/' + uh
+            config.user_hook = uh.split()
+        except:
+            pass
+        _uh = ' '.join(config.user_hook) if config.user_hook else None
+        logging.debug('server.user_hook = %s' % _uh)
+        try:
+            config.enterprise_layout = (cfg.get('server', 'layout') != 'simple')
+        except:
+            pass
+        logging.debug('server.layout = %s' % ('enterprise' \
+                                if config.enterprise_layout else 'simple'))
+        # end if initial
+    try:
+        config.polldelay = float(cfg.get('server', 'polldelay'))
+    except:
+        pass
+    try:
+        config.timeout = float(cfg.get('server', 'timeout'))
+    except:
+        pass
+    if not config.polldelay:
+        config.polldelay = 0.01
+    logging.debug('server.timeout = %s' % config.timeout)
+    logging.debug('server.polldelay = %s  ( %s msec )' % \
+                        (config.polldelay, int(config.polldelay * 1000)))
+    try:
+        config.pool_min_size = int(cfg.get('server', 'pool_min_size'))
+    except:
+        pass
+    logging.debug('server.pool_min_size = %s' % config.pool_min_size)
+    try:
+        config.pool_max_size = int(cfg.get('server', 'pool_max_size'))
+    except:
+        pass
+    logging.debug(
+        'server.pool_max_size = %s' %
+        (config.pool_max_size if config.pool_max_size is not None else 'auto'))
+    try:
+        config.reactor_thread_pool = int(
+            cfg.get('server', 'reactor_thread_pool'))
+    except:
+        pass
+    logging.debug('server.reactor_thread_pool = %s' %
+                  config.reactor_thread_pool)
+    try:
+        config.db_update = db_update_codes.index(cfg.get('server', 'db_update'))
+    except:
+        pass
+    logging.debug('server.db_update = %s' % db_update_codes[config.db_update])
+    try:
+        config.keep_action_history = int(
+            cfg.get('server', 'keep_action_history'))
+    except:
+        pass
+    logging.debug('server.keep_action_history = %s sec' % \
+            config.keep_action_history)
+    try:
+        config.action_cleaner_interval = int(
+            cfg.get('server', 'action_cleaner_interval'))
+        if config.action_cleaner_interval < 0:
+            raise Exception('invalid interval')
+    except:
+        config.action_cleaner_interval = default_action_cleaner_interval
+    logging.debug('server.action_cleaner_interval = %s sec' % \
+            config.action_cleaner_interval)
+    try:
+        config.keep_logmem = int(cfg.get('server', 'keep_logmem'))
+    except:
+        pass
+    logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
+    try:
+        config.keep_api_log = int(cfg.get('server', 'keep_api_log'))
+    except:
+        pass
+    logging.debug('server.keep_api_log = %s sec' % config.keep_api_log)
+    try:
+        config.exec_before_save = cfg.get('server', 'exec_before_save')
+    except:
+        pass
+    logging.debug('server.exec_before_save = %s' % config.exec_before_save)
+    try:
+        config.exec_after_save = cfg.get('server', 'exec_after_save')
+    except:
+        pass
+    logging.debug('server.exec_after_save = %s' % config.exec_after_save)
+    try:
+        config.mqtt_update_default = cfg.get('server', 'mqtt_update_default')
+    except:
+        pass
+    logging.debug('server.mqtt_update_default = %s' %
+                  config.mqtt_update_default)
+    try:
+        config.plugins = [
+            x.strip() for x in cfg.get('server', 'plugins').split(',')
+        ]
+    except:
+        pass
+    logging.debug('server.plugins = %s' % ', '.join(config.plugins))
+    try:
+        config.default_cloud_key = cfg.get('cloud', 'default_key')
+    except:
+        pass
+    logging.debug('cloud.default_key = %s' % config.default_cloud_key)
+    # init plugins
+    for p in config.plugins:
+        fname = f'{dir_eva}/plugins/{p}.py'
+        if os.path.exists(fname):
+            try:
+                plugin_modules[p] = importlib.import_module(f'eva.plugins.{p}')
+            except:
+                logging.error(f'unable to load plugin {p} ({fname})')
+                log_traceback()
+                continue
+        else:
+            try:
+                modname = f'evacontrib.{p}'
+                plugin_modules[p] = importlib.import_module(modname)
+            except:
+                logging.error(f'unable to load plugin {p} ({modname})')
+                log_traceback()
+                continue
+        logging.info(f'+ plugin {p}')
+    load_plugin_config(cfg)
+    return cfg
 
 
 def load_plugin_config(cfg):
