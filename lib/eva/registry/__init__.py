@@ -49,9 +49,9 @@ def safe(func):
 
 
 @safe
-def key_get(name, default=KeyError):
+def key_get(key, default=KeyError):
     try:
-        return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{name}')
+        return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{key}')
     except KeyError:
         if default is KeyError:
             raise
@@ -60,9 +60,9 @@ def key_get(name, default=KeyError):
 
 
 @safe
-def key_get_field(name, field, default=KeyError):
+def key_get_field(key, field, default=KeyError):
     try:
-        return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{name}', field=field)
+        return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{key}', field=field)
     except KeyError:
         if default is KeyError:
             raise
@@ -71,26 +71,33 @@ def key_get_field(name, field, default=KeyError):
 
 
 @safe
-def key_get_recursive(name):
-    return db.key_get_recursive(key=f'{PFX}/{SYSTEM_NAME}/{name}')
+def key_get_recursive(key):
+    return db.key_get_recursive(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 
 @safe
-def key_set(name, value, **kwargs):
-    return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}', value=value, **kwargs)
+def get_subkeys(key):
+    _key = f'{PFX}/{SYSTEM_NAME}/{key}'
+    l = len(_key) + 1
+    return {k[l:]: v for k, v in db.key_get_recursive(key=_key)}
 
 
 @safe
-def key_set_field(name, field, value, **kwargs):
-    return db.key_set_field(key=f'{PFX}/{SYSTEM_NAME}/{name}',
+def key_set(key, value, **kwargs):
+    return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{key}', value=value, **kwargs)
+
+
+@safe
+def key_set_field(key, field, value, **kwargs):
+    return db.key_set_field(key=f'{PFX}/{SYSTEM_NAME}/{key}',
                             field=field,
                             value=value,
                             **kwargs)
 
 
 @safe
-def key_as_dict(name, **kwargs):
-    return db.key_as_dict(key=f'{PFX}/{SYSTEM_NAME}/{name}', **kwargs)
+def key_as_dict(key, **kwargs):
+    return db.key_as_dict(key=f'{PFX}/{SYSTEM_NAME}/{key}', **kwargs)
 
 
 def init_defaults(skip_existing=True):
