@@ -759,7 +759,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     config.show_traceback = False
             if not config.development and not config.debug:
                 try:
-                    if os.environ.get('EVA_CORE_DEBUG'):
+                    if os.environ.get('EVA_CORE_DEBUG') == '1':
                         config.debug = True
                         config.show_traceback = True
                     else:

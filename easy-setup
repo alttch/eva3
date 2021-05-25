@@ -723,7 +723,7 @@ if [ "$UC_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
 elif [ $APPEND_MQTT -eq 1 ]; then
   if ! ./bin/uc-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for UC"
-    ./sbin/uc-control stop || exit 1
+    ./sbin/eva-control stop uc || exit 1
     create_notifier uc || exit 1
     start_controller uc || exit 1
   fi
@@ -789,7 +789,7 @@ if [ "$LM_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
 elif [ $APPEND_MQTT -eq 1 ]; then
   if ! ./bin/lm-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for LM PLC"
-    ./sbin/lm-control stop || exit 1
+    ./sbin/eva-control stop lm || exit 1
     create_notifier lm || exit 1
     start_controller lm || exit 1
   fi
@@ -872,7 +872,7 @@ if [ "$SFA_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
 elif [ $APPEND_MQTT -eq 1 ]; then
   if ! ./bin/sfa-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for SFA"
-    ./sbin/sfa-control stop || exit 1
+    ./sbin/eva-control stop sfa || exit 1
     create_notifier sfa || exit 1
     start_controller sfa || exit 1
   fi

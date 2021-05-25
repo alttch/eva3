@@ -24,8 +24,24 @@ else:
 db = YEDB(socket_path)
 
 
-def key_get(name):
-    return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{name}')
+def key_get(name, default=KeyError):
+    try:
+        return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{name}')
+    except KeyError:
+        if default is KeyError:
+            raise
+        else:
+            return default
+
+
+def key_get_field(name, field, default=KeyError):
+    try:
+        return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{name}', field=field)
+    except KeyError:
+        if default is KeyError:
+            raise
+        else:
+            return default
 
 
 def key_get_recursive(name):
@@ -34,6 +50,13 @@ def key_get_recursive(name):
 
 def key_set(name, value, **kwargs):
     return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{name}', value=value, **kwargs)
+
+
+def key_set_field(name, field, value, **kwargs):
+    return db.key_set_field(key=f'{PFX}/{SYSTEM_NAME}/{name}',
+                            field=field,
+                            value=value,
+                            **kwargs)
 
 
 def key_as_dict(name, **kwargs):

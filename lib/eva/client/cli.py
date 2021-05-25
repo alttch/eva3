@@ -1787,9 +1787,8 @@ class ControllerCLI(object):
             return self.local_func_result_failed
         snl = '' if params.get('show_notifier_logs') else 'EVA_CORE_SNLSO=1 '
         raw = '' if self.can_colorize() else 'EVA_CORE_RAW_STDOUT=1 '
-        env = '' if not snl and not raw else 'env '
-        os.system('{}{}{}{}/{}-control launch{}'.format(
-            env, snl, raw, self.dir_sbin, self._management_controller_id,
+        os.system('EVA_CONTROLLER={} {}{}{}/_control launch{}'.format(
+            self._management_controller_id, snl, raw, self.dir_sbin,
             ' debug' if params.get('_debug') else ''))
         return self.local_func_result_ok
 

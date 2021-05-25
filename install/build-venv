@@ -15,15 +15,18 @@ EVA_DIR=$(realpath "${EVA_DIR}")
 
 source <(./sbin/key-as-source config/venv 2>/dev/null)
 
-[ -z "$PYTHON" ] && PYTHON=python3
+if [ -z "$PYTHON" ]; then
+  echo "Unable to read registry key"
+  exit 1
+fi
 
 if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then
   [ -d "${EVA_DIR}/python3" ] && rm -rf "${EVA_DIR}/python3"
-  [ "$USE_SYSTEM_PIP" ] && O_PIP="" || O_PIP="--without-pip"
-  [ "${SYSTEM_SITE_PACKAGES}" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
+  [ "$USE_SYSTEM_PIP" = "1" ] && O_PIP="" || O_PIP="--without-pip"
+  [ "${SYSTEM_SITE_PACKAGES}" = "1" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
   "${PYTHON}" -m venv ${O_PIP} ${O_SSITE} "${EVA_DIR}/python3" || exit 2
   source "${EVA_DIR}/python3/bin/activate"
-  if [ ! "$USE_SYSTEM_PIP" ]; then
+  if [ "$USE_SYSTEM_PIP" != "1" ]; then
     ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/python3/bin/python3" ) || exit 3
   else
     pip3 install ${PIP_EXTRA_OPTIONS} wheel setuptools || exit 3

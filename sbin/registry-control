@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-D=`realpath $0`
-cd `dirname ${D}`/..
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
 
 WAIT_TO_KILL=10 # sec * 2 before kill -KILL
 MAX_START_WAIT=10 # sec * 2 before kill -KILL
 
-export EVA_DIR=`pwd`
+EVA_DIR=$(pwd)
 
 [ -f ./etc/eva_config ] && source ./etc/eva_config
 
-[ -z ${YEDB_REGISTRY_DIR} ] && YEDB_REGISTRY_DIR=${EVA_DIR}/runtime/registry
-[ -z ${YEDB_SOCKET} ] && YEDB_SOCKET=${EVA_DIR}/var/registry.sock
-[ -z ${YEDB_AUTO_BAK} ] && YEDB_AUTO_BAK=10
-[ -z ${YEDB_WORKERS} ] && YEDB_WORKERS=2
-[ -z ${YEDB_CACHE_SIZE} ] && YEDB_CACHE_SIZE=1000
+[ -z "${YEDB_REGISTRY_DIR}" ] && YEDB_REGISTRY_DIR=${EVA_DIR}/runtime/registry
+[ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=${EVA_DIR}/var/registry.sock
+[ -z "${YEDB_AUTO_BAK}" ] && YEDB_AUTO_BAK=10
+[ -z "${YEDB_WORKERS}" ] && YEDB_WORKERS=2
+[ -z "${YEDB_CACHE_SIZE}" ] && YEDB_CACHE_SIZE=1000
 
 REGISTRY=${EVA_DIR}/yedb/yedb-server
 PIDFILE=${EVA_DIR}/var/registry.pid
@@ -24,49 +24,46 @@ SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 TEST=${EVA_DIR}/yedb/yedb-cli test
 
-source ./etc/eva_servers
-
-if [ ${REGISTRY_SUPERVISOR_PROGRAM} ]; then
+if [ "${YEDB_SUPERVISORD_PROGRAM}" ]; then
   case $1 in
     start)
-      supervisorctl start ${REGISTRY_SUPERVISOR_PROGRAM}
+      supervisorctl start "${YEDB_SUPERVISORD_PROGRAM}"
       exit $?
       ;;
     stop)
-      supervisorctl stop watchdog-${REGISTRY_SUPERVISOR_PROGRAM}
+      supervisorctl stop "${YEDB_SUPERVISORD_PROGRAM}"
       exit $?
       ;;
     status)
-      supervisorctl status ${REGISTRY_SUPERVISOR_PROGRAM}
+      supervisorctl status "${YEDB_SUPERVISORD_PROGRAM}"
       exit $?
       ;;
     restart)
-      supervisorctl restart ${REGISTRY_SUPERVISOR_PROGRAM}
+      supervisorctl restart "${YEDB_SUPERVISORD_PROGRAM}"
       exit $?
       ;;
   esac
 fi
 
 function exec_cmd {
-  if [ "x${REGISTRY_USER}" == "x" ]; then
+  if [ -z "${YEDB_USER}" ]; then
     $*
     return $?
   else
-    su ${REGISTRY_USER} -c "$*"
+    su "${YEDB_USER}" -c $*
     return $?
   fi
 }
 
 case $1 in
   start)
-    echo -n 'Starting EVA registry server .'
-    ps xaww|grep -v grep|grep ${REGISTRY} > /dev/null 2>&1
-    if [ $? == 0 ]; then
+    echo -n "Starting EVA registry server ."
+    if pgrep -f "${REGISTRY}" >& /dev/null; then
       echo
       echo "already started"
       exit 2
     fi
-    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${REGISTRY} ${REGISTRY_ARGS} > /dev/null 2>&1 &
+    exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
     result=1
     C=0
     while [ "$result" != "0" ]; do
@@ -79,61 +76,59 @@ case $1 in
       if [ "$result" == "0" ]; then
         break
       fi
-      C=`expr $C + 1`
+      (( C++ ))
       echo -n "."
       sleep 0.5
     done
     echo " started"
-    [ "$INVOCATION_ID" ] && $EVA_DIR/sbin/sblock.sh &
+    [ "$INVOCATION_ID" ] && "$EVA_DIR/sbin/sblock.sh" &
     exit 0
     ;;
   launch)
-    [ "x$2" = "xdebug" ] && DEBUG="EVA_CORE_DEBUG=1" || DEBUG=
-    ${REGISTRY} ${REGISTRY_ARGS} -v
+    "${REGISTRY}" "${REGISTRY_ARGS}" -v
     ;;
   stop)
-    ps xaww|grep -v grep|grep ${REGISTRY} > /dev/null 2>&1
-    [ $? == 0 ] || exit 1
-    echo -n 'Stopping EVA registry server '
+    if ! pgrep -f "${REGISTRY}" >& /dev/null; then
+      exit 0
+    fi
+    echo -n "Stopping EVA registry server "
     PID_SAFE_RUN=
     PID_REGISTRY=
-    [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
-    [ -f ${PIDFILE} ] && PID_REGISTRY=`cat ${PIDFILE}`
-    if [ "x${PID_SAFE_RUN}" != "x" ]; then
-      kill ${PID_SAFE_RUN} > /dev/null 2>&1
-      rm -f ${SAFE_RUN_PIDFILE}
+    [ -f "${SAFE_RUN_PIDFILE}" ] && PID_SAFE_RUN=$(cat "${SAFE_RUN_PIDFILE}")
+    [ -f "${PIDFILE}" ] && PID_REGISTRY=$(cat "${PIDFILE}")
+    if [ "${PID_SAFE_RUN}" ]; then
+      kill "${PID_SAFE_RUN}" >& /dev/null
+      rm -f "${SAFE_RUN_PIDFILE}"
     fi
     if [ "x${PID_REGISTRY}" != "x" ]; then
-      kill ${PID_REGISTRY} > /dev/null 2>&1
+      kill "${PID_REGISTRY}" >& /dev/null
       I=0
-      while kill -0 ${PID_REGISTRY} > /dev/null 2>&1; do
-        echo -n '.'
+      while kill -0 "${PID_REGISTRY}" >& /dev/null; do
+        echo -n "."
         sleep 0.5
-        I=`expr ${I} + 1`
+        (( I++ ))
         if [ ${I} -ge ${WAIT_TO_KILL} ]; then
-          echo -n  'killing '
+          echo -n  "killing "
           kill -KILL "${PID_REGISTRY}"
           break
         fi
       done
       rm -f "${PIDFILE}"
     fi
-    ps xaww|grep -v grep|grep ${REGISTRY}|awk '{ print $1 }'|xargs kill > /dev/null 2>&1
-    if [ $? == 0 ]; then
+    if pkill -f "${REGISTRY}" >& /dev/null; then
       sleep 10
-      ps xaww|grep -v grep|grep ${REGISTRY}|awk '{ print $1 }'|xargs kill -9 > /dev/null 2>&1
+      pkill -KILL -f "${REGISTRY}" >& /dev/null
     fi
-    echo ' stopped'
-    [ "$INVOCATION_ID" ] && (ps auxw|grep -v grep |grep $EVA_DIR/sbin/sblock.sh|awk '{ print $2 }'|xargs kill -9)
+    echo " stopped"
+    [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh"
     exit 0
     ;;
   restart)
-    ./sbin/registry-control stop $2
-    ./sbin/registry-control start $2
+    ./sbin/registry-control stop "$2"
+    ./sbin/registry-control start "$2"
     ;;
   status)
-    ps xaww|grep -v grep|grep ${REGISTRY} > /dev/null 2>&1
-    if [ $? == 0 ]; then
+    if pgrep -f "${REGISTRY}" >& /dev/null; then
       echo "running"
     else
       echo "stopped"

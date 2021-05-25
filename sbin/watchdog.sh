@@ -11,7 +11,7 @@ cd "$(dirname "${D}")/.." || exit 1
 source <(./sbin/key-as-source config/watchdog WATCHDOG)
 
 if [ -z "$WATCHDOG_INTERVAL" ]; then
-    ( >&2 echo "WARNING: watchdog not configured" )
+    ( >&2 echo "WARNING: watchdog not configured or unable to read registry key" )
     exit 1
 fi
 

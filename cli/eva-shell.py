@@ -49,6 +49,8 @@ from eva.client.cli import ComplGeneric
 from eva.client.cli import ComplUser
 from eva.client.cli import ComplKey
 
+import eva.registry
+
 
 class ComplSubshellCmd(ComplGeneric):
 
@@ -155,11 +157,9 @@ class ManagementCLI(GenericCLI):
 
     def process_configuration(self):
         self.products_configured = []
-        for f in ['uc', 'lm', 'sfa']:
-            if os.path.isfile('{}/{}.ini'.format(
-                    dir_etc, f)) and os.path.isfile('{}/{}_apikeys.ini'.format(
-                        dir_etc, f)):
-                self.products_configured.append(f)
+        for c in ['uc', 'lm', 'sfa']:
+            if eva.registry.key_get_field(f'config/{c}', 'service/setup'):
+                self.products_configured.append(c)
 
     def add_manager_backup_functions(self):
         ap_backup = self.sp.add_parser('backup', help='Backup management')
@@ -647,65 +647,44 @@ sys.argv = {argv}
         return 0, result
 
     def enable_controller(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_ENABLED=yes\n".format(params['p'].upper()))
-            for line in lines:
-                if line.startswith("{}_SUPERVISORD".format(
-                        params['p'].upper())):
-                    self.print_err('Server is controlled by supervisord')
-                    return self.local_func_result_failed
-                if "{}_ENABLED".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
-            return self.local_func_result_ok
+        c = params['p']
+        if c in self.products_configured:
+            if eva.registry.key_get_field(f'config/{c}',
+                                          'service/supervisord-program'):
+                self.print_err('Server is controlled by supervisord')
+                return self.local_func_result_failed
+            else:
+                eva.registry.key_set_field(f'config/{c}', 'service/enabled',
+                                           True)
+                return self.local_func_result_ok
         return False
 
     def disable_controller(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_ENABLED=no\n".format(params['p'].upper()))
-            for line in lines:
-                if "{}_SUPERVISORD".format(params['p'].upper()) in line:
-                    self.print_err('Server is controlled by supervisord')
-                    return self.local_func_result_failed
-                if "{}_ENABLED".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
-            return self.local_func_result_ok
+        c = params['p']
+        if c in self.products_configured:
+            if eva.registry.key_get_field(f'config/{c}',
+                                          'service/supervisord-program'):
+                self.print_err('Server is controlled by supervisord')
+                return self.local_func_result_failed
+            else:
+                eva.registry.key_set_field(f'config/{c}', 'service/enabled',
+                                           False)
+                return self.local_func_result_ok
         return False
 
     def set_controller_user(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_USER={}\n".format(params['p'].upper(),
-                                                   params['v']))
-            for line in lines:
-                if "{}_USER".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
+        c = params['p']
+        if c in self.products_configured:
+            eva.registry.key_set_field(f'config/{c}', 'service/user',
+                                       params['v'])
             return self.local_func_result_ok
         return False
 
     def get_controller_user(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            u_dict = dict([(i.split('=')[0], i.split('=')[-1]) for i in lines])
-            return 0, u_dict.get("{}_USER".format(params['p'].upper())).rstrip()
+        c = params['p']
+        if c in self.products_configured:
+            return 0, eva.registry.key_set_field(f'config/{c}', 'service/user',
+                                                 '')
         return False
 
     def print_version(self, params):
@@ -1342,13 +1321,8 @@ sys.argv = {argv}
         else:
             ok = True
             products_enabled = []
-            with open('{}/eva_servers'.format(dir_etc)) as fh:
-                for l in fh.readlines():
-                    k, v = l.strip().split('=')
-                    if k.endswith('_ENABLED') and v == 'yes':
-                        products_enabled.append(k.split('_')[0].lower())
-            for p in self.products_configured:
-                if p in products_enabled:
+            for c in self.products_configured:
+                if eva.registry.get(f'config/{c}', 'service/enabled'):
                     print('{}: '.format(
                         self.colored(p, color='blue', attrs=['bold'])),
                           end='')
