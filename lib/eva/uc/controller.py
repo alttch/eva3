@@ -374,10 +374,12 @@ def load_db_state(items, item_type, clean=False):
                         eva.core.log_traceback()
                         items[d.id].set_time = time.time()
                 try:
-                    if d.ieid_b is not None and d.ieid_i is not None:
+                    if d.ieid_b and d.ieid_i and \
+                            d.ieid_b != '0' and d.ieid_i != '0':
                         items[d.id].ieid = eva.core.parse_ieid(
                             [d.ieid_b, d.ieid_i])
                     else:
+                        # generate IEID if missing or broken
                         items[d.id].ieid = eva.core.generate_ieid()
                 except:
                     eva.core.log_traceback()
