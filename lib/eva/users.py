@@ -73,7 +73,10 @@ def msad_init(host,
     _d.msad_cache_time = cache_time
     if ou is not None:
         _d.msad_ou = ou
-    dbconn.close()
+    try:
+        dbconn.close()
+    except:
+        pass
 
 
 def msad_cache_credentials(username, password, cn):
@@ -506,7 +509,10 @@ def init():
     except:
         eva.core.log_traceback()
         logging.critical('unable to create users table in db')
-    dbconn.close()
+    try:
+        dbconn.close()
+    except:
+        pass
 
 
 def update_config(cfg):
@@ -575,7 +581,10 @@ def api_log_cleaner(**kwargs):
     except:
         dbt.rollback()
         raise
-    dbconn.close()
+    try:
+        dbconn.close()
+    except:
+        pass
 
 
 @background_worker(delay=msad_cache_clean_delay,

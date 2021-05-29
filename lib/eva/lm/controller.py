@@ -544,7 +544,10 @@ def load_lvar_db_state(items, clean=False):
             for i in _db_to_clean_ids:
                 dbconn.execute(sql('delete from lvar_state where id=:id'), id=i)
                 logging.debug('{} state removed from db'.format(i))
-        dbconn.close()
+        try:
+            dbconn.close()
+        except:
+            pass
     except:
         logging.critical('db error')
         eva.core.critical()
