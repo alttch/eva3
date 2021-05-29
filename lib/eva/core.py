@@ -422,8 +422,17 @@ def generate_ieid():
 
 
 def generate_boot_id():
-    _flags.boot_id = eva.registry.key_increment(f'data/{product.code}/boot-id')
-    logging.debug(f'BOOT ID: {_flags.boot_id}')
+    try:
+        if not prepare_save():
+            raise RuntimeError('Unable to prepare save')
+        _flags.boot_id = eva.registry.key_increment(
+            f'data/{product.code}/boot-id')
+        if not finish_save():
+            raise RuntimeError('Unable to finish save')
+        logging.debug(f'BOOT ID: {_flags.boot_id}')
+    except Exception as e:
+        logging.error(e)
+        critical()
 
 
 def prepare_save():
