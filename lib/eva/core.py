@@ -133,7 +133,7 @@ sleep_step = 0.1
 _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
-db_update_codes = ['manual', 'instant', 'on_exit']
+db_update_codes = ['manual', 'instant', 'on-exit']
 """
 main EVA ICS directory
 """

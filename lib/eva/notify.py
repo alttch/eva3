@@ -1055,7 +1055,10 @@ class SQLANotifier(GenericNotifier):
                     self.history_cleaner.start(_name=self.notifier_id +
                                                '_cleaner')
                 self.connected = True
-                dbconn.close()
+                try:
+                    dbconn.close()
+                except:
+                    pass
             else:
                 self.connected = False
         except Exception as e:
