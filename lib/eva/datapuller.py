@@ -36,7 +36,8 @@ def update_config(cfg):
             cmd = v
             timeout = None
             event_timeout = None
-        logging.info(f'+ data puller {i}: {cmd}')
+        logging.info(
+            f'+ data puller {i}: {cmd} (timeout: {timeout}/{event_timeout})')
         append_data_puller(i, cmd, timeout=timeout, event_timeout=event_timeout)
 
 
