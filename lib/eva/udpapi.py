@@ -100,7 +100,7 @@ def update_config(cfg):
     except:
         return False
     try:
-        _ha = cfg.get('udpapi', 'hosts-allow')
+        _ha = cfg.get('udpapi/hosts-allow')
     except:
         _ha = None
     if _ha:
@@ -117,7 +117,7 @@ def update_config(cfg):
     else:
         logging.debug('udpapi.hosts_allow = none')
     try:
-        _ha = cfg.get('udpapi', 'hosts-allow-encrypted')
+        _ha = cfg.get('udpapi/hosts-allow-encrypted')
     except:
         _ha = None
     if _ha:
