@@ -41,6 +41,7 @@ from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
 from eva.tools import get_caller
 from eva.tools import SimpleNamespace
+from eva.tools import cvalue
 
 from eva.tools import Locker as GenericLocker
 
@@ -687,16 +688,16 @@ def load(initial=False, init_log=True, check_pid=True):
     from eva.logs import log_levels_by_name, init as init_logs
     fname_full = format_cfg_fname(fname)
     try:
-        cfg = eva.registry.get(f'config/{product.code}')
+        cfg = eva.registry.config_get(f'config/{product.code}')
     except:
         critical()
         raise
     if initial:
         try:
-            config.pid_file = cfg.get('server', 'pid_file')
+            config.pid_file = cfg.get('server/pid-file')
             if config.pid_file and config.pid_file[0] != '/':
                 config.pid_file = dir_eva + '/' + config.pid_file
-        except:
+        except KeyError:
             pass
         try:
             if not check_pid:
@@ -708,42 +709,42 @@ def load(initial=False, init_log=True, check_pid=True):
                     (product.name, fname_full), end = '')
             print('Another process is already running')
             return None
-        except:
+        except KeyError:
             pass
         if not os.environ.get('EVA_CORE_LOG_STDOUT'):
             try:
-                config.log_file = cfg.get('server', 'log_file')
-            except:
+                config.log_file = cfg.get('server/log-file')
+            except KeyError:
                 config.log_file = None
         if config.log_file and config.log_file[0] != '/':
             config.log_file = dir_eva + '/' + config.log_file
         try:
-            config.syslog = cfg.get('server', 'syslog')
+            config.syslog = cfg.get('server/syslog')
             if config.syslog == 'yes':
                 config.syslog = '/dev/log'
-        except:
+        except KeyError:
             pass
         try:
-            config.log_format = cfg.get('server', 'log_format').strip()
-        except:
+            config.log_format = cfg.get('server/log-format').strip()
+        except KeyError:
             pass
         try:
-            config.syslog_format = cfg.get('server', 'syslog_format').strip()
-        except:
+            config.syslog_format = cfg.get('server/syslog-format').strip()
+        except KeyError:
             pass
         try:
-            log_level = cfg.get('server', 'logging_level')
+            log_level = cfg.get('server/logging-level')
             if log_level in log_levels_by_name:
                 config.default_log_level_name = log_level
                 config.default_log_level_id = log_levels_by_name.get(log_level)
                 config.default_log_level = getattr(logging, log_level.upper())
-        except:
+        except KeyError:
             pass
         if init_log:
             init_logs()
         try:
-            config.development = (cfg.get('server', 'development') == 'yes')
-        except:
+            config.development = cfg.get('server/development')
+        except KeyError:
             config.development = False
         if config.development:
             config.show_traceback = True
@@ -753,9 +754,8 @@ def load(initial=False, init_log=True, check_pid=True):
             config.debug = True
         else:
             try:
-                config.show_traceback = (cfg.get('server',
-                                                 'show_traceback') == 'yes')
-            except:
+                config.show_traceback = cfg.get('server/show-traceback')
+            except KeyError:
                 config.show_traceback = False
         if not config.development and not config.debug:
             try:
@@ -763,10 +763,10 @@ def load(initial=False, init_log=True, check_pid=True):
                     config.debug = True
                     config.show_traceback = True
                 else:
-                    config.debug = (cfg.get('server', 'debug') == 'yes')
+                    config.debug = cfg.get('server/debug')
                 if config.debug:
                     debug_on()
-            except:
+            except KeyError:
                 pass
             if not config.debug:
                 logging.basicConfig(level=config.default_log_level)
@@ -774,59 +774,53 @@ def load(initial=False, init_log=True, check_pid=True):
                     log_engine.logger.setLevel(config.default_log_level)
         if config.show_traceback:
             pyaltt2.logs.config.tracebacks = True
-        try:
-            config.system_name = cfg.get('server', 'name')
-            update_controller_name()
-        except:
-            pass
+        config.system_name = eva.registry.SYSTEM_NAME
+        update_controller_name()
         logging.info('Loading server config')
-        logging.debug('server.pid_file = %s' % config.pid_file)
-        logging.debug('server.logging_level = %s' %
-                      config.default_log_level_name)
+        logging.debug(f'server.pid_file = {config.pid_file}')
+        logging.debug(f'server.logging_level = {config.default_log_level_name}')
         try:
-            config.notify_on_start = (cfg.get('server',
-                                              'notify_on_start') == 'yes')
-        except:
+            config.notify_on_start = cfg.get('server/notify-on-start')
+        except KeyError:
             pass
-        logging.debug('server.notify_on_start = %s' % ('yes' \
-                                    if config.notify_on_start else 'no'))
+        logging.debug(f'server.notify_on_start = {config.notify_on_start}')
         try:
-            config.stop_on_critical = (cfg.get('server', 'stop_on_critical'))
-        except:
+            config.stop_on_critical = cfg.get('server/stop-on-critical')
+        except KeyError:
             pass
-        if config.stop_on_critical == 'yes':
+        if config.stop_on_critical == 'yes' or config.stop_on_critical is True:
             config.stop_on_critical = 'always'
+        elif config.stop_on_critical is False:
+            config.stop_on_critical = 'no'
         elif config.stop_on_critical not in ['no', 'always', 'core']:
-            stop_on_critical = 'no'
-        logging.debug('server.stop_on_critical = %s' % config.stop_on_critical)
+            config.stop_on_critical = 'no'
+        logging.debug(f'server.stop_on_critical = {config.stop_on_critical}')
         try:
-            config.dump_on_critical = (cfg.get('server',
-                                               'dump_on_critical') == 'yes')
-        except:
+            config.dump_on_critical = cfg.get('server/dump-on-critical')
+        except KeyError:
             pass
-        logging.debug('server.dump_on_critical = %s' % ('yes' \
-                                    if config.dump_on_critical else 'no'))
+        logging.debug(f'server.dump_on_critical = {config.dump_on_critical}')
         prepare_save()
         try:
-            db_file = cfg.get('server', 'db_file')
+            db_file = cfg.get('server/db-file')
             secure_file(db_file)
-        except:
+        except KeyError:
             db_file = None
         try:
-            db_uri = cfg.get('server', 'db')
-        except:
+            db_uri = cfg.get('server/db')
+        except KeyError:
             if db_file:
                 db_uri = db_file
         config.db_uri = format_db_uri(db_uri)
-        logging.debug('server.db = %s' % config.db_uri)
+        logging.debug(f'server.db = {config.db_uri}')
         try:
-            userdb_file = cfg.get('server', 'userdb_file')
+            userdb_file = cfg.get('server/userdb-file')
             secure_file(userdb_file)
         except:
             userdb_file = None
         finish_save()
         try:
-            userdb_uri = cfg.get('server', 'userdb')
+            userdb_uri = cfg.get('server/userdb')
         except:
             if userdb_file:
                 userdb_uri = userdb_file
@@ -836,114 +830,104 @@ def load(initial=False, init_log=True, check_pid=True):
             config.userdb_uri = format_db_uri(userdb_uri)
         else:
             config.userdb_uri = config.db_uri
-        logging.debug('server.userdb = %s' % config.userdb_uri)
+        logging.debug(f'server.userdb = {config.userdb_uri}')
         try:
-            uh = cfg.get('server', 'user_hook')
+            uh = cfg.get('server/user-hook')
             if not uh.startswith('/'):
                 uh = dir_eva + '/' + uh
             config.user_hook = uh.split()
-        except:
+        except KeyError:
             pass
         _uh = ' '.join(config.user_hook) if config.user_hook else None
-        logging.debug('server.user_hook = %s' % _uh)
-        try:
-            config.enterprise_layout = (cfg.get('server', 'layout') != 'simple')
-        except:
-            pass
-        logging.debug('server.layout = %s' % ('enterprise' \
-                                if config.enterprise_layout else 'simple'))
+        logging.debug(f'server.user_hook = {uh}')
         # end if initial
     try:
-        config.polldelay = float(cfg.get('server', 'polldelay'))
-    except:
+        config.polldelay = float(cfg.get('server/polldelay'))
+    except KeyError:
         pass
     try:
-        config.timeout = float(cfg.get('server', 'timeout'))
-    except:
+        config.timeout = float(cfg.get('server/timeout'))
+    except KeyError:
         pass
     if not config.polldelay:
         config.polldelay = 0.01
-    logging.debug('server.timeout = %s' % config.timeout)
+    logging.debug(f'server.timeout = {config.timeout}')
     logging.debug('server.polldelay = %s  ( %s msec )' % \
                         (config.polldelay, int(config.polldelay * 1000)))
     try:
-        config.pool_min_size = int(cfg.get('server', 'pool_min_size'))
-    except:
+        config.pool_min_size = int(cfg.get('server/pool-min-size'))
+    except KeyError:
         pass
-    logging.debug('server.pool_min_size = %s' % config.pool_min_size)
+    logging.debug(f'server.pool_min_size = {config.pool_min_size}')
     try:
-        config.pool_max_size = int(cfg.get('server', 'pool_max_size'))
+        config.pool_max_size = int(cfg.get('server/pool-max-size'))
     except:
         pass
     logging.debug(
         'server.pool_max_size = %s' %
         (config.pool_max_size if config.pool_max_size is not None else 'auto'))
     try:
-        config.reactor_thread_pool = int(
-            cfg.get('server', 'reactor_thread_pool'))
+        config.reactor_thread_pool = int(cfg.get('server/reactor-thread-pool'))
     except:
         pass
-    logging.debug('server.reactor_thread_pool = %s' %
-                  config.reactor_thread_pool)
+    logging.debug(f'server.reactor_thread_pool = {config.reactor_thread_pool}')
     try:
-        config.db_update = db_update_codes.index(cfg.get('server', 'db_update'))
-    except:
+        config.db_update = db_update_codes.index(cfg.get('server/db-update'))
+    except KeyError:
         pass
     logging.debug('server.db_update = %s' % db_update_codes[config.db_update])
     try:
-        config.keep_action_history = int(
-            cfg.get('server', 'keep_action_history'))
+        config.keep_action_history = int(cfg.get('server/keep-action-history'))
     except:
         pass
-    logging.debug('server.keep_action_history = %s sec' % \
-            config.keep_action_history)
+    logging.debug(
+        f'server.keep_action_history = {config.keep_action_history} sec')
     try:
         config.action_cleaner_interval = int(
-            cfg.get('server', 'action_cleaner_interval'))
+            cfg.get('server/action-cleaner-interval'))
         if config.action_cleaner_interval < 0:
             raise Exception('invalid interval')
     except:
         config.action_cleaner_interval = default_action_cleaner_interval
-    logging.debug('server.action_cleaner_interval = %s sec' % \
-            config.action_cleaner_interval)
+    logging.debug(
+        f'server.action_cleaner_interval = {config.action_cleaner_interval} sec'
+    )
     try:
-        config.keep_logmem = int(cfg.get('server', 'keep_logmem'))
+        config.keep_logmem = int(cfg.get('server', 'keep-logmem'))
     except:
         pass
     logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
     try:
-        config.keep_api_log = int(cfg.get('server', 'keep_api_log'))
+        config.keep_api_log = int(cfg.get('server', 'keep-api-log'))
     except:
         pass
-    logging.debug('server.keep_api_log = %s sec' % config.keep_api_log)
+    logging.debug(f'server.keep_api_log = {config.keep_api_log} sec')
     try:
-        config.exec_before_save = cfg.get('server', 'exec_before_save')
+        config.exec_before_save = cfg.get('server/exec-before-save')
     except:
         pass
-    logging.debug('server.exec_before_save = %s' % config.exec_before_save)
+    logging.debug(f'server.exec_before_save = {config.exec_before_save}')
     try:
-        config.exec_after_save = cfg.get('server', 'exec_after_save')
+        config.exec_after_save = cfg.get('server/exec-after-save')
     except:
         pass
-    logging.debug('server.exec_after_save = %s' % config.exec_after_save)
+    logging.debug(f'server.exec_after_save = {config.exec_after_save}')
     try:
-        config.mqtt_update_default = cfg.get('server', 'mqtt_update_default')
+        config.mqtt_update_default = cfg.get('server/mqtt-update-default')
     except:
         pass
-    logging.debug('server.mqtt_update_default = %s' %
-                  config.mqtt_update_default)
+    logging.debug('server.mqtt_update_default = {config.mqtt_update_default}')
     try:
-        config.plugins = [
-            x.strip() for x in cfg.get('server', 'plugins').split(',')
-        ]
-    except:
+        config.default_cloud_key = str(cfg.get('cloud', 'default-key'))
+    except KeyError:
         pass
-    logging.debug('server.plugins = %s' % ', '.join(config.plugins))
-    try:
-        config.default_cloud_key = cfg.get('cloud', 'default_key')
-    except:
-        pass
-    logging.debug('cloud.default_key = %s' % config.default_cloud_key)
+    logging.debug(f'cloud.default_key = {config.default_cloud_key}')
+    plugin_cfg = eva.registry.get_subkeys(f'config/{product.code}/plugins')
+    config.plugins = []
+    for k, v in plugin_cfg:
+        if v.get('enabled'):
+            config.plugins.append(k)
+    logging.debug('plugins = %s' % ', '.join(config.plugins))
     # init plugins
     for p in config.plugins:
         fname = f'{dir_eva}/plugins/{p}.py'
@@ -968,10 +952,9 @@ def load(initial=False, init_log=True, check_pid=True):
 
 
 def load_plugin_config(cfg):
-    c = dict(cfg)
     for p, v in plugin_modules.items():
-        plugin_config = dict(c.get(f'plugin.{p}', {}))
-        exec_plugin_func(p, v, 'init', plugin_config)
+        pcfg = cfg[p].get('config', default={})
+        exec_plugin_func(p, v, 'init', pcfg)
 
 
 def plugins_exec(method, *args, **kwargs):

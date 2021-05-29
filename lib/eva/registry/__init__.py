@@ -9,6 +9,8 @@ from yedb import YEDB, FieldNotFound
 
 from pathlib import Path
 
+from pyaltt2.config import Config
+
 EVA_DIR = Path(__file__).parents[3].absolute()
 DEFAULTS_DIR = Path(__file__).parent / 'defaults'
 
@@ -46,6 +48,10 @@ def safe(func):
                 raise
 
     return wrapper
+
+
+def config_get(key, **kwargs):
+    return Config(key_get(key, **kwargs))
 
 
 @safe
