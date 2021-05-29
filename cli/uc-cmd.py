@@ -297,10 +297,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
                     del (d['error'])
                 else:
                     d['addr_hex'] = hex(addr)
-                    if d['type'] == 'f32':
+                    tp = d.get('type', 'u16')
+                    if tp == 'f32':
                         import numpy as np
                         d['value'] = np.float32(d['value'])
-                    elif d['type'] == 'bit':
+                    elif tp == 'bit':
                         d['_s'] = d["addr"] * 16 + d['bit']
                         d['addr'] = f'{d["addr"]}/{d["bit"]}'
                         d['addr_hex'] = f'{d["addr_hex"]}/{hex(d["bit"])}'
