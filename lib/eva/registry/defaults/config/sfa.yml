@@ -6,9 +6,9 @@ server:
   # system poll delay
   polldelay: 0.01
   # pid file
-  pid-file: var/uc.pid
+  pid-file: var/sfa.pid
   # log file
-  log-file: log/uc.log
+  log-file: log/sfa.log
   # custom primary log format
   #log-format: '{ "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
   # logging to local syslog
@@ -21,7 +21,7 @@ server:
   #syslog-format: 'EVA: { "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
   # db updates - instant, manual or on-exit
   db-update: instant
-  db-file: runtime/db/uc.db
+  db-file: runtime/db/sfa.db
   # use MySQL instead of SQLite
   #db: mysql+pymysql://user:password@localhost/dbname
   # user db file, default = db-file
@@ -80,7 +80,7 @@ plc:
 cache-remote-state: 0
 #lurp:
 # LURP replication
-#  listen: 127.0.0.1:8911
+#  listen: 127.0.0.1:8921
 #  buffer: 32768
 #msad:
   # user authentication via MS Active Directory
@@ -104,8 +104,8 @@ sysapi:
   setup-mode: true
 webapi:
   # web api listen on IP/port
-  listen: 0.0.0.0:8812
-  #ssl-listen: 0.0.0.0:8813
+  listen: 0.0.0.0:8828
+  #ssl-listen: 0.0.0.0:8829
   #ssl-module: builtin # or pyopenssl
   #ssl-cert: test.crt
   #ssl-key: test.key
