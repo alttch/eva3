@@ -12,25 +12,35 @@ import eva.core
 import queue
 import signal
 
+import eva.registry
+
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import MethodNotImplemented
 
 datapullers = {}
 
+
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+
 def update_config(cfg):
-    try:
-        c = dict(dict(cfg)['datapullers'])
-    except KeyError:
-        return
+    c = cfg.get('datapullers', default={})
+    c.update(eva.registry.get_subkeys('config/uc/datapullers'))
     for i, v in c.items():
-        logging.info(f'+ data puller {i}: {v}')
-        append_data_puller(i, v)
+        if isinstance(v, dict):
+            cmd = v['cmd']
+            timeout = v.get('timeout')
+            event_timeout = v.get('event-timeout')
+        else:
+            cmd = v
+            timeout = None
+            event_timeout = None
+        logging.info(f'+ data puller {i}: {cmd}')
+        append_data_puller(i, cmd, timeout=timeout, event_timeout=event_timeout)
 
 
-def append_data_puller(name, cmd):
+def append_data_puller(name, cmd, timeout, event_timeout):
     datapullers[name] = DataPuller(name,
                                    cmd,
                                    polldelay=eva.core.config.polldelay)
@@ -53,7 +63,13 @@ def serialize():
 
 class DataPuller:
 
-    def __init__(self, name, cmd, polldelay=0.1, tki=1):
+    def __init__(self,
+                 name,
+                 cmd,
+                 polldelay=0.1,
+                 tki=1,
+                 timeout=None,
+                 event_timeout=None):
         self.name = name
         self.cmd = cmd
         self.p = None
@@ -62,7 +78,8 @@ class DataPuller:
         self.tki = tki
         self.executor = None
         self.last_activity = None
-        self.timeout = eva.core.config.timeout
+        self.timeout = timeout if timeout else eva.core.config.timeout
+        self.event_timeout = None
         self.state = ''
 
     def serialize(self):
@@ -92,7 +109,7 @@ class DataPuller:
                 ],
                                           shell=True,
                                           env=env,
-                                          preexec_fn = preexec_function,
+                                          preexec_fn=preexec_function,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
                 self.executor = threading.Thread(target=self._t_run,

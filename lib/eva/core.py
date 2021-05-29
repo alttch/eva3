@@ -41,7 +41,6 @@ from eva.tools import wait_for as _wait_for
 from eva.tools import parse_host_port
 from eva.tools import get_caller
 from eva.tools import SimpleNamespace
-from eva.tools import cvalue
 
 from eva.tools import Locker as GenericLocker
 
@@ -686,7 +685,6 @@ def load(initial=False, init_log=True, check_pid=True):
         os.chmod(fn, mode=0o600)
 
     from eva.logs import log_levels_by_name, init as init_logs
-    fname_full = format_cfg_fname(fname)
     try:
         cfg = eva.registry.config_get(f'config/{product.code}')
     except:
@@ -697,7 +695,7 @@ def load(initial=False, init_log=True, check_pid=True):
             config.pid_file = cfg.get('server/pid-file')
             if config.pid_file and config.pid_file[0] != '/':
                 config.pid_file = dir_eva + '/' + config.pid_file
-        except KeyError:
+        except LookupError:
             pass
         try:
             if not check_pid:
@@ -709,28 +707,28 @@ def load(initial=False, init_log=True, check_pid=True):
                     (product.name, fname_full), end = '')
             print('Another process is already running')
             return None
-        except KeyError:
+        except:
             pass
         if not os.environ.get('EVA_CORE_LOG_STDOUT'):
             try:
                 config.log_file = cfg.get('server/log-file')
-            except KeyError:
+            except LookupError:
                 config.log_file = None
         if config.log_file and config.log_file[0] != '/':
             config.log_file = dir_eva + '/' + config.log_file
         try:
             config.syslog = cfg.get('server/syslog')
-            if config.syslog == 'yes':
+            if config.syslog is True:
                 config.syslog = '/dev/log'
-        except KeyError:
+        except LookupError:
             pass
         try:
             config.log_format = cfg.get('server/log-format').strip()
-        except KeyError:
+        except LookupError:
             pass
         try:
             config.syslog_format = cfg.get('server/syslog-format').strip()
-        except KeyError:
+        except LookupError:
             pass
         try:
             log_level = cfg.get('server/logging-level')
@@ -738,13 +736,13 @@ def load(initial=False, init_log=True, check_pid=True):
                 config.default_log_level_name = log_level
                 config.default_log_level_id = log_levels_by_name.get(log_level)
                 config.default_log_level = getattr(logging, log_level.upper())
-        except KeyError:
+        except LookupError:
             pass
         if init_log:
             init_logs()
         try:
             config.development = cfg.get('server/development')
-        except KeyError:
+        except LookupError:
             config.development = False
         if config.development:
             config.show_traceback = True
@@ -755,7 +753,7 @@ def load(initial=False, init_log=True, check_pid=True):
         else:
             try:
                 config.show_traceback = cfg.get('server/show-traceback')
-            except KeyError:
+            except LookupError:
                 config.show_traceback = False
         if not config.development and not config.debug:
             try:
@@ -766,7 +764,7 @@ def load(initial=False, init_log=True, check_pid=True):
                     config.debug = cfg.get('server/debug')
                 if config.debug:
                     debug_on()
-            except KeyError:
+            except LookupError:
                 pass
             if not config.debug:
                 logging.basicConfig(level=config.default_log_level)
@@ -781,12 +779,12 @@ def load(initial=False, init_log=True, check_pid=True):
         logging.debug(f'server.logging_level = {config.default_log_level_name}')
         try:
             config.notify_on_start = cfg.get('server/notify-on-start')
-        except KeyError:
+        except LookupError:
             pass
         logging.debug(f'server.notify_on_start = {config.notify_on_start}')
         try:
             config.stop_on_critical = cfg.get('server/stop-on-critical')
-        except KeyError:
+        except LookupError:
             pass
         if config.stop_on_critical == 'yes' or config.stop_on_critical is True:
             config.stop_on_critical = 'always'
@@ -797,18 +795,18 @@ def load(initial=False, init_log=True, check_pid=True):
         logging.debug(f'server.stop_on_critical = {config.stop_on_critical}')
         try:
             config.dump_on_critical = cfg.get('server/dump-on-critical')
-        except KeyError:
+        except LookupError:
             pass
         logging.debug(f'server.dump_on_critical = {config.dump_on_critical}')
         prepare_save()
         try:
             db_file = cfg.get('server/db-file')
             secure_file(db_file)
-        except KeyError:
+        except LookupError:
             db_file = None
         try:
             db_uri = cfg.get('server/db')
-        except KeyError:
+        except LookupError:
             if db_file:
                 db_uri = db_file
         config.db_uri = format_db_uri(db_uri)
@@ -836,18 +834,18 @@ def load(initial=False, init_log=True, check_pid=True):
             if not uh.startswith('/'):
                 uh = dir_eva + '/' + uh
             config.user_hook = uh.split()
-        except KeyError:
+        except LookupError:
             pass
         _uh = ' '.join(config.user_hook) if config.user_hook else None
-        logging.debug(f'server.user_hook = {uh}')
+        logging.debug(f'server.user_hook = {_uh}')
         # end if initial
     try:
         config.polldelay = float(cfg.get('server/polldelay'))
-    except KeyError:
+    except LookupError:
         pass
     try:
         config.timeout = float(cfg.get('server/timeout'))
-    except KeyError:
+    except LookupError:
         pass
     if not config.polldelay:
         config.polldelay = 0.01
@@ -856,7 +854,7 @@ def load(initial=False, init_log=True, check_pid=True):
                         (config.polldelay, int(config.polldelay * 1000)))
     try:
         config.pool_min_size = int(cfg.get('server/pool-min-size'))
-    except KeyError:
+    except LookupError:
         pass
     logging.debug(f'server.pool_min_size = {config.pool_min_size}')
     try:
@@ -873,7 +871,7 @@ def load(initial=False, init_log=True, check_pid=True):
     logging.debug(f'server.reactor_thread_pool = {config.reactor_thread_pool}')
     try:
         config.db_update = db_update_codes.index(cfg.get('server/db-update'))
-    except KeyError:
+    except LookupError:
         pass
     logging.debug('server.db_update = %s' % db_update_codes[config.db_update])
     try:
@@ -916,10 +914,10 @@ def load(initial=False, init_log=True, check_pid=True):
         config.mqtt_update_default = cfg.get('server/mqtt-update-default')
     except:
         pass
-    logging.debug('server.mqtt_update_default = {config.mqtt_update_default}')
+    logging.debug(f'server.mqtt_update_default = {config.mqtt_update_default}')
     try:
-        config.default_cloud_key = str(cfg.get('cloud', 'default-key'))
-    except KeyError:
+        config.default_cloud_key = str(cfg.get('cloud/default-key'))
+    except LookupError:
         pass
     logging.debug(f'cloud.default_key = {config.default_cloud_key}')
     plugin_cfg = eva.registry.get_subkeys(f'config/{product.code}/plugins')

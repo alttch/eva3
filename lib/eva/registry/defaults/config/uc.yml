@@ -88,7 +88,7 @@ upnp:
 sysapi:
   # enable remote file management functions
   file-management: yes
-  # allow entering setup mode
+  # allow entering setup mode (true for 60 sec or int for seconds)
   setup-mode: true
   # allow rpvt
   rpvt: false
@@ -125,7 +125,7 @@ udpapi:
     - 127.0.0.1/8
   hosts-allow-encrypted:
     - 0.0.0.0/0
-#modbus:
+#modbus-slave:
 # modbus slave configuration
 # modbus slave memory space size: 10000 registers (starting from 0) for each
 # type (holding, input, coils, discrete inputs)

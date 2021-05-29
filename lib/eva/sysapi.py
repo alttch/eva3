@@ -1755,23 +1755,22 @@ class SysHTTP_API_REST_abstract:
 
 def update_config(cfg):
     try:
-        config.api_file_management_allowed = (cfg.get(
-            'sysapi', 'file_management') == 'yes')
-    except:
+        config.api_file_management_allowed = cfg.get('sysapi/file-management')
+    except LookupError:
         pass
     try:
-        config.api_rpvt_allowed = (cfg.get('sysapi', 'rpvt') == 'yes')
-    except:
+        config.api_rpvt_allowed = cfg.get('sysapi/rpvt')
+    except LookupError:
         pass
-    logging.debug('sysapi.file_management = %s' % ('yes' \
-            if config.api_file_management_allowed else 'no'))
+    logging.debug(
+        f'sysapi.file_management = {config.api_file_management_allowed}')
     try:
-        s = cfg.get('sysapi', 'setup_mode')
-        s = 60 if s == 'yes' else int(s)
+        s = cfg.get('sysapi/setup-mode')
+        s = 60 if s is True else int(s)
         config.api_setup_mode = s
     except:
         pass
-    logging.debug('sysapi.setup_mode = %s' % config.api_setup_mode)
+    logging.debug(f'sysapi.setup_mode = {config.api_setup_mode}')
     return True
 
 

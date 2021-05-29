@@ -642,11 +642,10 @@ class ModbusPort(object):
             eva.core.log_traceback()
 
 
-def append_ip_slave(c, proto):
+def append_ip_slave(proto, unit, listen):
     try:
-        a, h = c.split(',')
-        host, port = parse_host_port(h, 502)
-        a = safe_int(a)
+        host, port = parse_host_port(listen, 502)
+        a = safe_int(unit)
         if not host:
             raise Exception
         config.slave[proto].append({'a': a, 'h': host, 'p': port})
@@ -656,11 +655,17 @@ def append_ip_slave(c, proto):
         eva.core.log_traceback()
 
 
-def append_serial_slave(c):
+def append_serial_slave(proto, unit, listen):
     try:
-        a, port = c.split(',')
-        framer, port, baudrate, bytesize, parity, stopbits = port.split(':')
-        a = safe_int(a)
+        try:
+            port, baudrate, bytesize, parity, stopbits = listen.split(':')
+        except:
+            port = listen
+            baudrate = 9600
+            bytesize = 8
+            parity = 'N'
+            stopbits = 1
+        a = safe_int(unit)
         baudrate = int(baudrate)
         bytesize = int(bytesize)
         stopbits = int(stopbits)
@@ -668,33 +673,35 @@ def append_serial_slave(c):
             port = int(port)
         except:
             pass
-        if framer not in ['rtu', 'ascii', 'binary']:
-            raise Exception('Invalid Modbus slave framer: {}'.format(framer))
+        if proto not in ['rtu', 'ascii', 'binary']:
+            raise Exception(f'Invalid Modbus slave framer: {proto}')
         config.slave['serial'].append({
             'a': a,
             'p': port,
-            'f': framer,
+            'f': proto,
             'b': baudrate,
             'bs': bytesize,
             'pt': parity,
             's': stopbits
         })
         logging.debug('modbus.slave.serial = {}.{}:{}:{}:{}:{}:{}'.format(
-            hex(a), framer, port, baudrate, bytesize, parity, stopbits))
+            hex(a), proto, port, baudrate, bytesize, parity, stopbits))
     except:
         eva.core.log_traceback()
 
 
 def update_config(cfg):
     try:
-        for c in cfg.options('modbus'):
-            for p in ['tcp', 'udp']:
-                if c.startswith(p):
-                    append_ip_slave(cfg.get('modbus', c), p)
-            if c.startswith('serial'):
-                append_serial_slave(cfg.get('modbus', c))
+        for c in cfg.get('modbus-slave', default=[]):
+            proto = c['proto']
+            unit = c['unit']
+            listen = c['listen']
+            if proto in ['tcp', 'udp']:
+                append_ip_slave(proto, unit, listen)
+            else:
+                append_serial_slave(proto, unit, listen)
     except:
-        pass
+        eva.core.log_traceback()
 
 
 def set_modified():

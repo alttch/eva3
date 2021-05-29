@@ -16,6 +16,8 @@ from eva.tools import SimpleNamespace
 
 from pyaltt2.mail import SMTP
 
+import eva.registry
+
 config = SimpleNamespace(sender='eva@' + platform.node(),
                          smtp_host='localhost',
                          smtp_port=25,
@@ -28,46 +30,31 @@ config = SimpleNamespace(sender='eva@' + platform.node(),
 default_port = 25
 
 
-def update_config(cfg):
+def load():
+    cfg = eva.registry.config_get('config/common/mailer', default={})
     try:
         config.smtp_host, config.smtp_port = parse_host_port(
-            cfg.get('mailer', 'smtp'), default_port)
+            cfg.get('smtp'), default_port)
     except:
         config.smtp_host = 'localhost'
         config.smtp_port = default_port
     logging.debug('mailer.smtp = %s:%u' % (config.smtp_host, config.smtp_port))
+    config.sender = cfg.get('from', default=f'eva@{platform.node()}')
+    logging.debug(f'mailer.from = {config.sender}')
     try:
-        config.sender = cfg.get('mailer', 'from')
-    except:
-        config.sender = 'eva@' + platform.node()
-    logging.debug('mailer.from = %s' % config.sender)
-    try:
-        config.default_rcp = list(
-            filter(None, [
-                x.strip() for x in cfg.get('mailer', 'default_rcp').split(',')
-            ]))
+        config.default_rcp = cfg.get('default-rcp')
+        if not isinstance(config.default_rcp, list):
+            config.default_rcp = [config.default_rcp]
     except:
         config.default_rcp = ['root']
     logging.debug('mailer.default_rcp = %s' % ', '.join(config.default_rcp))
-    try:
-        config.ssl = (cfg.get('mailer', 'ssl') == 'yes')
-    except:
-        config.ssl = False
+    config.ssl = cfg.get('ssl', default=False)
     logging.debug(f'mailer.ssl = {config.ssl}')
-    try:
-        config.tls = (cfg.get('mailer', 'tls') == 'yes')
-    except:
-        config.tls = False
+    config.tls = cfg.get('tls', default=False)
     logging.debug(f'mailer.tls = {config.tls}')
-    try:
-        config.login = cfg.get('mailer', 'login')
-    except:
-        config.login = None
+    config.login = cfg.get('login', default=None)
     logging.debug(f'mailer.login = {config.login}')
-    try:
-        config.password = cfg.get('mailer', 'password')
-    except:
-        config.password = None
+    config.password = cfg.get('password', default=None)
     logging.debug(f'mailer.password = {"*" if config.password else None}')
     return True
 

@@ -26,25 +26,23 @@ default_community = 'eva'
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(
-            cfg.get('snmptrap', 'listen'), default_port)
+        config.host, config.port = parse_host_port(cfg.get('snmptrap/listen'),
+                                                   default_port)
         logging.debug('snmptrap.listen = %s:%u' % (config.host, config.port))
     except:
         return False
     try:
-        config.community = cfg.get('snmptrap', 'community')
-    except:
+        config.community = cfg.get('snmptrap/community')
+    except LookupError:
         config.community = default_community
-    logging.debug('snmptrap.community = %s' % config.community)
+    logging.debug(f'snmptrap.community = {config.community}')
     try:
-        _ha = cfg.get('snmptrap', 'hosts_allow')
-    except:
-        _ha = None
+        _ha = list(cfg.get('snmptrap/hosts-allow'))
+    except LookupError:
+        _ha = []
     if _ha:
         try:
-            _hosts_allow = list(
-                filter(None, [x.strip() for x in _ha.split(',')]))
-            config.hosts_allow = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow = [IPNetwork(h) for h in _ha]
         except:
             logging.error('snmptrap bad host acl!')
             config.host = None
