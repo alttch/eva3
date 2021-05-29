@@ -170,7 +170,7 @@ class ManagementCLI(GenericCLI):
                                              metavar='func',
                                              help='Registry commands')
 
-        sp_backup_save = sp_backup.add_parser('edit', help='Edit registry')
+        sp_backup_save = sp_backup.add_parser('manage', help='Manage registry')
         sp_backup_save.add_argument('key',
                                     help='Registry key',
                                     metavar='NAME',
@@ -258,7 +258,7 @@ class ManagementCLI(GenericCLI):
                                       '--access',
                                       choices=['local-only', 'remote'],
                                       metavar='ACCESS_TYPE',
-                                      help='Access type')
+                                      help='Access type (local-only / remote)')
 
     def add_manager_control_functions(self):
         eva.client.cli.shells_available = []
@@ -920,10 +920,8 @@ sys.argv = {argv}
     def update_mirror(self, params):
         from eva.tools import ShellConfigFile
         try:
-            from configparser import ConfigParser
-            cp = ConfigParser(inline_comment_prefixes=';')
-            cp.read(dir_etc + '/sfa.ini')
-            sfa_listen = cp.get('webapi', 'listen')
+            sfa_listen = eva.registry.config_get('config/sfa').get(
+                'webapi/listen')
             if sfa_listen.startswith('127.'):
                 self.print_err(
                     'The local SFA is configured to listen on the loopback only'
@@ -1316,8 +1314,8 @@ sys.argv = {argv}
         return self.local_func_result_ok
 
     def edit_venv(self, params):
-        editor = os.environ.get('EDITOR', 'vi')
-        code = os.system('{} {}/etc/venv'.format(editor, dir_eva))
+        code = os.system(
+            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/venv')
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
@@ -1342,7 +1340,7 @@ sys.argv = {argv}
                         ok = False
             return self.local_func_result_empty if ok else (10, '')
 
-    def registry_edit(self, params):
+    def registry_manage(self, params):
         key = params.get('key')
         if key is None:
             key = ''
@@ -1356,34 +1354,20 @@ sys.argv = {argv}
 
         def set_masterkey_for(p, a, access):
             try:
-                in_section = False
-                key_found = False
-                nf = []
-                for st in open('{}/{}_apikeys.ini'.format(dir_etc,
-                                                          p)).readlines():
-                    st = st.strip()
-                    s = st.split(';')[0].strip()
-                    if s == '[masterkey]':
-                        in_section = True
-                    elif s.startswith('['):
-                        in_section = False
-                    elif s.find('=') != -1:
-                        i = s.split('=')[0].strip()
-                        if i == 'key' and in_section and a:
-                            key_found = True
-                            nf.append('key = {}'.format(a))
-                            continue
-                        if i == 'hosts_allow' and in_section and access:
-                            nf.append('hosts_allow = {}'.format(
-                                '127.0.0.1' if access ==
-                                'local-only' else '0.0.0.0/0'))
-                            continue
-                    nf.append(st)
-                if a and not key_found:
-                    raise Exception(
-                        'masterkey not found in {}_apikeys.ini'.format(p))
-                open('{}/{}_apikeys.ini'.format(dir_etc, p),
-                     'w').write('\n'.join(nf) + '\n')
+                if a is None:
+                    a = eva.registry.key_get_field(
+                        f'config/{p}/apikeys/masterkey', 'key')
+                masterkey_data = {
+                    'key':
+                        a,
+                    'master':
+                        True,
+                    'hosts-allow': [
+                        '127.0.0.0/8' if access == 'local-only' else '0.0.0.0/0'
+                    ]
+                }
+                eva.registry.key_set(f'config/{p}/apikeys/masterkey',
+                                     masterkey_data)
                 return True
             except Exception as e:
                 self.print_err(e)
@@ -1593,7 +1577,7 @@ _api_functions = {
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
-    'registry:edit': cli.registry_edit,
+    'registry:manage': cli.registry_manage,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey

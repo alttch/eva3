@@ -1758,17 +1758,14 @@ class ControllerCLI(object):
             self.print_err('not implemented')
             return self.local_func_result_failed
         import eva.core
-        import configparser
+        import eva.registry
         from sqlalchemy import text as sql
-        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.read(f'{self.dir_etc}/{self._management_controller_id}.ini')
+        cfg = eva.registry.config_get(
+            f'config/{self._management_controller_id}')
+        db_file = cfg.get('server/db-file', default=None)
         try:
-            db_file = cfg.get('server', 'db_file')
-        except:
-            db_file = None
-        try:
-            db_uri = cfg.get('server', 'db')
-        except:
+            db_uri = cfg.get('server/db')
+        except LookupError:
             if db_file:
                 db_uri = db_file
         db_uri = eva.core.format_db_uri(db_uri)
@@ -1940,9 +1937,8 @@ class ControllerCLI(object):
         if self.apiuri:
             self.print_local_only()
             return self.local_func_result_failed
-        editor = os.environ.get('EDITOR', 'vi')
-        code = os.system('{} {}/{}.ini'.format(editor, self.dir_etc,
-                                               self._management_controller_id))
+        code = os.system(f'AUTO_PREFIX=1 {self.dir_sbin}/eva-registry-cli '
+                         f'edit config/{self._management_controller_id}')
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
