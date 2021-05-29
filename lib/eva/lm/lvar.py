@@ -105,7 +105,7 @@ class LVar(eva.item.VariableItem):
     def set_prop(self, prop, val=None, save=False):
         if prop == 'logic':
             if val is None or val == '':
-                val is 'normal'
+                val = 'normal'
             elif val not in ['normal', 'simple', 'n', 's']:
                 return False
             if val in ['normal', 'n']:
