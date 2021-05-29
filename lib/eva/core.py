@@ -422,36 +422,8 @@ def generate_ieid():
 
 
 def generate_boot_id():
-
-    def _save_boot_id(boot_id, fname):
-        try:
-            with open(fname, 'w') as fh:
-                fh.write(str(boot_id))
-                fh.flush()
-                os.fsync(fh.fileno())
-            dirfd = os.open(dir_runtime, os.O_DIRECTORY | os.O_RDONLY)
-            os.fsync(dirfd)
-            os.close(dirfd)
-            return True
-        except:
-            log_traceback()
-            return False
-
-    boot_id = 0
-    boot_id_file = f'{dir_runtime}/{product.code}_bootid'
-    try:
-        with open(boot_id_file) as fh:
-            boot_id = int(fh.read().strip())
-    except FileNotFoundError:
-        pass
-    except:
-        logging.error('Unable to load boot id')
-        log_traceback()
-    _flags.boot_id = boot_id + 1
-    logging.debug(f'boot id set: {_flags.boot_id}')
-    if not prepare_save() or not _save_boot_id(
-            _flags.boot_id, boot_id_file) or not finish_save():
-        logging.error('unable to save boot id')
+    _flags.boot_id = eva.registry.key_increment(f'data/{product.code}/boot-id')
+    logging.debug(f'BOOT ID: {_flags.boot_id}')
 
 
 def prepare_save():
