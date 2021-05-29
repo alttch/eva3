@@ -82,6 +82,16 @@ def key_get_recursive(key):
 
 
 @safe
+def key_increment(key):
+    return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
+
+
+@safe
+def key_decrement(key):
+    return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
+
+
+@safe
 def get_subkeys(key):
     _key = f'{PFX}/{SYSTEM_NAME}/{key}'
     l = len(_key) + 1
