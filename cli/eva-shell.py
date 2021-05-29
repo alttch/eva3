@@ -20,6 +20,7 @@ dir_eva = Path(__file__).absolute().parents[1].as_posix()
 dir_backup = dir_eva + '/backup'
 dir_lib = dir_eva + '/lib'
 dir_etc = dir_eva + '/etc'
+dir_bin = dir_eva + '/bin'
 dir_sbin = dir_eva + '/sbin'
 dir_cli = dir_eva + '/cli'
 dir_runtime = dir_eva + '/runtime'
@@ -148,6 +149,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_common_functions()
         self.add_manager_control_functions()
         self.add_manager_backup_functions()
+        self.add_manager_registry_functions()
         self.add_manager_edit_functions()
         self.add_management_shells()
         self.add_manager_feature_functions()
@@ -160,6 +162,19 @@ class ManagementCLI(GenericCLI):
         for c in ['uc', 'lm', 'sfa']:
             if eva.registry.key_get_field(f'config/{c}', 'service/setup'):
                 self.products_configured.append(c)
+
+    def add_manager_registry_functions(self):
+        ap_backup = self.sp.add_parser('registry', help='Registry management')
+
+        sp_backup = ap_backup.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Registry commands')
+
+        sp_backup_save = sp_backup.add_parser('edit', help='Edit registry')
+        sp_backup_save.add_argument('key',
+                                    help='Registry key',
+                                    metavar='NAME',
+                                    nargs='?')
 
     def add_manager_backup_functions(self):
         ap_backup = self.sp.add_parser('backup', help='Backup management')
@@ -1332,6 +1347,16 @@ sys.argv = {argv}
                         ok = False
             return self.local_func_result_empty if ok else (10, '')
 
+    def registry_edit(self, params):
+        key = params.get('key')
+        if key is None:
+            key = ''
+        params = f' edit {key}' if key else ''
+        if os.system(f'{dir_bin}/eva-registry{params}'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
     def set_masterkey(self, params):
 
         def set_masterkey_for(p, a, access):
@@ -1573,6 +1598,7 @@ _api_functions = {
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
+    'registry:edit': cli.registry_edit,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
@@ -1636,7 +1662,7 @@ eva.features.cli = cli
 cli.default_prompt = '# '
 cli.arg_sections += [
     'backup', 'server', 'edit', 'masterkey', 'system', 'iote', 'mirror',
-    'feature'
+    'feature', 'registry'
 ]
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
