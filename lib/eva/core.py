@@ -919,9 +919,11 @@ def load(initial=False, init_log=True, check_pid=True):
     except LookupError:
         pass
     logging.debug(f'cloud.default_key = {config.default_cloud_key}')
-    plugin_cfg = eva.registry.get_subkeys(f'config/{product.code}/plugins')
+    plugin_cfg = cfg.get('plugins', default={})
+    plugin_cfg.update(
+        eva.registry.get_subkeys(f'config/{product.code}/plugins'))
     config.plugins = []
-    for k, v in plugin_cfg:
+    for k, v in plugin_cfg.items():
         if v.get('enabled'):
             config.plugins.append(k)
     logging.debug('plugins = %s' % ', '.join(config.plugins))
@@ -944,13 +946,13 @@ def load(initial=False, init_log=True, check_pid=True):
                 log_traceback()
                 continue
         logging.info(f'+ plugin {p}')
-    load_plugin_config(cfg)
+    load_plugin_config(plugin_cfg)
     return cfg
 
 
 def load_plugin_config(cfg):
     for p, v in plugin_modules.items():
-        pcfg = cfg[p].get('config', default={})
+        pcfg = cfg.get(p).get('config', {})
         exec_plugin_func(p, v, 'init', pcfg)
 
 
