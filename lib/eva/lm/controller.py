@@ -89,19 +89,17 @@ remote_cache_clean_delay = 60
 
 def update_config(cfg):
     try:
-        use_core_pool = cfg.get('plc', 'use_core_pool')
-        use_core_pool = use_core_pool == 'yes'
+        use_core_pool = cfg.get('plc/use-core-pool', default=True)
     except:
         use_core_pool = True
-    logging.debug('plc.use_core_pool = %s' % ('yes' \
-                                if use_core_pool else 'no'))
+    logging.debug(f'plc.use_core_pool = {use_core_pool}')
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
     try:
-        cache_remote_state = float(cfg.get('plc', 'cache_remote_state'))
+        cache_remote_state = float(cfg.get('plc/cache_remote_state'))
     except:
         cache_remote_state = 0.0
-    logging.debug('plc.cache_remote_state = %u' % cache_remote_state)
+    logging.debug(f'plc.cache_remote_state = {cache_remote_state}')
     config.cache_remote_state = cache_remote_state
 
 

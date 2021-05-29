@@ -23,15 +23,15 @@ _flags = SimpleNamespace(dispatcher_active=False)
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(cfg.get('lurp', 'listen'))
+        config.host, config.port = parse_host_port(cfg.get('lurp/listen'))
         try:
-            config.buf = int(cfg.get('lurp', 'buffer'))
+            config.buf = int(cfg.get('lurp/buffer'))
         except:
             pass
         if config.port == 0:
             return False
         logging.debug('lurp.listen = %s:%u' % (config.host, config.port))
-        logging.debug('lurp.buffer = %u' % (config.buf))
+        logging.debug(f'lurp.buffer = {config.buf}')
         return True
     except:
         return False

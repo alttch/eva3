@@ -703,9 +703,8 @@ def load(initial=False, init_log=True, check_pid=True):
             with open(config.pid_file) as fd:
                 pid = int(fd.readline().strip())
             p = psutil.Process(pid)
-            print('Can not start %s with config %s. ' % \
-                    (product.name, fname_full), end = '')
-            print('Another process is already running')
+            print(f'Can not start {product.name}, '
+                  'another process is already running')
             return None
         except:
             pass
