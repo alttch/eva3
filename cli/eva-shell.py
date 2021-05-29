@@ -159,22 +159,28 @@ class ManagementCLI(GenericCLI):
 
     def process_configuration(self):
         self.products_configured = []
-        for c in ['uc', 'lm', 'sfa']:
-            if eva.registry.key_get_field(f'config/{c}', 'service/setup'):
-                self.products_configured.append(c)
+        try:
+            for c in ['uc', 'lm', 'sfa']:
+                if eva.registry.key_get_field(f'config/{c}', 'service/setup'):
+                    self.products_configured.append(c)
+        except:
+            pass
 
     def add_manager_registry_functions(self):
-        ap_backup = self.sp.add_parser('registry', help='Registry management')
+        ap_registry = self.sp.add_parser('registry', help='Registry management')
 
-        sp_backup = ap_backup.add_subparsers(dest='_func',
-                                             metavar='func',
-                                             help='Registry commands')
+        sp_registry = ap_registry.add_subparsers(dest='_func',
+                                                 metavar='func',
+                                                 help='Registry commands')
 
-        sp_backup_save = sp_backup.add_parser('manage', help='Manage registry')
-        sp_backup_save.add_argument('key',
-                                    help='Registry key',
-                                    metavar='NAME',
-                                    nargs='?')
+        sp_registry_manage = sp_registry.add_parser('manage',
+                                                    help='Manage registry')
+        sp_registry_manage.add_argument('key',
+                                        help='Registry key',
+                                        metavar='NAME',
+                                        nargs='?')
+        sp_registry_restart = sp_registry.add_parser(
+            'restart', help='Restart registry server')
 
     def add_manager_backup_functions(self):
         ap_backup = self.sp.add_parser('backup', help='Backup management')
@@ -1350,6 +1356,17 @@ sys.argv = {argv}
         else:
             return self.local_func_result_ok
 
+    def registry_restart(self, params):
+        if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
+            self.print_err(
+                'Unable to restart registry server while other EVA servers are running'
+            )
+            return self.local_func_result_failed
+        if os.system(f'{dir_sbin}/registry-control restart'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
     def set_masterkey(self, params):
 
         def set_masterkey_for(p, a, access):
@@ -1578,6 +1595,7 @@ _api_functions = {
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
     'registry:manage': cli.registry_manage,
+    'registry:restart': cli.registry_restart,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
