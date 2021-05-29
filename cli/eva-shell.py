@@ -920,8 +920,8 @@ sys.argv = {argv}
     def update_mirror(self, params):
         from eva.tools import ShellConfigFile
         try:
-            sfa_listen = eva.registry.config_get('config/sfa').get(
-                'webapi/listen')
+            sfa_listen = eva.registry.key_get_field('config/sfa',
+                                                    'webapi/listen')
             if sfa_listen.startswith('127.'):
                 self.print_err(
                     'The local SFA is configured to listen on the loopback only'
