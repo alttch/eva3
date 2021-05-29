@@ -1054,10 +1054,11 @@ class UserAPI(object):
         """
         create API key
 
-        API keys are defined statically in etc/<controller>_apikeys.ini file as
-        well as can be created with API and stored in user database.
+        API keys are defined statically in EVA registry
+        config/<controller>/apikeys tree or can be created with API and stored
+        in the user database.
 
-        Keys with master permission can not be created.
+        Keys with the master permission can not be created.
 
         Args:
             k: .master
@@ -1080,8 +1081,7 @@ class UserAPI(object):
 
         .. note::
 
-            API keys, defined in etc/<controller>_apikeys.ini file can not be
-            managed with API.
+            API keys defined in EVA registry can not be managed with API.
 
         Args:
             k: .master

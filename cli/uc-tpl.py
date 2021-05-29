@@ -30,7 +30,7 @@ def usage():
 Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D] [-J]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
-         called in local mode (with data from ../etc/uc.ini and uc_apikeys.ini)
+         called in the local mode
     -K   masterkey, if no key specified, local master key will be used (if
          local API)
     -T   API request timeout
@@ -205,7 +205,7 @@ elif func == 'generate':
         try:
             api = apiclient.APIClientLocal('uc')
         except:
-            print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+            print('Can not init API')
             import traceback
             traceback.print_exc()
             sys.exit(98)

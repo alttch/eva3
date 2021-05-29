@@ -1385,9 +1385,7 @@ class GenericCLI(GCLI):
                 try:
                     api = apiclient.APIClientLocal(self.product)
                 except:
-                    print(
-                        'Can not init API, %s.ini or %s_apikeys.ini missing?' %
-                        (self.product, self.product))
+                    print('Can not init API')
                     import traceback
                     traceback.print_exc()
                     return 98
