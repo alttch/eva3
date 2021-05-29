@@ -519,7 +519,7 @@ def update_config(cfg):
     logging.debug(f'msad.ca = {ca}')
     key_prefix = cfg.get('msad/key-prefix', default=None)
     logging.debug(f'msad.key_prefix = {key_prefix}')
-    ou = cfg.get('msad', 'ou', default=_d.msad_ou)
+    ou = cfg.get('msad/ou', default=_d.msad_ou)
     logging.debug(f'msad.ou = {ou}')
     try:
         cache_time = float(cfg.get('msad/cache-time'))
