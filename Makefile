@@ -5,9 +5,9 @@ all:
 	@echo
 	@echo -n "Current build:"
 	@grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'
-	@./sbin/uc-control version
-	@./sbin/lm-control version
-	@./sbin/sfa-control version
+	@EVA_CONTROLLER=uc ./sbin/_control version
+	@EVA_CONTROLLER=lm ./sbin/_control version
+	@EVA_CONTROLLER=sfa ./sbin/_control version
 
 pub:
 	git push
