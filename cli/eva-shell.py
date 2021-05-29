@@ -870,11 +870,10 @@ sys.argv = {argv}
 
     def set_mirror(self, params):
 
-        from eva.tools import ConfigFile, ShellConfigFile
+        from eva.tools import ConfigFile
 
         url = params.get('MIRROR_URL')
         eva_shell_file = 'eva_shell.ini'
-        venv_file = 'venv'
         try:
             if os.path.exists(f'{dir_eva}/mirror'):
                 raise RuntimeError('Can not set mirror URLs on primary node. '
@@ -896,9 +895,9 @@ sys.argv = {argv}
                 with ConfigFile(eva_shell_file, init_if_missing=True) as cf:
                     cf.set('update', 'url', eva_mirror)
                 trusted_host = pypi_mirror.split('/', 3)[2].split(':', 1)[0]
-                with ShellConfigFile(venv_file, init_if_missing=True) as cf:
-                    cf.set('PIP_EXTRA_OPTIONS',
-                           f'-i {pypi_mirror} --trusted-host {trusted_host}')
+                with eva.registry.key_as_dict('config/venv') as k:
+                    k.set('pip-extra-options',
+                          f'-i {pypi_mirror} --trusted-host {trusted_host}')
             else:
                 try:
                     with ConfigFile(eva_shell_file,
@@ -906,12 +905,8 @@ sys.argv = {argv}
                         cf.delete('update', 'url')
                 except FileNotFoundError:
                     pass
-                try:
-                    with ShellConfigFile(venv_file,
-                                         init_if_missing=False) as cf:
-                        cf.delete('PIP_EXTRA_OPTIONS')
-                except FileNotFoundError:
-                    pass
+                with eva.registry.key_as_dict('config/venv') as k:
+                    k.delete('pip-extra-options')
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
