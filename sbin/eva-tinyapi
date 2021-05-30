@@ -107,9 +107,10 @@ REGISTRY_INI=./etc/eva_config
 
 [ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
 [ -z "${SOCKET}" ] && SOCKET=./var/registry.sock
+[ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
 
 source <(./yedb/yedb-cli -C "${SOCKET}" source \
-  "eva3/mws1/config/${PRODUCT}:webapi" --prefix WEBAPI)
+  "eva3/${SYSTEM_NAME}/config/${PRODUCT}:webapi" --prefix WEBAPI)
 
 if [ "$WEBAPI_LISTEN" ]; then
   CONNECT_TO=${WEBAPI_LISTEN}
@@ -125,7 +126,7 @@ fi
 U="${U}://${CONNECT_TO//0.0.0.0/127.0.0.1}/jrpc"
 
 source <(./yedb/yedb-cli -C "${SOCKET}" source \
-  "eva3/mws1/config/${PRODUCT}/apikeys/masterkey" --prefix MASTERKEY)
+  "eva3/${SYSTEM_NAME}/config/${PRODUCT}/apikeys/masterkey" --prefix MASTERKEY)
 
 if [ -z "$MASTERKEY_KEY" ]; then
   echo "Can not find masterkey"
