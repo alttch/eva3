@@ -59,6 +59,7 @@ import eva.tokens as tokens
 import eva.users
 
 import eva.notify
+import eva.registry
 
 from eva.tools import ConfigFile
 from eva.tools import ShellConfigFile
@@ -1497,16 +1498,14 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                                             c,
                                             raise_err=True)
         products = mod.flags.products
-        with eva.core.config_lock:
-            for p in prod:
-                if p in products:
-                    try:
-                        with ConfigFile(f'{p}.ini') as cf:
-                            cf.append('server', 'plugins', i)
-                            if p in configs:
-                                cf.add_section(f'plugin.{i}', configs[p])
-                    except FileNotFoundError:
-                        pass
+        for p in prod:
+            if p in products:
+                plugin_config = {
+                    'enabled': True,
+                }
+                if p in configs:
+                    plugin_config['config'] = configs[p]
+                eva.registry.key_set(f'config/{p}/plugins/{i}', plugin_config)
         return True
 
     @log_w
@@ -1520,14 +1519,8 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                                   'uninstall',
                                   raise_err=True)
         products = eva.core.plugin_modules[i].flags.products
-        with eva.core.config_lock:
-            for p in products:
-                try:
-                    with ConfigFile(f'{p}.ini') as cf:
-                        cf.remove('server', 'plugins', i)
-                        cf.remove_section(f'plugin.{i}')
-                except FileNotFoundError:
-                    pass
+        for p in products:
+            eva.registry.key_delete(f'config/{p}/plugins/{i}')
         return True
 
     @log_i

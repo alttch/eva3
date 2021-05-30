@@ -69,7 +69,6 @@ controllers = []
 plugin_modules = {}
 
 plugin_lock = threading.RLock()
-config_lock = threading.RLock()
 
 spawn = task_supervisor.spawn
 

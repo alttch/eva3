@@ -90,6 +90,9 @@ def key_increment(key):
 def key_decrement(key):
     return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
+@safe
+def key_delete(key):
+    return db.key_delete(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 @safe
 def get_subkeys(key):
