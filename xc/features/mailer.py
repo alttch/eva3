@@ -5,6 +5,8 @@ from eva.features import is_enabled
 
 from eva.tools import val_to_boolean
 
+import eva.registry
+
 import platform
 
 
@@ -19,26 +21,17 @@ def setup(smtp=None,
     if not default_from:
         default_from = f'eva@{platform.node()}'
     config = {'smtp': smtp, 'from': default_from}
-    ssl = val_to_boolean(ssl)
-    tls = val_to_boolean(tls)
-    if ssl:
-        config['ssl'] = 'yes'
-    if tls:
-        config['tls'] = 'yes'
+    config['ssl'] = val_to_boolean(ssl)
+    config['tls'] = val_to_boolean(tls)
     if login:
         config['login'] = login
     if password:
         config['password'] = password
+    eva.registry.key_set('config/common/mailer', config)
     for c in ['uc', 'lm', 'sfa']:
         if is_enabled(c):
-            with ConfigFile(f'{c}.ini') as fh:
-                fh.replace_section('mailer', config)
-                restart_controller(c)
+            restart_controller(c)
 
 
 def remove():
-    for c in ['uc', 'lm', 'sfa']:
-        if is_enabled(c):
-            with ConfigFile(f'{c}.ini') as fh:
-                fh.remove_section('mailer')
-                restart_controller(c)
+    eva.registry.key_delete('config/common/mailer')
