@@ -90,9 +90,6 @@ def key_increment(key):
 def key_decrement(key):
     return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
-@safe
-def key_delete(key):
-    return db.key_delete(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 @safe
 def get_subkeys(key):
@@ -112,6 +109,18 @@ def key_set_field(key, field, value, **kwargs):
                             field=field,
                             value=value,
                             **kwargs)
+
+
+@safe
+def key_delete(key):
+    return db.key_delete(key=f'{PFX}/{SYSTEM_NAME}/{key}')
+
+
+@safe
+def key_delete_field(key, field, **kwargs):
+    return db.key_delete_field(key=f'{PFX}/{SYSTEM_NAME}/{key}',
+                               field=field,
+                               **kwargs)
 
 
 @safe
