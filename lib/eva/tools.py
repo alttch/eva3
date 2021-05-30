@@ -92,8 +92,8 @@ class ConfigFile():
 
     Example:
 
-        with ConfigFile('uc.ini') as cf:
-            cf.set('plugin.my', 'field1', 'value1')
+        with ConfigFile('file.ini') as cf:
+            cf.set('section', 'field1', 'value1')
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
