@@ -16,12 +16,12 @@ export $EVA_REPOSITORY_URL
 
 OBS=""
 
-UC_NEW_CFG="runtime/uc_cs.json"
+UC_NEW_CFG=""
 UC_NEW_CFG_L=""
 UC_NEW_DIR="runtime/xc/uc/cs"
-LM_NEW_CFG="runtime/lm_cs.json"
-LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs runtime/lm_ext_data.d"
-SFA_NEW_CFG="runtime/sfa_cs.json"
+LM_NEW_CFG=""
+LM_NEW_DIR="runtime/xc/lm/functions runtime/xc/lm/cs"
+SFA_NEW_CFG=""
 SFA_NEW_DIR="runtime/xc/sfa/cs"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
