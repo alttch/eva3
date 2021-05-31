@@ -18,8 +18,8 @@ LOGIC_SIMPLE = 1
 
 class LVar(eva.item.VariableItem):
 
-    def __init__(self, var_id):
-        super().__init__(var_id, 'lvar')
+    def __init__(self, var_id=None, **kwargs):
+        super().__init__(var_id, 'lvar', **kwargs)
         self.status = 1
         self.mqtt_update_topics.append('set_time')
         self.prv_value = None

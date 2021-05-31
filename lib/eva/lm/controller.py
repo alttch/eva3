@@ -27,6 +27,7 @@ import eva.lm.dmatrix
 import eva.lm.jobs
 import eva.lm.extapi
 import eva.lm.macro_api
+import eva.registry
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -288,7 +289,7 @@ def save():
                 if not v.save():
                     return False
             try:
-                configs_to_remove.remove(v.get_fname())
+                configs_to_remove.remove(v.get_rkn())
             except:
                 pass
         dbt.commit()
@@ -306,7 +307,7 @@ def save():
                     return False
             try:
                 if i.static:
-                    configs_to_remove.remove(v.get_fname())
+                    configs_to_remove.remove(v.get_rkn())
             except:
                 pass
     finally:
@@ -316,7 +317,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in cycles_by_id.items():
@@ -324,7 +325,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in jobs.items():
@@ -332,7 +333,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in dm_rules.items():
@@ -340,12 +341,12 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for f in configs_to_remove:
         try:
-            os.unlink(f)
+            eva.registry.key_delete(f)
             logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
@@ -558,27 +559,17 @@ def load_lvars(start=False):
     _loaded = {}
     logging.info('Loading lvars')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lvar.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            lvar_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.config.enterprise_layout:
-                _id = lvar_id.split('___')[-1]
-                lvar_id = lvar_id.replace('___', '/')
-            else:
-                _id = lvar_id
-            u = eva.lm.lvar.LVar(_id)
-            if eva.core.config.enterprise_layout:
-                u.set_group('/'.join(lvar_id.split('/')[:-1]))
+        for i, ucfg in eva.registry.key_get_recursive('inventory/lvar'):
+            u = eva.lm.lvar.LVar(oid=f'lvar:{i}')
             if append_item(u, start=False):
-                _loaded[lvar_id] = u
+                _loaded[i] = u
         load_lvar_db_state(_loaded, clean=True)
         if start:
             for i, v in _loaded.items():
                 v.start_processors()
         return True
-    except:
-        logging.error('LVars load error')
+    except Exception as e:
+        logging.error(f'LVars load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -869,13 +860,13 @@ def destroy_macro(m_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove macro "%s" config' % \
                         m_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (macros_by_id[i.item_id])
         del (macros_by_full_id[i.full_id])
         logging.info('macro "%s" removed' % i.full_id)
@@ -928,13 +919,13 @@ def destroy_cycle(m_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove cycle "%s" config' % \
                         m_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (cycles_by_id[i.item_id])
         del (cycles_by_full_id[i.full_id])
         logging.info('cycle "%s" removed' % i.full_id)
@@ -973,13 +964,13 @@ def destroy_dm_rule(r_id):
         DM.remove_rule(i)
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove DM rule %s config' % \
                         r_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (dm_rules[r_id])
         logging.info('DM rule %s removed' % r_id)
         return True
@@ -1012,13 +1003,13 @@ def destroy_job(r_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove job %s config' % \
                         r_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (jobs[r_id])
         logging.info('Job %s removed' % r_id)
         return True
@@ -1133,13 +1124,13 @@ def remove_controller(controller_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove controller %s config' % \
                         _controller_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (remote_ucs[_controller_id])
         logging.info('controller %s removed' % _controller_id)
         return True
@@ -1230,12 +1221,12 @@ def destroy_item(item):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove %s config' % i.full_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         logging.info('%s destroyed' % i.full_id)
         return True
     except ResourceNotFound:
