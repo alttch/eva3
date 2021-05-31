@@ -22,12 +22,12 @@ function controller_cmd() {
   CN=${1^^}
   if [ ! "$(eval "echo \$${CN}_SUPERVISORD_PROGRAM")" ] &&
     [ "$(eval "echo \$${CN}_ENABLED")" != "1" ]; then
-    if [ "x$3" == "xA" ]; then
-      [ "$3" = "status" ] && echo disabled || echo "${CN} is disabled"
-      return 1
-    else
-      return 0
-    fi
+      if [ "x$3" == "xA" ]; then
+        [ "$3" = "status" ] && echo disabled || echo "${CN} is disabled"
+        return 1
+      else
+        return 0
+      fi
   fi
   EVA_CONTROLLER=$c ./sbin/_control "$2"
   if [ "$2" == "start" ]; then
@@ -36,20 +36,20 @@ function controller_cmd() {
     ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
     R=$?
     if [ $R -eq 9 ]; then
-        echo " configs missing!"
-        return 1
+      echo " configs missing!"
+      return 1
     fi
     echo -n "$c: ." | tr "[:lower:]" "[:upper:]"
     while [ $R -ne 0 ]; do
-        if [ $I -gt ${MAX_START_WAIT} ]; then
-            echo " failed to start!"
-            return 2
-        fi
-        (( I++ ))
-        sleep 0.5
-        echo -n "."
-        ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
-        R=$?
+      if [ $I -gt ${MAX_START_WAIT} ]; then
+        echo " failed to start!"
+        return 2
+      fi
+      (( I++ ))
+      sleep 0.5
+      echo -n "."
+      ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
+      R=$?
     done
     echo " started"
     return 0
@@ -59,7 +59,7 @@ function controller_cmd() {
 CS="uc lm sfa"
 
 case $1 in
-start)
+  start)
     if [ "$2" ]; then
       controller_cmd "$2" start A || exit 1
     else
@@ -73,7 +73,7 @@ start)
     [ "$INVOCATION_ID" ] && "$EVA_DIR/sbin/sblock.sh" &
     exit 0
     ;;
-stop)
+  stop)
     if [ "$2" ]; then
       controller_cmd "$2" stop A || exit 1
     else
@@ -87,12 +87,12 @@ stop)
     [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh" >& /dev/null
     exit 0
     ;;
-restart)
+  restart)
     $0 stop "$2"
     $0 start "$2"
     exit 0
     ;;
-status)
+  status)
     if [ "$2" ]; then
       controller_cmd "$2" status A || exit 1
     else
@@ -104,7 +104,7 @@ status)
       done
     fi
     ;;
-*)
+  *)
     echo "Usage: eva-control start|stop|restart"
     exit 0
 esac
