@@ -20,6 +20,8 @@ import threading
 import socket
 import sqlalchemy as sa
 
+import eva.registry
+
 import pyaltt2.logs
 
 from pyaltt2.converters import mq_topic_match
@@ -2523,7 +2525,9 @@ class GenericMQTTNotifier(GenericNotifier):
                     if item:
                         item.mqtt_set_state(None, frame)
                     else:
-                        logging.info(f'.{self.notifier_id} skipped {frame[oid]} state in bulk update')
+                        logging.info(
+                            f'.{self.notifier_id} skipped {frame[oid]} state in bulk update'
+                        )
         except:
             eva.core.log_traceback(notifier=True)
 
@@ -3586,23 +3590,16 @@ def remove_notifier(notifier_id):
     return True
 
 
-def load_notifier(notifier_id, fname=None, test=True, connect=True):
-    if not notifier_id and not fname:
+def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
+    if not notifier_id and not ncfg:
         return None
-    if not fname:
-        notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
-                (eva.core.product.code, notifier_id), runtime = True)
+    if not ncfg:
+        ncfg = eva.registry.key_get(
+            f'config/{eva.core.product.code}/notifiers/{notifier_id}')
+    if notifier_id and ncfg['id'] != notifier_id:
+        raise ValueError(f'notifier id mismatch {notifier_id}')
     else:
-        notifier_fname = fname
-    if not notifier_id:
-        _notifier_id = os.path.splitext(os.path.basename(notifier_fname))[0]
-    else:
-        _notifier_id = notifier_id
-    with open(notifier_fname) as fd:
-        ncfg = rapidjson.loads(fd.read())
-    if ncfg['id'] != _notifier_id:
-        raise Exception('notifier id mismatch, file %s' % \
-                notifier_fname)
+        notifier_id = ncfg['id']
     if ncfg['type'] == 'mqtt':
         host = ncfg.get('host')
         port = ncfg.get('port')
@@ -3627,7 +3624,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
         bulk_topic = ncfg.get('bulk_topic')
         bulk_subscribe = ncfg.get('bulk_subscribe')
-        n = MQTTNotifier(_notifier_id,
+        n = MQTTNotifier(notifier_id,
                          host=host,
                          port=port,
                          space=space,
@@ -3657,7 +3654,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
         port = ncfg.get('port')
-        n = UDPNotifier(_notifier_id,
+        n = UDPNotifier(notifier_id,
                         interval=interval,
                         buf_ttl=buf_ttl,
                         fmt=fmt,
@@ -3675,7 +3672,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         region = ncfg.get('region')
         registry = ncfg.get('registry')
         apikey = ncfg.get('apikey')
-        n = GCP_IoT(_notifier_id,
+        n = GCP_IoT(notifier_id,
                     keepalive=keepalive,
                     timeout=timeout,
                     interval=interval,
@@ -3694,7 +3691,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
         simple_cleaning = ncfg.get('simple_cleaning')
-        n = SQLANotifier(_notifier_id,
+        n = SQLANotifier(notifier_id,
                          db_uri=db,
                          keep=keep,
                          simple_cleaning=simple_cleaning,
@@ -3712,7 +3709,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
-        n = HTTP_JSONNotifier(_notifier_id,
+        n = HTTP_JSONNotifier(notifier_id,
                               ssl_verify=ssl_verify,
                               uri=uri,
                               username=username,
@@ -3738,7 +3735,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         password = ncfg.get('password')
         token = ncfg.get('token')
         v2_afixes = ncfg.get('v2_afixes', True)
-        n = InfluxDB_Notifier(_notifier_id,
+        n = InfluxDB_Notifier(notifier_id,
                               ssl_verify=ssl_verify,
                               uri=uri,
                               db=db,
@@ -3757,7 +3754,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         space = ncfg.get('space')
         username = ncfg.get('username')
         password = ncfg.get('password')
-        n = PrometheusNotifier(_notifier_id,
+        n = PrometheusNotifier(notifier_id,
                                username=username,
                                password=password)
     else:
@@ -3771,11 +3768,11 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             if n.test():
                 logging.info(
                     'notifier %s (%s) test passed' % \
-                        (_notifier_id, n.notifier_type))
+                        (notifier_id, n.notifier_type))
             else:
                 logging.error(
                     'notifier %s (%s) test failed' % \
-                        (_notifier_id, n.notifier_type))
+                        (notifier_id, n.notifier_type))
         elif connect:
             n.connect()
     for e in ncfg.get('events', []):
@@ -3794,28 +3791,20 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     return n
 
 
-def get_notifier_fnames():
-    fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-            '_notify.d/*.json', runtime = True)
-    return glob.glob(fnames)
-
-
 def load(test=True, connect=False):
     logging.info('Loading notifiers')
     notifiers.clear()
     try:
-        for notifier_fname in get_notifier_fnames():
+        for i, cfg in eva.registry.key_get_recursive(
+                f'config/{eva.core.product.code}/notifiers'):
             try:
-                n = load_notifier(notifier_id=None,
-                                  fname=notifier_fname,
-                                  test=test,
-                                  connect=connect)
+                n = load_notifier(i, cfg, test=test, connect=connect)
                 if not n:
                     raise Exception('Notifier load error')
                 notifiers[n.notifier_id] = n
                 logging.debug('+ notifier %s' % n.notifier_id)
             except:
-                logging.error('Can not load notifier from %s' % notifier_fname)
+                logging.error(f'Can not load notifier {i}')
                 eva.core.log_traceback(notifier=True)
     except:
         logging.error('Notifiers load error')
@@ -3840,14 +3829,12 @@ def serialize(notifier_id=None):
 
 
 def save_notifier(notifier_id):
-    fname_full = eva.core.format_cfg_fname(eva.core.product.code + \
-            '_notify.d/%s.json' % notifier_id, runtime = True)
     try:
         data = notifiers[notifier_id].serialize()
-        with open(fname_full, 'w') as fd:
-            fd.write(format_json(data, minimal=False))
-    except:
-        logging.error('can not save notifiers config into %s' % fname_full)
+        eva.registry.key_set(
+            f'config/{eva.core.product.code}/notifiers/{notifier_id}', data)
+    except Exception as e:
+        logging.error(f'can not save notifier {notifier_id} config')
         eva.core.log_traceback(notifier=True)
         return False
 

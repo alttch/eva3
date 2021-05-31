@@ -18,8 +18,6 @@ mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1
 mkdir -p ./runtime/data || exit 1
-mkdir -p ./runtime/sfa_notify.d || exit 1
-chmod 700 ./runtime/sfa_notify.d || exit 1
 mkdir -p ./runtime/sfa_remote_uc.d || exit 1
 chmod 700 ./runtime/sfa_remote_uc.d || exit 1
 mkdir -p ./runtime/sfa_remote_lm.d || exit 1

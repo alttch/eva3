@@ -14,6 +14,8 @@ sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
 import eva.core
 import eva.notify
+import eva.registry
+
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
@@ -419,14 +421,13 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     def destroy_notifier(self, params):
         n = self.get_notifier(params['i'])
         if n:
-            notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
-                (eva.core.product.code, params['i']), runtime = True)
             try:
-                os.unlink(notifier_fname)
-            except:
-                self.print_err('unable to delete notifier config file')
+                eva.registry.key_delete(
+                    f'config/{eva.core.product.code}/notifiers/{params["i"]}')
+                return self.local_func_result_ok
+            except Exception as e:
+                self.print_err('unable to delete notifier {params["i"]} config')
                 return self.local_func_result_failed
-            return self.local_func_result_ok
         else:
             return self.local_func_result_failed
 
