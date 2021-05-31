@@ -27,9 +27,9 @@ status_label_on = 'ON'
 class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
            eva.item.PhysicalItem):
 
-    def __init__(self, unit_id):
+    def __init__(self, unit_id=None, **kwargs):
         self.action_driver_config = None
-        super().__init__(unit_id, 'unit')
+        super().__init__(unit_id, 'unit', **kwargs)
 
         self.update_exec_after_action = False
         self.update_state_after_action = True

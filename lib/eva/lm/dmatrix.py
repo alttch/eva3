@@ -298,8 +298,10 @@ class DecisionRule(eva.item.Item):
         self.last_matched = 0
         self.processing_lock = threading.Lock()
         super().__init__(_uuid, 'dmatrix_rule')
-        self.respect_layout = False
         super().update_config({'group': 'dm_rules'})
+
+    def get_rkn(self):
+        return f'inventory/{self.item_type}/{self.item_id}'
 
     def serialize(self,
                   full=False,

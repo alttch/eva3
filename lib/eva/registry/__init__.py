@@ -40,7 +40,8 @@ def safe(func):
         except:
             if 'eva.core' in sys.modules:
                 import eva.core
-                logging.crticial('REGISTRY SERVER ERROR')
+                logging.critical('REGISTRY SERVER ERROR')
+                eva.core.log_traceback()
                 eva.core.critical()
             else:
                 from neotermcolor import cprint
@@ -78,7 +79,10 @@ def key_get_field(key, field, default=KeyError):
 
 @safe
 def key_get_recursive(key):
-    return db.key_get_recursive(key=f'{PFX}/{SYSTEM_NAME}/{key}')
+    _key = f'{PFX}/{SYSTEM_NAME}/{key}'
+    l = len(_key) + 1
+    for k, v in db.key_get_recursive(key=_key):
+        yield k[l:], v
 
 
 @safe

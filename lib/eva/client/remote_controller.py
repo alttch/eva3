@@ -221,11 +221,11 @@ class RemoteController(eva.item.Item):
                  static=True,
                  enabled=True,
                  ws_state_events=True,
-                 ws_buf_ttl=0):
+                 ws_buf_ttl=0,
+                 **kwargs):
         if item_id == None:
             item_id = ''
-        super().__init__(item_id, item_type)
-        self.respect_layout = False
+        super().__init__(item_id, item_type, **kwargs)
         if api:
             self.api = api
             self._key = api._key
@@ -249,6 +249,13 @@ class RemoteController(eva.item.Item):
         self.set_mqtt_notifier()
         self.ws_state_events = ws_state_events
         self.ws_buf_ttl = ws_buf_ttl
+
+    def get_rkn(self):
+        if self.item_id:
+            return (f'data/{eva.core.product.code}'
+                    f'/{self.item_type}/{self.item_id}')
+        else:
+            raise RuntimeError('controller object not configured')
 
     def set_connected(self, state, graceful_shutdown=False):
         if graceful_shutdown:

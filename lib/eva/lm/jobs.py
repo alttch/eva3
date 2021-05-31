@@ -39,8 +39,10 @@ class Job(eva.item.Item):
         self.every = ''
         self.every_set = ''
         super().__init__(_uuid, 'job')
-        self.respect_layout = False
         super().update_config({'group': 'jobs'})
+
+    def get_rkn(self):
+        return f'inventory/{self.item_type}/{self.item_id}'
 
     @with_scheduler_lock
     def schedule(self):

@@ -14,8 +14,8 @@ from eva.uc.ucitem import UCItem
 
 class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
 
-    def __init__(self, sensor_id):
-        super().__init__(sensor_id, 'sensor')
+    def __init__(self, sensor_id=None, **kwargs):
+        super().__init__(sensor_id, 'sensor', **kwargs)
         self._modbus_status_allowed = False
 
     def set_expired(self):
