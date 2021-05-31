@@ -271,7 +271,7 @@ def save():
             db.close()
     for f in configs_to_remove:
         try:
-            os.unlink(f)
+            eva.registry.key_delete(f)
             logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
