@@ -161,8 +161,12 @@ class ManagementCLI(GenericCLI):
         self.products_configured = []
         try:
             for c in ['uc', 'lm', 'sfa']:
-                if eva.registry.key_get_field(f'config/{c}', 'service/setup'):
-                    self.products_configured.append(c)
+                try:
+                    if eva.registry.key_get_field(f'config/{c}',
+                                                  'service/setup'):
+                        self.products_configured.append(c)
+                except:
+                    pass
         except:
             pass
 
