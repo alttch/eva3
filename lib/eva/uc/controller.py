@@ -210,13 +210,7 @@ def get_mu(mu_id):
 
 
 @with_item_lock
-def append_item(item, start=False, load=True):
-    try:
-        if load and not item.load():
-            return False
-    except:
-        eva.core.log_traceback()
-        return False
+def append_item(item, start=False):
     if item.item_type == 'unit':
         if not eva.core.config.enterprise_layout:
             units_by_id[item.item_id] = item
@@ -427,6 +421,7 @@ def load_units(start=False):
     try:
         for i, ucfg in eva.registry.key_get_recursive('inventory/unit'):
             u = eva.uc.unit.Unit(oid=f'unit:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
                 _loaded[i] = u
         load_db_state(_loaded, 'U', clean=True)
@@ -447,6 +442,7 @@ def load_sensors(start=False):
     try:
         for i, ucfg in eva.registry.key_get_recursive('inventory/sensor'):
             u = eva.uc.sensor.Sensor(oid=f'sensor:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
                 _loaded[i] = u
         load_db_state(_loaded, 'S', clean=True)
@@ -454,8 +450,8 @@ def load_sensors(start=False):
             for i, v in _loaded.items():
                 v.start_processors()
         return True
-    except:
-        logging.error('sensors load error')
+    except Exception as e:
+        logging.error(f'sensors load error {e}')
         eva.core.log_traceback()
         return False
 
@@ -467,13 +463,13 @@ def load_mu(start=False):
         for i, ucfg in eva.registry.key_get_recursive('inventory/mu'):
             u = eva.uc.ucmu.UCMultiUpdate(oid=f'mu:{i}')
             u.get_item_func = get_item
-            if u.load():
-                append_item(u, start=False)
-                if start:
-                    u.start_processors()
+            u.load(ucfg)
+            append_item(u, start=False)
+            if start:
+                u.start_processors()
         return True
-    except:
-        logging.error('multi updates load error')
+    except Exception as e:
+        logging.error(f'multi updates load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -514,7 +510,7 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start=start, load=False)
+    append_item(item, start=start)
     if save:
         item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))

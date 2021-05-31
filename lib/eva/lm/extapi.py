@@ -11,6 +11,8 @@ import glob
 import os
 
 import eva.core
+import eva.registry
+
 from eva.tools import format_json
 
 from eva.x import import_x
@@ -72,15 +74,13 @@ def ext_constructor(f):
 
 
 def load_data(ext):
-    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
-    with open(datapath) as fh:
-        ext.data = rapidjson.loads(fh.read())
+    datapath = f'data/lm/extension_data/{ext.ext_id}'
+    ext.data = eva.registry.key_get(datapath)
 
 
 def save_data(ext):
-    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
-    with open(datapath, 'w') as fh:
-        fh.write(rapidjson.dumps(ext.data))
+    datapath = f'data/lm/extension_data/{ext.ext_id}'
+    eva.registry.key_set(datapath, ext.data)
 
 
 # internal functions

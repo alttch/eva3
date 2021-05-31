@@ -26,7 +26,7 @@ schedule.logger.setLevel(logging.WARNING)
 
 class Job(eva.item.Item):
 
-    def __init__(self, job_uuid=None):
+    def __init__(self, job_uuid=None, **kwargs):
         if not job_uuid:
             _uuid = str(uuid.uuid4())
         else:
@@ -38,7 +38,7 @@ class Job(eva.item.Item):
         self.last_action = None
         self.every = ''
         self.every_set = ''
-        super().__init__(_uuid, 'job')
+        super().__init__(_uuid, 'job', **kwargs)
         super().update_config({'group': 'jobs'})
 
     def get_rkn(self):

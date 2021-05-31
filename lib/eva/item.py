@@ -52,7 +52,11 @@ class Item(object):
     def __init__(self, item_id=None, item_type=None, item_group=None, oid=None):
         if oid:
             item_type, i = parse_oid(oid)
-            item_group, item_id = i.split('/', 1)
+            if '/' in i:
+                item_group, item_id = i.split('/', 1)
+            else:
+                item_group = 'nogroup'
+                item_id = i
         elif item_id is None or item_type is None:
             raise RuntimeError('item init failed, no id provided')
         self.item_id = item_id

@@ -381,14 +381,11 @@ class MacroAction(eva.item.ItemAction):
 
 class Macro(eva.item.ActiveItem):
 
-    def __init__(self, item_id):
-        super().__init__(item_id, 'lmacro')
+    def __init__(self, item_id=None, **kwargs):
+        super().__init__(item_id, 'lmacro', **kwargs)
         self.api = eva.lm.macro_api.MacroAPI(pass_errors=False,
                                              send_critical=False)
         self.pfcode = None
-
-    def get_rkn(self):
-        return f'inventory/{self.item_type}/{self.item_id}'
 
     def update_config(self, data):
         if 'pass_errors' in data:
@@ -510,8 +507,8 @@ class VFMacro(Macro):
 
 class Cycle(eva.item.Item):
 
-    def __init__(self, item_id):
-        super().__init__(item_id, 'lcycle')
+    def __init__(self, item_id=None, **kwargs):
+        super().__init__(item_id, 'lcycle', **kwargs)
         self.macro = None
         self.macro_args = []
         self.macro_kwargs = {}
@@ -526,9 +523,6 @@ class Cycle(eva.item.Item):
         self.iterations = 0
         self.set_time = time.time()
         self.ieid = [0, 0]
-
-    def get_rkn(self):
-        return f'inventory/{self.item_type}/{self.item_id}'
 
     def update_config(self, data):
         if 'macro' in data:

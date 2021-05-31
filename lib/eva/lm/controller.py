@@ -253,13 +253,7 @@ def get_lvar(lvar_id):
 
 
 @with_item_lock
-def append_item(item, start=False, load=True):
-    try:
-        if load and not item.load():
-            return False
-    except:
-        eva.core.log_traceback()
-        return False
+def append_item(item, start=False):
     if item.item_type == 'lvar':
         if not eva.core.config.enterprise_layout:
             lvars_by_id[item.item_id] = item
@@ -561,6 +555,7 @@ def load_lvars(start=False):
     try:
         for i, ucfg in eva.registry.key_get_recursive('inventory/lvar'):
             u = eva.lm.lvar.LVar(oid=f'lvar:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
                 _loaded[i] = u
         load_lvar_db_state(_loaded, clean=True)
@@ -577,20 +572,17 @@ def load_lvars(start=False):
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_remote_uc.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            uc_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.lm.lremote.LRemoteUC(uc_id)
-            if u.load():
-                controller_lock.acquire()
-                try:
-                    remote_ucs[uc_id] = u
-                finally:
-                    controller_lock.release()
+        for i, cfg in eva.registry.key_get_recursive('data/lm/remote_uc'):
+            u = eva.lm.lremote.LRemoteUC(i)
+            u.load(cfg)
+            controller_lock.acquire()
+            try:
+                remote_ucs[i] = u
+            finally:
+                controller_lock.release()
         return True
-    except:
-        logging.error('UCs load error')
+    except Exception as e:
+        logging.error(f'UCs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -734,18 +726,15 @@ def load_macros():
     eva.lm.plc.load_macro_api_functions()
     logging.info('Loading macro configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lmacro.d/*.json', runtime = True)
-        for mcfg in glob.glob(fnames):
-            m_id = os.path.splitext(os.path.basename(mcfg))[0]
-            m = eva.lm.plc.Macro(m_id)
-            if m.load():
-                macros_by_id[m_id] = m
-                macros_by_full_id[m.full_id] = m
-                logging.debug('macro "%s" config loaded' % m_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/lmacro'):
+            m = eva.lm.plc.Macro(oid=f'lmacro:{i}')
+            m.load(cfg)
+            macros_by_id[m.item_id] = m
+            macros_by_full_id[m.full_id] = m
+            logging.debug(f'macro "{i}" config loaded')
         return True
-    except:
-        logging.error('Macro configs load error')
+    except Exception as e:
+        logging.error(f'Macro configs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -754,18 +743,15 @@ def load_macros():
 def load_cycles():
     logging.info('Loading cycle configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lcycle.d/*.json', runtime = True)
-        for mcfg in glob.glob(fnames):
-            m_id = os.path.splitext(os.path.basename(mcfg))[0]
-            m = eva.lm.plc.Cycle(m_id)
-            if m.load():
-                cycles_by_id[m_id] = m
-                cycles_by_full_id[m.full_id] = m
-                logging.debug('cycle "%s" config loaded' % m_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/lcycle'):
+            m = eva.lm.plc.Cycle(oid=f'lcycle:{i}')
+            m.load(cfg)
+            cycles_by_id[m.item_id] = m
+            cycles_by_full_id[m.full_id] = m
+            logging.debug('cycle "%s" config loaded' % i)
         return True
-    except:
-        logging.error('Cycle configs load error')
+    except Exception as e:
+        logging.error(f'Cycle configs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -774,21 +760,19 @@ def load_cycles():
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_dmatrix_rule.d/*.json', runtime = True)
-        for rcfg in glob.glob(fnames):
-            r_id = os.path.splitext(os.path.basename(rcfg))[0]
-            r = eva.lm.dmatrix.DecisionRule(r_id)
-            if r.load():
-                dm_rules[r_id] = r
-                if eva.core.config.development:
-                    rule_id = r_id
-                else:
-                    rule_id = r_id[:14] + '...'
-                logging.debug('DM rule %s loaded' % rule_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/dmatrix_rule'):
+            r = eva.lm.dmatrix.DecisionRule(oid=f'dmatrix_rule:{i}')
+            r.load(cfg)
+            r_id = r.item_id
+            dm_rules[r_id] = r
+            if eva.core.config.development:
+                rule_id = r_id
+            else:
+                rule_id = r_id[:14] + '...'
+            logging.debug('DM rule %s loaded' % rule_id)
         return True
-    except:
-        logging.error('DM rules load error')
+    except Exception as e:
+        logging.error(f'DM rules load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -797,21 +781,18 @@ def load_dm_rules():
 def load_jobs():
     logging.info('Loading jobs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_job.d/*.json', runtime = True)
-        for rcfg in glob.glob(fnames):
-            r_id = os.path.splitext(os.path.basename(rcfg))[0]
-            r = eva.lm.jobs.Job(r_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/job'):
+            r = eva.lm.jobs.Job(oid=f'job:{i}')
             if r.load():
-                jobs[r_id] = r
+                jobs[i] = r
                 if eva.core.config.development:
-                    job_id = r_id
+                    job_id = i
                 else:
-                    job_id = r_id[:14] + '...'
+                    job_id = i[:14] + '...'
                 logging.debug('Job %s loaded' % job_id)
         return True
-    except:
-        logging.error('Jobs load error')
+    except Exception as e:
+        logging.error(f'Jobs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -1104,6 +1085,7 @@ def append_controller(uri,
         remote_ucs[u.item_id] = u
     finally:
         controller_lock.release()
+    u.config_changed = True
     if save:
         u.save()
     logging.info('controller %s added to pool' % u.item_id)

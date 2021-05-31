@@ -19,7 +19,7 @@ from eva.tools import parse_func_str
 from eva.exceptions import FunctionFailed
 
 
-class DecisionMatrix(object):
+class DecisionMatrix:
 
     def __init__(self):
         self.rules = []
@@ -271,7 +271,7 @@ class DecisionMatrix(object):
 
 class DecisionRule(eva.item.Item):
 
-    def __init__(self, rule_uuid=None):
+    def __init__(self, rule_uuid=None, **kwargs):
         self.priority = 100
         if not rule_uuid:
             _uuid = str(uuid.uuid4())
@@ -297,7 +297,7 @@ class DecisionRule(eva.item.Item):
         self.chillout_active = False
         self.last_matched = 0
         self.processing_lock = threading.Lock()
-        super().__init__(_uuid, 'dmatrix_rule')
+        super().__init__(_uuid, 'dmatrix_rule', **kwargs)
         super().update_config({'group': 'dm_rules'})
 
     def get_rkn(self):

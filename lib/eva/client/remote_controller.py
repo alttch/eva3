@@ -425,6 +425,8 @@ class RemoteController(eva.item.Item):
         if self.group != result['product_code']:
             self.set_group(result['product_code'])
             self.config_changed = True
+        else:
+            self.set_group(result['product_code'])
         self.product_build = result['product_build']
         logging.info('controller %s loaded' % self.full_id)
         self.version = result['version']
@@ -435,8 +437,11 @@ class RemoteController(eva.item.Item):
             logging.info(msg)
         return True
 
-    def save(self, fname=None):
-        return super().save(fname=fname) if self.static else True
+    def save(self):
+        if not self.item_id:
+            return False
+        else:
+            return super().save() if self.static else True
 
     def update_config(self, data):
         if cloud_manager:
@@ -696,6 +701,7 @@ class RemoteUC(RemoteController):
     def __init__(self, uc_id=None, api=None, mqtt_update=None, static=True):
         super().__init__(uc_id, 'remote_uc', api, mqtt_update, static)
         self.api.set_product('uc')
+        self.set_group('uc')
 
     def create_remote_unit(self, state):
         return eva.client.remote_item.RemoteUnit(self, state)
@@ -735,6 +741,7 @@ class RemoteLM(RemoteController):
     def __init__(self, lm_id=None, api=None, mqtt_update=None, static=True):
         super().__init__(lm_id, 'remote_lm', api, mqtt_update, static)
         self.api.set_product('lm')
+        self.set_group('lm')
 
     def create_remote_lvar(self, state):
         return eva.client.remote_item.RemoteLVar(self, state)
