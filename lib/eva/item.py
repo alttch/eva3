@@ -324,7 +324,7 @@ class UpdatableItem(Item):
         self.value = ''
         self.set_time = time.time()
         self.state_set_time = time.perf_counter()
-        self.ieid = [1, 1]
+        self.ieid = [eva.core.get_boot_id(), 1]
         self.expires = 0
         self.mqtt_update = None
         self.mqtt_update_notifier = None

@@ -420,6 +420,10 @@ def generate_ieid():
     return [_flags.boot_id, time.perf_counter_ns()]
 
 
+def get_boot_id():
+    return _flags.boot_id
+
+
 def generate_boot_id():
     try:
         if not prepare_save():
