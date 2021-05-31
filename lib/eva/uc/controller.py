@@ -530,6 +530,8 @@ def create_unit(unit_id, group=None, enabled=None, save=False):
                        save=save and not enabled)
     if enabled:
         unit.set_prop('action_enabled', True, save=save)
+        unit.ieid = eva.core.generate_ieid()
+        unit.notify()
     unit.start_processors()
     return unit
 
