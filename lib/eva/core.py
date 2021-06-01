@@ -24,6 +24,7 @@ import uuid
 import glob
 import importlib
 import yaml
+import re
 
 # python 3.6 compat
 try:
@@ -188,6 +189,7 @@ corescript_globals = {
 
 OID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
 GROUP_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\./\(\)\[\]-]*$'
+ID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
 
 
 def critical(log=True, from_driver=False):
@@ -1046,7 +1048,7 @@ def get_cvar(var=None):
 
 @cvars_lock
 def set_cvar(var, value=None):
-    if not var:
+    if not var or not re.match(ID_ALLOWED_SYMBOLS, var):
         return False
     if value is not None:
         cvars[str(var)] = str(value)
