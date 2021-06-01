@@ -76,7 +76,7 @@ _flags = SimpleNamespace(ignore_critical=False,
                          sigterm_sent=False,
                          started=threading.Event(),
                          shutdown_requested=False,
-                         cvars_modified=False,
+                         cvars_modified=set(),
                          cs_modified=False,
                          setup_mode=0,
                          boot_id=0,
@@ -964,12 +964,8 @@ def exec_plugin_func(pname, plugin, func, *args, raise_err=False, **kwargs):
 
 @cvars_lock
 def load_cvars(fname=None):
-    fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
-    if not fname_full:
-        logging.warning('No file or product specified,' + \
-                            ' skipping loading custom variables')
-        return False
     cvars.clear()
+    _flags.cvars_modified.clear()
     env.clear()
     env.update(os.environ.copy())
     env['EVA_VERSION'] = __version__
@@ -977,17 +973,17 @@ def load_cvars(fname=None):
     if not 'PATH' in env:
         env['PATH'] = ''
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
-    logging.info('Loading custom vars from %s' % fname_full)
+    logging.info('Loading custom vars')
     try:
-        with open(fname_full) as fd:
-            cvars.update(rapidjson.loads(fd.read()))
-    except:
-        logging.error('can not load custom vars from %s' % fname_full)
+        for i, value in eva.registry.key_get_recursive(
+                f'config/{eva.core.product.code}/cvars'):
+            cvars[i] = value
+    except Exception as e:
+        logging.error('Error loading custom vars: {e}')
         log_traceback()
         return False
     for i, v in cvars.items():
         logging.debug('custom var %s = "%s"' % (i, v))
-    _flags.cvars_modified = False
     return True
 
 
@@ -1010,21 +1006,24 @@ def load_corescripts(fname=None):
         return False
 
 
+@save
 @cvars_lock
-def save_cvars(fname=None):
-    fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
-    logging.info('Saving custom vars to %s' % fname_full)
-    try:
-        with open(fname_full, 'w') as fd:
-            fd.write(format_json(cvars, minimal=False))
-        _flags.cvars_modified = False
-        return True
-    except:
-        logging.error('can not save custom vars into %s' % fname_full)
-        log_traceback()
-        return False
+def save_cvars():
+    for i in _flags.cvars_modified:
+        try:
+            kn = f'config/{eva.core.product.code}/cvars/{i}'
+            try:
+                value = cvars[i]
+                eva.registry.key_set(kn, cvars[i])
+            except KeyError:
+                eva.registry.key_delete(kn)
+        except Exception as e:
+            logging.error(f'Unable to save cvar {i}: {e}')
+            log_traceback()
+    _flags.cvars_modified.clear()
 
 
+@save
 @corescript_lock
 def save_cs(fname=None):
     fname_full = format_cfg_fname(fname, 'cs', ext='json', runtime=True)
@@ -1062,18 +1061,10 @@ def set_cvar(var, value=None):
             del cvars[str(var)]
         except:
             return False
+    _flags.cvars_modified.add(var)
     if config.db_update == 1:
         save_cvars()
-    else:
-        _flags.cvars_modified = True
     return True
-
-
-@save
-def save_modified():
-    return (save_cvars() if _flags.cvars_modified else True) \
-        and (save_cs() if \
-        _flags.cs_modified else True)
 
 
 def debug_on():
