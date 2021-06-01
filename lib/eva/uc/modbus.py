@@ -237,7 +237,7 @@ def load():
     try:
         for i, v in eva.registry.key_get_recursive('config/uc/buses/modbus'):
             if i != v['id']:
-                raise ValueError('port id mismatch')
+                raise ValueError(f'port {i} id mismatch')
             p = v['params']
             del v['id']
             del v['params']

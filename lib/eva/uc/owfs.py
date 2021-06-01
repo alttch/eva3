@@ -143,7 +143,7 @@ def load():
     try:
         for i, v in eva.registry.key_get_recursive('config/uc/buses/owfs'):
             if i != v['id']:
-                raise ValueError('bus id mismatch')
+                raise ValueError(f'bus {i} id mismatch')
             p = v['location']
             del v['id']
             del v['location']
