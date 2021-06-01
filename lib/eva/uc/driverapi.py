@@ -13,6 +13,8 @@ import threading
 import importlib
 
 import eva.core
+import eva.registry
+
 from eva.tools import format_json
 
 from eva.x import import_x
@@ -38,7 +40,7 @@ shared_namespaces = {}
 with_drivers_lock = eva.core.RLocker('uc/driverapi')
 with_shared_namespaces_lock = eva.core.RLocker('uc/driverapi/shared_namespaces')
 
-_d = SimpleNamespace(modified=False)
+_d = SimpleNamespace(phi_modified=set(), driver_modified=set())
 
 # public API functions, may be imported into PHI and LPI
 
@@ -503,7 +505,8 @@ def load_phi(phi_id,
              phi_cfg=None,
              start=True,
              config_validated=False,
-             _o=None):
+             _o=None,
+             set_modified=True):
     if not phi_id:
         raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
@@ -552,7 +555,8 @@ def load_phi(phi_id,
         except:
             eva.core.log_traceback()
     phis[phi_id] = phi
-    set_modified()
+    if set_modified:
+        _d.phi_modified.add(phi_id)
     if not phi_id in items_by_phi:
         items_by_phi[phi_id] = set()
     if start:
@@ -574,7 +578,8 @@ def load_driver(lpi_id,
                 lpi_cfg=None,
                 start=True,
                 config_validated=False,
-                _o=None):
+                _o=None,
+                set_modified=True):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
             'Unable to load LPI, unknown PHI: {}'.format(phi_id))
@@ -628,7 +633,8 @@ def load_driver(lpi_id,
         except:
             eva.core.log_traceback()
     drivers[lpi.driver_id] = lpi
-    set_modified()
+    if set_modified:
+        _d.driver_modified.add(lpi.driver_id)
     if start:
         try:
             lpi._start()
@@ -691,7 +697,7 @@ def unload_phi(phi_id):
     except:
         eva.core.log_traceback()
     del phis[phi_id]
-    set_modified()
+    _d.phi_modified.add(phi_id)
     return True
 
 
@@ -747,7 +753,7 @@ def unload_driver(driver_id):
     except:
         eva.core.log_traceback()
     del drivers[lpi.driver_id]
-    set_modified()
+    _d.driver_modified.add(lpi.driver_id)
     return True
 
 
@@ -791,50 +797,74 @@ def dump():
     return serialize(full=True, config=True)
 
 
+@with_drivers_lock
 def load():
     try:
-        with open(eva.core.dir_runtime + '/uc_drivers.json') as fd:
-            data = rapidjson.loads(fd.read())
-        _phi = data.get('phi')
-        if _phi:
-            for p in _phi:
-                try:
-                    load_phi(p['id'], p['mod'], phi_cfg=p['cfg'], start=False)
-                except Exception as e:
-                    logging.error(e)
-                    eva.core.log_traceback()
-        _lpi = data.get('lpi')
-        if _lpi:
-            for l in _lpi:
-                try:
-                    load_driver(l['lpi_id'],
-                                l['mod'],
-                                l['phi_id'],
-                                lpi_cfg=l['cfg'],
-                                start=False)
-                except Exception as e:
-                    logging.error(e)
-                    eva.core.log_traceback()
-        _d.modified = False
+        for i, cfg in eva.registry.key_get_recursive('config/uc/phis'):
+            try:
+                if i != cfg['id']:
+                    raise ValueError(f'PHI {i} id mismatch')
+                else:
+                    load_phi(i,
+                             cfg['mod'],
+                             phi_cfg=cfg['cfg'],
+                             start=False,
+                             set_modified=False)
+            except Exception as e:
+                logging.error(e)
+                eva.core.log_traceback()
+        for i, cfg in eva.registry.key_get_recursive('config/uc/drivers'):
+            try:
+                if i != cfg['id']:
+                    raise ValueError(f'driver {i} id mismatch')
+                else:
+                    load_driver(cfg['lpi_id'],
+                                cfg['mod'],
+                                cfg['phi_id'],
+                                lpi_cfg=cfg['cfg'],
+                                start=False,
+                                set_modified=False)
+            except Exception as e:
+                logging.error(e)
+                eva.core.log_traceback()
+        _d.phi_modified.clear()
+        _d.driver_modified.clear()
         return True
     except Exception as e:
-        logging.error('unable to load uc_drivers.json: {}'.format(e))
+        logging.error(f'Error loading drivers: {e}')
         eva.core.log_traceback()
         return False
 
 
 @eva.core.save
+@with_drivers_lock
 def save():
-    if _d.modified:
-        try:
-            with open(eva.core.dir_runtime + '/uc_drivers.json', 'w') as fd:
-                fd.write(format_json(serialize(config=True), minimal=False))
-            _d.modified = False
-            return True
-        except Exception as e:
-            logging.error('unable to save drivers config: {}'.format(e))
-            eva.core.log_traceback()
-            return False
+    try:
+        if not eva.core.prepare_save():
+            raise RuntimeError('Unable to prepare save')
+        for i in _d.phi_modified:
+            # do not use KeyError, as it may be raised by serialize
+            kn = f'config/uc/phis/{i}'
+            if i in phis:
+                eva.registry.key_set(kn, phis[i].serialize(config=True))
+            else:
+                eva.registry.key_delete(kn)
+        for i in _d.driver_modified:
+            # do not use KeyError, as it may be raised by serialize
+            kn = f'config/uc/drivers/{i}'
+            if i in drivers:
+                eva.registry.key_set(kn, drivers[i].serialize(config=True))
+            else:
+                eva.registry.key_delete(kn)
+        _d.phi_modified.clear()
+        _d.driver_modified.clear()
+        if not eva.core.finish_save():
+            raise RuntimeError('Unable to finish save')
+        return True
+    except Exception as e:
+        logging.error(f'Error saving drivers: {e}')
+        eva.core.log_traceback()
+        return False
 
 
 def start():
@@ -916,7 +946,3 @@ def get_shared_namespace(namespace_id):
     if namespace_id not in shared_namespaces:
         shared_namespaces[namespace_id] = NS()
     return shared_namespaces[namespace_id]
-
-
-def set_modified():
-    _d.modified = True

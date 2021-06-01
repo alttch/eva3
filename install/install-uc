@@ -37,8 +37,6 @@ mkdir -p ./xc/drivers/lpi || exit 1
 
 echo "Performing initial config"
 
-[ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
-
 echo "Finished"
 
 exit 0
