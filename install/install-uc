@@ -37,7 +37,6 @@ mkdir -p ./xc/drivers/lpi || exit 1
 
 echo "Performing initial config"
 
-[ -f ./runtime/uc_cs.json ] || echo "{}" > ./runtime/uc_cs.json
 [ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
 [ -f ./runtime/uc_modbus.json ] || echo "[]" > ./runtime/uc_modbus.json
 [ -f ./runtime/uc_owfs.json ] || echo "[]" > ./runtime/uc_owfs.json

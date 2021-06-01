@@ -989,19 +989,13 @@ def load_cvars(fname=None):
 
 @corescript_lock
 def load_corescripts(fname=None):
-    reload_corescripts()
-    fname_full = format_cfg_fname(fname, 'cs', ext='json', runtime=True)
-    if not fname_full:
-        logging.warning('No file or product specified,' + \
-                            ' skipping loading corescript config')
-        return False
     cs_data.topics.clear()
     try:
-        with open(fname_full) as fd:
-            cs_data.topics = rapidjson.loads(fd.read()).get('mqtt-topics', [])
+        cfg = eva.registry.key_get(f'config/{eva.core.product.code}/cs', {})
+        cs_data.topics = cfg.get('mqtt-topics', [])
         return True
-    except:
-        logging.error('can not load corescript config from %s' % fname_full)
+    except Exception as e:
+        logging.error('Error loading corescript config: {e}')
         log_traceback()
         return False
 
@@ -1009,35 +1003,37 @@ def load_corescripts(fname=None):
 @save
 @cvars_lock
 def save_cvars():
-    for i in _flags.cvars_modified:
-        try:
+    try:
+        prepare_save()
+        for i in _flags.cvars_modified:
             kn = f'config/{eva.core.product.code}/cvars/{i}'
             try:
                 value = cvars[i]
                 eva.registry.key_set(kn, cvars[i])
             except KeyError:
                 eva.registry.key_delete(kn)
-        except Exception as e:
-            logging.error(f'Unable to save cvar {i}: {e}')
-            log_traceback()
-    _flags.cvars_modified.clear()
+        _flags.cvars_modified.clear()
+        finish_save()
+    except Exception as e:
+        logging.error(f'Error saving cvars: {e}')
+        log_traceback()
 
 
 @save
 @corescript_lock
 def save_cs(fname=None):
-    fname_full = format_cfg_fname(fname, 'cs', ext='json', runtime=True)
-    logging.info('Saving corescript config to %s' % fname_full)
-    try:
-        with open(fname_full, 'w') as fd:
-            fd.write(format_json({'mqtt-topics': cs_data.topics},
-                                 minimal=False))
-        _flags.cs_modified = False
-        return True
-    except:
-        logging.error('can not save corescript config to %s' % fname_full)
-        log_traceback()
-        return False
+    if _flags.cs_modified:
+        try:
+            prepare_save()
+            cfg = {'mqtt-topics': cs_data.topics}
+            eva.registry.key_set(f'config/{eva.core.product.code}/cs', cfg)
+            _flags.cs_modified = False
+            finish_save()
+            return True
+        except Exception as e:
+            logging.error(f'Error saving corescript configs: {e}')
+            log_traceback()
+            return False
 
 
 @cvars_lock
@@ -1286,6 +1282,8 @@ def corescript_mqtt_subscribe(topic, qos=None):
         n.handler_append(topic, handle_corescript_mqtt_event, qos)
         cs_data.topics.append({'topic': topic, 'qos': qos})
         _flags.cs_modified = True
+        if config.db_update == 1:
+            save_cs()
         return True
     except:
         log_traceback()
@@ -1309,6 +1307,8 @@ def corescript_mqtt_unsubscribe(topic):
                 n.handler_remove(topic, handle_corescript_mqtt_event)
                 cs_data.topics.remove(t)
                 _flags.cs_modified = True
+                if config.db_update == 1:
+                    save_cs()
                 return True
             except:
                 log_traceback()

@@ -36,7 +36,6 @@ mkdir -p ./xc/extensions || exit 1
 
 echo "Performing initial config"
 
-[ -f ./runtime/lm_cs.json ] || echo "{}" > ./runtime/lm_cs.json
 [ -f ./runtime/lm_extensions.json ] || echo "{}" > ./runtime/lm_extensions.json
 
 echo "Finished"

@@ -31,8 +31,6 @@ chmod 700 pvt
 
 echo "Performing initial config"
 
-[ -f ./runtime/sfa_cs.json ] || echo "{}" > ./runtime/sfa_cs.json
-
 echo "Finished"
 
 exit 0
