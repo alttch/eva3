@@ -10,9 +10,8 @@ import argparse
 from neotermcolor import colored
 
 ap = argparse.ArgumentParser()
-ap.add_argument('KEYS_FILE',
-                metavar='FILE',
-                help='key-value file (keys as relative paths), "-" for stdin')
+ap.add_argument('KEY', metavar='KEY', help='Key to import')
+ap.add_argument('KEYS_FILE', metavar='FILE', help='Key file, "-" for stdin')
 ap.add_argument('-c',
                 '--config',
                 metavar='VARS',
@@ -38,8 +37,7 @@ else:
     with open(a.KEYS_FILE) as fh:
         tplc = fh.read()
 
-keys = render_template(tplc, a.config)
+data = render_template(tplc, a.config)
 
-for key, value in keys.items():
-    eva.registry.key_set(key, value)
-    print(f' [{colored("+", color="green")}] {key}')
+eva.registry.key_set(a.KEY, data)
+print(f' [{colored("+", color="green")}] {a.KEY}')
