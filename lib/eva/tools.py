@@ -86,6 +86,27 @@ def validate_schema(data, schema_id):
     jsonschema.validate(data, schema=schema)
 
 
+def generate_template(tplc):
+    import jinja2
+    import importlib
+    if not isinstance(tplc, str):
+        tplc = tplc.read()
+    tpl = jinja2.Template(tplc)
+    tpl.globals['import_module'] = importlib.import_module
+    tpl.globals['time_ns'] = int(time.time() * 1000000000)
+    return tpl
+
+
+def render_template(tplc, cfg=None, raw=False):
+    import yaml
+    if cfg is None:
+        cfg = {}
+    elif isinstance(cfg, str):
+        cfg = dict_from_str(cfg)
+    data = generate_template(tplc).render(cfg)
+    return data if raw else yaml.load(data)
+
+
 class ConfigFile():
     """
     A helper to manage .ini files

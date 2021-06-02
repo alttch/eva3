@@ -1234,26 +1234,16 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         test_mode = props.get('test')
         try:
             try:
-                import jinja2
-                import importlib
-                import time
-                from eva.tools import dict_from_str
+                import yaml
+                from eva.tools import render_template
                 fname = props.get('f')
-                v = props.get('c')
-                if v:
-                    v = dict_from_str(v)
-                else:
-                    v = {}
                 if fname == '-':
                     dirname = '.'
                     tplc = props['__stdin']
                 else:
                     dirname = os.path.dirname(fname)
                     tplc = read_uri(fname)
-                tpl = jinja2.Template(tplc)
-                tpl.globals['import_module'] = importlib.import_module
-                tpl.globals['time_ns'] = int(time.time() * 1000000000)
-                ys = tpl.render(v)
+                ys = render_template(tplc, props.get('c'), raw=True)
                 if test_mode:
                     self.print_debug('-' * 3)
                     self.print_debug(ys)

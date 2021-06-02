@@ -1434,33 +1434,23 @@ sys.argv = {argv}
 
     @lru_cache(maxsize=None)
     def _feature_info(self, name):
-        import yaml
-        try:
-            yaml.warnings({'YAMLLoadWarning': False})
-        except:
-            pass
-        import jinja2
-        import importlib
+        from eva.tools import render_template
         from eva.tools import kb_uri
         fname = f'{dir_lib}/eva/features/{name}.yml'
         version = self._get_version()
         build = self._get_build()
-        with open(fname) as fh:
-            tplc = fh.read()
-        tpl = jinja2.Template(tplc)
-        tpl.globals['import_module'] = importlib.import_module
         setup_cmd = f'feature setup {name} '
         if not self.interactive:
             setup_cmd = 'eva ' + setup_cmd
-        ys = tpl.render({
-            'EVA_VERSION': version,
-            'EVA_BUILD': build,
-            'EVA_DIR': dir_eva,
-            'setup_cmd': setup_cmd,
-            'kb_uri': kb_uri
-        })
-        data = yaml.load(ys)
-        return data
+        with open(fname) as fh:
+            return render_template(
+                fh, {
+                    'EVA_VERSION': version,
+                    'EVA_BUILD': build,
+                    'EVA_DIR': dir_eva,
+                    'setup_cmd': setup_cmd,
+                    'kb_uri': kb_uri
+                })
 
     def list_features(self, params):
         import glob
