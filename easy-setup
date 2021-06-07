@@ -12,7 +12,6 @@ LM_ENABLED=
 SFA_ENABLED=
 FORCE=0
 CLEAR=0
-USE_SUPERVISOR=0
 APPEND=0
 APPEND_MQTT=0
 INTERACTIVE=1
@@ -59,49 +58,49 @@ function on_exit {
 }
 
 function usage {
-    echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
-    echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
-    echo "          [--cloud-manager]"
-    echo
-    echo " Options:"
-    echo
-    echo " --clear                  clear runtime and supervisor configs (recommended"
-    echo "                          with --force. WARNING!!! destroys all data)"
-    echo
-    echo " --force                  force install even if configs are already present"
-    echo " --skip-check             skip virtualenv check"
-    echo " --auto                   perform automatic (unattended) setup"
-    echo
-    echo " Options for the automatic setup:"
-    echo
-    echo " --local-only             accept API keys (except operator) only from local host"
-    echo " --supervisor             Use supervisord (should be installed)"
-    echo " -u USER                  set up all controllers to run under specified user"
-    echo
-    echo " --link                   link all controllers statically"
-    echo "                          WARNING: it's not possible to change controller id"
-    echo "                          after linking. IDs of all controllers are automatically"
-    echo "                          set to the current host name. If you want to use different"
-    echo "                          IDs, prepare etc/uc.ini and etc/lm.ini files first and"
-    echo "                          set 'name' key there"
-    echo
-    echo " --mqtt user:password@host:port/space"
-    echo "                          specify MQTT server access"
-    echo " --mqtt-cafile FILE       MQTT CA file to enable MQTT via SSL"
-    echo " --mqtt-cert FILE         MQTT authorization cert"
-    echo " --mqtt-key FILE          MQTT authorization key"
-    echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
-    echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
-    echo " --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)"
-    echo
-    echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, can be specified"
-    echo "                          several times"
-    echo
-    echo "--cloud-manager           set up SFA cloud manager"
-    echo
-    echo "--feature NAME:PARAMS     Install additional feature, can be specified several times"
-    echo "--deploy FILE             deploy config from YAML file (requires cloud manager)"
-    echo
+cat <<EOF
+Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]
+          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]
+          [--cloud-manager]
+
+ Options:
+
+ --clear                  clear runtime and configs (recommended with --force.
+                          WARNING!!! destroys all data)
+
+ --force                  force install even if configs are already present
+ --skip-check             skip virtualenv check
+ --auto                   perform automatic (unattended) setup
+
+ Options for the automatic setup:
+
+ --local-only             accept API keys (except operator) only from local host
+ -u USER                  set up all controllers to run under specified user
+
+ --link                   link all controllers statically
+                          WARNING: it's not possible to change controller id
+                          after linking. IDs of all controllers are automatically
+                          set to the current host name. If you want to use different
+                          IDs, prepare etc/uc.ini and etc/lm.ini files first and
+                          set 'name' key there
+
+ --mqtt user:password@host:port/space
+                          specify MQTT server access
+ --mqtt-cafile FILE       MQTT CA file to enable MQTT via SSL
+ --mqtt-cert FILE         MQTT authorization cert
+ --mqtt-key FILE          MQTT authorization key
+ --mqtt-announce          Enable MQTT announces and API calls via MQTT
+ --mqtt-discovery         Enable autodiscovery of other nodes via MQTT
+ --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)
+
+ -p {uc|lm|sfa|all}       specify which controller to set up or all, can be specified
+                          several times
+
+--cloud-manager           set up SFA cloud manager
+
+--feature NAME:PARAMS     Install additional feature, can be specified several times
+--deploy FILE             deploy config from YAML file (requires cloud manager)
+EOF
 }
 
 function option_error {
@@ -111,13 +110,7 @@ function option_error {
 
 
 function start_controller() {
-    if [ $USE_SUPERVISOR -eq 1 ]; then
-      supervisorctl update || return 5
-      supervisorctl start "eva-$1" > /dev/null 2>&1
-      supervisorctl start "watchdog-eva-$1" > /dev/null 2>&1
-    else
-      "./sbin/$1-control" start || return 5
-    fi
+    "./sbin/$1-control" start || return 5
     I=0
     sleep 0.5
     ./sbin/eva-tinyapi -C "$1" -F test > /dev/null 2>&1
@@ -254,30 +247,6 @@ function check_required_exec {
     fi
     echo "${RESULT}"
     return 0
-}
-
-function setup_supervisor_onboot {
-  [ $USE_SUPERVISOR -eq 1 ] || return 0
-  cp -vf ./etc/supervisor/conf.d/eva-onboot.conf /etc/supervisor/conf.d/ || return 1
-  sed -i "s|/opt/eva|${EVA_DIR}|g" /etc/supervisor/conf.d/eva-onboot.conf || return 2
-  return 0
-}
-
-function setup_supervisor {
-  local p=$1
-  local u=$2
-  [ $USE_SUPERVISOR -eq 1 ] || return 0
-  cp -vf "./etc/supervisor/conf.d/eva-${p}.conf" /etc/supervisor/conf.d/ || return 1
-  if [ "$SUPERVISOR_SET_LOG_STDOUT" ]; then
-    sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
-    sed -i 's/\(events=TICK_60\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
-  fi
-  sed -i "s|/opt/eva|${EVA_DIR}|g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 2
-  if [ "$u" != "root" ]; then
-    sed -i "s/^;user=.*/user=${u}/g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 4
-  fi
-  echo "$(echo "${p}"|tr "[:lower:]" "[:upper:]")_SUPERVISOR_PROGRAM=eva-${p}" >> ./etc/eva_servers
-  return 0
 }
 
 function askYN {
@@ -521,7 +490,7 @@ do
             shift
         ;;
         --clear)
-            echo "WARNING: asked to clear config. Will remove all files in runtime and supervisor"
+            echo "WARNING: asked to clear config. Will remove all files in runtime"
             CLEAR=1
             shift
         ;;
@@ -544,10 +513,6 @@ do
         ;;
         --cloud-manager)
             CLOUDMANAGER=1
-            shift
-        ;;
-        --supervisor)
-            USE_SUPERVISOR=1
             shift
         ;;
       --deploy)
@@ -609,17 +574,6 @@ if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   exit 1
 fi
 
-if [ $USE_SUPERVISOR -eq 1 ]; then
-  if ! command -v supervisorctl > /dev/null; then
-    echo "Error: supervisorctl not found"
-    exit 12
-  fi
-  if [ ! -d /etc/supervisor/conf.d ]; then
-    echo "Error: directory /etc/supervisor/conf.d doesn't exist"
-    exit 13
-  fi
-fi
-
 echo
 
 if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
@@ -664,9 +618,6 @@ if [ $CLEAR -eq 1 ]; then
   rm -rf runtime/* || exit 1
   rm -f etc/eva_servers || exit 2
   echo "WARNING: all files in runtime/ are deleted"
-  rm -f /etc/supervisor/conf.d/eva-uc.conf
-  rm -f /etc/supervisor/conf.d/eva-lm.conf
-  rm -f /etc/supervisor/conf.d/eva-sfa.conf
 fi
 
 ./install/mklinks || exit 1
@@ -680,11 +631,6 @@ if [ -z $SKIP_VENV ]; then
 fi
 
 # ASK SOME QUESTIONS
-
-if command -v supervisorctl > /dev/null && [ -d /etc/supervisor/conf.d ]; then
-  askYN "Supervisor daemon detected. Use it instead of standard startup" N
-  [ $VALUE == "1" ] && USE_SUPERVISOR=1
-fi
 
 if [ $APPEND -ne 1 ]; then
     echo
@@ -706,11 +652,9 @@ fi
 
 [ $APPEND -ne 1 ] && echo -n > etc/eva_servers
 
-[ $USE_SUPERVISOR -ne 1 ] && [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
+[ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
 ./install/install-yedb || exit 3
-
-setup_supervisor registry root || exit 2
 
 ./sbin/registry-control start || exit 1
 
@@ -768,7 +712,6 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user uc "${USER}" || exit 1
     fi
-    setup_supervisor uc "${USER}" || exit 2
     if ! start_controller uc; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -834,7 +777,6 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user lm "${USER}" || exit 1
     fi
-    setup_supervisor lm "${USER}" || exit 2
     if ! start_controller lm; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -921,7 +863,6 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user sfa "${USER}" || exit 1
     fi
-    setup_supervisor sfa "${USER}" || exit 2
     if ! start_controller sfa; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
@@ -985,8 +926,6 @@ EOF
     fi
     echo
 fi
-
-setup_supervisor_onboot || exit 11
 
 # FEATURES
 
