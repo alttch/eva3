@@ -565,6 +565,8 @@ fi
 EVA_DIR=$(dirname "$(realpath "$0")")
 cd "${EVA_DIR}" || exit 11
 
+./install/mklinks || exit 1
+
 # Install YEDB
 
 ./install/install-yedb || exit 3
@@ -576,7 +578,7 @@ PYTHON=
 
 if ! AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/venv >& /dev/null; then
   AUTO_PREFIX=1 ./sbin/eva-registry-cli set \
-    config/venv2 - -p yaml < ./lib/eva/registry/defaults/config/venv.yml > /dev/null || exit 2
+    config/venv2 - -p yaml < ./lib/eva/registry/setup-defaults/config/venv.yml > /dev/null || exit 8
 fi
 
 source <(./sbin/key-as-source config/venv 2>/dev/null)
@@ -591,16 +593,23 @@ echo
 
 # TODO yedb move from here
 
-if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
+source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+
+if [ "$UC_ENABLED" ] || [ "${LM_ENABLED}" ] || [ "${SFA_ENABLED}" ]; then
+ if [ $CLEAR -ne 1 ]; then
     echo "Installed system detected"
-    source ./etc/eva_servers
-    source ./etc/easy_setup
+    source <(./sbin/key-as-source data/easy_setup SFA 2>/dev/null)
     [ "$UC_ENABLED" == "yes" ] && PRD=uc
     [ "$LM_ENABLED" == "yes" ] && PRD=lm
     [ "$SFA_ENABLED" == "yes" ] && PRD=sfa
     echo "Will use settings from $PRD"
     eval "$(./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY)" || exit 1
     APPEND=1
+ fi
+else
+  ./sbin/import-registry-defaults || exit 2
 fi
 
 [ "$MASTERKEY" ] || MASTERKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
@@ -627,15 +636,15 @@ EOF
     echo
 fi
 
-[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/registry-control stop ; ./sbin/eva-control stop )
+[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop )
 
 if [ $CLEAR -eq 1 ]; then
-  rm -rf runtime/* || exit 1
-  rm -f etc/eva_servers || exit 2
-  echo "WARNING: all files in runtime/ are deleted"
+  KEYS_TO_CLEAR=(config/common config/uc config/lm config/sfa config/watchdog data inventory)
+  for k in "${KEYS[@]}"; do
+    AUTO_PREFIX=1 ./sbin/eva-registry-cli delete -r "${k}" || exit 8
+  done
+  echo "WARNING: all configs are deleted"
 fi
-
-./install/mklinks || exit 1
 
 # check mods, build venv
 
@@ -665,10 +674,6 @@ if [ $APPEND -ne 1 ]; then
     [ $VALUE == "1" ] && LINK=1
 fi
 
-[ $APPEND -ne 1 ] && echo -n > etc/eva_servers
-
-[ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
-
 # INSTALL UC
 
 if [ "$UC_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
@@ -692,7 +697,8 @@ echo
 if [ $INSTALL_UC -eq 1 ]; then
     echo "Installing EVA Universal Controller"
     bash install/install-uc || exit 1
-    echo "UC_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/uc:service/setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/uc:service/enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (root is recommended for UC)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -705,18 +711,14 @@ if [ $INSTALL_UC -eq 1 ]; then
           exit 2
       fi
     fi
-    [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
-    chmod 644 etc/uc.ini
-    echo "Generating uc_apikeys.ini"
-    rm -f etc/uc_apikeys.ini
-    cat > etc/uc_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    echo "Setting UC master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts_allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/uc_apikeys.ini
+  )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/apikeys/masterkey - -p yaml  || exit 8
     create_notifier uc || exit 1
     UC_USER=${USER}
     if [ "$USER" != "root" ]; then
@@ -757,7 +759,8 @@ echo
 if [ $INSTALL_LM -eq 1 ]; then
     echo "Installing EVA LM PLC"
     bash install/install-lm || exit 1
-    echo "LM_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/lm:service/setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/lm:service/enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -770,18 +773,14 @@ if [ $INSTALL_LM -eq 1 ]; then
           exit 2
       fi
     fi
-    [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
-    chmod 644 etc/lm.ini
-    echo "Generating lm_apikeys.ini"
-    rm -f etc/lm_apikeys.ini
-    cat > etc/lm_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    echo "Setting LM master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts_allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/lm_apikeys.ini
+  )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/lm/apikeys/masterkey - -p yaml  || exit 8
     create_notifier lm || exit 1
     LM_USER=${USER}
     if [ "$USER" != "root" ]; then
@@ -841,7 +840,8 @@ if [ $INSTALL_SFA -eq 1 ]; then
     bash install/install-sfa || exit 1
     askYN "Enable SFA Cloud Manager"
     [ $VALUE == "1" ] && CLOUDMANAGER=1
-    echo "SFA_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/sfa:service/setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/sfa:service/enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -854,19 +854,15 @@ if [ $INSTALL_SFA -eq 1 ]; then
           exit 2
       fi
     fi
-    [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
-    [ $CLOUDMANAGER -eq 1 ] && sed -i 's/.*\(cloud_manager\).*/\1 = yes/g' etc/sfa.ini
-    chmod 644 etc/sfa.ini
-    echo "Generating sfa_apikeys.ini"
-    rm -f etc/sfa_apikeys.ini
-    cat > etc/sfa_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    [ $CLOUDMANAGER -eq 1 ] && ./sbin/key-set-flag config/sfa:cloud/cloud-manager 1 > /dev/null || exit 8
+    echo "Setting SFA master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts_allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/sfa_apikeys.ini
+  )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/sfa/apikeys/masterkey - -p yaml  || exit 8
     create_notifier sfa || exit 1
     create_db_notifier sfa || exit 1
     SFA_USER=${USER}
@@ -1005,8 +1001,10 @@ fi
 mkdir -p backup
 chmod 700 backup
 
-echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
-echo "LINK=$LINK" >> ./etc/easy_setup
+AUTO_PREFIX=1 ./sbin/eva-registry-cli set-field data/easy-setup link 
+
+./sbin/key-set-flag data/easy_setup:mqtt-discovery-enabled $MQTT_DISCOVERY_ENABLED || exit 8
+./sbin/key-set-flag data/easy_setup:link $LINK || exit 8
 
 if [ "${DEPLOY_FILE}" ]; then
   if ! [[ ${DEPLOY_FILE} == http://* ]] && ! [[ ${DEPLOY_FILE} == https://* ]]; then

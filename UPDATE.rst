@@ -16,7 +16,9 @@ Removed and deprecated
 
 - Supervisord is no longer supported out-of-the-box. If easy-setup is used to
   configure supervisord, consider writing additional custom configuration
-  scripts.
+  scripts. "eva-control" still supports controller management with
+  supervisorctl (using "service/supervisord-program" field of controller
+  configuration key).
 
 - uc-control, lm-control and sfa-control scripts are removed. Consider using
   "eva" or "eva-control" only.
