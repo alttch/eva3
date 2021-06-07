@@ -16,9 +16,12 @@ export EVA_DIR EVA_CONTROLLER
 
 source <(./sbin/key-as-source config/uc:service CONTROLLER 2>/dev/null)
 
-if [ -z "$CONTROLLER_ENABLED" ]; then
-  echo "Unable to read registry key"
-  exit 1
+if [ "$FORCE_ALL" == "1" ]; then
+  CONTROLLER_ENABLED=1
+  if [ -z "$CONTROLLER_ENABLED" ]; then
+    echo "Unable to read registry key"
+    exit 1
+  fi
 fi
 
 

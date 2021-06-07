@@ -11,11 +11,16 @@ source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
 source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
 source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
 
-if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
-  echo "Unable to read registry key"
-  exit 1
+if [ "${FORCE_ALL}" == "1" ]; then
+  UC_ENABLED=1
+  LM_ENABLED=1
+  SFA_ENABLED=1
+else
+  if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
+    echo "Unable to read registry key"
+    exit 1
+  fi
 fi
-
 
 function controller_cmd() {
   c=${1,,}
