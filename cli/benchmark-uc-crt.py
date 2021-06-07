@@ -82,6 +82,7 @@ api_call('set_prop', {
     'v': 1
 })
 api_call('enable_actions', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'})
+api_call('update', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor', 's': 1})
 
 api_call('load_phi', {'i': 'eva_benchmark_vr', 'm': 'vrtrelay'})
 api_call('load_phi', {
