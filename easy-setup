@@ -525,6 +525,7 @@ do
             shift
         ;;
         --benchmark)
+            # TODO move to YEDB
             echo "Will setup UC and do benchmark"
             if [ -f ./etc/uc.ini ]; then
                 echo "etc/uc.ini already exists. Aborting"
@@ -564,9 +565,21 @@ fi
 EVA_DIR=$(dirname "$(realpath "$0")")
 cd "${EVA_DIR}" || exit 11
 
-[ -f "${EVA_DIR}/etc/venv" ] && source ${EVA_DIR}/etc/venv
+# Install YEDB
 
-[ -z "$PYTHON" ] && PYTHON=python3
+./install/install-yedb || exit 3
+./sbin/registry-control start || exit 1
+
+# Create VENV key if not present
+
+PYTHON=
+
+if ! AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/venv >& /dev/null; then
+  AUTO_PREFIX=1 ./sbin/eva-registry-cli set \
+    config/venv2 - -p yaml < ./lib/eva/registry/defaults/config/venv.yml > /dev/null || exit 2
+fi
+
+source <(./sbin/key-as-source config/venv 2>/dev/null)
 
 PYTHON_MINOR=$($PYTHON --version|cut -d. -f2)
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
@@ -575,6 +588,8 @@ if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
 fi
 
 echo
+
+# TODO yedb move from here
 
 if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     echo "Installed system detected"
@@ -653,10 +668,6 @@ fi
 [ $APPEND -ne 1 ] && echo -n > etc/eva_servers
 
 [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
-
-./install/install-yedb || exit 3
-
-./sbin/registry-control start || exit 1
 
 # INSTALL UC
 
