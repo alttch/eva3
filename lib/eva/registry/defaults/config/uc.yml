@@ -41,6 +41,8 @@ server:
   action-cleaner-interval: 60
   # keep memory log in seconds
   keep-logmem: 86400
+  # minimal log level
+  #logging-level: warning
   # keep extended API call log in user db in seconds (0 = disable logging)
   #keep-api-log: 0
   # notify states on start
@@ -87,7 +89,7 @@ upnp:
   listen: 0.0.0.0
 sysapi:
   # enable remote file management functions
-  file-management: yes
+  file-management: true
   # allow entering setup mode (true for 60 sec or int for seconds)
   setup-mode: true
   # allow rpvt

@@ -716,7 +716,7 @@ def load(initial=False, init_log=True, check_pid=True):
         except LookupError:
             pass
         try:
-            log_level = cfg.get('server/logging-level')
+            log_level = cfg.get('server/logging-level').lower()
             if log_level in log_levels_by_name:
                 config.default_log_level_name = log_level
                 config.default_log_level_id = log_levels_by_name.get(log_level)

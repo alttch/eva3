@@ -41,6 +41,8 @@ server:
   action-cleaner-interval: 60
   # keep memory log in seconds
   keep-logmem: 86400
+  # minimal log level
+  #logging-level: warning
   # keep extended API call log in user db in seconds (0 = disable logging)
   #keep-api-log: 0
   # notify states on start
@@ -99,7 +101,7 @@ upnp:
   discover-on: all
 sysapi:
   # enable remote file management functions
-  file-management: yes
+  file-management: true
   # allow entering setup mode
   setup-mode: true
 webapi:

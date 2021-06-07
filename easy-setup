@@ -530,19 +530,9 @@ SKIP_ROOT=1
 shift
 ;;
 --benchmark)
-# TODO move to YEDB
 echo "Will setup UC and do benchmark"
-if [ -f ./etc/uc.ini ]; then
-echo "etc/uc.ini already exists. Aborting"
-exit 5
-fi
 INTERACTIVE=0
 INSTALL_UC=1
-cp -v ./etc/uc.ini-benchmark ./etc/uc.ini
-if [ ! -f ./etc/venv ]; then
-echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
-echo 'SKIP="pandas"' >> ./etc/venv
-fi
 BENCHMARK=1
 shift
 ;;
@@ -596,8 +586,6 @@ if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
 fi
 
 echo
-
-# TODO yedb move from here
 
 source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
 source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
@@ -717,6 +705,11 @@ if [ $INSTALL_UC -eq 1 ]; then
       echo "User ${USER} has no valid shell set"
       exit 2
     fi
+  fi
+  if [ $BENCHMARK -eq 1 ]; then
+    echo "Setting benchmark config"
+    AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc \
+      - -p yaml < ./etc/setup/uc-benchmark.yml > /dev/null || exit 8
   fi
   echo "Setting UC master key"
   (cat <<EOF
