@@ -61,7 +61,7 @@ case $1 in
     if pgrep -f "${REGISTRY}" >& /dev/null; then
       echo
       echo "already started"
-      exit 2
+      exit 0
     fi
     exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
     result=1
