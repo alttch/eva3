@@ -23,6 +23,8 @@ Removed and deprecated
 - uc-control, lm-control and sfa-control scripts are removed. Consider using
   "eva" or "eva-control" only.
 
+- backups from versions, below 3.4, are INCOMPATIBLE
+
 Update instructions
 ===================
 
