@@ -14,7 +14,7 @@ EVA_DIR=$(pwd)
 
 export EVA_DIR EVA_CONTROLLER
 
-source <(./sbin/key-as-source config/uc:service CONTROLLER 2>/dev/null)
+source <(./sbin/key-as-source "config/${EVA_CONTROLLER}/service" CONTROLLER 2>/dev/null)
 
 if [ "$FORCE_ALL" == "1" ]; then
   CONTROLLER_ENABLED=1

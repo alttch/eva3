@@ -7,9 +7,9 @@ EVA_DIR=$(pwd)
 
 MAX_START_WAIT=180
 
-source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
-source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
-source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
 
 if [ "${FORCE_ALL}" == "1" ]; then
   UC_ENABLED=1

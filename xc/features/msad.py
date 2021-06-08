@@ -34,13 +34,13 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
         config['ca'] = ca
     if cache_time and cache_time > 0:
         config['cache-time'] = cache_time
-    eva.registry.key_set_field('config/sfa', 'msad', config)
+    eva.registry.key_set_field('config/sfa/main', 'msad', config)
     restart_controller('sfa')
 
 
 def remove():
     if not is_enabled('sfa'):
         raise FunctionFailed('SFA is not enabled')
-    eva.registry.key_delete_field('config/sfa', 'msad')
+    eva.registry.key_delete_field('config/sfa/main', 'msad')
     remove_python_libraries(python_libs)
     restart_controller('sfa')

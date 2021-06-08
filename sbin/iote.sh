@@ -14,9 +14,9 @@ FORCE=0
 [ -z "$EVA_CLOUD" ] && EVA_CLOUD=c.iote.cloud
 [ -z "$EVA_CLOUD_ID" ] && EVA_CLOUD_ID=iote
 
-source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
-source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
-source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
 
 if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
   echo "Unable to read registry key"

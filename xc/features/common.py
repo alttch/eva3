@@ -127,7 +127,10 @@ def append_python_libraries(libs, rebuild_venv=True):
     import eva.registry as registry
     need_modify = False
     with registry.key_as_dict('config/venv') as venv:
-        extra = venv.get('extra', [])
+        extra = venv.get('extra', default=None)
+        if extra is None:
+            extra = []
+            venv.set('extra', extra)
         for lib in libs:
             lib_id = lib.split('=', 1)[0]
             print(f'Adding extra Python library dependency: {lib}')
@@ -202,4 +205,4 @@ def remove_phis(phis):
 
 
 def is_enabled(p):
-    return eva.registry.key_get_field(f'config/{p}', 'service/enabled')
+    return eva.registry.key_get_field(f'config/{p}/service', 'enabled')

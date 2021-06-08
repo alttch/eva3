@@ -674,7 +674,7 @@ def load(initial=False, init_log=True, check_pid=True):
 
     from eva.logs import log_levels_by_name, init as init_logs
     try:
-        cfg = eva.registry.config_get(f'config/{product.code}')
+        cfg = eva.registry.config_get(f'config/{product.code}/main')
     except:
         critical()
         raise

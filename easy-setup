@@ -587,9 +587,9 @@ fi
 
 echo
 
-source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
-source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
-source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
 
 if [ "$UC_ENABLED" == "1" ] || [ "${LM_ENABLED}" == "1" ] || [ "${SFA_ENABLED}" == "1" ]; then
     if [ $CLEAR -ne 1 ]; then
@@ -630,12 +630,18 @@ fi
 
 [ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop > /dev/null 2>&1 )
 
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
+
 if [ $CLEAR -eq 1 ]; then
     KEYS_TO_CLEAR=(config/common config/cloud config/uc config/lm config/sfa config/watchdog data inventory)
     for k in "${KEYS_TO_CLEAR[@]}"; do
         AUTO_PREFIX=1 ./sbin/eva-registry-cli delete "${k}" -r > /dev/null || exit 8
     done
     rm -rf ./runtime/db || exit 1
+    [ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
+    ./sbin/eva-registry-cli delete ".schema/${SYSTEM_NAME}" -r > /dev/null || exit 8
     echo "WARNING: all configs are deleted"
 fi
 
@@ -693,8 +699,8 @@ echo
 if [ $INSTALL_UC -eq 1 ]; then
     echo "Installing EVA Universal Controller"
     bash install/install-uc || exit 1
-    ./sbin/key-set-flag config/uc:service/setup 1 > /dev/null || exit 8
-    ./sbin/key-set-flag config/uc:service/enabled 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/uc/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/uc/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (root is recommended for UC)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -709,7 +715,7 @@ if [ $INSTALL_UC -eq 1 ]; then
     fi
     if [ $BENCHMARK -eq 1 ]; then
         echo "Setting benchmark config"
-        AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc \
+        AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/main \
             - -p yaml < ./etc/setup/uc-benchmark.yml > /dev/null || exit 8
     fi
     echo "Setting UC master key"
@@ -760,8 +766,8 @@ echo
 if [ $INSTALL_LM -eq 1 ]; then
     echo "Installing EVA LM PLC"
     bash install/install-lm || exit 1
-    ./sbin/key-set-flag config/lm:service/setup 1 > /dev/null || exit 8
-    ./sbin/key-set-flag config/lm:service/enabled 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/lm/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/lm/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -843,8 +849,8 @@ if [ $INSTALL_SFA -eq 1 ]; then
     bash install/install-sfa || exit 1
     askYN "Enable SFA Cloud Manager"
     [ $VALUE == "1" ] && CLOUDMANAGER=1
-    ./sbin/key-set-flag config/sfa:service/setup 1 > /dev/null || exit 8
-    ./sbin/key-set-flag config/sfa:service/enabled 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/sfa/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/sfa/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -857,7 +863,9 @@ if [ $INSTALL_SFA -eq 1 ]; then
             exit 2
         fi
     fi
-    [ $CLOUDMANAGER -eq 1 ] && ./sbin/key-set-flag config/sfa:cloud/cloud-manager 1 > /dev/null || exit 8
+    if [ $CLOUDMANAGER -eq 1 ]; then
+      ./sbin/key-set-flag config/sfa/main:cloud/cloud-manager 1 > /dev/null || exit 8
+    fi
     echo "Setting SFA master key"
     (cat <<EOF
 key: "${MASTERKEY}"

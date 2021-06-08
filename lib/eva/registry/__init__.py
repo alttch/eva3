@@ -13,7 +13,7 @@ from pyaltt2.config import Config
 
 EVA_DIR = Path(__file__).parents[3].absolute()
 DEFAULTS_DIR = Path(__file__).parent / 'defaults'
-SCHEMA_DIR = Path(__file__).parent / 'schema'
+SCHEMA = Path(__file__).parent / 'schema.yml'
 
 config_file = EVA_DIR / 'etc/eva_config'
 
@@ -154,11 +154,9 @@ def init_defaults(skip_existing=True):
 
 def import_schema():
     import yaml
-    l = len(SCHEMA_DIR.as_posix()) + 1
-    for f in SCHEMA_DIR.glob('**/*.yml'):
-        with f.open() as fh:
-            key = (f'.schema/{PFX}/{SYSTEM_NAME}'
-                   f'/{f.as_posix()[l:].rsplit(".", 1)[0]}')
-            logging.info(f'Importing schema {key} from {f}')
-            data = yaml.safe_load(fh)
-            db.key_set(key=f'{key}', value=data)
+    with SCHEMA.open() as fh:
+        data = yaml.safe_load(fh)
+    for k, v in data.items():
+        key = f'.schema/{PFX}/{SYSTEM_NAME}/{k}'
+        logging.info(f'Importing schema {key}')
+        db.key_set(key=f'{key}', value=v)

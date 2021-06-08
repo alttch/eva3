@@ -83,7 +83,7 @@ fi
 function set_user {
     local p=$1
     local u=$2
-    AUTO_PREFIX=1 ./sbin/eva-registry-cli set-field "config/${p}" service/user "$u" > /dev/null || exit 8
+    AUTO_PREFIX=1 ./sbin/eva-registry-cli set-field "config/${p}/service" user "$u" > /dev/null || exit 8
     echo
     echo "${p} is set up to run under user ${u}"
     echo "!! Make sure to set ${p} API ports to non-privileged (>1024)"

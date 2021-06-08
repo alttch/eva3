@@ -106,11 +106,11 @@ fi
 REGISTRY_INI=./etc/eva_config
 
 [ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
-[ -z "${SOCKET}" ] && SOCKET=./var/registry.sock
+[ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=./var/registry.sock
 [ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
 
-source <(./yedb/yedb-cli -C "${SOCKET}" source \
-  "eva3/${SYSTEM_NAME}/config/${PRODUCT}:webapi" --prefix WEBAPI)
+source <(./yedb/yedb-cli -C "${YEDB_SOCKET}" source \
+  "eva3/${SYSTEM_NAME}/config/${PRODUCT}/main:webapi" --prefix WEBAPI)
 
 if [ "$WEBAPI_LISTEN" ]; then
   CONNECT_TO=${WEBAPI_LISTEN}
@@ -125,7 +125,7 @@ fi
 
 U="${U}://${CONNECT_TO//0.0.0.0/127.0.0.1}/jrpc"
 
-source <(./yedb/yedb-cli -C "${SOCKET}" source \
+source <(./yedb/yedb-cli -C "${YEDB_SOCKET}" source \
   "eva3/${SYSTEM_NAME}/config/${PRODUCT}/apikeys/masterkey" --prefix MASTERKEY)
 
 if [ -z "$MASTERKEY_KEY" ]; then

@@ -196,7 +196,7 @@ class APIClientLocal(APIClient):
             if key.get('master'):
                 self._key = key.get('key')
                 break
-        cfg = eva.registry.config_get(f'config/{product}')
+        cfg = eva.registry.config_get(f'config/{product}/main')
         try:
             self._timeout = float(cfg.get('server/timeout'))
         except LookupError:

@@ -162,9 +162,9 @@ if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./ru
   ./install/convert-legacy-configs || exit 4
 fi
 
-source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
-source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
-source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
 
 if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
   echo "Unable to read registry key"

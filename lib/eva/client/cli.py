@@ -1761,7 +1761,7 @@ class ControllerCLI(object):
         import eva.registry
         from sqlalchemy import text as sql
         cfg = eva.registry.config_get(
-            f'config/{self._management_controller_id}')
+            f'config/{self._management_controller_id}/main')
         db_file = cfg.get('server/db-file', default=None)
         try:
             db_uri = cfg.get('server/db')
@@ -1938,7 +1938,7 @@ class ControllerCLI(object):
             self.print_local_only()
             return self.local_func_result_failed
         code = os.system(f'AUTO_PREFIX=1 {self.dir_sbin}/eva-registry-cli '
-                         f'edit config/{self._management_controller_id}')
+                         f'edit config/{self._management_controller_id}/main')
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 

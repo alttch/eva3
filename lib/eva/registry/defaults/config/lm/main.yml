@@ -1,7 +1,3 @@
-service:
-  enabled: false
-  setup: false
-  supervisord-program: null
 server:
   # system poll delay
   polldelay: 0.01

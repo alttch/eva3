@@ -162,8 +162,8 @@ class ManagementCLI(GenericCLI):
         try:
             for c in ['uc', 'lm', 'sfa']:
                 try:
-                    if eva.registry.key_get_field(f'config/{c}',
-                                                  'service/setup'):
+                    if eva.registry.key_get_field(f'config/{c}/service',
+                                                  'setup'):
                         self.products_configured.append(c)
                 except:
                     pass
@@ -666,12 +666,12 @@ sys.argv = {argv}
     def enable_controller(self, params):
         c = params['p']
         if c in self.products_configured:
-            if eva.registry.key_get_field(f'config/{c}',
-                                          'service/supervisord-program'):
+            if eva.registry.key_get_field(f'config/{c}/service',
+                                          'supervisord-program'):
                 self.print_err('Server is controlled by supervisord')
                 return self.local_func_result_failed
             else:
-                eva.registry.key_set_field(f'config/{c}', 'service/enabled',
+                eva.registry.key_set_field(f'config/{c}/service', 'enabled',
                                            True)
                 return self.local_func_result_ok
         return False
@@ -679,12 +679,12 @@ sys.argv = {argv}
     def disable_controller(self, params):
         c = params['p']
         if c in self.products_configured:
-            if eva.registry.key_get_field(f'config/{c}',
-                                          'service/supervisord-program'):
+            if eva.registry.key_get_field(f'config/{c}/service',
+                                          'supervisord-program'):
                 self.print_err('Server is controlled by supervisord')
                 return self.local_func_result_failed
             else:
-                eva.registry.key_set_field(f'config/{c}', 'service/enabled',
+                eva.registry.key_set_field(f'config/{c}/service', 'enabled',
                                            False)
                 return self.local_func_result_ok
         return False
@@ -692,7 +692,7 @@ sys.argv = {argv}
     def set_controller_user(self, params):
         c = params['p']
         if c in self.products_configured:
-            eva.registry.key_set_field(f'config/{c}', 'service/user',
+            eva.registry.key_set_field(f'config/{c}/service', 'user',
                                        params['v'])
             return self.local_func_result_ok
         return False
@@ -700,7 +700,7 @@ sys.argv = {argv}
     def get_controller_user(self, params):
         c = params['p']
         if c in self.products_configured:
-            return 0, eva.registry.key_set_field(f'config/{c}', 'service/user',
+            return 0, eva.registry.key_set_field(f'config/{c}/service', 'user',
                                                  '')
         return False
 
@@ -922,7 +922,7 @@ sys.argv = {argv}
     def update_mirror(self, params):
         from eva.tools import ShellConfigFile
         try:
-            sfa_listen = eva.registry.key_get_field('config/sfa',
+            sfa_listen = eva.registry.key_get_field('config/sfa/main',
                                                     'webapi/listen')
             if sfa_listen.startswith('127.'):
                 self.print_err(
@@ -1332,7 +1332,7 @@ sys.argv = {argv}
             ok = True
             products_enabled = []
             for c in self.products_configured:
-                if eva.registry.get(f'config/{c}', 'service/enabled'):
+                if eva.registry.get(f'config/{c}/service', 'enabled'):
                     print('{}: '.format(
                         self.colored(p, color='blue', attrs=['bold'])),
                           end='')

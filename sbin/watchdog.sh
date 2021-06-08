@@ -33,7 +33,7 @@ while true; do
             ./sbin/eva-tinyapi -C "${CONTROLLER}" -F dump -T "${WATCHDOG_MAX_TIMEOUT}" >& /dev/null
         fi
         rm -f "${PIDFILE}"
-        "./sbin/${CONTROLLER}-control" restart
+        ./sbin/eva-control restart "${CONTROLLER}"
         exit
     fi
 done
