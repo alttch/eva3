@@ -13,11 +13,15 @@ fi
 
 EVA_DIR=$(realpath "${EVA_DIR}")
 
-source <(./sbin/key-as-source config/venv 2>/dev/null)
-
-if [ -z "$PYTHON" ]; then
-  echo "Unable to read registry key"
-  exit 1
+if [ -d ${EVA_DIR}/yedb ]; then
+  source <(${EVA_DIR}/sbin/key-as-source config/venv 2>/dev/null)
+  if [ -z "$PYTHON" ]; then
+    echo "Unable to read registry key"
+    exit 1
+  fi
+else
+  [ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+  [ -z $PYTHON ] && PYTHON=python3
 fi
 
 if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then

@@ -639,7 +639,8 @@ if [ $CLEAR -eq 1 ]; then
     echo "WARNING: all configs are deleted"
 fi
 
-./sbin/import-registry-defaults || exit 8
+./install/import-registry-schema || exit 8
+./install/import-registry-defaults || exit 8
 
 # check mods, build venv
 
