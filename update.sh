@@ -73,27 +73,7 @@ cd ..
 echo "- Stopping everything"
 
 ./sbin/eva-control stop
-./sbin/registry-control stop
-
-./install/install-yedb || exit 2
-
-./sbin/registry-control start || exit 2
-
-./sbin/import-registry-defaults || exit 8
-
-if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
-  echo "EVA ICS obsolete configuration found. Staring conversion"
-  ./sbin/import-legacy-configs || exit 4
-fi
-
-source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
-source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
-source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
-
-if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
-  echo "Unable to read registry key"
-  exit 8
-fi
+[ -x ./sbin/registry-control ] && ./sbin/registry-control stop
 
 echo "- Installing missing modules"
 
@@ -110,6 +90,86 @@ echo "- Removing obsolete files and folders"
 for o in ${OBS}; do
   rm -rf ${o}
 done
+
+if [ ! -d ./backup ]; then
+  mkdir ./backup
+  chmod 700 ./backup
+fi
+
+echo "- Installing new files"
+
+(cd ./lib/eva && ln -sf ../../plugins) || exit 1
+
+rm -f _update/eva-${VERSION}/ui/index.html
+rm -f _update/eva-${VERSION}/update.sh
+
+cp -rf _update/eva-${VERSION}/* . || exit 1
+
+mkdir -p ./xc/drivers/phi || exit 1
+mkdir -p ./xc/drivers/lpi || exit 1
+mkdir -p ./xc/extensions || exit 1
+
+mkdir -p ./runtime/data || exit 1
+
+(cd lib/eva/uc && ln -sf ../../../xc/drivers . ) || exit 1
+(cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py . ) || exit 1
+(cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py . ) || exit 1
+(cd lib/eva/lm && ln -sf ../../../xc/extensions . ) || exit 1
+(cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
+(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
+
+if [ ! -d ./runtime/xc/cmd ]; then
+  if [ -d ./xc/cmd ]; then
+    mv -f ./xc/cmd runtime/xc/ || exit 1
+    (cd xc && ln -sf ../runtime/xc/cmd) || exit 1
+  fi
+fi
+
+rm -f bin/eva-shell
+ln -sf eva bin/eva-shell
+
+./install/mklinks || exit 1
+
+./install/install-yedb || exit 2
+
+if [ -f /etc/systemd/system/eva-ics.service ]; then
+  if ! grep eva-ics-registry /etc/systemd/system/eva-ics.service >& /dev/null; then
+    if [ "$(id -u)" = "0" ]; then
+      echo "- Installing EVA ICS registry service"
+      PREFIX=$(pwd)
+      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics-registry.service > /etc/systemd/system/eva-ics-registry.service
+      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics.service > /etc/systemd/system/eva-ics.service
+      if systemctl -a |grep eva-ics|grep active >& /dev/null ; then
+        echo "- Enabling EVA ICS registry service"
+        systemctl enable eva-ics-registry.service
+        systemctl daemon-reload
+      fi
+    else
+      echo "- WARNING! EVA ICS sevice is installed but update isn't launched under root"
+      echo "- WARNING! Please install new eva-ics.service and eva-ics-registry.service manually"
+      sleep 3
+    fi
+  fi
+fi
+
+./sbin/registry-control start || exit 2
+
+./install/import-registry-schema || exit 8
+./install/import-registry-defaults || exit 8
+
+if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
+  echo "EVA ICS obsolete configuration found. Staring conversion"
+  ./install/convert-legacy-configs || exit 4
+fi
+
+source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+
+if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
+  echo "Unable to read registry key"
+  exit 8
+fi
 
 echo "- Creating new runtime dirs"
 
@@ -141,46 +201,6 @@ if [ ! -d runtime/tpl ]; then
   fi
 fi
 
-if [ ! -d ./backup ]; then
-  mkdir ./backup
-  chmod 700 ./backup
-fi
-
-echo "- Installing new files"
-
-(cd ./lib/eva && ln -sf ../../plugins) || exit 1
-
-rm -f _update/eva-${VERSION}/ui/index.html
-rm -f _update/eva-${VERSION}/update.sh
-
-cp -rf _update/eva-${VERSION}/* . || exit 1
-
-mkdir -p ./xc/drivers/phi || exit 1
-mkdir -p ./xc/drivers/lpi || exit 1
-mkdir -p ./xc/extensions || exit 1
-
-mkdir -p ./runtime/data || exit 1
-
-(cd lib/eva/uc && ln -sf ../../../xc/drivers . ) || exit 1
-(cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py . ) || exit 1
-(cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py . ) || exit 1
-(cd lib/eva/lm && ln -sf ../../../xc/extensions . ) || exit 1
-(cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
-(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
-
-
-if [ ! -d ./runtime/xc/cmd ]; then
-  if [ -d ./xc/cmd ]; then
-    mv -f ./xc/cmd runtime/xc/ || exit 1
-    (cd xc && ln -sf ../runtime/xc/cmd) || exit 1
-  fi
-fi
-
-rm -f bin/eva-shell
-ln -sf eva bin/eva-shell
-
-./install/mklinks || exit 1
-
 echo "- Updating tables"
 
 if [ "$UC_SETUP" == "1" ]; then
@@ -195,26 +215,6 @@ if [ "$SFA_SETUP" == "1" ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
 
-if [ -f /etc/systemd/system/eva-ics.service ]; then
-  if ! grep eva-ics-registry /etc/systemd/system/eva-ics.service >& /dev/null; then
-    if [ "$(id -u)" = "0" ]; then
-      echo "- Installing EVA ICS registry service"
-      PREFIX=$(pwd)
-      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics-registry.service > /etc/systemd/system/eva-ics-registry.service
-      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics.service > /etc/systemd/system/eva-ics.service
-      if systemctl -a |grep eva-ics|grep active >& /dev/null ; then
-        echo "- Enabling EVA ICS registry service"
-        systemctl enable eva-ics-registry.service
-        systemctl daemon-reload
-      fi
-    else
-      echo "- WARNING! EVA ICS sevice is installed but update isn't launched under root"
-      echo "- WARNING! Please install new eva-ics.service and eva-ics-registry.service manually"
-      sleep 3
-    fi
-  fi
-fi
-
 echo "- Cleaning up"
 
 rm -rf _update
@@ -227,6 +227,7 @@ if [ "$CURRENT_BUILD" = "$BUILD" ]; then
   echo "- Current build: ${BUILD}"
   echo "---------------------------------------------"
   echo "Update completed. Starting everything back"
+  ./sbin/registry-control start
   ./sbin/eva-control start
 else
   echo "Update failed"
