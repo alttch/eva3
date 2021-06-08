@@ -1,0 +1,29 @@
+config/uc/apikeys: &apikey
+  type: object
+  additionalProperties: false
+  properties:
+    key:
+      type: string
+    master:
+      type: boolean
+    sysfunc:
+      type: boolean
+    hosts-allow: &strarr
+      type: array
+      items:
+        type: string
+    hosts-assign: *strarr
+    items: *strarr
+    items-ro: *strarr
+    items-deny: *strarr
+    groups: *strarr
+    groups-ro: *strarr
+    groups-deny: *strarr
+    pvt: *strarr
+    rpvt: *strarr
+    allow: *strarr
+    cdata: *strarr
+  required:
+    - key
+config/lm/apikeys: *apikey
+config/sfa/apikeys: *apikey
