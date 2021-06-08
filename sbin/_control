@@ -20,7 +20,7 @@ if [ "$FORCE_ALL" == "1" ]; then
   CONTROLLER_ENABLED=1
   if [ -z "$CONTROLLER_ENABLED" ]; then
     echo "Unable to read registry key"
-    exit 1
+    exit 8
   fi
 fi
 

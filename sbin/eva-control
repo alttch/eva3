@@ -18,7 +18,7 @@ if [ "${FORCE_ALL}" == "1" ]; then
 else
   if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
     echo "Unable to read registry key"
-    exit 1
+    exit 8
   fi
 fi
 
