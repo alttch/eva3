@@ -39,12 +39,7 @@ class LVar(eva.item.VariableItem):
         self.update_lock = threading.RLock()
         self.logic = LOGIC_NORMAL
         if create:
-            self.set_defaults(self.fields, 'lvar')
-        d = eva.core.defaults.get('lvar')
-        if 'status' in d or 'value' in d:
-            s = d.get('status', 0)
-            v = d.get('value', '')
-            self.update_set_state(status=s, value=v)
+            self.set_defaults(self.fields)
 
     def update_config(self, data):
         if 'logic' in data:

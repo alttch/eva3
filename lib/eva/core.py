@@ -908,8 +908,9 @@ def load(initial=False, init_log=True, check_pid=True):
         pass
     logging.debug(f'cloud.default_key = {config.default_cloud_key}')
     defaults.clear()
-    defaults.update(
-        eva.registry.key_get(f'config/{product.code}/defaults', default={}))
+    d = eva.registry.key_get(f'config/{product.code}/defaults', default=None)
+    if d:
+        defaults.update(d)
     for k, v in defaults.items():
         if isinstance(v, dict):
             for k2, v2 in v.items():

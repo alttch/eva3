@@ -71,8 +71,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.update_if_action = False
         self.action_always_exec = False
         self.auto_off = 0
-        self.nstatus = 0
-        self.nvalue = ''
+        self.nstatus = self.status
+        self.nvalue = self.value
         self.last_action = 0
         self.auto_processor = None
         self.auto_processor_lock = threading.RLock()
@@ -84,12 +84,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         }
         self.status_labels = self.default_status_labels.copy()
         if create:
-            self.set_defaults(self.fields, 'unit')
-        d = eva.core.defaults.get('unit')
-        if 'status' in d or 'value' in d:
-            s = d.get('status', 0)
-            v = d.get('value', '')
-            self.update_set_state(status=s, value=v)
+            self.set_defaults(self.fields)
 
     def status_by_label(self, label):
         if label is None:

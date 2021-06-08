@@ -68,11 +68,8 @@ class Item(object):
         self.config_file_exists = False
         self.notify_events = 2  # 2 - all events, 1 - state only, 0 - no
 
-    def set_defaults(self, fields, section=None):
-        if section:
-            defaults = eva.core.defaults.get(section, {})
-        else:
-            defaults = eva.core.defaults
+    def set_defaults(self, fields):
+        defaults = eva.core.defaults.get(self.item_type, {})
         for f in fields:
             if f in defaults:
                 self.set_prop(f, defaults[f])
@@ -333,8 +330,17 @@ class UpdatableItem(Item):
         self._updates_allowed = True
         self.update_xc = None
         # default status: 0 - off, 1 - on, -1 - error
-        self.status = 0
-        self.value = ''
+        d = eva.core.defaults.get(item_type, {})
+        try:
+            self.status = int(d.get('status', 0))
+        except ValueError:
+            logging.error(f'Invalid default status for {item_type}')
+            self.status = 0
+        self.value = d.get('value', '')
+        if self.value is None:
+            self.value = ''
+        else:
+            self.value = str(self.value)
         self.set_time = time.time()
         self.state_set_time = time.perf_counter()
         self.ieid = [eva.core.get_boot_id(), 1]

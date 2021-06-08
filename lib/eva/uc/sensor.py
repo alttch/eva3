@@ -39,12 +39,7 @@ class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
         super().__init__(sensor_id, 'sensor', **kwargs)
         self._modbus_status_allowed = False
         if create:
-            self.set_defaults(self.fields, 'sensor')
-        d = eva.core.defaults.get('sensor')
-        if 'status' in d or 'value' in d:
-            s = d.get('status', 0)
-            v = d.get('value', '')
-            self.update_set_state(status=s, value=v)
+            self.set_defaults(self.fields)
 
     def set_expired(self):
         if super().set_expired():
