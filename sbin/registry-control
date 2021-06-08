@@ -58,68 +58,80 @@ function exec_cmd {
 case $1 in
   start)
     echo -n "Starting EVA registry server ."
-    if pgrep -f "${REGISTRY}" >& /dev/null; then
-      echo
-      echo "already started"
-      exit 0
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
+    else
+      if pgrep -f "${REGISTRY}" >& /dev/null; then
+        echo
+        echo "already started"
+        exit 0
+      fi
+      exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
+      result=1
+      C=0
+      while [ "$result" != "0" ]; do
+        if [ $C -gt ${MAX_START_WAIT} ]; then
+          echo " Failed!"
+          exit 1
+        fi
+        exec_cmd "${TEST}"
+        result=$?
+        if [ "$result" == "0" ]; then
+          break
+        fi
+        (( C++ ))
+        echo -n "."
+        sleep 0.5
+      done
+      echo " started"
     fi
-    exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
-    result=1
-    C=0
-    while [ "$result" != "0" ]; do
-      if [ $C -gt ${MAX_START_WAIT} ]; then
-        echo " Failed!"
-        exit 1
-      fi
-      exec_cmd "${TEST}"
-      result=$?
-      if [ "$result" == "0" ]; then
-        break
-      fi
-      (( C++ ))
-      echo -n "."
-      sleep 0.5
-    done
-    echo " started"
     [ "$INVOCATION_ID" ] && "$EVA_DIR/sbin/sblock.sh" &
     exit 0
     ;;
   launch)
-    "${REGISTRY}" "${REGISTRY_ARGS}" -v
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo "YEDB server not managed locally"
+    else
+      "${REGISTRY}" "${REGISTRY_ARGS}" -v
+    fi
     ;;
   stop)
     if ! pgrep -f "${REGISTRY}" >& /dev/null; then
       exit 0
     fi
-    echo -n "Stopping EVA registry server "
-    PID_SAFE_RUN=
-    PID_REGISTRY=
-    [ -f "${SAFE_RUN_PIDFILE}" ] && PID_SAFE_RUN=$(cat "${SAFE_RUN_PIDFILE}")
-    [ -f "${PIDFILE}" ] && PID_REGISTRY=$(cat "${PIDFILE}")
-    if [ "${PID_SAFE_RUN}" ]; then
-      kill "${PID_SAFE_RUN}" >& /dev/null
-      rm -f "${SAFE_RUN_PIDFILE}"
+    echo -n "Stopping EVA registry server ."
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
+    else
+      PID_SAFE_RUN=
+      PID_REGISTRY=
+      [ -f "${SAFE_RUN_PIDFILE}" ] && PID_SAFE_RUN=$(cat "${SAFE_RUN_PIDFILE}")
+      [ -f "${PIDFILE}" ] && PID_REGISTRY=$(cat "${PIDFILE}")
+      if [ "${PID_SAFE_RUN}" ]; then
+        kill "${PID_SAFE_RUN}" >& /dev/null
+        rm -f "${SAFE_RUN_PIDFILE}"
+      fi
+      if [ "x${PID_REGISTRY}" != "x" ]; then
+        kill "${PID_REGISTRY}" >& /dev/null
+        I=0
+        while kill -0 "${PID_REGISTRY}" >& /dev/null; do
+          echo -n "."
+          sleep 0.5
+          (( I++ ))
+          if [ ${I} -ge ${WAIT_TO_KILL} ]; then
+            echo -n  "killing "
+            kill -KILL "${PID_REGISTRY}"
+            break
+          fi
+        done
+        rm -f "${PIDFILE}"
+      fi
+      if pkill -f "${REGISTRY}" >& /dev/null; then
+        sleep 10
+        pkill -KILL -f "${REGISTRY}" >& /dev/null
+      fi
+      echo " stopped"
     fi
-    if [ "x${PID_REGISTRY}" != "x" ]; then
-      kill "${PID_REGISTRY}" >& /dev/null
-      I=0
-      while kill -0 "${PID_REGISTRY}" >& /dev/null; do
-        echo -n "."
-        sleep 0.5
-        (( I++ ))
-        if [ ${I} -ge ${WAIT_TO_KILL} ]; then
-          echo -n  "killing "
-          kill -KILL "${PID_REGISTRY}"
-          break
-        fi
-      done
-      rm -f "${PIDFILE}"
-    fi
-    if pkill -f "${REGISTRY}" >& /dev/null; then
-      sleep 10
-      pkill -KILL -f "${REGISTRY}" >& /dev/null
-    fi
-    echo " stopped"
     [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh"
     exit 0
     ;;
@@ -128,10 +140,14 @@ case $1 in
     ./sbin/registry-control start "$2"
     ;;
   status)
-    if pgrep -f "${REGISTRY}" >& /dev/null; then
-      echo "running"
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
     else
-      echo "stopped"
+      if pgrep -f "${REGISTRY}" >& /dev/null; then
+        echo "running"
+      else
+        echo "stopped"
+      fi
     fi
     ;;
   version)
