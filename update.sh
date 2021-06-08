@@ -16,20 +16,14 @@ export $EVA_REPOSITORY_URL
 
 OBS=""
 
-UC_NEW_CFG=""
-UC_NEW_CFG_L=""
 UC_NEW_DIR="runtime/xc/uc/cs"
-LM_NEW_CFG=""
 LM_NEW_DIR="runtime/xc/lm/functions runtime/xc/lm/cs"
-SFA_NEW_CFG=""
 SFA_NEW_DIR="runtime/xc/sfa/cs"
 
-if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
-    echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
-    exit 1
+if [ ! -d ./runtime ]; then
+  echo "Runtime dir not found. Please run the script in the folder where EVA ICS is already installed"
+  exit 1
 fi
-
-source etc/eva_servers
 
 if ! command -v jq > /dev/null; then
   echo "Please install jq"
@@ -37,15 +31,15 @@ if ! command -v jq > /dev/null; then
 fi
 
 if [ -f ./sbin/eva-tinyapi ]; then
-    if ! CURRENT_BUILD=$(./sbin/eva-tinyapi -B); then
-        echo "Can't obtain current build"
-        exit 1
-    fi
-    
-    if [ "$CURRENT_BUILD" -ge "$BUILD" ]; then
-        echo "Your build is ${CURRENT_BUILD}, this script can update EVA ICS to ${BUILD} only"
-        exit 1
-    fi
+  if ! CURRENT_BUILD=$(./sbin/eva-tinyapi -B); then
+    echo "Can't obtain current build"
+    exit 1
+  fi
+
+  if [ "$CURRENT_BUILD" -ge "$BUILD" ]; then
+    echo "Your build is ${CURRENT_BUILD}, this script can update EVA ICS to ${BUILD} only"
+    exit 1
+  fi
 fi
 
 rm -rf _update
@@ -55,8 +49,8 @@ echo "- Starting update to ${VERSION} build ${BUILD}"
 mkdir -p _update
 
 if ! touch _update/test; then
-    echo "Unable to write. Read-only file system?"
-    exit 1
+  echo "Unable to write. Read-only file system?"
+  exit 1
 fi
 
 echo "- Downloading new version tarball"
@@ -85,6 +79,22 @@ echo "- Stopping everything"
 
 ./sbin/registry-control start || exit 2
 
+./sbin/import-registry-defaults || exit 8
+
+if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
+  echo "EVA ICS obsolete configuration found. Staring conversion"
+  ./sbin/import-legacy-configs || exit 4
+fi
+
+source <(./sbin/key-as-source config/uc:service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm:service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa:service SFA 2>/dev/null)
+
+if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
+  echo "Unable to read registry key"
+  exit 8
+fi
+
 echo "- Installing missing modules"
 
 ./_update/eva-${VERSION}/install/build-venv . || exit 2
@@ -98,70 +108,42 @@ fi
 echo "- Removing obsolete files and folders"
 
 for o in ${OBS}; do
-    rm -rf ${o}
+  rm -rf ${o}
 done
 
-echo "- Adding new runtime configs"
-
-for f in ${UC_NEW_CFG}; do
-    [ ! -f $f ] && echo "{}" > $f
-    if [ "$UC_USER" ]; then
-        chown "${UC_USER}" "$f"
-    fi
-done
-
-for f in ${UC_NEW_CFG_L}; do
-    [ ! -f $f ] && echo "[]" > $f
-    if [ "$UC_USER" ]; then
-        chown "${UC_USER}" "$f"
-    fi
-done
-
-for f in ${LM_NEW_CFG}; do
-    [ ! -f "$f" ] && echo "{}" > $f
-    if [ "$LM_USER" ]; then
-        chown "${LM_USER}" "$f"
-    fi
-done
-
-for f in ${SFA_NEW_CFG}; do
-    [ ! -f $f ] && echo "{}" > $f
-    if [ "$SFA_USER" ]; then
-        chown "${SFA_USER}" "$f"
-    fi
-done
+echo "- Creating new runtime dirs"
 
 for f in ${UC_NEW_DIR}; do
-    mkdir -p "$f"
-    if [ "$UC_USER" ]; then
-        chown "${UC_USER}" "$f"
-    fi
+  mkdir -p "$f"
+  if [ "$UC_USER" ]; then
+    chown "${UC_USER}" "$f"
+  fi
 done
 
 for f in ${LM_NEW_DIR}; do
-    mkdir -p "$f"
-    if [ "$LM_USER" ]; then
-        chown "${LM_USER}" "$f"
-    fi
+  mkdir -p "$f"
+  if [ "$LM_USER" ]; then
+    chown "${LM_USER}" "$f"
+  fi
 done
 
-chmod 700 ./runtime/lm_ext_data.d || exit 1
-
 for f in ${SFA_NEW_DIR}; do
-    mkdir -p "$f"
-    if [ "$SFA_USER" ]; then
-        chown "${SFA_USER}" "$f"
-    fi
+  mkdir -p "$f"
+  if [ "$SFA_USER" ]; then
+    chown "${SFA_USER}" "$f"
+  fi
 done
 
 if [ ! -d runtime/tpl ]; then
-    mkdir runtime/tpl
-    chown "${UC_USER}" runtime/tpl
+  mkdir ./runtime/tpl
+  if [ "$UC_USER" ]; then
+    chown "${UC_USER}" ./runtime/tpl
+  fi
 fi
 
-if [ ! -d backup ]; then
-    mkdir backup
-    chmod 700 backup
+if [ ! -d ./backup ]; then
+  mkdir ./backup
+  chmod 700 ./backup
 fi
 
 echo "- Installing new files"
@@ -201,14 +183,15 @@ ln -sf eva bin/eva-shell
 
 echo "- Updating tables"
 
-if [ -f ./etc/uc.ini ]; then
+if [ "$UC_SETUP" == "1" ]; then
   ./sbin/eva-update-tables uc || exit 1
 fi
 
-if [ -f ./etc/lm.ini ]; then
+if [ "$LM_SETUP" == "1" ]; then
   ./sbin/eva-update-tables lm || exit 1
 fi
-if [ -f ./etc/sfa.ini ]; then
+
+if [ "$SFA_SETUP" == "1" ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
 
@@ -233,11 +216,11 @@ rm -rf _update
 CURRENT_BUILD=$(./sbin/eva-tinyapi -B)
 
 if [ "$CURRENT_BUILD" = "$BUILD" ]; then
-    echo "- Current build: ${BUILD}"
-    echo "---------------------------------------------"
-    echo "Update completed. Starting everything back"
-    ./sbin/eva-control start
+  echo "- Current build: ${BUILD}"
+  echo "---------------------------------------------"
+  echo "Update completed. Starting everything back"
+  ./sbin/eva-control start
 else
-    echo "Update failed"
-    exit 1
+  echo "Update failed"
+  exit 1
 fi
