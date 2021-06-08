@@ -631,7 +631,7 @@ fi
 [ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop > /dev/null 2>&1 )
 
 if [ $CLEAR -eq 1 ]; then
-    KEYS_TO_CLEAR=(config/common config/uc config/lm config/sfa config/watchdog data inventory)
+    KEYS_TO_CLEAR=(config/common config/cloud config/uc config/lm config/sfa config/watchdog data inventory)
     for k in "${KEYS_TO_CLEAR[@]}"; do
         AUTO_PREFIX=1 ./sbin/eva-registry-cli delete "${k}" -r > /dev/null || exit 8
     done

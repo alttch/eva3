@@ -599,23 +599,15 @@ sys.argv = {argv}
         os.chdir(dir_eva)
 
     def iote_list(self, params):
-        if not os.path.isfile(dir_etc + '/iote.domains'):
-            return self.local_func_result_empty
-        with open(dir_etc + '/iote.domains') as f:
-            clouds = f.readlines()
-        if clouds:
-            result = []
-            for c in clouds:
-                if c:
-                    acc, dcloud, cid = c.strip().split(' ', 2)
-                    result.append({
-                        'account': acc,
-                        'domain': '{}.{}'.format(acc, dcloud),
-                        'cloud': cid
-                    })
-            return 0, result
-        else:
-            return self.local_func_result_empty
+        result = []
+        for k, v in eva.registry.key_get('config/cloud/iote',
+                                         default={}).items():
+            result.append({
+                'account': v['account'],
+                'domain': k,
+                'cloud': 'iote'
+            })
+        return 0, result
 
     def iote_leave(self, params):
         code = os.system(dir_sbin + '/iote.sh leave {} {}'.format(
