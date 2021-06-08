@@ -195,16 +195,22 @@ if [ "$SFA_SETUP" == "1" ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
 
-if [ "$(id -u)" = "0" ] && [ -f /etc/systemd/system/eva-ics.service ]; then
+if [ -f /etc/systemd/system/eva-ics.service ]; then
   if ! grep eva-ics-registry /etc/systemd/system/eva-ics.service >& /dev/null; then
-    echo "- Installing EVA ICS registry service"
-    PREFIX=$(pwd)
-    sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics-registry.service > /etc/systemd/system/eva-ics-registry.service
-    sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics.service > /etc/systemd/system/eva-ics.service
-    if systemctl -a |grep eva-ics|grep active >& /dev/null ; then
-      echo "- Enabling EVA ICS registry service"
-      systemctl enable eva-ics-registry.service
-      systemctl daemon-reload
+    if [ "$(id -u)" = "0" ]; then
+      echo "- Installing EVA ICS registry service"
+      PREFIX=$(pwd)
+      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics-registry.service > /etc/systemd/system/eva-ics-registry.service
+      sed "s|/opt/eva|${PREFIX}|g" ./etc/systemd/eva-ics.service > /etc/systemd/system/eva-ics.service
+      if systemctl -a |grep eva-ics|grep active >& /dev/null ; then
+        echo "- Enabling EVA ICS registry service"
+        systemctl enable eva-ics-registry.service
+        systemctl daemon-reload
+      fi
+    else
+      echo "- WARNING! EVA ICS sevice is installed but update isn't launched under root"
+      echo "- WARNING! Please install new eva-ics.service and eva-ics-registry.service manually"
+      sleep 3
     fi
   fi
 fi
@@ -212,6 +218,8 @@ fi
 echo "- Cleaning up"
 
 rm -rf _update
+
+rm -f ./sbin/uc-control ./sbin/lm-control ./sbin/sfa-control
 
 CURRENT_BUILD=$(./sbin/eva-tinyapi -B)
 
