@@ -18,7 +18,19 @@ LOGIC_SIMPLE = 1
 
 class LVar(eva.item.VariableItem):
 
-    def __init__(self, var_id=None, **kwargs):
+    fields = [
+        'description',
+        'expires',
+        'logic',
+        'mqtt_update',
+        'notify_events',
+        'update_delay',
+        'update_exec',
+        'update_interval',
+        'update_timeout',
+    ]
+
+    def __init__(self, var_id=None, create=False, **kwargs):
         super().__init__(var_id, 'lvar', **kwargs)
         self.status = 1
         self.mqtt_update_topics.append('set_time')
@@ -26,6 +38,13 @@ class LVar(eva.item.VariableItem):
         self.prv_status = 1
         self.update_lock = threading.RLock()
         self.logic = LOGIC_NORMAL
+        if create:
+            self.set_defaults(self.fields, 'lvar')
+        d = eva.core.defaults.get('lvar')
+        if 'status' in d or 'value' in d:
+            s = d.get('status', 0)
+            v = d.get('value', '')
+            self.update_set_state(status=s, value=v)
 
     def update_config(self, data):
         if 'logic' in data:

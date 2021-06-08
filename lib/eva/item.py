@@ -68,6 +68,15 @@ class Item(object):
         self.config_file_exists = False
         self.notify_events = 2  # 2 - all events, 1 - state only, 0 - no
 
+    def set_defaults(self, fields, section=None):
+        if section:
+            defaults = eva.core.defaults.get(section, {})
+        else:
+            defaults = eva.core.defaults
+        for f in fields:
+            if f in defaults:
+                self.set_prop(f, defaults[f])
+
     def set_group(self, group=None):
         if group:
             self.group = group

@@ -27,7 +27,42 @@ status_label_on = 'ON'
 class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
            eva.item.PhysicalItem):
 
-    def __init__(self, unit_id=None, **kwargs):
+    fields = [
+        'action_allow_termination',
+        'action_always_exec',
+        'action_driver_config',
+        'action_enabled',
+        'action_exec',
+        'action_queue',
+        'action_timeout',
+        'auto_off',
+        'description',
+        'expires',
+        'location',
+        'maintenance_duration',
+        'modbus_status',
+        'modbus_value',
+        'mqtt_control',
+        'mqtt_update',
+        'notify_events',
+        'snmp_trap',
+        'term_kill_interval',
+        'update_delay',
+        'update_driver_config',
+        'update_exec',
+        'update_exec_after_action',
+        'update_if_action',
+        'update_interval',
+        'update_state_after_action',
+        'update_timeout',
+        'value_condition',
+        'value_in_range_max',
+        'value_in_range_max_eq',
+        'value_in_range_min',
+        'value_in_range_min_eq',
+    ]
+
+    def __init__(self, unit_id=None, create=False, **kwargs):
         self.action_driver_config = None
         super().__init__(unit_id, 'unit', **kwargs)
 
@@ -48,6 +83,13 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             '1': status_label_on
         }
         self.status_labels = self.default_status_labels.copy()
+        if create:
+            self.set_defaults(self.fields, 'unit')
+        d = eva.core.defaults.get('unit')
+        if 'status' in d or 'value' in d:
+            s = d.get('status', 0)
+            v = d.get('value', '')
+            self.update_set_state(status=s, value=v)
 
     def status_by_label(self, label):
         if label is None:

@@ -121,6 +121,8 @@ config = SimpleNamespace(pid_file=None,
                          user_hook=None,
                          plugins=[])
 
+defaults = {}
+
 db_engine = SimpleNamespace(primary=None, user=None)
 
 log_engine = SimpleNamespace(logger=None,
@@ -905,6 +907,15 @@ def load(initial=False, init_log=True, check_pid=True):
     except LookupError:
         pass
     logging.debug(f'cloud.default_key = {config.default_cloud_key}')
+    defaults.clear()
+    defaults.update(
+        eva.registry.key_get(f'config/{product.code}/defaults', default={}))
+    for k, v in defaults.items():
+        if isinstance(v, dict):
+            for k2, v2 in v.items():
+                logging.debug(f'defaults.{k}.{k2} = {v2}')
+        else:
+            logging.debug(f'defaults.{k} = {v}')
     plugin_cfg = cfg.get('plugins', default={})
     plugin_cfg.update(
         eva.registry.get_subkeys(f'config/{product.code}/plugins'))

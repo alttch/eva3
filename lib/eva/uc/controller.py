@@ -475,7 +475,12 @@ def load_mu(start=False):
 
 
 @with_item_lock
-def create_item(item_id, item_type, group=None, start=True, save=False):
+def create_item(item_id,
+                item_type,
+                group=None,
+                start=True,
+                create=False,
+                save=False):
     if not item_id:
         raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
@@ -499,9 +504,9 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'U' or item_type == 'unit':
-        item = eva.uc.unit.Unit(i)
+        item = eva.uc.unit.Unit(i, create=create)
     elif item_type == 'S' or item_type == 'sensor':
-        item = eva.uc.sensor.Sensor(i)
+        item = eva.uc.sensor.Sensor(i, create=create)
     elif item_type == 'MU' or item_type == 'mu':
         item = eva.uc.ucmu.UCMultiUpdate(i)
     if not item:
@@ -523,6 +528,7 @@ def create_unit(unit_id, group=None, enabled=None, save=False):
                        item_type='U',
                        group=group,
                        start=False,
+                       create=True,
                        save=save and not enabled)
     if enabled:
         unit.set_prop('action_enabled', True, save=save)
@@ -538,6 +544,7 @@ def create_sensor(sensor_id, group=None, enabled=None, save=False):
                          item_type='S',
                          group=group,
                          start=False,
+                         create=True,
                          save=save)
     if enabled:
         sensor.update_set_state(status=1)

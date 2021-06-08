@@ -1124,7 +1124,7 @@ def remove_controller(controller_id):
 
 
 @with_item_lock
-def create_item(item_id, item_type, group=None, save=False):
+def create_item(item_id, item_type, group=None, create=False, save=False):
     if not item_id:
         raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
@@ -1148,14 +1148,14 @@ def create_item(item_id, item_type, group=None, save=False):
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'LV' or item_type == 'lvar':
-        item = eva.lm.lvar.LVar(i)
+        item = eva.lm.lvar.LVar(i, create=create)
     if not item:
         return False
     cfg = {'group': grp}
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start=True, load=False)
+    append_item(item, start=True)
     if save:
         item.save()
     if item_type == 'LV' or item_type == 'lvar':
@@ -1166,7 +1166,11 @@ def create_item(item_id, item_type, group=None, save=False):
 
 @with_item_lock
 def create_lvar(lvar_id, group=None, save=False):
-    return create_item(item_id=lvar_id, item_type='LV', group=group, save=save)
+    return create_item(item_id=lvar_id,
+                       item_type='LV',
+                       group=group,
+                       create=True,
+                       save=save)
 
 
 @with_item_lock
