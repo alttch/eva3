@@ -10,7 +10,6 @@ import logging
 import sys
 
 from eva.tools import ShellConfigFile
-from yedb import YEDB, FieldNotFound
 
 from pathlib import Path
 
@@ -30,6 +29,7 @@ else:
     socket_path = EVA_DIR / 'var/registry.sock'
     SYSTEM_NAME = platform.node()
 
+from yedb import YEDB, FieldNotFound
 db = YEDB(socket_path)
 
 from functools import wraps
