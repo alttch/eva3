@@ -29,6 +29,14 @@ config/sfa/apikeys: *apikey
 data/easy-setup:
   link: *bool
   mqtt-discovery-enabled: *bool
+data/info:
+  type: object
+  additionalProperties: false
+  properties:
+    build:
+      type: number
+    version:
+      type: string
 data/uc/boot-id: &bootid
   type: integer
   minimum: 1

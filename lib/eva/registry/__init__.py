@@ -1,3 +1,8 @@
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2021 Altertech Group"
+__license__ = "Apache License 2.0"
+__version__ = "3.3.3"
+
 PFX = 'eva3'
 
 import platform
@@ -135,6 +140,8 @@ def key_as_dict(key, **kwargs):
 
 def init_defaults(skip_existing=True):
     import yaml
+    import os
+    key_delete('data/info')
     l = len(DEFAULTS_DIR.as_posix()) + 1
     for f in DEFAULTS_DIR.glob('**/*.yml'):
         key = f.as_posix()[l:].rsplit('.', 1)[0]
@@ -150,6 +157,10 @@ def init_defaults(skip_existing=True):
                 logging.info(f'Setting key {key} to defaults from {f}')
                 data = yaml.safe_load(fh)
                 key_set(key, data)
+    version = os.popen(f'{EVA_DIR}/sbin/eva-tinyapi -V').read().strip()
+    build = int(os.popen(f'{EVA_DIR}/sbin/eva-tinyapi -B').read().strip())
+    key_set_field('data/info', 'version', __version__)
+    key_set_field('data/info', 'build', build)
 
 
 def import_schema():
