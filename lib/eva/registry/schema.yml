@@ -454,3 +454,25 @@ inventory/mu:
     update_exec: *stringornull
     update_interval: *floatzeropositive
     update_timeout: *floatpositiveornull
+inventory/lvar:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    mqtt_update: *stringornull
+    logic:
+      type: integer
+      enum:
+        - 0
+        - 1
+    notify_events: *notifyevents
+    oid: *str
+    type: *str
+    update_delay: *floatornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
