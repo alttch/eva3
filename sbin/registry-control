@@ -15,11 +15,12 @@ EVA_DIR=$(pwd)
 [ -z "${YEDB_AUTO_BAK}" ] && YEDB_AUTO_BAK=10
 [ -z "${YEDB_WORKERS}" ] && YEDB_WORKERS=2
 [ -z "${YEDB_CACHE_SIZE}" ] && YEDB_CACHE_SIZE=1000
+[ "${YEDB_STRICT_SCHEMA}" != "0" ] && YEDB_STRICT="--strict-schema"
 
 REGISTRY=${EVA_DIR}/yedb/yedb-server
 PIDFILE=${EVA_DIR}/var/registry.pid
 LOCKFILE=${EVA_DIR}/var/registry.lock
-REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE}"
+REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE} ${YEDB_STRICT}"
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 TEST=${EVA_DIR}/yedb/yedb-cli test
