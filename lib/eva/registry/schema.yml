@@ -312,6 +312,43 @@ config/uc/buses/owfs:
   required:
     - id
     - location
+config/uc/phis:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    mod: *str
+  required:
+    - id
+    - mod
+config/uc/drivers:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    lpi_id: *str
+    phi_id: *str
+    mod: *str
+  required:
+    - id
+    - lpi_id
+    - phi_id
+    - mod
+config/lm/extensions:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    mod: *str
+  required:
+    - id
+    - mod
 config/uc/cvars: {}
 config/lm/cvars: {}
 config/sfa/cvars: {}
