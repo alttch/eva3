@@ -1,7 +1,3 @@
-service:
-  enabled: true
-  setup: true
-  supervisord-program: null
 server:
   polldelay: 0.001
   pid-file: var/uc.pid
