@@ -319,7 +319,21 @@ config/uc/cs: &cscfg
   type: object
   additionalProperties: false
   properties:
-    mqtt-topics: *strarr
+    mqtt-topics:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          qos: &qos
+            type: integer
+            enum:
+              - 0
+              - 1
+              - 2
+          topic: *str
+        required:
+          - topic
 config/lm/cs: *cscfg
 config/sfa/cs: *cscfg
 config/venv:
