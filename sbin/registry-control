@@ -132,7 +132,6 @@ case $1 in
         pkill -KILL -f "${REGISTRY}" >& /dev/null
       fi
       echo " stopped"
-      sleep 1
     fi
     [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh"
     exit 0
