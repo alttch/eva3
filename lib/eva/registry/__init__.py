@@ -127,10 +127,26 @@ def key_delete(key):
 
 
 @safe
+def key_delete_recursive(key):
+    return db.key_delete_recursive(key=f'{PFX}/{SYSTEM_NAME}/{key}')
+
+
+@safe
 def key_delete_field(key, field, **kwargs):
     return db.key_delete_field(key=f'{PFX}/{SYSTEM_NAME}/{key}',
                                field=field,
                                **kwargs)
+
+
+@safe
+def key_import(key, fh):
+    import yaml
+    if isinstance(fh, str):
+        with open(fh) as f:
+            data = f.read()
+    else:
+        data = fh.read()
+    key_set(key, yaml.safe_load(data))
 
 
 @safe
