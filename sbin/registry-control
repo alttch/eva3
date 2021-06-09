@@ -128,10 +128,11 @@ case $1 in
         rm -f "${PIDFILE}"
       fi
       if pkill -f "${REGISTRY}" >& /dev/null; then
-        sleep 10
+        sleep 3
         pkill -KILL -f "${REGISTRY}" >& /dev/null
       fi
       echo " stopped"
+      sleep 1
     fi
     [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh"
     exit 0

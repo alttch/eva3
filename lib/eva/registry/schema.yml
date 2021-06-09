@@ -28,17 +28,17 @@ config/sfa/apikeys: *apikey
 config/common/mailer:
   type: object
   additionalProperties: false
-  smtp: *str
-  from: *str
-  default-rcp:
-    anyOf:
-      - type: string
-      - type: array
-        items: *str
-  ssl: *bool
-  tls: *bool
-  login: *str
-  password: *str
+  properties:
+    smtp: *str
+    from: *str
+    default-rcp:
+      anyOf:
+        - type: string
+        - <<: *strarr
+    ssl: *bool
+    tls: *bool
+    login: *str
+    password: *str
 config/watchdog:
   dump: *bool
   inerval: &intpositive
@@ -48,7 +48,7 @@ config/watchdog:
 config/uc/service: &service
   enabled: *bool
   setup: *bool
-  supervisord-program:
+  supervisord-program: &stringornull
     anyOf:
       - type: string
       - type: "null"
@@ -296,7 +296,7 @@ config/cloud/iote:
       additionalProperties: false
       properties:
         account: *str
-data/easy-setup:
+data/easy_setup:
   link: *bool
   mqtt-discovery-enabled: *bool
 data/info:
@@ -320,10 +320,8 @@ data/lm/remote_uc: &remotecontroller
     group: *str
     id: *str
     key: *str
-    mqtt_update:
-      anyOf:
-        - type: string
-        - type: "null"
+    masterkey: *str
+    mqtt_update: *stringornull
     oid: *str
     reload_interval: *floatzeropositive
     retries: *intzeropositive
@@ -347,3 +345,112 @@ data/sfa/remote_uc:
   <<: *remotecontroller
 data/sfa/remote_lm:
   <<: *remotecontroller
+inventory/unit:
+  type: object
+  additionalProperties: false
+  properties:
+    action_allow_termination: *bool
+    action_always_exec: *bool
+    action_driver_config: &objectornull
+      anyOf:
+        - type: object
+        - type: "null"
+    action_enabled: *bool
+    action_exec: *stringornull
+    action_queue:
+      enum:
+      - 0
+      - 1
+      - 2
+      type: integer
+    action_timeout: &floatpositiveornull
+      anyOf:
+        - <<: *floatpositive
+        - type: "null"
+    auto_off: *floatzeropositive
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    location: {}
+    maintenance_duration: *floatzeropositive
+    modbus_status: *stringornull
+    modbus_value: *stringornull
+    mqtt_control: *stringornull
+    mqtt_update: *stringornull
+    notify_events: &notifyevents
+      enum:
+      - 0
+      - 1
+      - 2
+      type: integer
+    oid: *str
+    snmp_trap: {}
+    status_labels:
+      type: object
+    term_kill_interval: *floatpositiveornull
+    type: *str
+    update_delay: *floatzeropositive
+    update_driver_config: *objectornull
+    update_exec: *stringornull
+    update_exec_after_action: *bool
+    update_if_action: *bool
+    update_interval: *floatzeropositive
+    update_state_after_action: *bool
+    update_timeout: *floatpositiveornull
+    value_in_range_max: &floatornull
+      anyOf:
+        - type: number
+        - type: "null"
+    value_in_range_max_eq: &boolornull
+      anyOf:
+        - type: boolean
+        - type: "null"
+    value_in_range_min: *floatornull
+    value_in_range_min_eq: *boolornull
+inventory/sensor:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    location: {}
+    maintenance_duration: *floatzeropositive
+    modbus_status: *stringornull
+    modbus_value: *stringornull
+    mqtt_control: *stringornull
+    mqtt_update: *stringornull
+    notify_events: *notifyevents
+    oid: *str
+    snmp_trap: {}
+    term_kill_interval: *floatpositiveornull
+    type: *str
+    update_delay: *floatornull
+    update_driver_config: *objectornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
+    value_in_range_max: *floatornull
+    value_in_range_max_eq: *boolornull
+    value_in_range_min: *floatornull
+    value_in_range_min_eq: *boolornull
+inventory/mu:
+  type: object
+  additionalProperties: false
+  properties:
+    full_id: *str
+    group: *str
+    id: *str
+    description: *str
+    items: *strarr
+    oid: *str
+    type: *str
+    update_allow_check: *bool
+    update_delay: *floatornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
