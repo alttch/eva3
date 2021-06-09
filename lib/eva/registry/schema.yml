@@ -4,10 +4,9 @@ config/uc/apikeys: &apikey
   properties:
     key:
       type: string
-    master:
+    master: &bool
       type: boolean
-    sysfunc:
-      type: boolean
+    sysfunc: *bool
     hosts-allow: &strarr
       type: array
       items:
@@ -27,3 +26,19 @@ config/uc/apikeys: &apikey
     - key
 config/lm/apikeys: *apikey
 config/sfa/apikeys: *apikey
+data/easy-setup:
+  link: *bool
+  mqtt-discovery-enabled: *bool
+data/uc/boot-id: &bootid
+  type: integer
+  minimum: 1
+data/lm/boot-id: *bootid
+data/sfa/boot-id: *bootid
+config/watchdog:
+  dump: *bool
+  inerval:
+    type: integer
+    minimum: 1
+  max-timeout:
+    type: integer
+    minimum: 1
