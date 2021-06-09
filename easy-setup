@@ -565,7 +565,7 @@ cd "${EVA_DIR}" || exit 11
 # Install YEDB
 
 ./install/install-yedb || exit 3
-./sbin/registry-control restart || exit 1
+./sbin/registry-control start || exit 1
 
 # Create VENV key if not present
 
