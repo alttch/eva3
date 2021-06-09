@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[ "${debug}" ] && set -o xtrace
+[ "${debug}" == "1" ] && set -o xtrace
 
 [ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 export EVA_REPOSITORY_URL
@@ -995,20 +995,18 @@ fi
 
 ln -sf eva bin/eva-shell
 
-if [ $APPEND_MQTT -ne 1 ]; then
-    echo "Setup completed!"
+echo "Setup completed!"
+echo
+echo "EVA ICS v$(./sbin/eva-tinyapi -V) build $(./sbin/eva-tinyapi -B)"
+echo
+echo "MASTERKEY: ${MASTERKEY}"
+echo "Controller default key: ${DEFAULTKEY}"
+echo "Operator key: ${OPKEY}"
+echo
+if [ $INSTALL_SFA -eq 1 ]; then
+    echo "Default user: operator"
+    echo "Password: ${OPPASSWD}"
     echo
-    echo "EVA ICS v$(./sbin/eva-tinyapi -V) build $(./sbin/eva-tinyapi -B)"
-    echo
-    echo "MASTERKEY: ${MASTERKEY}"
-    echo "Controller default key: ${DEFAULTKEY}"
-    echo "Operator key: ${OPKEY}"
-    echo
-    if [ $INSTALL_SFA -eq 1 ]; then
-        echo "Default user: operator"
-        echo "Password: ${OPPASSWD}"
-        echo
-    fi
 fi
 
 mkdir -p backup
