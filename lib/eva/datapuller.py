@@ -31,8 +31,12 @@ def update_config(cfg):
         for i, v in c.items():
             if isinstance(v, dict):
                 cmd = v['cmd']
-                timeout = float(v.get('timeout'))
-                event_timeout = float(v.get('event-timeout'))
+                timeout = v.get('timeout')
+                if timeout:
+                    timeout = float(timeout)
+                event_timeout = v.get('event-timeout')
+                if event_timeout:
+                    event_timeout = float(event_timeout)
             else:
                 cmd = v
                 timeout = None
