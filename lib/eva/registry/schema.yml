@@ -715,3 +715,4 @@ inventory/job:
     - id
     - oid
     - type
+userdata: {}
