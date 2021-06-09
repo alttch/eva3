@@ -5,6 +5,7 @@ doc/_build
 bin/eva-shell
 etc/eva_servers
 etc/watchdog
+etc/eva_config
 etc/*.ini
 etc/venv
 keys
@@ -38,6 +39,10 @@ bin/test-phi
 bin/test-uc-xc
 bin/uc-cmd
 bin/uc-tpl
+bin/gen-intl
+bin/key-deploy
+bin/key-improt
+bin/prepare-sr
 sbin/check-mqtt
 sbin/get-setup-options
 sbin/layout-converter
@@ -46,4 +51,8 @@ sbin/pypi-mirror
 tests/benchmark-uc-crt
 lib/eva/plugins
 xc/cmd
+install/convert-legacy-configs
+install/import-registry-defaults
+install/import-registry-schema
 .keys
+yedb
