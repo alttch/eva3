@@ -51,7 +51,10 @@ config/uc/service: &service
   supervisord-program:
     anyOf:
       - type: string
-      - type: null
+      - type: "null"
+  required:
+    - enabled
+    - setup
 config/lm/service: *service
 config/sfa/service: *service
 config/uc/main:
@@ -261,6 +264,38 @@ config/lm/plugins:
   <<: *plugin
 config/sfa/plugins:
   <<: *plugin
+config/uc/notifiers: &notifier
+  type: object
+  additionalProperties: true
+  properties:
+    id: *str
+    type: *str
+    enabled: *bool
+    events:
+      type: array
+config/lm/notifiers:
+  <<: *notifier
+config/sfa/notifiers:
+  <<: *notifier
+config/venv:
+  type: object
+  additionalProperties: false
+  properties:
+    use-system-pip: *bool
+    python: *str
+    system-site-packages: *bool
+    skip: *strarr
+    extra: *strarr
+    pip-extra-options: *str
+  required:
+    - python
+config/cloud/iote:
+  patternProperties:
+    "^.*$":
+      type: object
+      additionalProperties: false
+      properties:
+        account: *str
 data/easy-setup:
   link: *bool
   mqtt-discovery-enabled: *bool
@@ -274,3 +309,39 @@ data/info:
 data/uc/boot-id: *intpositive
 data/lm/boot-id: *intpositive
 data/sfa/boot-id: *intpositive
+data/lm/remote_uc: &remotecontroller
+  type: object
+  additionalProperties: false
+  properties:
+    enabled: *bool
+    full_id: *str
+    group: *str
+    id: *str
+    key: *str
+    mqtt_update:
+      anyOf:
+        - type: string
+        - type: "null"
+    oid: *str
+    reload_interval: *floatzeropositive
+    retries: *intzeropositive
+    ssl_verify: *bool
+    static: *bool
+    timeout: *floatpositive
+    type: *str
+    uri: *str
+    ws_buf_ttl: *floatzeropositive
+    ws_state_events: *bool
+  required:
+    - enabled
+    - full_id
+    - group
+    - id
+    - key
+    - oid
+    - timeout
+    - uri
+data/sfa/remote_uc:
+  <<: *remotecontroller
+data/sfa/remote_lm:
+  <<: *remotecontroller
