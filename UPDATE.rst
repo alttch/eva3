@@ -24,6 +24,10 @@ Removed and deprecated
 
 - backups from versions, below 3.4, are INCOMPATIBLE
 
+- plugins and custom deployment tools no longer can manipulate with
+  configuration files - these does not exist any longer. Consider switching to
+  EVA Registry.
+
 Update instructions
 ===================
 
