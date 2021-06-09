@@ -45,6 +45,8 @@ server:
   notify-on-start: true
   # debug mode
   debug: false
+  # log code tracebacks
+  #show-traceback: true
   # create crash dump on critical errors
   dump-on-critical: true
   # stop server on critical errors (will be restarted via safe-run)
@@ -75,7 +77,7 @@ plc:
 # (e.g. useful for handling rare bulk events), default is "true"
   use-core-pool: true
 # cache state of remote items into local db (seconds ttl), off by default
-cache-remote-state: 0
+  cache-remote-state: 0
 #lurp:
 # LURP replication
 #  listen: 127.0.0.1:8911

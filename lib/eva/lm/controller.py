@@ -97,7 +97,7 @@ def update_config(cfg):
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
     try:
-        cache_remote_state = float(cfg.get('plc/cache_remote_state'))
+        cache_remote_state = float(cfg.get('plc/cache-remote-state'))
     except:
         cache_remote_state = 0.0
     logging.debug(f'plc.cache_remote_state = {cache_remote_state}')

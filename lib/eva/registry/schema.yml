@@ -2,15 +2,14 @@ config/uc/apikeys: &apikey
   type: object
   additionalProperties: false
   properties:
-    key:
+    key: &str
       type: string
     master: &bool
       type: boolean
     sysfunc: *bool
     hosts-allow: &strarr
       type: array
-      items:
-        type: string
+      items: *str
     hosts-assign: *strarr
     items: *strarr
     items-ro: *strarr
@@ -26,6 +25,242 @@ config/uc/apikeys: &apikey
     - key
 config/lm/apikeys: *apikey
 config/sfa/apikeys: *apikey
+config/common/mailer:
+  type: object
+  additionalProperties: false
+  smtp: *str
+  from: *str
+  default-rcp:
+    anyOf:
+      - type: string
+      - type: array
+        items: *str
+  ssl: *bool
+  tls: *bool
+  login: *str
+  password: *str
+config/watchdog:
+  dump: *bool
+  inerval: &intpositive
+    type: integer
+    minimum: 1
+  max-timeout: *intpositive
+config/uc/service: &service
+  enabled: *bool
+  setup: *bool
+  supervisord-program:
+    anyOf:
+      - type: string
+      - type: null
+config/lm/service: *service
+config/sfa/service: *service
+config/uc/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: &server
+      type: object
+      additionalProperties: false
+      properties:
+        polldelay: &floatpositive
+          type: number
+          minimum: 0.001
+        pid-file: *str
+        log-file: *str
+        log-format: *str
+        syslog:
+          anyOf:
+            - type: boolean
+            - type: string
+        syslog-format: *str
+        db-update:
+          type: string
+          enum:
+            - instant
+            - manual
+            - on-exit
+        db-file: *str
+        db: *str
+        userdb-file: *str
+        userdb: *str
+        user-hook: *str
+        keep-action-history: &intzeropositive
+          type: integer
+          minimum: 0
+        action-cleaner-interval: *intpositive
+        keep-logmem: *intzeropositive
+        logging-level:
+          type: string
+          enum:
+            - debug
+            - info
+            - warning
+            - error
+            - critical
+        keep-api-log: *intzeropositive
+        notify-on-start: *bool
+        debug: *bool
+        development: *bool
+        show-traceback: *bool
+        dump-on-critical: *bool
+        stop-on-critical:
+          anyOf:
+            - type: string
+              enum:
+                - always
+                - core
+                - no
+            - type: boolean
+              enum:
+                - false
+        timeout: *floatpositive
+        pool-min-size: *intzeropositive
+        pool-max-size: *intpositive
+        reactor-thread-pool: *intpositive
+        exec-before-save: *str
+        exec-after-save: *str
+        mqtt-update-default: *str
+    msad: &msad
+      type: object
+      additionalProperties: false
+      properties:
+        host: *str
+        domain: *str
+        key-prefix: *str
+        ou: *str
+        ca: *str
+        cache-time: *intzeropositive
+    upnp:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+    sysapi: &sysapi
+      type: object
+      additionalProperties: false
+      properties:
+        file-management: *bool
+        setup-mode: *bool
+        rpvt: *bool
+    webapi: &webapi
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        ssl-listen: *str
+        ssl-module:
+          type: string
+          enum:
+            - builtin
+            - pyopenssl
+        ssl-cert: *str
+        ssl-key: *str
+        ssl-chain: *str
+        session-timeout: *intzeropositive
+        session-no-prolong: *bool
+        thread-pool: *intpositive
+        ei-enabled: *bool
+        x-real-ip: *bool
+    snmptrap:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        community: *str
+        hosts-allow: *strarr
+    udpapi:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        hosts-allow: *strarr
+        hosts-allow-encrypted: *strarr
+    modbus-slave:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          proto:
+            type: string
+            enum:
+              - tcp
+              - udp
+              - rtu
+              - ascii
+              - binary
+          unit:
+            anyOf:
+              - type: string
+              - type: integer
+                minimum: 1
+          listen: *str
+    datapullers:
+      type: object
+      patternProperties:
+        "^.*$": &datapuller
+          anyOf:
+            - type: string
+            - type: object
+              additionalProperties: false
+              properties:
+                cmd: *str
+                timeout: *floatpositive
+                event-timeout: *floatpositive
+              required:
+                - cmd
+    plugins:
+      type: object
+      patternProperties:
+        "^.*$": &plugin
+          type: object
+          additionalProperties: false
+          properties:
+            enabled: *bool
+            config:
+              type: object
+config/lm/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: *server
+    plc:
+      use-core-pool: *bool
+      cache-remote-state: &floatzeropositive
+        type: number
+        minimum: 0
+    lurp: &lurp
+      listen: *str
+      buffer: *intpositive
+    msad: *msad
+    upnp: &upnpactive
+      listen: *str
+      discover-on: *str
+    sysapi: *sysapi
+    webapi: *webapi
+    cloud:
+      default-key: *str
+config/sfa/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: *server
+    lurp: *lurp
+    msad: *msad
+    upnp: *upnpactive
+    sysapi: *sysapi
+    webapi: *webapi
+    cloud:
+      default-key: *str
+      cloud-manager: *bool
+config/uc/datapullers:
+  <<: *datapuller
+config/uc/plugins:
+  <<: *plugin
+config/lm/plugins:
+  <<: *plugin
+config/sfa/plugins:
+  <<: *plugin
 data/easy-setup:
   link: *bool
   mqtt-discovery-enabled: *bool
@@ -34,19 +269,8 @@ data/info:
   additionalProperties: false
   properties:
     build:
-      type: number
-    version:
-      type: string
-data/uc/boot-id: &bootid
-  type: integer
-  minimum: 1
-data/lm/boot-id: *bootid
-data/sfa/boot-id: *bootid
-config/watchdog:
-  dump: *bool
-  inerval:
-    type: integer
-    minimum: 1
-  max-timeout:
-    type: integer
-    minimum: 1
+      type: integer
+    version: *str
+data/uc/boot-id: *intpositive
+data/lm/boot-id: *intpositive
+data/sfa/boot-id: *intpositive

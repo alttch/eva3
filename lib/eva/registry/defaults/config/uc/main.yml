@@ -45,6 +45,8 @@ server:
   notify-on-start: true
   # debug mode
   debug: false
+  # log code tracebacks
+  #show-traceback: true
   # create crash dump on critical errors
   dump-on-critical: true
   # stop server on critical errors (will be restarted via safe-run)
