@@ -309,6 +309,8 @@ data/info:
 data/uc/boot-id: *intpositive
 data/lm/boot-id: *intpositive
 data/sfa/boot-id: *intpositive
+data/lm/extension_data:
+  type: object
 data/lm/remote_uc: &remotecontroller
   type: object
   additionalProperties: false
