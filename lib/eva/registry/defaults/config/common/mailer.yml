@@ -1,7 +1,7 @@
 # mailer configuration
 smtp: localhost:25
 from: eva@eva3-lm1
-default_rcp:
+default-rcp:
   - admin@localhost
   - root@localhost
 #ssl: true
