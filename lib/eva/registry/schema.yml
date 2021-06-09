@@ -451,7 +451,8 @@ inventory/unit:
     status_labels:
       type: object
     term_kill_interval: *floatpositiveornull
-    type: *str
+    type:
+      const: unit
     update_delay: *floatzeropositive
     update_driver_config: *objectornull
     update_exec: *stringornull
@@ -495,7 +496,8 @@ inventory/sensor:
     oid: *str
     snmp_trap: {}
     term_kill_interval: *floatpositiveornull
-    type: *str
+    type:
+      const: sensor
     update_delay: *floatornull
     update_driver_config: *objectornull
     update_exec: *stringornull
@@ -521,7 +523,8 @@ inventory/mu:
     description: *str
     items: *strarr
     oid: *str
-    type: *str
+    type:
+      const: mu
     update_allow_check: *bool
     update_delay: *floatornull
     update_exec: *stringornull
@@ -550,7 +553,8 @@ inventory/lvar:
         - 1
     notify_events: *notifyevents
     oid: *str
-    type: *str
+    type:
+      const: lvar
     update_delay: *floatornull
     update_exec: *stringornull
     update_interval: *floatzeropositive
@@ -559,5 +563,118 @@ inventory/lvar:
     - id
     - full_id
     - group
+    - oid
+    - type
+inventory/lmacro:
+  type: object
+  additionalProperties: false
+  properties:
+    action_enabled: *bool
+    action_exec: *str
+    description: *str
+    pass_errors: *bool
+    send_critical: *bool
+    id: *str
+    full_id: *str
+    group: *str
+    oid: *str
+    type:
+      const: lmacro
+  required:
+    - id
+    - full_id
+    - oid
+    - group
+inventory/lcycle:
+  type: object
+  additionalProperties: false
+  properties:
+    autostart: *bool
+    description: *str
+    full_id: *str
+    group: *str
+    ict: *intzeropositive
+    interval: *floatzeropositive
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    id: *str
+    oid: *str
+    type:
+      const: lcycle
+    on_error: *stringornull
+  required:
+    - id
+    - group
+    - oid
+    - type
+inventory/dmatrix_rule:
+  type: object
+  additionalProperties: false
+  properties:
+    break_after_exec: *bool
+    chillout_time: *floatzeropositive
+    description: *str
+    enabled: *bool
+    id: *str
+    oid: *str
+    for_initial:
+      type: string
+      enum:
+        - skip
+        - any
+        - only
+    for_item_group: *stringornull
+    for_item_id: *stringornull
+    for_item_type: *stringornull
+    for_prop:
+      type: string
+      enum:
+        - status
+        - value
+    for_prop_bit:
+      anyOf:
+        - type: "null"
+        - type: integer
+          minimum: 0
+    in_range_max: *floatornull
+    in_range_max_eq: *bool
+    in_range_min: *floatornull
+    in_range_min_eq: *bool
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    priority: *intpositive
+    type:
+      const: dmatrix_rule
+  required:
+    - enabled
+    - for_prop
+    - id
+    - oid
+    - type
+inventory/job:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    enabled: *bool
+    every: *str
+    id: *str
+    oid: *str
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    type:
+      const: job
+  required:
+    - enabled
+    - id
     - oid
     - type
