@@ -119,8 +119,6 @@ config/uc/main:
                 - core
                 - no
             - type: boolean
-              enum:
-                - false
         timeout: *floatpositive
         pool-min-size: *intzeropositive
         pool-max-size: *intpositive
@@ -217,7 +215,7 @@ config/uc/main:
                 event-timeout: *floatpositive
               required:
                 - cmd
-    plugins:
+    plugins: &plugins
       type: object
       patternProperties:
         "^.*$": &plugin
@@ -248,6 +246,7 @@ config/lm/main:
     webapi: *webapi
     cloud:
       default-key: *str
+    plugins: *plugins
 config/sfa/main:
   type: object
   additionalProperties: false
@@ -261,6 +260,7 @@ config/sfa/main:
     cloud:
       default-key: *str
       cloud-manager: *bool
+    plugins: *plugins
 config/uc/datapullers:
   <<: *datapuller
 config/uc/plugins:
