@@ -277,6 +277,16 @@ config/lm/notifiers:
   <<: *notifier
 config/sfa/notifiers:
   <<: *notifier
+config/uc/cvars: {}
+config/lm/cvars: {}
+config/sfa/cvars: {}
+config/uc/cs: &cscfg
+  type: object
+  additionalProperties: false
+  properties:
+    mqtt-topics: *strarr
+config/lm/cs: *cscfg
+config/sfa/cs: *cscfg
 config/venv:
   type: object
   additionalProperties: false
