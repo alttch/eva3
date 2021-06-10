@@ -408,6 +408,18 @@ try:
 except FileNotFoundError:
     pass
 
+# modbus and owfs
+
+for tp in ['modbus', 'owfs']:
+    try:
+        data = load_json((dir_runtime / f'uc_{tp}.json').as_posix())
+        for d in data:
+            if 'timeout' in d and d['timeout'] is None:
+                del d['timeout']
+            set(f'config/uc/buses/{tp}/{d["id"]}', d)
+    except FileNotFoundError:
+        pass
+
 # lm extensions
 
 try:
@@ -423,7 +435,6 @@ for f in (dir_runtime / 'lm_ext_data.d').glob('*.json'):
     data = load_json(f.as_posix())
     key = f'data/lm/extension_data/{f.stem}'
     set(key, data)
-
 
 print()
 
