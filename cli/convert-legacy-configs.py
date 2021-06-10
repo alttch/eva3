@@ -43,6 +43,9 @@ from eva.tools import ConfigFile, ShellConfigFile
 SCHEMA = yaml.safe_load((Path(__file__).absolute().parents[1] /
                          'lib/eva/registry/schema.yml').open())
 
+eva_servers = ShellConfigFile(f'{eva_dir}/etc/eva_servers')
+eva_servers.open()
+
 
 def load_json(f):
     with open(f) as fh:
@@ -148,6 +151,88 @@ try:
         set('config/clouds/iote', clouds)
 except FileNotFoundError:
     pass
+
+# controller ini files
+
+FLOATS = ['polldelay', 'timeout']
+INTS = [
+    'keep-action-history', 'action-cleaner-interval', 'keep-logmem',
+    'keep-api-log', 'pool-min-size', 'pool-max-size', 'reactor-thread-pool',
+    'cache-time', 'session-timeout', 'thread-pool', 'cache-remote-state',
+    'buffer'
+]
+FORCE_ARRAY = ['hosts-allow', 'hosts-allow-encrypted']
+BOOLS = [
+    'notify-on-start', 'show-traceback', 'debug', 'development',
+    'dump-on-critical', 'file-management', 'setup-mode', 'rpvt',
+    'session-no-prolong', 'x-real-ip', 'ssl', 'tls', 'use-core-pool',
+    'cloud-manager'
+]
+TRY_BOOLS = ['syslog', 'stop-on-critical']
+
+# TODO convert uc/modbus-slave
+# TODO convert uc/datapullers
+# TODO convert plugins
+
+for c in prod:
+    cu = c.upper()
+    inifile = dir_etc / f'{c}.ini'
+    if inifile.exists():
+        service = {'setup': True}
+        service['enabled'] = eva_servers.get(f'{cu}_ENABLED', 'no') == 'yes'
+        try:
+            service['user'] = eva_servers.get(f'{cu}_USER')
+        except KeyError:
+            pass
+        try:
+            service['supervisord-program'] = eva_servers.get(
+                f'{cu}_SUPERVISORD')
+        except KeyError:
+            pass
+        sch = SCHEMA[f'config/{c}/main']
+        cfg = {}
+        with ConfigFile(inifile.as_posix()) as cf:
+            try:
+                if cf.get('server', 'layout') == 'simple':
+                    raise RuntimeError('Simple layout is no longer supported')
+            except KeyError:
+                pass
+            for section, v in sch['properties'].items():
+                if section not in ['modbus-slave', 'datapullers', 'plugins']:
+                    try:
+                        for name, vc in v['properties'].items():
+                            try:
+                                value = cf.get(section, name.replace('-', '_'))
+                                if name == 'db-update':
+                                    value = value.replace('_', '-')
+                                elif name in FLOATS:
+                                    value = float(value)
+                                elif name in INTS:
+                                    value = int(value)
+                                elif name in FORCE_ARRAY:
+                                    if not isinstance(value, list):
+                                        value = [value]
+                                elif name in BOOLS:
+                                    if value == 'yes':
+                                        value = True
+                                    elif value == 'no':
+                                        value = False
+                                    else:
+                                        raise ValueError('Invalid boolean value'
+                                                         ' (should be yes/no)')
+                                elif name in TRY_BOOLS:
+                                    if value == 'yes':
+                                        value = True
+                                    elif value == 'no':
+                                        value = False
+                                cfg.setdefault(section, {})[name] = value
+                            except KeyError:
+                                pass
+                    except:
+                        print(f'Failed to convert {section}/{name}')
+                        raise
+        set(f'config/{c}/service', service)
+        set(f'config/{c}/main', cfg)
 
 print()
 
