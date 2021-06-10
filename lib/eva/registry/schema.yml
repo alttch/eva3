@@ -431,6 +431,7 @@ data/lm/remote_uc: &remotecontroller
   properties:
     enabled: *bool
     full_id: *str
+    description: *str
     group: *str
     id: *str
     key: *str
@@ -674,11 +675,13 @@ inventory/dmatrix_rule:
     id: *str
     oid: *str
     for_initial:
-      type: string
-      enum:
-        - skip
-        - any
-        - only
+      anyOf:
+        - type: "null"
+        - type: string
+          enum:
+            - skip
+            - any
+            - only
     for_item_group: *stringornull
     for_item_id: *stringornull
     for_item_type: *stringornull
@@ -687,6 +690,9 @@ inventory/dmatrix_rule:
       enum:
         - status
         - value
+        - nstatus
+        - nvalue
+        - "#"
     for_prop_bit:
       anyOf:
         - type: "null"
