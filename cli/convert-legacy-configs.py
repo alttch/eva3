@@ -57,15 +57,16 @@ def load_json(f):
         return json.load(fh)
 
 
-def set(key, value):
+def set(key, value, force_schema_key=None):
+    schema_key = force_schema_key if force_schema_key else key
     if check:
         try:
-            sch = SCHEMA[key]
+            sch = SCHEMA[schema_key]
         except KeyError:
             try:
-                sch = SCHEMA[key[:key.rfind('/')]]
+                sch = SCHEMA[schema_key[:schema_key.rfind('/')]]
             except KeyError:
-                raise RuntimeError(f'No schema for {key}')
+                raise RuntimeError(f'No schema for {schema_key}')
         try:
             jsonschema.validate(value, schema=sch)
             print(f'[{colored("✓", color="cyan")}] {key}')
@@ -329,6 +330,68 @@ for c in prod:
                     pass
         set(f'config/{c}/service', service)
         set(f'config/{c}/main', cfg)
+
+# import inventory and notifiers
+
+INVENTORY = [
+    ('uc_unit.d', 'inventory/unit'),
+    ('uc_sensor.d', 'inventory/sensor'),
+    ('uc_mu.d', 'inventory/mu'),
+    ('uc_notify.d', 'config/uc/notifiers'),
+    ('lm_notify.d', 'config/lm/notifiers'),
+    ('sfa_notify.d', 'config/sfa/notifiers'),
+    ('lm_lvar.d', 'inventory/lvar'),
+    ('lm_lmacro.d', 'inventory/lmacro'),
+    ('lm_lcycle.d', 'inventory/lcycle'),
+    ('lm_job.d', 'inventory/job'),
+    ('lm_dmatrix_rule.d', 'inventory/dmatrix_rule'),
+    ('lm_remote_uc.d', 'data/lm/remote_uc'),
+    ('sfa_remote_uc.d', 'data/sfa/remote_uc'),
+    ('sfa_remote_lm.d', 'data/sfa/remote_lm'),
+]
+
+INVENTORY_RESPECT_LAYOUT = ['unit', 'sensor', 'mu', 'lvar', 'lmacro', 'lcycle']
+
+for d, k in INVENTORY:
+    for f in (dir_runtime / d).glob('*.json'):
+        tp = k.rsplit('/')[-1]
+        data = load_json(f.as_posix())
+        if tp in INVENTORY_RESPECT_LAYOUT:
+            if 'full_id' not in data:
+                data['full_id'] = data['group'] + '/' + data['id']
+            try:
+                oid = data['oid']
+            except KeyError:
+                oid = f'{data["type"]}:{data["group"]}/{data["id"]}'
+                data['oid'] = oid
+            key = f'{k}/{oid[oid.find(":")+1:]}'
+        else:
+            key = f'{k}/{data["id"]}'
+        if 'macro_args' in data:
+            d = data['macro_args']
+            if d is None:
+                d = []
+            elif isinstance(d, str):
+                d = d.split()
+            data['macro_args'] = d
+        if 'macro_kwargs' in data:
+            d = data['macro_kwargs']
+            if not isinstance(d, dict):
+                d = {}
+            data['macro_kwargs'] = d
+        if 'set_time' in data:
+            del data['set_time']
+        if tp in ['lmacro', 'job', 'dmatrix_rule', 'remote_uc', 'remote_lm']:
+            if 'notify_events' in data:
+                del data['notify_events']
+        if tp == 'dmatrix_rule':
+            if 'condition' in data:
+                del data['condition']
+        if tp == 'dmatrix_rule':
+            data['oid'] = 'dmatrix_rule:dm_rules/' + data['id']
+        if tp == 'job':
+            data['oid'] = 'job:jobs/' + data['id']
+        set(key, data, force_schema_key=k)
 
 print()
 
