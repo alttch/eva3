@@ -166,17 +166,64 @@ INTS = [
     'cache-time', 'session-timeout', 'thread-pool', 'cache-remote-state',
     'buffer'
 ]
-FORCE_ARRAY = ['hosts-allow', 'hosts-allow-encrypted']
+FORCE_ARRAY = [
+    'hosts-allow', 'hosts-allow-encrypted', 'cdata', 'items', 'items-ro',
+    'groups', 'groups-ro', 'items-deny', 'groups-deny', 'hosts-assign'
+]
 BOOLS = [
     'notify-on-start', 'show-traceback', 'debug', 'development',
     'dump-on-critical', 'file-management', 'setup-mode', 'rpvt',
     'session-no-prolong', 'x-real-ip', 'ssl', 'tls', 'use-core-pool',
-    'cloud-manager'
+    'cloud-manager', 'master', 'sysfunc'
 ]
 TRY_BOOLS = ['syslog', 'stop-on-critical']
 
 for c in prod:
     cu = c.upper()
+    keyfile = dir_etc / f'{c}_apikeys.ini'
+    if keyfile.exists():
+        with ConfigFile(keyfile.as_posix()) as cf:
+            for key_name in cf.cp.sections():
+                d = dict(cf.get_section(key_name))
+                kcfg = {}
+                for k in [
+                        'id', 'master', 'key', 'sysfunc', 'cdata', 'items',
+                        'groups', 'items-ro', 'groups-ro', 'items-deny',
+                        'groups-deny', 'hosts-allow', 'hosts-assign'
+                ]:
+                    try:
+                        value = d[k.replace('-', '_')]
+                    except KeyError:
+                        continue
+                    if k in FLOATS:
+                        value = float(value)
+                    elif k in INTS:
+                        value = int(value)
+                    elif k in FORCE_ARRAY:
+                        if not isinstance(value, list):
+                            value = [value]
+                    elif k in BOOLS:
+                        if value == 'yes':
+                            value = True
+                        elif value == 'no':
+                            value = False
+                        else:
+                            raise ValueError('Invalid boolean value'
+                                             ' (should be yes/no)')
+                    elif k in TRY_BOOLS:
+                        if value == 'yes':
+                            value = True
+                        elif value == 'no':
+                            value = False
+                    kcfg[k] = value
+                for k in ['allow', 'pvt', 'rpvt']:
+                    try:
+                        value = list(
+                            filter(None, [x.strip() for x in d[k].split(',')]))
+                    except KeyError:
+                        continue
+                    kcfg[k] = value
+                set(f'config/{c}/apikeys/{key_name}', kcfg)
     inifile = dir_etc / f'{c}.ini'
     if inifile.exists():
         service = {'setup': True}
