@@ -29,7 +29,7 @@ else:
     socket_path = EVA_DIR / 'var/registry.sock'
     SYSTEM_NAME = platform.node()
 
-from yedb import YEDB, FieldNotFound
+from yedb import YEDB, FieldNotFound, SchemaValidationError
 db = YEDB(socket_path)
 
 from functools import wraps
@@ -43,12 +43,16 @@ def safe(func):
             return func(*args, **kwargs)
         except (KeyError, ValueError, FieldNotFound):
             raise
-        except:
+        except Exception as e:
             if 'eva.core' in sys.modules:
                 import eva.core
-                logging.critical('REGISTRY SERVER ERROR')
-                eva.core.log_traceback()
-                eva.core.critical()
+                if isinstance(e, SchemaValidationError):
+                    logging.error(f'Schema validation error {e}')
+                    raise
+                else:
+                    logging.critical('REGISTRY SERVER ERROR')
+                    eva.core.log_traceback()
+                    eva.core.critical()
             else:
                 from neotermcolor import cprint
                 cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
