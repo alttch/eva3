@@ -28,6 +28,8 @@ Removed and deprecated
   configuration files - these does not exist any longer. Consider switching to
   EVA Registry.
 
+- mailer configuration is now unified for all components.
+
 Update instructions
 ===================
 
@@ -44,3 +46,6 @@ Update instructions
 
 - The EVA ICS registry service MUST be always online. If service shutdown is
   required, shutdown all EVA ICS components first.
+
+- Automatic converter imports mailer configuration from lm.ini only. If mailer
+  configuration is defined elsewhere, import it into the registry manually.
