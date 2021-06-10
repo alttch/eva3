@@ -127,6 +127,16 @@ for c in prod:
     for k, v in cvars.items():
         set(f'config/{c}/cvars/{k}', v)
 
+# cs
+for c in prod:
+    try:
+        data = load_json(f'{dir_runtime}/{c}_cs.json')
+    except FileNotFoundError:
+        pass
+    if not data:
+        data = {'mqtt-topics': []}
+    set(f'config/{c}/cs', data)
+
 print()
 
 if check:
