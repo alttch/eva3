@@ -14,7 +14,7 @@ fi
 
 export $EVA_REPOSITORY_URL
 
-OBS=""
+OBS="./sbin/layout-converter ./sbin/uc-control ./sbin/lm-control ./sbin/sfa-control"
 
 UC_NEW_DIR="runtime/xc/uc/cs"
 LM_NEW_DIR="runtime/xc/lm/functions runtime/xc/lm/cs"
@@ -218,8 +218,6 @@ fi
 echo "- Cleaning up"
 
 rm -rf _update
-
-rm -f ./sbin/uc-control ./sbin/lm-control ./sbin/sfa-control
 
 CURRENT_BUILD=$(./sbin/eva-tinyapi -B)
 
