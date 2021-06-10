@@ -393,6 +393,38 @@ for d, k in INVENTORY:
             data['oid'] = 'job:jobs/' + data['id']
         set(key, data, force_schema_key=k)
 
+# phis and drivers
+
+try:
+    drivers = load_json((dir_runtime / 'uc_drivers.json').as_posix())
+    for phi in drivers.get('phi', []):
+        if 'features' in phi:
+            del phi['features']
+        set(f'config/uc/phis/{phi["id"]}', phi)
+    for driver in drivers.get('lpi', []):
+        if 'features' in driver:
+            del driver['features']
+        set(f'config/uc/drivers/{driver["id"]}', driver)
+except FileNotFoundError:
+    pass
+
+# lm extensions
+
+try:
+    extensions = load_json((dir_runtime / 'lm_extensions.json').as_posix())
+    for ext in extensions:
+        set(f'config/lm/extensions/{ext["id"]}', ext)
+except FileNotFoundError:
+    pass
+
+# ext data
+
+for f in (dir_runtime / 'lm_ext_data.d').glob('*.json'):
+    data = load_json(f.as_posix())
+    key = f'data/lm/extension_data/{f.stem}'
+    set(key, data)
+
+
 print()
 
 if check:
