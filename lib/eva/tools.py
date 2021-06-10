@@ -172,7 +172,7 @@ class ConfigFile():
         """
         from configparser import NoOptionError, NoSectionError
         try:
-            return self.cp.get(section)
+            return self.cp[section]
         except (NoOptionError, NoSectionError) as e:
             raise KeyError(str(e))
 
