@@ -75,6 +75,11 @@ echo "- Stopping everything"
 ./sbin/eva-control stop
 [ -x ./sbin/registry-control ] && ./sbin/registry-control stop
 
+if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
+  echo "EVA ICS obsolete configuration found. Checking..."
+  ./install/convert-legacy-configs --check-only || exit 3
+fi
+
 echo "- Installing missing modules"
 
 ./_update/eva-${VERSION}/install/build-venv . || exit 2
