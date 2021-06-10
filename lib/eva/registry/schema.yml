@@ -53,6 +53,7 @@ config/watchdog:
 config/uc/service: &service
   enabled: *bool
   setup: *bool
+  user: *str
   supervisord-program: &stringornull
     anyOf:
       - type: string
