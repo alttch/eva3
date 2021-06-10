@@ -77,7 +77,7 @@ echo "- Stopping everything"
 
 if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
   echo "EVA ICS obsolete configuration found. Checking..."
-  EVA_DIR=$(pwd) ./python3/bin/python3 ./_update/cli/convert-legacy-configs --check-only || exit 3
+  ./python3/bin/python3 ./_update/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
 fi
 
 echo "- Installing missing modules"
@@ -164,7 +164,7 @@ fi
 
 if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
   echo "EVA ICS obsolete configuration found. Staring conversion"
-  ./install/convert-legacy-configs || exit 4
+  ./install/convert-legacy-configs import --clear || exit 4
 fi
 
 source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
