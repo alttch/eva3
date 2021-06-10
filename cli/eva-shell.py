@@ -600,7 +600,7 @@ sys.argv = {argv}
 
     def iote_list(self, params):
         result = []
-        for k, v in eva.registry.key_get('config/cloud/iote',
+        for k, v in eva.registry.key_get('config/clouds/iote',
                                          default={}).items():
             result.append({
                 'account': v['account'],

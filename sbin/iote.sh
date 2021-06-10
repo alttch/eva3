@@ -131,7 +131,7 @@ case $CMD in
     echo "Joining ${DOMAIN}.${EVA_CLOUD}"
     if [ $FORCE -ne 1 ]; then
       if AUTO_PREFIX=1 ./sbin/eva-registry-cli get-field \
-        "config/cloud/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" >& /dev/null; then
+        "config/clouds/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" >& /dev/null; then
               echo "Node already joined"
               exit 4
       fi
@@ -174,7 +174,7 @@ case $CMD in
       fi
     done
     AUTO_PREFIX=1 ./sbin/eva-registry-cli set-field \
-      "config/cloud/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}/account" "${DOMAIN}" > /dev/null || exit 8
+      "config/clouds/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}/account" "${DOMAIN}" > /dev/null || exit 8
     echo
     echo "Node joined ${DOMAIN}.${EVA_CLOUD}"
     ;;
@@ -185,7 +185,7 @@ case $CMD in
     echo "Leaving ${DOMAIN}.${EVA_CLOUD}"
     if [ $FORCE -ne 1 ]; then
       if ! AUTO_PREFIX=1 ./sbin/eva-registry-cli get-field \
-        "config/cloud/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" >& /dev/null; then
+        "config/clouds/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" >& /dev/null; then
               echo "Node not in the cloud"
               exit 4
       fi
@@ -201,12 +201,12 @@ case $CMD in
       fi
     done
     AUTO_PREFIX=1 ./sbin/eva-registry-cli delete-field \
-      "config/cloud/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" > /dev/null || exit 8
+      "config/clouds/${EVA_CLOUD_ID}" "${DOMAIN}.${EVA_CLOUD}" > /dev/null || exit 8
     echo
     echo "Node left ${DOMAIN}.${EVA_CLOUD}"
     ;;
   list)
-    ( AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/cloud/iote | jq -r ) 2> /dev/null
+    ( AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/clouds/iote | jq -r ) 2> /dev/null
     ;;
   *)
     usage

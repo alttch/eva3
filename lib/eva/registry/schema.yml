@@ -386,7 +386,7 @@ config/venv:
     pip-extra-options: *str
   required:
     - python
-config/cloud/iote:
+config/clouds/iote:
   patternProperties:
     "^.*$":
       type: object
