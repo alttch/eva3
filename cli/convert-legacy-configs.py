@@ -104,7 +104,6 @@ with ShellConfigFile(f'{dir_etc}/watchdog') as f:
     set('config/watchdog', data)
 
 # etc/easy_setup
-
 try:
     with ShellConfigFile(f'{dir_etc}/easy_setup') as f:
         data = {
@@ -122,20 +121,33 @@ except FileNotFoundError:
 for c in prod:
     try:
         cvars = load_json(f'{dir_runtime}/{c}_cvars.json')
+        for k, v in cvars.items():
+            set(f'config/{c}/cvars/{k}', v)
     except FileNotFoundError:
         pass
-    for k, v in cvars.items():
-        set(f'config/{c}/cvars/{k}', v)
 
 # cs
 for c in prod:
     try:
         data = load_json(f'{dir_runtime}/{c}_cs.json')
+        if not data:
+            data = {'mqtt-topics': []}
+        set(f'config/{c}/cs', data)
     except FileNotFoundError:
         pass
-    if not data:
-        data = {'mqtt-topics': []}
-    set(f'config/{c}/cs', data)
+
+# iote.domains
+try:
+    clouds = {}
+    with open(f'{dir_etc}/iote.domains') as fh:
+        for s in fh.readlines():
+            if s:
+                domain, cloud, ctp = s.split(maxsplit=2)
+                clouds.setdefault(f'{domain}.{cloud}', {})['account'] = domain
+    if clouds:
+        set('config/clouds/iote', clouds)
+except FileNotFoundError:
+    pass
 
 print()
 
