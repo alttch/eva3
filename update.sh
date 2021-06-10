@@ -77,7 +77,7 @@ echo "- Stopping everything"
 
 if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
   echo "EVA ICS obsolete configuration found. Checking..."
-  ./install/convert-legacy-configs --check-only || exit 3
+  EVA_DIR=$(pwd) ./python3/bin/python3 ./_update/cli/convert-legacy-configs --check-only || exit 3
 fi
 
 echo "- Installing missing modules"
@@ -93,7 +93,7 @@ fi
 echo "- Removing obsolete files and folders"
 
 for o in ${OBS}; do
-  rm -rf ${o}
+  rm -rf "${o}"
 done
 
 if [ ! -d ./backup ]; then
