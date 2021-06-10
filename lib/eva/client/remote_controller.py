@@ -482,7 +482,9 @@ class RemoteController(eva.item.Item):
         return self.reload_interval
 
     def set_prop(self, prop, val=None, save=False):
-        if prop == 'uri' and val:
+        if prop == 'notify_events':
+            return False
+        elif prop == 'uri' and val:
             if self.api._uri != val:
                 self.api.set_uri(val)
                 self.log_set(prop, val)
@@ -688,6 +690,8 @@ class RemoteController(eva.item.Item):
                                    info=info,
                                    props=props,
                                    notify=notify))
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def destroy(self):
