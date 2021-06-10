@@ -232,21 +232,33 @@ config/lm/main:
   properties:
     server: *server
     plc:
-      use-core-pool: *bool
-      cache-remote-state: &floatzeropositive
-        type: number
-        minimum: 0
+      type: object
+      additionalProperties: false
+      properties:
+        use-core-pool: *bool
+        cache-remote-state: &floatzeropositive
+          type: number
+          minimum: 0
     lurp: &lurp
-      listen: *str
-      buffer: *intpositive
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        buffer: *intpositive
     msad: *msad
     upnp: &upnpactive
-      listen: *str
-      discover-on: *str
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        discover-on: *str
     sysapi: *sysapi
     webapi: *webapi
     cloud:
-      default-key: *str
+      type: object
+      additionalProperties: false
+      properties:
+        default-key: *str
     plugins: *plugins
 config/sfa/main:
   type: object
@@ -259,8 +271,11 @@ config/sfa/main:
     sysapi: *sysapi
     webapi: *webapi
     cloud:
-      default-key: *str
-      cloud-manager: *bool
+      type: object
+      additionalProperties: false
+      properties:
+        default-key: *str
+        cloud-manager: *bool
     plugins: *plugins
 config/uc/datapullers:
   <<: *datapuller
