@@ -167,7 +167,7 @@ def save():
         for i in _d.modified:
             kn = f'config/uc/buses/owfs/{i}'
             try:
-                eva.registry.key_set(kn, owbus[i].serialize())
+                eva.registry.key_set(kn, owbus[i].serialize(config=True))
             except KeyError:
                 eva.registry.key_delete(kn)
         _d.modified.clear()
@@ -273,7 +273,11 @@ class OWFSBus(object):
             'delay': self.delay,
             'retries': self.retries
         }
-        d['timeout'] = self._timeout if config else self.timeout
+        if config:
+            if self._timeout is not None:
+                d['timeout'] = self._timeout
+        else:
+            d['timeout'] = self.timeout
         return d
 
     def stop(self):

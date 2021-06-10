@@ -261,12 +261,12 @@ def save():
         for i in _d.modified:
             kn = f'config/uc/buses/modbus/{i}'
             try:
-                eva.registry.key_set(kn, ports[i].serialize())
+                eva.registry.key_set(kn, ports[i].serialize(config=True))
             except KeyError:
                 eva.registry.key_delete(kn)
         _d.modified.clear()
         return True
-    except:
+    except Exception as e:
         logging.error(f'Error saving modbus ports config: {e}')
         eva.core.log_traceback()
         return False
@@ -643,7 +643,11 @@ class ModbusPort(object):
             'delay': self.delay,
             'retries': self.retries
         }
-        d['timeout'] = self._timeout if config else self.timeout
+        if config:
+            if self._timeout is not None:
+                d['timeout'] = self._timeout
+        else:
+            d['timeout'] = self.timeout
         return d
 
     def stop(self):
