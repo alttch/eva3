@@ -131,6 +131,10 @@ class ConfigFile():
         return self._changed
 
     def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
         from configparser import ConfigParser
         self.cp = ConfigParser(inline_comment_prefixes=';')
         if not os.path.exists(self.fname):
@@ -140,9 +144,11 @@ class ConfigFile():
             else:
                 raise FileNotFoundError(f'File not found: {self.fname}')
         self.cp.read(self.fname)
-        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         if self._changed:
             import shutil
             from datetime import datetime
@@ -164,7 +170,11 @@ class ConfigFile():
         """
         Get dict of section values
         """
-        return self.cp.get(section)
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp.get(section)
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
 
     def set(self, section, name, value):
         """
@@ -183,7 +193,11 @@ class ConfigFile():
         self._changed = True
 
     def get(self, section, name):
-        return self.cp.get(section, name)
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp.get(section, name)
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
 
     def delete(self, section, name):
         """
@@ -263,6 +277,10 @@ class ShellConfigFile():
         return self._changed
 
     def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
         if not os.path.exists(self.fname):
             if self.init_if_missing:
                 import shutil
@@ -282,9 +300,11 @@ class ShellConfigFile():
                     except:
                         raise ValueError(
                             f'Invalid config file: {self.fname} ({line})')
-        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         if self._changed:
             import shutil
             from datetime import datetime
