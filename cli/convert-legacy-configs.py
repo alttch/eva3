@@ -2,16 +2,30 @@
 
 import argparse
 import sys
-import yaml
-import jsonschema
+import os
+try:
+    import yaml
+except:
+    os.system('pip3 install pyyaml==3.12')
+    import yaml
+try:
+    import jsonschema
+except:
+    os.system('pip3 install jsonschema==3.2.0')
+    import jsonschema
 import json
 
-from neotermcolor import colored
+try:
+    from neotermcolor import colored
+except:
+    os.system('pip3 install neotermcolor==2.0.8')
+    from neotermcolor import colored
 
 ap = argparse.ArgumentParser()
 
 ap.add_argument('MODE', choices=['import', 'check'])
 ap.add_argument('--dir', help='EVA ICS dir', default='.')
+ap.add_argument('--schema', help='Alternative schema file')
 ap.add_argument('--clear', action='store_true')
 
 a = ap.parse_args()
@@ -43,10 +57,280 @@ sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 if not check:
     import eva.registry
 
-from eva.tools import ConfigFile, ShellConfigFile
 
-SCHEMA = yaml.safe_load((Path(__file__).absolute().parents[1] /
-                         'lib/eva/registry/schema.yml').open())
+# embed classes to run standalone
+class ConfigFile():
+    """
+    A helper to manage .ini files
+
+    Example:
+
+        with ConfigFile('file.ini') as cf:
+            cf.set('section', 'field1', 'value1')
+    """
+
+    def __init__(self, fname, init_if_missing=False, backup=True):
+        self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'
+        self.init_if_missing = init_if_missing
+        self._changed = False
+        self.backup = backup
+
+    def is_changed(self):
+        """
+        Returns True, if configuration file was changed and will be saved after
+        the statement exit
+        """
+        return self._changed
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
+        from configparser import ConfigParser
+        self.cp = ConfigParser(inline_comment_prefixes=';')
+        if not os.path.exists(self.fname):
+            if self.init_if_missing:
+                import shutil
+                shutil.copy(f'{self.fname}-dist', self.fname)
+            else:
+                raise FileNotFoundError(f'File not found: {self.fname}')
+        self.cp.read(self.fname)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        if self._changed:
+            import shutil
+            from datetime import datetime
+            if self.backup:
+                shutil.move(
+                    self.fname,
+                    f'{self.fname}-{datetime.now().strftime("%Y%m%d%H%M%S")}')
+            with open(self.fname, 'w') as fh:
+                self.cp.write(fh)
+
+    def add_section(self, section, values):
+        """
+        Add section with dict of values
+        """
+        self.cp[section] = values
+        self._changed = True
+
+    def get_section(self, section):
+        """
+        Get dict of section values
+        """
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp[section]
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
+
+    def set(self, section, name, value):
+        """
+        Set section field value
+        """
+        try:
+            if self.get(section, name) == str(value):
+                return
+        except:
+            pass
+        try:
+            self.cp[section][name] = str(value)
+        except:
+            self.cp.add_section(section)
+            self.cp[section][name] = str(value)
+        self._changed = True
+
+    def get(self, section, name):
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp.get(section, name)
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
+
+    def delete(self, section, name):
+        """
+        Delete field from section
+        """
+        try:
+            self.cp.remove_option(section, name)
+            self._changed = True
+        except:
+            pass
+
+    def remove_section(self, section):
+        """
+        Remove section
+        """
+        try:
+            self.cp.remove_section(section)
+        except:
+            pass
+
+    def replace_section(self, section, values):
+        """
+        Replace section with dict of values
+        """
+        self.remove_section(section)
+        return self.add_section(section, values)
+
+    def append(self, section, name, value):
+        """
+        Append value to array field (in .ini configs, arrays are string fields
+        with values, separated with commas)
+        """
+        try:
+            current = [x.strip() for x in self.get(section, name).split(',')]
+            if value not in current:
+                current.append(value)
+                self.set(section, name, ', '.join(current))
+        except:
+            self.set(section, name, value)
+            return
+
+    def remove(self, section, name, value):
+        """
+        Remove value from array field
+        """
+        try:
+            current = [x.strip() for x in self.get(section, name).split(',')]
+            if value in current:
+                current.remove(value)
+                self.set(section, name, ', '.join(current))
+        except:
+            return
+
+
+class ShellConfigFile():
+    """
+    A helper to manage shell scripts configuration files
+
+    Example:
+
+        with ShellConfigFile('eva_config') as cf:
+            cf.set('KEYNAME', 0)
+    """
+
+    def __init__(self, fname, init_if_missing=False, backup=True):
+        self.fname = fname if '/' in fname else f'{dir_etc}/{fname}'
+        self.init_if_missing = init_if_missing
+        self._changed = False
+        self.backup = backup
+        self._data = {}
+
+    def is_changed(self):
+        """
+        Returns True, if configuration file was changed and will be saved after
+        the statement exit
+        """
+        return self._changed
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
+        if not os.path.exists(self.fname):
+            if self.init_if_missing:
+                import shutil
+                shutil.copy(f'{self.fname}-dist', self.fname)
+            else:
+                raise FileNotFoundError
+        with open(self.fname) as fh:
+            for line in fh.readlines():
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    try:
+                        name, value = line.split('=', 1)
+                        if (value.startswith('"') and value.endswith('"')) or \
+                            (value.startswith('\'') and value.endswith('\'')):
+                            value = value[1:-1]
+                        self._data[name] = value.strip()
+                    except:
+                        raise ValueError(
+                            f'Invalid config file: {self.fname} ({line})')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        if self._changed:
+            import shutil
+            from datetime import datetime
+            if self.backup:
+                shutil.move(
+                    self.fname,
+                    f'{self.fname}-{datetime.now().strftime("%Y%m%d%H%M%S")}')
+            with open(self.fname, 'w') as fh:
+                for k, v in self._data.items():
+                    try:
+                        float(v)
+                        fh.write(f'{k}={v}\n')
+                    except:
+                        fh.write(f'{k}="{v}"\n')
+
+    def set(self, name, value):
+        """
+        Set field to value
+        """
+        if self._data.get(name) != value:
+            self._data[name] = value
+            self._changed = True
+
+    def get(self, name, default=KeyError):
+        """
+        Get field value
+        """
+        try:
+            return self._data[name]
+        except KeyError:
+            if default is KeyError:
+                raise
+            else:
+                return default
+
+    def delete(self, name):
+        """
+        Delete field
+        """
+        try:
+            del self._data[name]
+            self._changed = True
+        except:
+            pass
+
+    def append(self, name, value):
+        """
+        Append value to array field (in shell configs, arrays are string fields
+        with values, separated with spaces)
+        """
+        current = [x.strip() for x in self._data.get(name, '').split()]
+        if value not in current:
+            current.append(value)
+            self.set(name, ' '.join(current))
+
+    def remove(self, name, value):
+        """
+        Remove value from array field
+        """
+        current = [x.strip() for x in self._data.get(name, '').split()]
+        if value in current:
+            current.remove(value)
+            self.set(name, ' '.join(current))
+
+
+schema_file = a.schema
+
+if schema_file is None:
+    schema_file = (Path(__file__).absolute().parents[1] /
+                   'lib/eva/registry/schema.yml')
+else:
+    schema_file = Path(schema_file)
+
+SCHEMA = yaml.safe_load(schema_file.open())
 
 eva_servers = ShellConfigFile(f'{eva_dir}/etc/eva_servers')
 eva_servers.open()
