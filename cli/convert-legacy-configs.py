@@ -31,6 +31,11 @@ if not dir_etc.is_dir():
 
 check = a.MODE == 'check'
 
+print(
+    colored('{} CONFIGS'.format('CHECKING' if check else 'IMPORTING'),
+            color='yellow'))
+print()
+
 eva_dir = a.dir
 
 sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
