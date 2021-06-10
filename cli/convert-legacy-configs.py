@@ -175,10 +175,6 @@ BOOLS = [
 ]
 TRY_BOOLS = ['syslog', 'stop-on-critical']
 
-# TODO convert uc/modbus-slave
-# TODO convert uc/datapullers
-# TODO convert plugins
-
 for c in prod:
     cu = c.upper()
     inifile = dir_etc / f'{c}.ini'
@@ -236,6 +232,54 @@ for c in prod:
                     except:
                         print(f'Failed to convert {section}/{name}')
                         raise
+            try:
+                plugins_enabled = list(
+                    filter(None, [
+                        x.strip() for x in cf.get('server', 'plugins').split()
+                    ]))
+            except KeyError:
+                plugins_enabled = []
+            for section in cf.cp.sections():
+                if section.startswith('plugin.'):
+                    plugin_name = section[7:]
+                    pcfg = {
+                        'enabled': plugin_name in plugins_enabled,
+                        'config': dict(cf.cp[section])
+                    }
+                    try:
+                        plugins_enabled.remove(plugin_name)
+                    except ValueError:
+                        pass
+                    set(f'config/{c}/plugins/{plugin_name}', pcfg)
+            for p in plugins_enabled:
+                set(f'config/{c}/plugins/{p}', {'enabled': True, 'config': {}})
+            if c == 'uc':
+                try:
+                    for name, cmd in dict(
+                            cf.get_section('datapullers')).items():
+                        set(f'config/{c}/datapullers/{name}', {'cmd': cmd})
+                except KeyError:
+                    pass
+                try:
+                    for name, s in dict(cf.get_section('modbus')).items():
+                        if name.startswith('tcp'):
+                            proto = 'tcp'
+                            unit, listen = s.split(',', 1)
+                        elif name.startswith('udp'):
+                            proto = 'tcp'
+                            unit, listen = s.split(',', 1)
+                        elif name.startswith('serial'):
+                            unit, listen = s.split(',', 1)
+                            proto, listen = listen.split(':', 1)
+                        else:
+                            continue
+                        cfg.setdefault('modbus-slave', []).append({
+                            'proto': proto,
+                            'unit': unit,
+                            'listen': listen
+                        })
+                except KeyError:
+                    pass
         set(f'config/{c}/service', service)
         set(f'config/{c}/main', cfg)
 
