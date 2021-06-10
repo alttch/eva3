@@ -26,7 +26,7 @@ except:
 eva.core.init()
 eva.core.set_product(product_code, '-1')
 
-eva.core.load(initial=True, check_pid=False)
+eva.core.load(initial=True, check_pid=False, omit_plugins=True)
 eva.core.start(init_db_only=True)
 
 eva.apikey.load(load_from_db=True)

@@ -664,7 +664,7 @@ def userdb():
         return g.userdb
 
 
-def load(initial=False, init_log=True, check_pid=True):
+def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
 
     def secure_file(f):
         fn = dir_eva + '/' + f
@@ -917,34 +917,36 @@ def load(initial=False, init_log=True, check_pid=True):
                 logging.debug(f'defaults.{k}.{k2} = {v2}')
         else:
             logging.debug(f'defaults.{k} = {v}')
-    plugin_cfg = cfg.get('plugins', default={})
-    plugin_cfg.update(
-        eva.registry.get_subkeys(f'config/{product.code}/plugins'))
-    config.plugins = []
-    for k, v in plugin_cfg.items():
-        if v.get('enabled'):
-            config.plugins.append(k)
-    logging.debug('plugins = %s' % ', '.join(config.plugins))
-    # init plugins
-    for p in config.plugins:
-        fname = f'{dir_eva}/plugins/{p}.py'
-        if os.path.exists(fname):
-            try:
-                plugin_modules[p] = importlib.import_module(f'eva.plugins.{p}')
-            except:
-                logging.error(f'unable to load plugin {p} ({fname})')
-                log_traceback()
-                continue
-        else:
-            try:
-                modname = f'evacontrib.{p}'
-                plugin_modules[p] = importlib.import_module(modname)
-            except:
-                logging.error(f'unable to load plugin {p} ({modname})')
-                log_traceback()
-                continue
-        logging.info(f'+ plugin {p}')
-    load_plugin_config(plugin_cfg)
+    if not omit_plugins:
+        plugin_cfg = cfg.get('plugins', default={})
+        plugin_cfg.update(
+            eva.registry.get_subkeys(f'config/{product.code}/plugins'))
+        config.plugins = []
+        for k, v in plugin_cfg.items():
+            if v.get('enabled'):
+                config.plugins.append(k)
+        logging.debug('plugins = %s' % ', '.join(config.plugins))
+        # init plugins
+        for p in config.plugins:
+            fname = f'{dir_eva}/plugins/{p}.py'
+            if os.path.exists(fname):
+                try:
+                    plugin_modules[p] = importlib.import_module(
+                        f'eva.plugins.{p}')
+                except:
+                    logging.error(f'unable to load plugin {p} ({fname})')
+                    log_traceback()
+                    continue
+            else:
+                try:
+                    modname = f'evacontrib.{p}'
+                    plugin_modules[p] = importlib.import_module(modname)
+                except:
+                    logging.error(f'unable to load plugin {p} ({modname})')
+                    log_traceback()
+                    continue
+            logging.info(f'+ plugin {p}')
+        load_plugin_config(plugin_cfg)
     return cfg
 
 

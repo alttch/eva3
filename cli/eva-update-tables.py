@@ -70,7 +70,7 @@ eva.core.init()
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'table update'
 
-cfg = eva.core.load(initial=True, init_log=False)
+cfg = eva.core.load(initial=True, init_log=False, omit_plugins=True)
 if not cfg:
     sys.exit(2)
 eva.core.start()
