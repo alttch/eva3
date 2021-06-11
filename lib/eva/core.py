@@ -1005,6 +1005,7 @@ def load_cvars(fname=None):
 
 @corescript_lock
 def load_corescripts(fname=None):
+    reload_corescripts()
     cs_data.topics.clear()
     try:
         cfg = eva.registry.key_get(f'config/{eva.core.product.code}/cs', {})
