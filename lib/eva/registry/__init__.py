@@ -81,9 +81,9 @@ def key_get(key, default=KeyError):
 def key_get_field(key, field, default=KeyError):
     try:
         return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{key}', field=field)
-    except KeyError:
+    except (KeyError, FieldNotFound) as e:
         if default is KeyError:
-            raise
+            raise KeyError(str(e))
         else:
             return default
 
