@@ -389,18 +389,6 @@ config/uc/cs: &cscfg
           - topic
 config/lm/cs: *cscfg
 config/sfa/cs: *cscfg
-config/venv:
-  type: object
-  additionalProperties: false
-  properties:
-    use-system-pip: *bool
-    python: *str
-    system-site-packages: *bool
-    skip: *strarr
-    extra: *strarr
-    pip-extra-options: *str
-  required:
-    - python
 config/clouds/iote:
   patternProperties:
     "^.*$":

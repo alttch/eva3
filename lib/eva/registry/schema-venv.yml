@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+properties:
+  extra: &strarr
+    items: &str
+      type: string
+    type: array
+  pip-extra-options: *str
+  python: *str
+  skip: *strarr
+  system-site-packages: &bool
+    type: boolean
+  use-system-pip: *bool
+required:
+  - python

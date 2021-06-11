@@ -564,8 +564,16 @@ cd "${EVA_DIR}" || exit 11
 
 # Install YEDB
 
+mkdir -p var
+
 ./install/install-yedb || exit 3
 ./sbin/registry-control restart || exit 1
+
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
+
+[ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
 
 # Create VENV key if not present
 
@@ -573,6 +581,8 @@ PYTHON=
 
 if [ "$VENV_CONFIG" ] || ! AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/venv >& /dev/null; then
     [ "$VENV_CONFIG" ] && VENV_CFG=$VENV_CONFIG || VENV_CFG=./lib/eva/registry/setup-defaults/config/venv.yml
+    ./sbin/eva-registry-cli set ".schema/eva3/${SYSTEM_NAME}/config/venv" \
+        - -p yaml < ./lib/eva/registry/schema-venv.yml > /dev/null || exit 8
     AUTO_PREFIX=1 ./sbin/eva-registry-cli set \
         config/venv - -p yaml < $VENV_CFG > /dev/null || exit 8
 fi
@@ -630,17 +640,12 @@ fi
 
 [ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop > /dev/null 2>&1 )
 
-REGISTRY_INI=${EVA_DIR}/etc/eva_config
-
-[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
-
 if [ $CLEAR -eq 1 ]; then
     KEYS_TO_CLEAR=(config/common config/clouds config/uc config/lm config/sfa config/watchdog data inventory)
     for k in "${KEYS_TO_CLEAR[@]}"; do
         AUTO_PREFIX=1 ./sbin/eva-registry-cli delete "${k}" -r > /dev/null || exit 8
     done
     rm -rf ./runtime/db || exit 1
-    [ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
     ./sbin/eva-registry-cli delete ".schema/${SYSTEM_NAME}" -r > /dev/null || exit 8
     echo "WARNING: all configs are deleted"
 fi

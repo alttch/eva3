@@ -18,6 +18,7 @@ from pyaltt2.config import Config
 EVA_DIR = Path(__file__).parents[3].absolute()
 DEFAULTS_DIR = Path(__file__).parent / 'defaults'
 SCHEMA = Path(__file__).parent / 'schema.yml'
+VENV_SCHEMA = Path(__file__).parent / 'schema-venv.yml'
 
 config_file = EVA_DIR / 'etc/eva_config'
 
@@ -185,6 +186,10 @@ def init_defaults(skip_existing=True):
 
 def import_schema():
     import yaml
+    with VENV_SCHEMA.open() as fh:
+        key = f'.schema/{PFX}/{SYSTEM_NAME}/config/venv'
+        logging.info(f'Importing schema {key}')
+        db.key_set(key=f'{key}', value=yaml.safe_load(fh))
     with SCHEMA.open() as fh:
         data = yaml.safe_load(fh)
     for k, v in data.items():
