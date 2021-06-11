@@ -327,10 +327,16 @@ schema_file = a.schema
 if schema_file is None:
     schema_file = (Path(__file__).absolute().parents[1] /
                    'lib/eva/registry/schema.yml')
+    venv_schema_file = (Path(__file__).absolute().parents[1] /
+                        'lib/eva/registry/schema-venv.yml')
 else:
     schema_file = Path(schema_file)
+    venv_schema_file = None
 
 SCHEMA = yaml.safe_load(schema_file.open())
+
+if venv_schema_file:
+    SCHEMA['config/venv'] = yaml.safe_load(venv_schema_file.open())
 
 eva_servers = ShellConfigFile(f'{eva_dir}/etc/eva_servers')
 eva_servers.open()
