@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.3.3"
+__version__ = "3.4.0"
 
 # -*- coding: utf-8 -*-
 #

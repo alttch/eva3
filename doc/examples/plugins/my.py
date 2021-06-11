@@ -32,7 +32,7 @@ var2 = value2
 __author__ = 'Altertech, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2021 Altertech'
 __license__ = 'Apache License 2.0'
-__version__ = "3.3.3"
+__version__ = "3.4.0"
 
 # import EVA ICS Plugin API library
 import eva.pluginapi as pa
