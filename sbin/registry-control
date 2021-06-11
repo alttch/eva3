@@ -23,7 +23,7 @@ LOCKFILE=${EVA_DIR}/var/registry.lock
 REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE} ${YEDB_STRICT}"
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
-TEST=${EVA_DIR}/yedb/yedb-cli test
+TEST="${EVA_DIR}/yedb/yedb-cli -C ${YEDB_SOCKET} test"
 
 if [ "${YEDB_SUPERVISORD_PROGRAM}" ]; then
   case $1 in
@@ -75,7 +75,7 @@ case $1 in
           echo " Failed!"
           exit 1
         fi
-        exec_cmd "${TEST}"
+        exec_cmd "${TEST}" >& /dev/null
         result=$?
         if [ "$result" == "0" ]; then
           break
