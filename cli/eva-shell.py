@@ -183,6 +183,9 @@ class ManagementCLI(GenericCLI):
                                         help='Registry key',
                                         metavar='NAME',
                                         nargs='?')
+        sp_ = sp_registry.add_parser('start', help='Start registry server')
+        sp_registry_stop = sp_registry.add_parser('stop',
+                                                  help='Stop registry server')
         sp_registry_restart = sp_registry.add_parser(
             'restart', help='Restart registry server')
 
@@ -623,28 +626,28 @@ sys.argv = {argv}
                 not code else self.local_func_result_failed
 
     def start_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('start', c)
         return self.local_func_result_ok
 
     def stop_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('stop', c)
         return self.local_func_result_ok
 
     def restart_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('restart', c)
         return self.local_func_result_ok
 
     def status_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         out = self.exec_control_script('status', c, collect_output=True)
@@ -781,6 +784,8 @@ sys.argv = {argv}
                 return self.local_func_result_failed
             return self.local_func_result_ok
         if params.get('full'):
+            self.stop_controller({})
+            self.registry_stop({})
             self.clear_runtime(full=True)
             self.clear_xc()
             self.clear_ui()
@@ -798,6 +803,11 @@ sys.argv = {argv}
                 return self.local_func_result_failed
             if not self.after_save():
                 return self.local_func_result_failed
+            self.registry_start({})
+            for cmd in ['import-registry-schema', 'import-registry-defaults']:
+                if os.system(f'{dir_eva}/install/{cmd}'):
+                    return self.local_func_result_failed
+            self.start_controller({})
             return self.local_func_result_ok
         try:
             if params.get('xc'):
@@ -1363,6 +1373,23 @@ sys.argv = {argv}
         else:
             return self.local_func_result_ok
 
+    def registry_stop(self, params):
+        if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
+            self.print_err(
+                'Unable to restart registry server while other EVA servers are running'
+            )
+            return self.local_func_result_failed
+        if os.system(f'{dir_sbin}/registry-control stop'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
+    def registry_start(self, params):
+        if os.system(f'{dir_sbin}/registry-control start'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
     def set_masterkey(self, params):
 
         def set_masterkey_for(p, a, access):
@@ -1582,6 +1609,8 @@ _api_functions = {
     'backup:restore': cli.backup_restore,
     'registry:manage': cli.registry_manage,
     'registry:restart': cli.registry_restart,
+    'registry:start': cli.registry_start,
+    'registry:stop': cli.registry_stop,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
