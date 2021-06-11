@@ -12,7 +12,7 @@ fi
 
 [ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
-export $EVA_REPOSITORY_URL
+export EVA_REPOSITORY_URL
 
 OBS="./sbin/layout-converter ./sbin/uc-control ./sbin/lm-control ./sbin/sfa-control"
 
