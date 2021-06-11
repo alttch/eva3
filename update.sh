@@ -73,7 +73,6 @@ cd ..
 echo "- Stopping everything"
 
 ./sbin/eva-control stop
-[ -x ./sbin/registry-control ] && ./sbin/registry-control stop
 
 if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
   echo "EVA ICS obsolete configuration found. Checking..."
@@ -134,6 +133,8 @@ rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
 
 ./install/mklinks || exit 1
+
+[ -x ./sbin/registry-control ] && ./sbin/registry-control stop
 
 ./install/install-yedb || exit 2
 
