@@ -93,7 +93,8 @@ case $1 in
     if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
       echo "YEDB server not managed locally"
     else
-      "${REGISTRY}" "${REGISTRY_ARGS}" -v
+      [ "$REGISTRY_NO_VERBOSE" == "1" ] && VERBOSE= || VERBOSE=-v
+      "${REGISTRY}" ${REGISTRY_ARGS} ${VERBOSE}
     fi
     ;;
   stop)
