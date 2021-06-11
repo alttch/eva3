@@ -1,6 +1,8 @@
 python-dateutil==2.7.3
 pyasn1==0.4.8
 cryptography==3.4.7
+cairocffi==1.1.0
+cffi==1.14.0
 cairosvg==2.1.1
 jsonpickle==0.9.6
 urllib3==1.24.3
