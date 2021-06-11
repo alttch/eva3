@@ -1,17 +1,20 @@
 EVA ICS CHANGELOG
 *****************
 
-3.3.3 (TBA)
+3.4.0 (TBA)
 
 Common
 ------
 
+   * Configs and runtime data moved to crash-free YEDB-based registry
    * Next-generation event replication engine
    * InfluxDB v2 support (v1 API via dbrp and v2 API)
    * "connected" property of the remote items in LM PLC and SFA
    * UDP Notifiers
    * LURP event replication protocol
    * Notifier event buffering
+   * "eva restore" now stops / starts all components automatically if runtime
+     folder is restored.
 
 UC
 --
