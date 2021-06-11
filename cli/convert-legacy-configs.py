@@ -567,7 +567,8 @@ for c in prod:
             try:
                 plugins_enabled = list(
                     filter(None, [
-                        x.strip() for x in cf.get('server', 'plugins').split()
+                        x.strip()
+                        for x in cf.get('server', 'plugins').split(',')
                     ]))
             except KeyError:
                 plugins_enabled = []
