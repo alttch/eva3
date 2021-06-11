@@ -381,9 +381,8 @@ class MacroAction(eva.item.ItemAction):
 
 class Macro(eva.item.ActiveItem):
 
-    def __init__(self, item_id):
-        super().__init__(item_id, 'lmacro')
-        self.respect_layout = False
+    def __init__(self, item_id=None, **kwargs):
+        super().__init__(item_id, 'lmacro', **kwargs)
         self.api = eva.lm.macro_api.MacroAPI(pass_errors=False,
                                              send_critical=False)
         self.pfcode = None
@@ -508,9 +507,8 @@ class VFMacro(Macro):
 
 class Cycle(eva.item.Item):
 
-    def __init__(self, item_id):
-        super().__init__(item_id, 'lcycle')
-        self.respect_layout = False
+    def __init__(self, item_id=None, **kwargs):
+        super().__init__(item_id, 'lcycle', **kwargs)
         self.macro = None
         self.macro_args = []
         self.macro_kwargs = {}

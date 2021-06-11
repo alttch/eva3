@@ -187,39 +187,30 @@ class APIClientLocal(APIClient):
         import configparser
         super().__init__()
         if dir_eva is not None:
-            _etc = dir_eva + '/etc'
-        else:
-            _etc = (Path(__file__).absolute().parents[3] / 'etc').as_posix()
+            import sys
+            sys.path.insert(0, f'{dir_eva}/lib')
+        import eva.registry
         self._product_code = product
-        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.read(_etc + '/' + product + '_apikeys.ini')
-        for s in cfg.sections():
-            try:
-                _master = (cfg.get(s, 'master') == 'yes')
-                if _master:
-                    try:
-                        self._key = cfg.get(s, 'key')
-                        break
-                    except:
-                        pass
-            except:
-                pass
-        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.read(_etc + '/' + product + '.ini')
+        for key_name, key in eva.registry.get_subkeys(
+                f'config/{product}/apikeys').items():
+            if key.get('master'):
+                self._key = key.get('key')
+                break
+        cfg = eva.registry.config_get(f'config/{product}/main')
         try:
-            self._timeout = float(cfg.get('server', 'timeout'))
-        except:
+            self._timeout = float(cfg.get('server/timeout'))
+        except LookupError:
             pass
         try:
-            h = cfg.get('webapi', 'listen')
+            h = cfg.get('webapi/listen')
             pfx = 'http://'
             default_port = 80
-        except:
+        except LookupError:
             try:
-                h = cfg.get('webapi', 'ssl_listen')
+                h = cfg.get('webapi/ssl_listen')
                 pfx = 'https://'
                 default_port = 443
-            except:
+            except LookupError:
                 h = None
         if h:
             try:

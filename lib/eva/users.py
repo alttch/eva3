@@ -517,32 +517,20 @@ def init():
 
 def update_config(cfg):
     try:
-        host = cfg.get('msad', 'host')
-    except:
+        host = cfg.get('msad/host')
+    except LookupError:
         return
     logging.debug(f'msad.host = {host}')
-    try:
-        domain = cfg.get('msad', 'domain')
-    except:
-        domain = ''
+    domain = cfg.get('msad/domain', default='')
     logging.debug(f'msad.domain = {domain}')
-    try:
-        ca = cfg.get('msad', 'ca')
-    except:
-        ca = None
+    ca = cfg.get('msad/ca', default=None)
     logging.debug(f'msad.ca = {ca}')
-    try:
-        key_prefix = cfg.get('msad', 'key_prefix')
-    except:
-        key_prefix = None
+    key_prefix = cfg.get('msad/key-prefix', default=None)
     logging.debug(f'msad.key_prefix = {key_prefix}')
-    try:
-        ou = cfg.get('msad', 'ou')
-    except:
-        ou = _d.msad_ou
+    ou = cfg.get('msad/ou', default=_d.msad_ou)
     logging.debug(f'msad.ou = {ou}')
     try:
-        cache_time = float(cfg.get('msad', 'cache_time'))
+        cache_time = float(cfg.get('msad/cache-time'))
     except:
         cache_time = 86400
     logging.debug(f'msad.cache_time = {cache_time}')

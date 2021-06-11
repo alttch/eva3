@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+D=$(realpath "$0")
+EVA_DIR=$(realpath "$(dirname "${D}")/..")
+
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
+
+[ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=$EVA_DIR/var/registry.sock
+
+YEDB_PS="eva:$(hostname)/registry" "$EVA_DIR/python3/bin/yedb" "$YEDB_SOCKET" "$@"

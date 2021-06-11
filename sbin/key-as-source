@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+[ "$2" ] && PFX="--prefix $2" || PFX=""
+
+D=$(realpath "$0")
+AUTO_PREFIX=1 "$(dirname "${D}")/eva-registry-cli" source "$1" $PFX --convert-bool onezero || exit 1

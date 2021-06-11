@@ -6,11 +6,14 @@ __version__ = "3.3.3"
 default_delay = 0.02
 
 import importlib
-import eva.core
 import threading
 import time
 import logging
 import rapidjson
+import re
+
+import eva.core
+import eva.registry
 
 from eva.exceptions import InvalidParameter
 from eva.exceptions import FunctionFailed
@@ -35,7 +38,7 @@ slave_registers = {}
 
 ports = {}
 
-_d = SimpleNamespace(modified=False)
+_d = SimpleNamespace(modified=set())
 
 # public functions
 
@@ -195,6 +198,8 @@ def create_modbus_port(port_id, params, **kwargs):
         retries: retry attempts for port read/write operations (default: 0)
     """
     try:
+        if not port_id or not re.match(eva.core.ID_ALLOWED_SYMBOLS, port_id):
+            raise InvalidParameter('port id')
         p = ModbusPort(port_id, params, **kwargs)
         if not p.client:
             raise FunctionFailed
@@ -208,7 +213,7 @@ def create_modbus_port(port_id, params, **kwargs):
         if port_id in ports:
             ports[port_id].stop()
         ports[port_id] = p
-        set_modified()
+        set_modified(port_id)
         logging.info('created modbus port {} : {}'.format(port_id, params))
         return True
 
@@ -219,7 +224,7 @@ def destroy_modbus_port(port_id):
         ports[port_id].stop()
         try:
             del ports[port_id]
-            set_modified()
+            set_modified(port_id)
         except:
             pass
         return True
@@ -227,37 +232,44 @@ def destroy_modbus_port(port_id):
         raise ResourceNotFound
 
 
+@with_ports_lock
 def load():
     try:
-        with open(eva.core.dir_runtime + '/uc_modbus.json') as fd:
-            data = rapidjson.loads(fd.read())
-        for p in data:
-            d = p.copy()
-            del d['id']
-            del d['params']
+        for i, v in eva.registry.key_get_recursive('config/uc/buses/modbus'):
+            if i != v['id']:
+                raise ValueError(f'port {i} id mismatch')
+            p = v['params']
+            del v['id']
+            del v['params']
             try:
-                create_modbus_port(p['id'], p['params'], **d)
+                create_modbus_port(i, p, **v)
             except Exception as e:
-                logging.error(e)
-        _d.modified = False
-    except:
-        logging.error('unable to load uc_modbus.json')
+                logging.error(f'Error loading modbus port: {e}')
+                eva.core.log_traceback()
+        _d.modified.clear()
+        return True
+    except Exception as e:
+        logging.error(f'Error loading modbus ports: {e}')
         eva.core.log_traceback()
         return False
-    return True
 
 
 @eva.core.save
+@with_ports_lock
 def save():
     try:
-        with open(eva.core.dir_runtime + '/uc_modbus.json', 'w') as fd:
-            fd.write(format_json(serialize(config=True)))
-        _d.modified = False
-    except:
-        logging.error('unable to save modbus ports config')
+        for i in _d.modified:
+            kn = f'config/uc/buses/modbus/{i}'
+            try:
+                eva.registry.key_set(kn, ports[i].serialize(config=True))
+            except KeyError:
+                eva.registry.key_delete(kn)
+        _d.modified.clear()
+        return True
+    except Exception as e:
+        logging.error(f'Error saving modbus ports config: {e}')
         eva.core.log_traceback()
         return False
-    return True
 
 
 def modbus_slave_block(size):
@@ -631,7 +643,11 @@ class ModbusPort(object):
             'delay': self.delay,
             'retries': self.retries
         }
-        d['timeout'] = self._timeout if config else self.timeout
+        if config:
+            if self._timeout is not None:
+                d['timeout'] = self._timeout
+        else:
+            d['timeout'] = self.timeout
         return d
 
     def stop(self):
@@ -642,11 +658,10 @@ class ModbusPort(object):
             eva.core.log_traceback()
 
 
-def append_ip_slave(c, proto):
+def append_ip_slave(proto, unit, listen):
     try:
-        a, h = c.split(',')
-        host, port = parse_host_port(h, 502)
-        a = safe_int(a)
+        host, port = parse_host_port(listen, 502)
+        a = safe_int(unit)
         if not host:
             raise Exception
         config.slave[proto].append({'a': a, 'h': host, 'p': port})
@@ -656,11 +671,17 @@ def append_ip_slave(c, proto):
         eva.core.log_traceback()
 
 
-def append_serial_slave(c):
+def append_serial_slave(proto, unit, listen):
     try:
-        a, port = c.split(',')
-        framer, port, baudrate, bytesize, parity, stopbits = port.split(':')
-        a = safe_int(a)
+        try:
+            port, baudrate, bytesize, parity, stopbits = listen.split(':')
+        except:
+            port = listen
+            baudrate = 9600
+            bytesize = 8
+            parity = 'N'
+            stopbits = 1
+        a = safe_int(unit)
         baudrate = int(baudrate)
         bytesize = int(bytesize)
         stopbits = int(stopbits)
@@ -668,34 +689,36 @@ def append_serial_slave(c):
             port = int(port)
         except:
             pass
-        if framer not in ['rtu', 'ascii', 'binary']:
-            raise Exception('Invalid Modbus slave framer: {}'.format(framer))
+        if proto not in ['rtu', 'ascii', 'binary']:
+            raise Exception(f'Invalid Modbus slave framer: {proto}')
         config.slave['serial'].append({
             'a': a,
             'p': port,
-            'f': framer,
+            'f': proto,
             'b': baudrate,
             'bs': bytesize,
             'pt': parity,
             's': stopbits
         })
         logging.debug('modbus.slave.serial = {}.{}:{}:{}:{}:{}:{}'.format(
-            hex(a), framer, port, baudrate, bytesize, parity, stopbits))
+            hex(a), proto, port, baudrate, bytesize, parity, stopbits))
     except:
         eva.core.log_traceback()
 
 
 def update_config(cfg):
     try:
-        for c in cfg.options('modbus'):
-            for p in ['tcp', 'udp']:
-                if c.startswith(p):
-                    append_ip_slave(cfg.get('modbus', c), p)
-            if c.startswith('serial'):
-                append_serial_slave(cfg.get('modbus', c))
+        for c in cfg.get('modbus-slave', default=[]):
+            proto = c['proto']
+            unit = c['unit']
+            listen = c['listen']
+            if proto in ['tcp', 'udp']:
+                append_ip_slave(proto, unit, listen)
+            else:
+                append_serial_slave(proto, unit, listen)
     except:
-        pass
+        eva.core.log_traceback()
 
 
-def set_modified():
-    _d.modified = True
+def set_modified(port_id):
+    _d.modified.add(port_id)

@@ -1,7 +1,8 @@
 from eva.features import restart_controller, is_enabled
 
 from eva.features import InvalidParameter, FunctionFailed
-from eva.features import ConfigFile
+
+import eva.registry
 
 
 def setup(ttl=None):
@@ -12,14 +13,12 @@ def setup(ttl=None):
             ttl = float(ttl)
         except:
             raise InvalidParameter('ttl is not a number')
-    with ConfigFile('lm.ini') as fh:
-        fh.set('plc', 'cache_remote_state', ttl)
+    eva.registry.key_set_field('config/lm/main', 'plc/cache-remote-state', ttl)
     restart_controller('lm')
 
 
 def remove():
     if not is_enabled('lm'):
         raise FunctionFailed('LM PLC is not enabled')
-    with ConfigFile('lm.ini') as fh:
-        fh.delete('plc', 'cache_remote_state')
+    eva.registry.key_delete_field('config/lm/main', 'plc/cache-remote-state')
     restart_controller('lm')

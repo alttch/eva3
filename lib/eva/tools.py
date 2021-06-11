@@ -86,14 +86,35 @@ def validate_schema(data, schema_id):
     jsonschema.validate(data, schema=schema)
 
 
+def generate_template(tplc):
+    import jinja2
+    import importlib
+    if not isinstance(tplc, str):
+        tplc = tplc.read()
+    tpl = jinja2.Template(tplc)
+    tpl.globals['import_module'] = importlib.import_module
+    tpl.globals['time_ns'] = int(time.time() * 1000000000)
+    return tpl
+
+
+def render_template(tplc, cfg=None, raw=False):
+    import yaml
+    if cfg is None:
+        cfg = {}
+    elif isinstance(cfg, str):
+        cfg = dict_from_str(cfg)
+    data = generate_template(tplc).render(cfg)
+    return data if raw else yaml.load(data)
+
+
 class ConfigFile():
     """
     A helper to manage .ini files
 
     Example:
 
-        with ConfigFile('uc.ini') as cf:
-            cf.set('plugin.my', 'field1', 'value1')
+        with ConfigFile('file.ini') as cf:
+            cf.set('section', 'field1', 'value1')
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
@@ -110,6 +131,10 @@ class ConfigFile():
         return self._changed
 
     def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
         from configparser import ConfigParser
         self.cp = ConfigParser(inline_comment_prefixes=';')
         if not os.path.exists(self.fname):
@@ -119,9 +144,11 @@ class ConfigFile():
             else:
                 raise FileNotFoundError(f'File not found: {self.fname}')
         self.cp.read(self.fname)
-        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         if self._changed:
             import shutil
             from datetime import datetime
@@ -143,7 +170,11 @@ class ConfigFile():
         """
         Get dict of section values
         """
-        return self.cp.get(section)
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp[section]
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
 
     def set(self, section, name, value):
         """
@@ -162,7 +193,11 @@ class ConfigFile():
         self._changed = True
 
     def get(self, section, name):
-        return self.cp.get(section, name)
+        from configparser import NoOptionError, NoSectionError
+        try:
+            return self.cp.get(section, name)
+        except (NoOptionError, NoSectionError) as e:
+            raise KeyError(str(e))
 
     def delete(self, section, name):
         """
@@ -223,8 +258,8 @@ class ShellConfigFile():
 
     Example:
 
-        with ShellConfigFile('venv') as cf:
-            cf.set('SYSTEM_SITE_PACKAGES', 0)
+        with ShellConfigFile('eva_config') as cf:
+            cf.set('KEYNAME', 0)
     """
 
     def __init__(self, fname, init_if_missing=False, backup=True):
@@ -242,6 +277,10 @@ class ShellConfigFile():
         return self._changed
 
     def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
         if not os.path.exists(self.fname):
             if self.init_if_missing:
                 import shutil
@@ -261,9 +300,11 @@ class ShellConfigFile():
                     except:
                         raise ValueError(
                             f'Invalid config file: {self.fname} ({line})')
-        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         if self._changed:
             import shutil
             from datetime import datetime
@@ -287,11 +328,17 @@ class ShellConfigFile():
             self._data[name] = value
             self._changed = True
 
-    def get(self, name):
+    def get(self, name, default=KeyError):
         """
         Get field value
         """
-        return self._data[name]
+        try:
+            return self._data[name]
+        except KeyError:
+            if default is KeyError:
+                raise
+            else:
+                return default
 
     def delete(self, name):
         """

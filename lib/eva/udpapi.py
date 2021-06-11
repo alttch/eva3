@@ -94,20 +94,18 @@ def exec_custom_handler(func, data, address):
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(cfg.get('udpapi', 'listen'),
+        config.host, config.port = parse_host_port(cfg.get('udpapi/listen'),
                                                    default_port)
         logging.debug('udpapi.listen = %s:%u' % (config.host, config.port))
     except:
         return False
     try:
-        _ha = cfg.get('udpapi', 'hosts_allow')
+        _ha = cfg.get('udpapi/hosts-allow')
     except:
         _ha = None
     if _ha:
         try:
-            _hosts_allow = list(
-                filter(None, [x.strip() for x in _ha.split(',')]))
-            config.hosts_allow = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow = [IPNetwork(h) for h in _ha]
         except:
             logging.error('udpapi: invalid hosts allow acl!')
             config.host = None
@@ -119,14 +117,12 @@ def update_config(cfg):
     else:
         logging.debug('udpapi.hosts_allow = none')
     try:
-        _ha = cfg.get('udpapi', 'hosts_allow_encrypted')
+        _ha = cfg.get('udpapi/hosts-allow-encrypted')
     except:
         _ha = None
     if _ha:
         try:
-            _hosts_allow = list(
-                filter(None, [x.strip() for x in _ha.split(',')]))
-            config.hosts_allow_encrypted = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow_encrypted = [IPNetwork(h) for h in _ha]
         except:
             logging.error('udpapi: invalid encrypted hosts allow acl!')
             config.host = None

@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+[ -z "$EVA_CONTROLLER" ] && exit 5
+
+CONTROLLER=$EVA_CONTROLLER
+CONTROLLER_NAME=${EVA_CONTROLLER^^}
+
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
+
+WAIT_TO_KILL=40 # sec * 2 before kill -KILL
+
+EVA_DIR=$(pwd)
+
+export EVA_DIR EVA_CONTROLLER
+
+source <(./sbin/key-as-source "config/${EVA_CONTROLLER}/service" CONTROLLER 2>/dev/null)
+
+if [ "$FORCE_ALL" == "1" ]; then
+  CONTROLLER_ENABLED=1
+  if [ -z "$CONTROLLER_ENABLED" ]; then
+    echo "Unable to read registry key"
+    exit 8
+  fi
+fi
+
+
+PYTHON=${EVA_DIR}/python3/bin/python3
+PIDFILE=${EVA_DIR}/var/${CONTROLLER}.pid
+CONTROLLER_PROGRAM=${EVA_DIR}/sbin/${CONTROLLER}serv.py
+CONTROLLER_ARGS=
+SAFE_RUN_PIDFILE=${EVA_DIR}/var/${CONTROLLER}_safe.pid
+WATCHDOG_PIDFILE=${EVA_DIR}/var/${CONTROLLER}_watchdog.pid
+SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
+
+if [ "${CONTROLLER_SUPERVISORD_PROGRAM}" = "1" ]; then
+  case $1 in
+    start)
+      supervisorctl start "${CONTROLLER_SUPERVISORD_PROGRAM}"
+      supervisorctl start "watchdog-${CONTROLLER_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    stop)
+      supervisorctl stop "watchdog-${CONTROLLER_SUPERVISORD_PROGRAM}"
+      supervisorctl stop "${CONTROLLER_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    status)
+      supervisorctl status "${CONTROLLER_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    restart)
+      supervisorctl restart "${CONTROLLER_SUPERVISORD_PROGRAM}"
+      supervisorctl restart "watchdog-${CONTROLLER_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+  esac
+fi
+
+function exec_cmd {
+  if [ -z "${CONTROLLER_USER}" ]; then
+    $*
+  else
+    su "${CONTROLLER_USER}" -c $*
+  fi
+}
+
+case $1 in
+  start)
+    echo "Starting ${CONTROLLER_NAME} server"
+    if pgrep -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
+      echo "already started"
+      exit 2
+    fi
+    exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${PYTHON}" "${CONTROLLER_PROGRAM}" "${CONTROLLER_ARGS}" >& /dev/null &
+    "${WATCHDOG}" "${CONTROLLER}" "${CONTROLLER_PROGRAM}" > /dev/null &
+    ;;
+  launch)
+    [ "$2" = "debug" ] && DEBUG=1 || DEBUG=0
+    EVA_CORE_ENABLE_CC=1 EVA_CORE_LOG_STDOUT=1 EVA_CORE_DEBUG=$DEBUG "${PYTHON}" "${CONTROLLER_PROGRAM}" "${CONTROLLER_ARGS}"
+    ;;
+  stop)
+    if ! pgrep -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
+      exit 0
+    fi
+    echo -n "Stopping ${CONTROLLER_NAME} server "
+    PID_SAFE_RUN=
+    PID_CONTROLLER=
+    PID_WATCHDOG=
+    [ -f "${SAFE_RUN_PIDFILE}" ] && PID_SAFE_RUN=$(cat "${SAFE_RUN_PIDFILE}")
+    [ -f "${WATCHDOG_PIDFILE}" ] && PID_WATCHDOG=$(cat "${WATCHDOG_PIDFILE}")
+    [ -f "${PIDFILE}" ] && PID_CONTROLLER=$(cat "${PIDFILE}")
+    if [ "${PID_WATCHDOG}" ]; then
+      kill "${PID_WATCHDOG}" >& /dev/null
+      rm -f "${WATCHDOG_PIDFILE}"
+    fi
+    if [ "${PID_SAFE_RUN}" ]; then
+      kill "${PID_SAFE_RUN}" >& /dev/null
+      rm -f "${SAFE_RUN_PIDFILE}"
+    fi
+    if [ "${PID_CONTROLLER}" ]; then
+      kill "${PID_CONTROLLER}" >& /dev/null
+      I=0
+      while kill -0 "${PID_CONTROLLER}" >& /dev/null; do
+        echo -n "."
+        sleep 0.5
+        (( I++ ))
+        if [ ${I} -ge ${WAIT_TO_KILL} ]; then
+          echo -n  "killing "
+          kill -KILL "${PID_CONTROLLER}"
+          break
+        fi
+      done
+      rm -f "${PIDFILE}"
+    fi
+    if pkill -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
+      sleep 10
+      pkill -KILL "${CONTROLLER_PROGRAM}" >& /dev/null
+    fi
+    echo " stopped"
+    ;;
+  restart)
+    $0 stop "$2"
+    $0 start "$2"
+    ;;
+  logrotate)
+    [ -f "${PIDFILE}" ] && kill -HUP "$(cat "${PIDFILE}")"
+    ;;
+  status)
+    if pgrep -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
+      echo "running"
+    else
+      echo "stopped"
+    fi
+    ;;
+  version)
+    exec_cmd "${PYTHON}" "${CONTROLLER_PROGRAM}" -V
+    ;;
+  *)
+    echo "Usage: $0 start|stop|restart|logrotate|version"
+esac

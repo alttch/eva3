@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import rapidjson
+import eva.registry
 
 from pathlib import Path
 
@@ -123,37 +124,47 @@ def restart_controller(controller=''):
 
 
 def append_python_libraries(libs, rebuild_venv=True):
-    with ShellConfigFile('venv', init_if_missing=True) as fh:
+    import eva.registry as registry
+    need_modify = False
+    with registry.key_as_dict('config/venv') as venv:
+        extra = venv.get('extra', default=None)
+        if extra is None:
+            extra = []
+            venv.set('extra', extra)
         for lib in libs:
             lib_id = lib.split('=', 1)[0]
             print(f'Adding extra Python library dependency: {lib}')
-            need_to_set = False
-            try:
-                xtra = fh.get('EXTRA')
-                new_xtra = []
-                need_to_set = True
-                for x in xtra.split():
-                    x_id = x.split('=', 1)[0]
-                    if x_id != lib_id or x == lib:
-                        new_xtra.append(x)
-                    elif x == lib:
-                        need_to_set = False
-                if need_to_set:
-                    fh.set('EXTRA', ' '.join(new_xtra))
-            except KeyError:
-                need_to_set = True
-            if need_to_set:
-                fh.append('EXTRA', lib)
-    if rebuild_venv:
+            for x in extra.copy():
+                x_id = x.split('=', 1)[0]
+                if x_id == lib_id:
+                    if x != lib:
+                        need_modify = True
+                        extra.remove(x)
+                if x == lib:
+                    break
+            else:
+                extra.append(lib)
+                need_modify = True
+        if need_modify:
+            venv.set_modified()
+    if need_modify and rebuild_venv:
         rebuild_python_venv()
 
 
 def remove_python_libraries(libs, rebuild_venv=True):
-    with ShellConfigFile('venv', init_if_missing=True) as fh:
+    import eva.registry as registry
+    need_modify = False
+    with registry.key_as_dict('config/venv') as venv:
+        extra = venv.get('extra', [])
         for lib in libs:
             print(f'Removing extra Python library dependency: {lib}')
-            fh.remove('EXTRA', lib)
-    if rebuild_venv:
+            try:
+                extra.remove(lib)
+                venv.set_modified()
+                need_modify = True
+            except ValueError:
+                pass
+    if need_modify and rebuild_venv:
         rebuild_python_venv()
 
 
@@ -194,8 +205,4 @@ def remove_phis(phis):
 
 
 def is_enabled(p):
-    with ShellConfigFile('eva_servers') as fh:
-        try:
-            return val_to_boolean(fh.get(f'{p.upper()}_ENABLED'))
-        except KeyError:
-            return False
+    return eva.registry.key_get_field(f'config/{p}/service', 'enabled')

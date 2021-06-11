@@ -6,11 +6,14 @@ __version__ = "3.3.3"
 default_delay = 0.05
 
 import importlib
-import eva.core
 import logging
 import rapidjson
 import threading
 import time
+import re
+
+import eva.core
+import eva.registry
 
 from eva.tools import format_json
 
@@ -24,7 +27,7 @@ with_ports_lock = eva.core.RLocker('uc/owfs')
 
 owbus = {}
 
-_d = SimpleNamespace(modified=False)
+_d = SimpleNamespace(modified=set())
 
 # public functions
 
@@ -101,6 +104,8 @@ def create_owfs_bus(bus_id, location, **kwargs):
         retries: retry attempts for bus read/write operations (default: 0)
     """
     try:
+        if not bus_id or not re.match(eva.core.ID_ALLOWED_SYMBOLS, bus_id):
+            raise InvalidParameter('bus id')
         bus = OWFSBus(bus_id, location, **kwargs)
         if not bus._ow:
             raise FunctionFailed
@@ -114,7 +119,7 @@ def create_owfs_bus(bus_id, location, **kwargs):
         if bus_id in owbus:
             owbus[bus_id].stop()
         owbus[bus_id] = bus
-        set_modified()
+        set_modified(bus_id)
         logging.info('owfs bus {} : {}'.format(bus_id, location))
         return True
 
@@ -125,7 +130,7 @@ def destroy_owfs_bus(bus_id):
         owbus[bus_id].stop()
         try:
             del owbus[bus_id]
-            set_modified()
+            set_modified(bus_id)
         except:
             pass
         return True
@@ -133,37 +138,44 @@ def destroy_owfs_bus(bus_id):
         raise ResourceNotFound
 
 
+@with_ports_lock
 def load():
     try:
-        with open(eva.core.dir_runtime + '/uc_owfs.json') as fd:
-            data = rapidjson.loads(fd.read())
-        for p in data:
-            d = p.copy()
-            del d['id']
-            del d['location']
+        for i, v in eva.registry.key_get_recursive('config/uc/buses/owfs'):
+            if i != v['id']:
+                raise ValueError(f'bus {i} id mismatch')
+            p = v['location']
+            del v['id']
+            del v['location']
             try:
-                create_owfs_bus(p['id'], p['location'], **d)
+                create_owfs_bus(i, p, **v)
             except Exception as e:
-                logging.error(e)
-        _d.modified = False
-    except:
-        logging.error('unable to load uc_owfs.json')
+                logging.error(f'Error loading owfs bus: {e}')
+                eva.core.log_traceback()
+        _d.modified.clear()
+        return True
+    except Exception as e:
+        logging.error(f'Error loading OWFS buses: {e}')
         eva.core.log_traceback()
         return False
-    return True
 
 
 @eva.core.save
+@with_ports_lock
 def save():
     try:
-        with open(eva.core.dir_runtime + '/uc_owfs.json', 'w') as fd:
-            fd.write(format_json(serialize(config=True)))
-        _d.modified = False
-    except:
-        logging.error('unable to save owfs bus config')
+        for i in _d.modified:
+            kn = f'config/uc/buses/owfs/{i}'
+            try:
+                eva.registry.key_set(kn, owbus[i].serialize(config=True))
+            except KeyError:
+                eva.registry.key_delete(kn)
+        _d.modified.clear()
+        return True
+    except Exception as e:
+        logging.error(f'Error saving owfs bus config: {e}')
         eva.core.log_traceback()
         return False
-    return True
 
 
 def start():
@@ -261,7 +273,11 @@ class OWFSBus(object):
             'delay': self.delay,
             'retries': self.retries
         }
-        d['timeout'] = self._timeout if config else self.timeout
+        if config:
+            if self._timeout is not None:
+                d['timeout'] = self._timeout
+        else:
+            d['timeout'] = self.timeout
         return d
 
     def stop(self):
@@ -272,5 +288,5 @@ class OWFSBus(object):
             eva.core.log_traceback()
 
 
-def set_modified():
-    _d.modified = True
+def set_modified(bus_id):
+    _d.modified.add(bus_id)

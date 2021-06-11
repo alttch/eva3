@@ -62,8 +62,6 @@ function set_runtime_permissions {
     fi
     exec_cmd chown -R ${u} runtime/${p}*
     exec_cmd chown -R ${u} runtime/db/${p}*.db
-    exec_cmd chown ${u} etc/${p}_apikeys.ini
-    exec_cmd chmod 600 etc/${p}_apikeys.ini
     [ -f log/${p}.log ] && mv -f log/${p}.log log/${p}.log.bak
     return 0
 }
@@ -85,13 +83,7 @@ fi
 function set_user {
     local p=$1
     local u=$2
-    [ -f etc/eva_servers ] || touch etc/eva_servers
-    grep "${p}_USER=" etc/eva_servers > /dev/null 2>&1
-    if [ $? != 0 ]; then
-        echo "${p}_USER=$u" >> etc/eva_servers
-    else
-        sed -i "s/\(${p}_USER=\).*/\\1${u}/g" etc/eva_servers
-    fi
+    AUTO_PREFIX=1 ./sbin/eva-registry-cli set-field "config/${p}/service" user "$u" > /dev/null || exit 8
     echo
     echo "${p} is set up to run under user ${u}"
     echo "!! Make sure to set ${p} API ports to non-privileged (>1024)"
@@ -105,17 +97,14 @@ check_dir_access runtime/db ${USER} || exit 1
 
 case ${PRODUCT} in
 uc)
-    check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
     set_runtime_permissions uc ${USER} || exit 1
     set_user UC ${USER}
     ;;
 lm)
-    check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
     set_runtime_permissions lm ${USER} || exit 1
     set_user LM ${USER}
     ;;
 sfa)
-    check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
     set_runtime_permissions sfa ${USER} || exit 1
     set_user SFA ${USER}
     ;;

@@ -1,22 +1,36 @@
 #!/bin/sh
 
-PLATFORMS="arm-musleabihf i686-musl x86_64-musl"
-VERSION=$1
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
 
-if [ -z "$VERSION" ]; then
+. ./lib/eva/registry/info
+
+PLATFORMS="arm-musleabihf i686-musl x86_64-musl"
+
+if [ -z "$YEDB_VERSION" ]; then
   echo "version not specified"
   exit 1
 fi
 
 for platform in $PLATFORMS; do
   echo "----- ${platform} -----"
-  FNAME="yedb-${VERSION}-${platform}.tar.gz"
-  wget "https://github.com/alttch/yedb-rs/releases/download/v${VERSION}/${FNAME}" -O "/tmp/${FNAME}" || exit 2
-  gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}"
+  FNAME="yedb-${YEDB_VERSION}-${platform}.tar.gz"
+  wget "https://github.com/alttch/yedb-rs/releases/download/v${YEDB_VERSION}/${FNAME}" \
+    -O "/tmp/${FNAME}" || exit 2
+  gsutil cp -a public-read "/tmp/${FNAME}" "gs://get.eva-ics.com/yedb/${FNAME}" || exit 3
+done
+
+./dev/generate-yedb-manifest.py "${YEDB_VERSION}" "/tmp/yedb-manifest-${YEDB_VERSION}.json" || exit 3
+gsutil cp -a public-read "/tmp/yedb-manifest-${YEDB_VERSION}.json" \
+  "gs://get.eva-ics.com/yedb/yedb-manifest-${YEDB_VERSION}.json" || exit 3
+
+for platform in $PLATFORMS; do
   rm -f "/tmp/${FNAME}" || exit 2
 done
 
+rm -f "/tmp/yedb-manifest-${YEDB_VERSION}.json"
+
 jks build get.eva-ics.com || exit 3
 echo "================================"
-echo "v${VERSION} UPLOADED"
+echo "v${YEDB_VERSION} UPLOADED"
 exit 0

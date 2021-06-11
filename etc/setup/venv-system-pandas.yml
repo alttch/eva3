@@ -1,0 +1,5 @@
+python: "python3"
+skip:
+  - "pandas"
+system-site-packages: true
+use-system-pip: false

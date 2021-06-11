@@ -38,16 +38,15 @@ def usage(version_only=False):
         )
     if version_only:
         return
-    print("""Usage: ucserv.py [-f config_file ] [-d]
+    print("""Usage: ucserv.py [-d]
 
- -f config_file     start with an alternative config file
  -d                 run in background
 
-for production use uc-control only to start/stop UC
+for production use eva-control only to start/stop UC
 """)
 
 
-product_build = 2021050301
+product_build = 2021052901
 
 product_code = 'uc'
 
@@ -59,7 +58,6 @@ eva.core.product.name = 'EVA Universal Controller'
 eva.core._flags.use_reactor = True
 
 _fork = False
-_eva_ini = None
 
 try:
     optlist, args = getopt.getopt(sys.argv[1:], 'f:dhV')
@@ -70,8 +68,6 @@ except:
 for o, a in optlist:
     if o == '-d':
         _fork = True
-    if o == '-f':
-        _eva_ini = a
     if o == '-V':
         usage(version_only=True)
         sys.exit()
@@ -79,7 +75,7 @@ for o, a in optlist:
         usage()
         sys.exit()
 
-cfg = eva.core.load(fname=_eva_ini, initial=True)
+cfg = eva.core.load(initial=True)
 if not cfg:
     sys.exit(2)
 
@@ -90,13 +86,14 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.mailer.load()
+
 eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
 eva.sysapi.update_config(cfg)
-eva.mailer.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
 eva.datapuller.update_config(cfg)
 

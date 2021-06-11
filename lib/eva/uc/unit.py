@@ -27,17 +27,52 @@ status_label_on = 'ON'
 class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
            eva.item.PhysicalItem):
 
-    def __init__(self, unit_id):
+    fields = [
+        'action_allow_termination',
+        'action_always_exec',
+        'action_driver_config',
+        'action_enabled',
+        'action_exec',
+        'action_queue',
+        'action_timeout',
+        'auto_off',
+        'description',
+        'expires',
+        'location',
+        'maintenance_duration',
+        'modbus_status',
+        'modbus_value',
+        'mqtt_control',
+        'mqtt_update',
+        'notify_events',
+        'snmp_trap',
+        'term_kill_interval',
+        'update_delay',
+        'update_driver_config',
+        'update_exec',
+        'update_exec_after_action',
+        'update_if_action',
+        'update_interval',
+        'update_state_after_action',
+        'update_timeout',
+        'value_condition',
+        'value_in_range_max',
+        'value_in_range_max_eq',
+        'value_in_range_min',
+        'value_in_range_min_eq',
+    ]
+
+    def __init__(self, unit_id=None, create=False, **kwargs):
         self.action_driver_config = None
-        super().__init__(unit_id, 'unit')
+        super().__init__(unit_id, 'unit', **kwargs)
 
         self.update_exec_after_action = False
         self.update_state_after_action = True
         self.update_if_action = False
         self.action_always_exec = False
         self.auto_off = 0
-        self.nstatus = 0
-        self.nvalue = ''
+        self.nstatus = self.status
+        self.nvalue = self.value
         self.last_action = 0
         self.auto_processor = None
         self.auto_processor_lock = threading.RLock()
@@ -48,6 +83,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             '1': status_label_on
         }
         self.status_labels = self.default_status_labels.copy()
+        if create:
+            self.set_defaults(self.fields)
 
     def status_by_label(self, label):
         if label is None:

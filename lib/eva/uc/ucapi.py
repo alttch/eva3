@@ -1221,7 +1221,8 @@ class UC_API(GenericAPI):
                                                   delay=d,
                                                   retries=r)
         if save:
-            eva.uc.modbus.save()
+            if not eva.uc.modbus.save():
+                raise FunctionFailed('port save error')
         return True
 
     @log_w
@@ -1239,7 +1240,8 @@ class UC_API(GenericAPI):
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.modbus.destroy_modbus_port(i)
         if result and eva.core.config.db_update == 1:
-            eva.uc.modbus.save()
+            if not eva.uc.modbus.save():
+                raise FunctionFailed('port save error')
         return result
 
     @log_d
@@ -1687,7 +1689,8 @@ class UC_API(GenericAPI):
         i, n, l, t, d, r, save = parse_api_params(kwargs, 'inltdrS', 'SSbnnib')
         eva.uc.owfs.create_owfs_bus(i, n, lock=l, timeout=t, delay=d, retries=r)
         if save:
-            eva.uc.owfs.save()
+            if not eva.uc.owfs.save():
+                raise FunctionFailed('bus save error')
         return True
 
     @log_w
@@ -1711,7 +1714,8 @@ class UC_API(GenericAPI):
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.owfs.destroy_owfs_bus(i)
         if result and eva.core.config.db_update == 1:
-            eva.uc.owfs.save()
+            if not eva.uc.owfs.save():
+                raise FunctionFailed('bus save error')
         return result
 
     @log_d

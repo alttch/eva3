@@ -671,8 +671,8 @@ Working with Ethernet/IP
 
 The standard way to work with Ethernet/IP devices in EVA ICS is `cpppo
 <https://github.com/pjkundert/cpppo/>`_ Python module. The module isn't
-installed by default. Set *EXTRA="cpppo"* in */opt/eva/etc/venv* and rebuild
-EVA ICS venv (*/opt/eva/install/build-venv*).
+installed by default. Append *cpppo* to "extra:" section of *config/venv* EVA
+registry key and rebuild EVA ICS venv (*eva feature setup venv*).
 
 Here is helper usage example:
 

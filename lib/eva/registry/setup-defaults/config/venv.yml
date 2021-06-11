@@ -1,0 +1,14 @@
+# use system PIP
+use-system-pip: false
+# path to Python executable
+python: python3
+# use system site packages
+system-site-packages: false
+# skip packages (enable system site packages to let venv use preinstalled)
+#skip:
+# - pandas
+# specify extra PIP3 options e.g., -v for verbose
+#pip-extra-options: "-v"
+# additional module
+#extra:
+#  - soundfile==0.10.2

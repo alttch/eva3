@@ -76,22 +76,23 @@ _flags = SimpleNamespace(dispatcher_active=False)
 
 def update_config(cfg):
     try:
-        config.host = cfg.get('upnp', 'listen')
-    except:
+        config.host = cfg.get('upnp/listen')
+    except LookupError:
         pass
     logging.debug(f'upnp.listen = {config.host}')
     # for tests only, undocumented
     try:
-        config.broadcast = cfg.get('upnp', 'broadcast_ip')
-    except:
+        config.broadcast = cfg.get('upnp/broadcast-ip')
+    except LookupError:
         pass
     logging.debug(f'upnp.broadcast_ip = {config.broadcast}')
     try:
-        interfaces = cfg.get('upnp', 'discover_on')
-        if interfaces != 'all':
-            config.interfaces = [x.strip() for x in interfaces.split(',')]
+        interfaces = cfg.get('upnp/discover-on')
+        if not isinstance(interfaces, list):
+            interfaces = [interfaces]
+        config.interfaces = interfaces
         config.discover = True
-    except:
+    except LookupError:
         pass
     logging.debug('upnp.discover_controllers = ' +
                   ('enabled' if config.discover else 'disabled'))

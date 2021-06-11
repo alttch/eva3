@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
+
+WAIT_TO_KILL=10 # sec * 2 before kill -KILL
+MAX_START_WAIT=10 # sec * 2 before kill -KILL
+
+EVA_DIR=$(pwd)
+
+[ -f ./etc/eva_config ] && source ./etc/eva_config
+
+[ -z "${YEDB_REGISTRY_DIR}" ] && YEDB_REGISTRY_DIR=${EVA_DIR}/runtime/registry
+[ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=${EVA_DIR}/var/registry.sock
+[ -z "${YEDB_AUTO_BAK}" ] && YEDB_AUTO_BAK=10
+[ -z "${YEDB_WORKERS}" ] && YEDB_WORKERS=2
+[ -z "${YEDB_CACHE_SIZE}" ] && YEDB_CACHE_SIZE=1000
+[ "${YEDB_STRICT_SCHEMA}" != "0" ] && YEDB_STRICT="--strict-schema"
+
+REGISTRY=${EVA_DIR}/yedb/yedb-server
+PIDFILE=${EVA_DIR}/var/registry.pid
+LOCKFILE=${EVA_DIR}/var/registry.lock
+REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE} ${YEDB_STRICT}"
+SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
+SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+TEST=${EVA_DIR}/yedb/yedb-cli test
+
+if [ "${YEDB_SUPERVISORD_PROGRAM}" ]; then
+  case $1 in
+    start)
+      supervisorctl start "${YEDB_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    stop)
+      supervisorctl stop "${YEDB_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    status)
+      supervisorctl status "${YEDB_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+    restart)
+      supervisorctl restart "${YEDB_SUPERVISORD_PROGRAM}"
+      exit $?
+      ;;
+  esac
+fi
+
+function exec_cmd {
+  if [ -z "${YEDB_USER}" ]; then
+    $*
+    return $?
+  else
+    su "${YEDB_USER}" -c $*
+    return $?
+  fi
+}
+
+case $1 in
+  start)
+    echo -n "Starting EVA registry server ."
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
+    else
+      if pgrep -f "${REGISTRY}" >& /dev/null; then
+        echo
+        echo "already started"
+        exit 0
+      fi
+      exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
+      result=1
+      C=0
+      while [ "$result" != "0" ]; do
+        if [ $C -gt ${MAX_START_WAIT} ]; then
+          echo " Failed!"
+          exit 1
+        fi
+        exec_cmd "${TEST}"
+        result=$?
+        if [ "$result" == "0" ]; then
+          break
+        fi
+        (( C++ ))
+        echo -n "."
+        sleep 0.5
+      done
+      echo " started"
+    fi
+    [ "$INVOCATION_ID" ] && "$EVA_DIR/sbin/sblock.sh" &
+    exit 0
+    ;;
+  launch)
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo "YEDB server not managed locally"
+    else
+      "${REGISTRY}" "${REGISTRY_ARGS}" -v
+    fi
+    ;;
+  stop)
+    if ! pgrep -f "${REGISTRY}" >& /dev/null; then
+      exit 0
+    fi
+    echo -n "Stopping EVA registry server ."
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
+    else
+      PID_SAFE_RUN=
+      PID_REGISTRY=
+      [ -f "${SAFE_RUN_PIDFILE}" ] && PID_SAFE_RUN=$(cat "${SAFE_RUN_PIDFILE}")
+      [ -f "${PIDFILE}" ] && PID_REGISTRY=$(cat "${PIDFILE}")
+      if [ "${PID_SAFE_RUN}" ]; then
+        kill "${PID_SAFE_RUN}" >& /dev/null
+        rm -f "${SAFE_RUN_PIDFILE}"
+      fi
+      if [ "x${PID_REGISTRY}" != "x" ]; then
+        kill "${PID_REGISTRY}" >& /dev/null
+        I=0
+        while kill -0 "${PID_REGISTRY}" >& /dev/null; do
+          echo -n "."
+          sleep 0.5
+          (( I++ ))
+          if [ ${I} -ge ${WAIT_TO_KILL} ]; then
+            echo -n  "killing "
+            kill -KILL "${PID_REGISTRY}"
+            break
+          fi
+        done
+        rm -f "${PIDFILE}"
+      fi
+      if pkill -f "${REGISTRY}" >& /dev/null; then
+        sleep 3
+        pkill -KILL -f "${REGISTRY}" >& /dev/null
+      fi
+      echo " stopped"
+    fi
+    [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh"
+    exit 0
+    ;;
+  restart)
+    ./sbin/registry-control stop "$2"
+    ./sbin/registry-control start "$2"
+    ;;
+  status)
+    if [ "$YEDB_SERVER_ENABLED" == "0" ]; then
+      echo " not managed locally"
+    else
+      if pgrep -f "${REGISTRY}" >& /dev/null; then
+        echo "running"
+      else
+        echo "stopped"
+      fi
+    fi
+    ;;
+  version)
+    exec_cmd ./yedb/yedb-cli version
+    ;;
+  *)
+    echo "Usage: registry-control start|stop|restart|version"
+esac

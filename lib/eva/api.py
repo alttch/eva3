@@ -468,7 +468,7 @@ def set_restful_response_location(i, rtp, api_uri='/r'):
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(cfg.get('webapi', 'listen'),
+        config.host, config.port = parse_host_port(cfg.get('webapi/listen'),
                                                    default_port)
         logging.debug('webapi.listen = %s:%u' % (config.host, config.port))
     except:
@@ -476,61 +476,46 @@ def update_config(cfg):
         return False
     try:
         config.ssl_host, config.ssl_port = parse_host_port(
-            cfg.get('webapi', 'ssl_listen'), default_ssl_port)
+            cfg.get('webapi/ssl-listen'), default_ssl_port)
         try:
-            config.ssl_module = cfg.get('webapi', 'ssl_module')
-        except:
+            config.ssl_module = cfg.get('webapi/ssl-module')
+        except LookupError:
             config.ssl_module = 'builtin'
-        config.ssl_cert = cfg.get('webapi', 'ssl_cert')
+        config.ssl_cert = cfg.get('webapi/ssl-cert')
         if config.ssl_cert[0] != '/':
             config.ssl_cert = eva.core.dir_etc + '/' + config.ssl_cert
-        config.ssl_key = cfg.get('webapi', 'ssl_key')
+        config.ssl_key = cfg.get('webapi/ssl-key')
         if config.ssl_key[0] != '/':
             config.ssl_key = eva.core.dir_etc + '/' + config.ssl_key
         logging.debug('webapi.ssl_listen = %s:%u' %
                       (config.ssl_host, config.ssl_port))
-        config.ssl_chain = cfg.get('webapi', 'ssl_chain')
+        config.ssl_chain = cfg.get('webapi/ssl-chain')
         if config.ssl_chain[0] != '/':
             config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
     except:
         pass
     try:
-        config.session_timeout = int(cfg.get('webapi', 'session_timeout'))
+        config.session_timeout = int(cfg.get('webapi/session-timeout'))
         tokens.expire = config.session_timeout
     except:
         pass
-    logging.debug('webapi.session_timeout = %u' % config.session_timeout)
+    logging.debug(f'webapi.session_timeout = {config.session_timeout}')
     try:
-        config.session_timeout = int(cfg.get('webapi', 'session_timeout'))
-        tokens.expire = config.session_timeout
-    except:
-        pass
-    try:
-        config.session_no_prolong = (cfg.get('webapi',
-                                             'session_no_prolong') == 'yes')
+        config.session_no_prolong = cfg.get('webapi/session-no-prolong')
         tokens.prolong_disabled = config.session_no_prolong
     except:
         pass
-    logging.debug('webapi.session_no_prolong = %s' % ('yes' \
-                                if config.session_no_prolong else 'no'))
+    logging.debug(f'webapi.session_no_prolong = {config.session_no_prolong}')
     try:
-        config.thread_pool = int(cfg.get('webapi', 'thread_pool'))
+        config.thread_pool = int(cfg.get('webapi/thread-pool'))
     except:
         pass
-    logging.debug('webapi.thread_pool = %u' % config.thread_pool)
+    logging.debug(f'webapi.thread_pool = {config.thread_pool}')
     eva.core.db_pool_size = config.thread_pool
-    try:
-        config.ei_enabled = (cfg.get('webapi', 'ei_enabled') == 'yes')
-    except:
-        pass
-    logging.debug('webapi.ei_enabled = %s' % ('yes' \
-                                if config.ei_enabled else 'no'))
-    try:
-        config.use_x_real_ip = (cfg.get('webapi', 'x_real_ip') == 'yes')
-    except:
-        pass
-    logging.debug('webapi.x_real_ip = %s' % ('yes' \
-                                if config.use_x_real_ip else 'no'))
+    config.ei_enabled = cfg.get('webapi/ei-enabled', default=True)
+    logging.debug(f'webapi.ei_enabled = {config.ei_enabled}')
+    config.use_x_real_ip = cfg.get('webapi/x-real-ip', default=False)
+    logging.debug(f'webapi.x_real_ip = {config.use_x_real_ip}')
     return True
 
 

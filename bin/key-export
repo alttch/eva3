@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 <KEY>"
+  exit 9
+fi
+
+D=$(realpath "$0")
+EVA_DIR=$(dirname "${D}")/..
+
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
+[ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
+KEY=eva3/${SYSTEM_NAME}/$1
+
+"$EVA_DIR/bin/eva-registry" cat "${KEY}" -p yaml

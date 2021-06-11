@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+D=$(realpath "$0")
+EVA_DIR=$(dirname "${D}")/..
+
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
+[ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=$EVA_DIR/var/registry.sock
+
+if [ "$AUTO_PREFIX" = "1" ]; then
+  CMD=$1
+  shift
+  KEY=$1
+  shift
+  [ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
+  KEY=eva3/${SYSTEM_NAME}/${KEY}
+  "$EVA_DIR/yedb/yedb-cli" -C "$YEDB_SOCKET" "$CMD" "$KEY" "$@"
+else
+  "$EVA_DIR/yedb/yedb-cli" -C "$YEDB_SOCKET" "$@"
+fi

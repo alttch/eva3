@@ -7,9 +7,10 @@ ln -sf eva bin/eva-shell
 mkdir -p bin sbin tests
 ln -sf ../cli/venvl tests/benchmark-uc-crt
 
-BIN="uc-cmd lm-cmd sfa-cmd test-uc-xc test-ext test-phi uc-tpl prepare-sr gen-intl"
+BIN="uc-cmd lm-cmd sfa-cmd test-uc-xc test-ext test-phi uc-tpl prepare-sr gen-intl key-deploy key-import"
 NBIN="uc-notifier lm-notifier sfa-notifier"
-SBIN="check-mqtt layout-converter get-setup-options eva-update-tables pypi-mirror"
+SBIN="check-mqtt get-setup-options eva-update-tables pypi-mirror"
+INSTALL="import-registry-defaults import-registry-schema convert-legacy-configs"
 
 for p in ${BIN}; do
   ln -sf ../cli/venvl bin/"${p}"
@@ -21,6 +22,10 @@ done
 
 for p in ${SBIN}; do
   ln -sf ../cli/venvl sbin/"${p}"
+done
+
+for p in ${INSTALL}; do
+  ln -sf ../cli/venvl install/"${p}"
 done
 
 rm -f lib/eva/features

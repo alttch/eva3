@@ -15,9 +15,9 @@ import time
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
 
-    def __init__(self, item_type, controller, state):
+    def __init__(self, item_type, controller, state, **kwargs):
         item_id = state['id']
-        super().__init__(item_id, item_type)
+        super().__init__(item_id, item_type, **kwargs)
         self.controller = controller
         cfg = {}
         if controller.mqtt_update:

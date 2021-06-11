@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-[ "${debug}" ] && set -o xtrace
+[ "${debug}" == "1" ] && set -o xtrace
+
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+export EVA_REPOSITORY_URL
 
 PYTHON3_MIN=6
 
@@ -9,7 +12,6 @@ LM_ENABLED=
 SFA_ENABLED=
 FORCE=0
 CLEAR=0
-USE_SUPERVISOR=0
 APPEND=0
 APPEND_MQTT=0
 INTERACTIVE=1
@@ -45,59 +47,65 @@ REQUIRED="realpath python3 curl jq"
 MAX_START_WAIT=180
 
 function on_exit {
-  local err=$?
-  if [ $err -ne 0 ]; then
-    echo
-    ./sbin/eva-control stop
-    echo
-    echo "SETUP FAILED, CODE: $err"
-  fi
+    local err=$?
+    if [ $err -ne 0 ]; then
+        echo
+        FORCE_ALL=1 ./sbin/eva-control stop
+        ./sbin/registry-control stop
+        echo
+        echo "SETUP FAILED, CODE: $err"
+    fi
 }
 
 function usage {
-    echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
-    echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
-    echo "          [--cloud-manager]"
-    echo
-    echo " Options:"
-    echo
-    echo " --clear                  clear runtime and supervisor configs (recommended"
-    echo "                          with --force. WARNING!!! destroys all data)"
-    echo
-    echo " --force                  force install even if configs are already present"
-    echo " --skip-check             skip virtualenv check"
-    echo " --auto                   perform automatic (unattended) setup"
-    echo
-    echo " Options for the automatic setup:"
-    echo
-    echo " --local-only             accept API keys (except operator) only from local host"
-    echo " --supervisor             Use supervisord (should be installed)"
-    echo " -u USER                  set up all controllers to run under specified user"
-    echo
-    echo " --link                   link all controllers statically"
-    echo "                          WARNING: it's not possible to change controller id"
-    echo "                          after linking. IDs of all controllers are automatically"
-    echo "                          set to the current host name. If you want to use different"
-    echo "                          IDs, prepare etc/uc.ini and etc/lm.ini files first and"
-    echo "                          set 'name' key there"
-    echo
-    echo " --mqtt user:password@host:port/space"
-    echo "                          specify MQTT server access"
-    echo " --mqtt-cafile FILE       MQTT CA file to enable MQTT via SSL"
-    echo " --mqtt-cert FILE         MQTT authorization cert"
-    echo " --mqtt-key FILE          MQTT authorization key"
-    echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
-    echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
-    echo " --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)"
-    echo
-    echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, can be specified"
-    echo "                          several times"
-    echo
-    echo "--cloud-manager           set up SFA cloud manager"
-    echo
-    echo "--feature NAME:PARAMS     Install additional feature, can be specified several times"
-    echo "--deploy FILE             deploy config from YAML file (requires cloud manager)"
-    echo
+    cat <<EOF
+Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]
+          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]
+          [--cloud-manager]
+
+ Options:
+
+ --clear                  clear runtime and configs (recommended with --force.
+                          WARNING!!! destroys all data)
+
+ --force                  force install even if configs are already present
+ --skip-check             skip virtualenv check
+ --auto                   perform automatic (unattended) setup
+
+ Options for the automatic setup:
+
+ --local-only             accept API keys (except operator) only from local host
+ -u USER                  set up all controllers to run under specified user
+
+ --link                   link all controllers statically
+                          WARNING: it's not possible to change controller id
+                          after linking. IDs of all controllers are automatically
+                          set to the current host name. If you want to use different
+                          IDs, prepare etc/uc.ini and etc/lm.ini files first and
+                          set 'name' key there
+
+ --mqtt user:password@host:port/space
+                          specify MQTT server access
+ --mqtt-cafile FILE       MQTT CA file to enable MQTT via SSL
+ --mqtt-cert FILE         MQTT authorization cert
+ --mqtt-key FILE          MQTT authorization key
+ --mqtt-announce          Enable MQTT announces and API calls via MQTT
+ --mqtt-discovery         Enable autodiscovery of other nodes via MQTT
+ --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)
+
+ -p {uc|lm|sfa|all}       specify which controller to set up or all, can be specified
+                          several times
+
+ --cloud-manager           set up SFA cloud manager
+
+ --feature NAME:PARAMS     Install additional feature, can be specified several times
+ --deploy FILE             deploy config from YAML file (requires cloud manager)
+
+ Env variables:
+
+ EVA_REPOSITORY_URL        Alternative EVA ICS repository URL
+ VENV_CONFIG               Alternative VENV config YAML to use/import
+EOF
 }
 
 function option_error {
@@ -107,13 +115,7 @@ function option_error {
 
 
 function start_controller() {
-    if [ $USE_SUPERVISOR -eq 1 ]; then
-      supervisorctl update || return 5
-      supervisorctl start "eva-$1" > /dev/null 2>&1
-      supervisorctl start "watchdog-eva-$1" > /dev/null 2>&1
-    else
-      "./sbin/$1-control" start || return 5
-    fi
+    "./sbin/eva-control" start $1 || return 5
     I=0
     sleep 0.5
     ./sbin/eva-tinyapi -C "$1" -F test > /dev/null 2>&1
@@ -221,7 +223,7 @@ function create_notifier {
             BATCH="$BATCH;set eva_1 announce_interval 30"
         fi
         [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ "$T" != 'uc' ] && \
-           BATCH="$BATCH;set eva_1 discovery_enabled 1"
+            BATCH="$BATCH;set eva_1 discovery_enabled 1"
         [ "$MQTT_NO_RETAIN" = "1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
         BATCH="$BATCH;test eva_1"
         if [ "$T" = "sfa" ]; then
@@ -252,30 +254,6 @@ function check_required_exec {
     return 0
 }
 
-function setup_supervisor_onboot {
-  [ $USE_SUPERVISOR -eq 1 ] || return 0
-  cp -vf ./etc/supervisor/conf.d/eva-onboot.conf /etc/supervisor/conf.d/ || return 1
-  sed -i "s|/opt/eva|${EVA_DIR}|g" /etc/supervisor/conf.d/eva-onboot.conf || return 2
-  return 0
-}
-
-function setup_supervisor {
-  local p=$1
-  local u=$2
-  [ $USE_SUPERVISOR -eq 1 ] || return 0
-  cp -vf "./etc/supervisor/conf.d/eva-${p}.conf" /etc/supervisor/conf.d/ || return 1
-  if [ "$SUPERVISOR_SET_LOG_STDOUT" ]; then
-    sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
-    sed -i 's/\(events=TICK_60\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
-  fi
-  sed -i "s|/opt/eva|${EVA_DIR}|g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 2
-  if [ "$u" != "root" ]; then
-    sed -i "s/^;user=.*/user=${u}/g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 4
-  fi
-  echo "$(echo "${p}"|tr "[:lower:]" "[:upper:]")_SUPERVISOR_PROGRAM=eva-${p}" >> ./etc/eva_servers
-  return 0
-}
-
 function askYN {
     if [ $INTERACTIVE -ne 1 ]; then
         VALUE=2
@@ -283,11 +261,11 @@ function askYN {
     fi
     local v=
     if [ "$2" == "N" ]; then
-      local default=N
-      local default_val=0
+        local default=N
+        local default_val=0
     else
-      local default=Y
-      local default_val=1
+        local default=Y
+        local default_val=1
     fi
     while [ -z "$v" ]; do
         local P="$1 (Y/N, default ${default})? "
@@ -300,10 +278,10 @@ function askYN {
             case $a in
                 y|Y)
                     v=1
-                ;;
+                    ;;
                 n|N)
                     v=0
-                ;;
+                    ;;
             esac
         fi
     done
@@ -371,7 +349,7 @@ function askMQTT {
         fi
         if ! ./sbin/check-mqtt ${SSL_OPTS} \
             "${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE}" > /dev/null 2>&1
-          then
+        then
             if [ ${INTERACTIVE} -ne 1 ]; then
                 echo "MQTT test failed"
                 exit 5
@@ -418,7 +396,7 @@ do
         --link)
             LINK=1
             shift
-        ;;
+            ;;
         --mqtt)
             M=$2
             if ! (echo "$M"|grep '@' > /dev/null); then
@@ -433,7 +411,7 @@ do
             ( echo "$M" |grep '/' > /dev/null ) && MQTT_SPACE=$(echo "$M"|cut -d/ -f2-)
             shift
             shift
-        ;;
+            ;;
         --mqtt-cafile)
             if [ ! -f "$2" ]; then
                 echo "No such MQTT CA file: $2"
@@ -442,7 +420,7 @@ do
             MQTT_CAFILE=$2
             shift
             shift
-        ;;
+            ;;
         --mqtt-cert)
             if [ ! -f "$2" ]; then
                 echo "No such MQTT cert file: $2"
@@ -451,7 +429,7 @@ do
             MQTT_CERT=$2
             shift
             shift
-        ;;
+            ;;
         --mqtt-key)
             if [ ! -f "$2" ]; then
                 echo "No such MQTT key file: $2"
@@ -460,120 +438,107 @@ do
             MQTT_KEY=$2
             shift
             shift
-        ;;
+            ;;
         --mqtt-announce)
             MQTT_ANNOUNCE_ENABLED=1
             shift
-        ;;
+            ;;
         --mqtt-discovery)
             MQTT_DISCOVERY_ENABLED=1
             shift
-        ;;
+            ;;
         --mqtt-disable-retain)
             MQTT_NO_RETAIN=1
             shift
-        ;;
+            ;;
         -u)
             DEFAULT_USER="$2"
             shift
             shift
-        ;;
+            ;;
         --feature)
             FEATURES="$FEATURES $2"
             shift
             shift
-        ;;
+            ;;
         -p)
             case $2 in
                 uc|UC)
                     INSTALL_UC=1
-                ;;
+                    ;;
                 lm|LM)
                     INSTALL_LM=1
-                ;;
+                    ;;
                 sfa|SFA)
                     INSTALL_SFA=1
-                ;;
+                    ;;
                 all)
                     INSTALL_UC=1
                     INSTALL_LM=1
                     INSTALL_SFA=1
-                ;;
+                    ;;
                 *)
                     option_error
-                ;;
+                    ;;
             esac
             shift
             shift
-        ;;
+            ;;
         --local-only)
             echo "This node will be installed with local-only key access"
             REMOTES="127.0.0.1"
             shift
-        ;;
+            ;;
         --force)
             echo "WARNING: using force installation, will stop EVA and remove old configs"
             FORCE=1
             shift
-        ;;
+            ;;
         --clear)
-            echo "WARNING: asked to clear config. Will remove all files in runtime and supervisor"
+            echo "WARNING: asked to clear config. Will remove all files in runtime"
             CLEAR=1
             shift
-        ;;
+            ;;
         --skip-check)
             SKIP_CHECK=1
             shift
-        ;;
+            ;;
         --skip-venv)
             SKIP_VENV=1
             shift
-        ;;
+            ;;
         -h|--help)
             usage
             exit 0
-        ;;
+            ;;
         --auto)
             INTERACTIVE=0
             echo "Will perform automatic install"
             shift
-        ;;
+            ;;
         --cloud-manager)
             CLOUDMANAGER=1
             shift
-        ;;
-        --supervisor)
-            USE_SUPERVISOR=1
-            shift
-        ;;
-      --deploy)
+            ;;
+        --deploy)
             DEPLOY_FILE=$2
             shift
             shift
-        ;;
+            ;;
         --root)
             SKIP_ROOT=1
             shift
-        ;;
+            ;;
         --benchmark)
             echo "Will setup UC and do benchmark"
-            if [ -f ./etc/uc.ini ]; then
-                echo "etc/uc.ini already exists. Aborting"
-                exit 5
-            fi
             INTERACTIVE=0
             INSTALL_UC=1
-            cp -v ./etc/uc.ini-benchmark ./etc/uc.ini
-            if [ ! -f ./etc/venv ]; then
-              echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
-              echo 'SKIP="pandas"' >> ./etc/venv
-            fi
             BENCHMARK=1
             shift
-        ;;
+            ;;
         *)
             option_error
-        ;;
+            ;;
     esac
 done
 
@@ -595,39 +560,48 @@ fi
 EVA_DIR=$(dirname "$(realpath "$0")")
 cd "${EVA_DIR}" || exit 11
 
-[ -f "${EVA_DIR}/etc/venv" ] && source ${EVA_DIR}/etc/venv
+./install/mklinks || exit 1
 
-[ -z "$PYTHON" ] && PYTHON=python3
+# Install YEDB
+
+./install/install-yedb || exit 3
+./sbin/registry-control restart || exit 1
+
+# Create VENV key if not present
+
+PYTHON=
+
+if [ "$VENV_CONFIG" ] || ! AUTO_PREFIX=1 ./sbin/eva-registry-cli get config/venv >& /dev/null; then
+    [ "$VENV_CONFIG" ] && VENV_CFG=$VENV_CONFIG || VENV_CFG=./lib/eva/registry/setup-defaults/config/venv.yml
+    AUTO_PREFIX=1 ./sbin/eva-registry-cli set \
+        config/venv - -p yaml < $VENV_CFG > /dev/null || exit 8
+fi
+
+source <(./sbin/key-as-source config/venv 2>/dev/null)
 
 PYTHON_MINOR=$($PYTHON --version|cut -d. -f2)
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
-  echo "Python 3.$PYTHON3_MIN is required"
-  exit 1
-fi
-
-if [ $USE_SUPERVISOR -eq 1 ]; then
-  if ! command -v supervisorctl > /dev/null; then
-    echo "Error: supervisorctl not found"
-    exit 12
-  fi
-  if [ ! -d /etc/supervisor/conf.d ]; then
-    echo "Error: directory /etc/supervisor/conf.d doesn't exist"
-    exit 13
-  fi
+    echo "Python 3.$PYTHON3_MIN is required"
+    exit 1
 fi
 
 echo
 
-if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
-    echo "Installed system detected"
-    source ./etc/eva_servers
-    source ./etc/easy_setup
-    [ "$UC_ENABLED" == "yes" ] && PRD=uc
-    [ "$LM_ENABLED" == "yes" ] && PRD=lm
-    [ "$SFA_ENABLED" == "yes" ] && PRD=sfa
-    echo "Will use settings from $PRD"
-    eval "$(./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY)" || exit 1
-    APPEND=1
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
+
+if [ "$UC_ENABLED" == "1" ] || [ "${LM_ENABLED}" == "1" ] || [ "${SFA_ENABLED}" == "1" ]; then
+    if [ $CLEAR -ne 1 ]; then
+        echo "Installed system detected"
+        source <(./sbin/key-as-source data/easy_setup 2>/dev/null)
+        [ "$UC_ENABLED" == "1" ] && PRD=uc
+        [ "$LM_ENABLED" == "1" ] && PRD=lm
+        [ "$SFA_ENABLED" == "1" ] && PRD=sfa
+        echo "Will use settings from $PRD"
+        eval "$(./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY)" || exit 1
+        APPEND=1
+    fi
 fi
 
 [ "$MASTERKEY" ] || MASTERKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
@@ -654,18 +628,25 @@ EOF
     echo
 fi
 
-[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && ./sbin/eva-control stop
+[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop > /dev/null 2>&1 )
+
+REGISTRY_INI=${EVA_DIR}/etc/eva_config
+
+[ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
 
 if [ $CLEAR -eq 1 ]; then
-  rm -rf runtime/* || exit 1
-  rm -f etc/eva_servers || exit 2
-  echo "WARNING: all files in runtime/ are deleted"
-  rm -f /etc/supervisor/conf.d/eva-uc.conf
-  rm -f /etc/supervisor/conf.d/eva-lm.conf
-  rm -f /etc/supervisor/conf.d/eva-sfa.conf
+    KEYS_TO_CLEAR=(config/common config/clouds config/uc config/lm config/sfa config/watchdog data inventory)
+    for k in "${KEYS_TO_CLEAR[@]}"; do
+        AUTO_PREFIX=1 ./sbin/eva-registry-cli delete "${k}" -r > /dev/null || exit 8
+    done
+    rm -rf ./runtime/db || exit 1
+    [ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
+    ./sbin/eva-registry-cli delete ".schema/${SYSTEM_NAME}" -r > /dev/null || exit 8
+    echo "WARNING: all configs are deleted"
 fi
 
-./install/mklinks || exit 1
+./install/import-registry-schema || exit 8
+./install/import-registry-defaults || exit 8
 
 # check mods, build venv
 
@@ -677,19 +658,14 @@ fi
 
 # ASK SOME QUESTIONS
 
-if command -v supervisorctl > /dev/null && [ -d /etc/supervisor/conf.d ]; then
-  askYN "Supervisor daemon detected. Use it instead of standard startup" N
-  [ $VALUE == "1" ] && USE_SUPERVISOR=1
-fi
-
 if [ $APPEND -ne 1 ]; then
     echo
     askYN "Should this node grant API access for the remote instances"
     [ $VALUE == "0" ] && REMOTES="127.0.0.1"
     askMQTT
 elif [ ! "$MQTT_HOST" ]; then
-  askMQTT
-  echo
+    askMQTT
+    echo
 fi
 
 [ "$MQTT_HOST" ] && APPEND_MQTT=1
@@ -700,23 +676,19 @@ if [ $APPEND -ne 1 ]; then
     [ $VALUE == "1" ] && LINK=1
 fi
 
-[ $APPEND -ne 1 ] && echo -n > etc/eva_servers
-
-[ $USE_SUPERVISOR -ne 1 ] && [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
-
 # INSTALL UC
 
-if [ "$UC_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
+if [ "$UC_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
     echo
     askYN "Install EVA Universal Controller on this host"
     [ $VALUE == "1" ] && INSTALL_UC=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  if ! ./bin/uc-notifier config eva_1 > /dev/null 2>&1; then
-    echo "Setting up MQTT for UC"
-    ./sbin/uc-control stop || exit 1
-    create_notifier uc || exit 1
-    start_controller uc || exit 1
-  fi
+    if ! ./bin/uc-notifier config eva_1 > /dev/null 2>&1; then
+        echo "Setting up MQTT for UC"
+        ./sbin/eva-control stop uc || exit 1
+        create_notifier uc || exit 1
+        start_controller uc || exit 1
+    fi
 else
     echo "UC is already installed. Skipping"
     INSTALL_UC=0
@@ -727,7 +699,8 @@ echo
 if [ $INSTALL_UC -eq 1 ]; then
     echo "Installing EVA Universal Controller"
     bash install/install-uc || exit 1
-    echo "UC_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/uc/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/uc/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (root is recommended for UC)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -735,30 +708,30 @@ if [ $INSTALL_UC -eq 1 ]; then
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-          echo "User ${USER} has no valid shell set"
-          exit 2
-      fi
+        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
+            echo "User ${USER} has no valid shell set"
+            exit 2
+        fi
     fi
-    [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
-    chmod 644 etc/uc.ini
-    echo "Generating uc_apikeys.ini"
-    rm -f etc/uc_apikeys.ini
-    cat > etc/uc_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    if [ $BENCHMARK -eq 1 ]; then
+        echo "Setting benchmark config"
+        AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/main \
+            - -p yaml < ./etc/setup/uc-benchmark.yml > /dev/null || exit 8
+    fi
+    echo "Setting UC master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts-allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/uc_apikeys.ini
+    )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier uc || exit 1
     UC_USER=${USER}
     if [ "$USER" != "root" ]; then
         chmod 777 runtime/db
         ./install/set-run-under-user uc "${USER}" || exit 1
     fi
-    setup_supervisor uc "${USER}" || exit 2
     if ! start_controller uc; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -773,16 +746,16 @@ fi
 
 # INSTALL LM
 
-if [ "$LM_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
+if [ "$LM_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
     askYN "Install EVA Logical Manager PLC on this host"
     [ $VALUE == "1" ] && INSTALL_LM=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  if ! ./bin/lm-notifier config eva_1 > /dev/null 2>&1; then
-    echo "Setting up MQTT for LM PLC"
-    ./sbin/lm-control stop || exit 1
-    create_notifier lm || exit 1
-    start_controller lm || exit 1
-  fi
+    if ! ./bin/lm-notifier config eva_1 > /dev/null 2>&1; then
+        echo "Setting up MQTT for LM PLC"
+        ./sbin/eva-control stop lm || exit 1
+        create_notifier lm || exit 1
+        start_controller lm || exit 1
+    fi
 else
     echo "LM is already installed. Skipping"
     INSTALL_LM=0
@@ -793,7 +766,8 @@ echo
 if [ $INSTALL_LM -eq 1 ]; then
     echo "Installing EVA LM PLC"
     bash install/install-lm || exit 1
-    echo "LM_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/lm/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/lm/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -801,30 +775,25 @@ if [ $INSTALL_LM -eq 1 ]; then
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-          echo "User ${USER} has no valid shell set"
-          exit 2
-      fi
+        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
+            echo "User ${USER} has no valid shell set"
+            exit 2
+        fi
     fi
-    [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
-    chmod 644 etc/lm.ini
-    echo "Generating lm_apikeys.ini"
-    rm -f etc/lm_apikeys.ini
-    cat > etc/lm_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    echo "Setting LM master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts-allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/lm_apikeys.ini
+    )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/lm/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier lm || exit 1
     LM_USER=${USER}
     if [ "$USER" != "root" ]; then
         chmod 777 runtime/db
         ./install/set-run-under-user lm "${USER}" || exit 1
     fi
-    setup_supervisor lm "${USER}" || exit 2
     if ! start_controller lm; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -834,21 +803,23 @@ EOF
     create_operator_key lm || exit 21
     create_default_key lm lock || exit 22
     save_controller_state lm || exit 23
-    if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
-        echo "Linking local UC to LM PLC"
-        SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
-        ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C lm -F remove_controller i="${SNAME}" > /dev/null 2>&1
-        if ! ./sbin/eva-tinyapi -C lm -F append_controller \
-            u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
-        fi
-        if ! ./sbin/eva-tinyapi -C lm -F setup_mode setup=0 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
+    if [ $LINK -eq 1 ]; then
+        if [ $INSTALL_UC -eq 1 ] || [ "$UC_ENABLED" == "1" ]; then
+            echo "Linking local UC to LM PLC"
+            SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
+            ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C lm -F remove_controller i="${SNAME}" > /dev/null 2>&1
+            if ! ./sbin/eva-tinyapi -C lm -F append_controller \
+                u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
+            if ! ./sbin/eva-tinyapi -C lm -F setup_mode setup=0 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
         fi
     fi
     echo
@@ -856,16 +827,16 @@ fi
 
 # INSTALL SFA
 
-if [ "$SFA_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
+if [ "$SFA_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
     askYN "Install SCADA Final Aggregator on this host"
     [ $VALUE == "1" ] && INSTALL_SFA=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  if ! ./bin/sfa-notifier config eva_1 > /dev/null 2>&1; then
-    echo "Setting up MQTT for SFA"
-    ./sbin/sfa-control stop || exit 1
-    create_notifier sfa || exit 1
-    start_controller sfa || exit 1
-  fi
+    if ! ./bin/sfa-notifier config eva_1 > /dev/null 2>&1; then
+        echo "Setting up MQTT for SFA"
+        ./sbin/eva-control stop sfa || exit 1
+        create_notifier sfa || exit 1
+        start_controller sfa || exit 1
+    fi
 else
     echo "SFA is already installed. Skipping"
     INSTALL_SFA=0
@@ -878,7 +849,8 @@ if [ $INSTALL_SFA -eq 1 ]; then
     bash install/install-sfa || exit 1
     askYN "Enable SFA Cloud Manager"
     [ $VALUE == "1" ] && CLOUDMANAGER=1
-    echo "SFA_ENABLED=yes" >> etc/eva_servers
+    ./sbin/key-set-flag config/sfa/service:setup 1 > /dev/null || exit 8
+    ./sbin/key-set-flag config/sfa/service:enabled 1 > /dev/null || exit 8
     echo
     askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
     if ! id "${USER}" > /dev/null 2>&1; then
@@ -886,24 +858,22 @@ if [ $INSTALL_SFA -eq 1 ]; then
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-          echo "User ${USER} has no valid shell set"
-          exit 2
-      fi
+        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
+            echo "User ${USER} has no valid shell set"
+            exit 2
+        fi
     fi
-    [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
-    [ $CLOUDMANAGER -eq 1 ] && sed -i 's/.*\(cloud_manager\).*/\1 = yes/g' etc/sfa.ini
-    chmod 644 etc/sfa.ini
-    echo "Generating sfa_apikeys.ini"
-    rm -f etc/sfa_apikeys.ini
-    cat > etc/sfa_apikeys.ini << EOF
-[masterkey]
-key = ${MASTERKEY}
-master = yes
-hosts_allow = ${REMOTES}
-
+    if [ $CLOUDMANAGER -eq 1 ]; then
+      ./sbin/key-set-flag config/sfa/main:cloud/cloud-manager 1 > /dev/null || exit 8
+    fi
+    echo "Setting SFA master key"
+    (cat <<EOF
+key: "${MASTERKEY}"
+master: true
+hosts-allow:
+ - ${REMOTES}
 EOF
-    chmod 600 etc/sfa_apikeys.ini
+    )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/sfa/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier sfa || exit 1
     create_db_notifier sfa || exit 1
     SFA_USER=${USER}
@@ -911,7 +881,6 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user sfa "${USER}" || exit 1
     fi
-    setup_supervisor sfa "${USER}" || exit 2
     if ! start_controller sfa; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
@@ -923,81 +892,81 @@ EOF
     echo "Creating SFA operator user"
     create_operator_user sfa || exit 21
     save_controller_state sfa || exit 23
-    if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
-        echo "Linking local UC to SFA"
-        SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
-        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
-        if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
+    if [ $LINK -eq 1 ]; then
+        if [ $INSTALL_UC -eq 1 ] || [ "$UC_ENABLED" == "1" ]; then
+            echo "Linking local UC to SFA"
+            SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
+            ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
+            if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
+                g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
+            if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
+            if [ $CLOUDMANAGER -eq 1 ]; then
+                if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+                    i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
+                    echo "Management API linking failed!"
+                    ./sbin/eva-control stop
+                    exit 5
+                fi
+            fi
         fi
-        if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
-        fi
-        if [ $CLOUDMANAGER -eq 1 ]; then
-          if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
-              i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
-              echo "Management API linking failed!"
-              ./sbin/eva-control stop
-              exit 5
-          fi
-        fi
-    fi
-    if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
-        echo "Linking local LM PLC to SFA"
-        SNAME=lm/$(./sbin/eva-tinyapi -C lm -F test|jq -Mr .system)
-        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
-        if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
-        fi
-        if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
-            echo "Linking failed!"
-            ./sbin/eva-control stop
-            exit 5
-        fi
-        if [ $CLOUDMANAGER -eq 1 ]; then
-          if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
-              i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
-              echo "Management API linking failed!"
-              ./sbin/eva-control stop
-              exit 5
-          fi
+        if [ $INSTALL_LM -eq 1 ]; then
+            echo "Linking local LM PLC to SFA"
+            SNAME=lm/$(./sbin/eva-tinyapi -C lm -F test|jq -Mr .system)
+            ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
+            if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
+                g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
+            if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
+                echo "Linking failed!"
+                ./sbin/eva-control stop
+                exit 5
+            fi
+            if [ $CLOUDMANAGER -eq 1 ]; then
+                if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+                    i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
+                    echo "Management API linking failed!"
+                    ./sbin/eva-control stop
+                    exit 5
+                fi
+            fi
         fi
     fi
     echo
 fi
 
-setup_supervisor_onboot || exit 11
-
 # FEATURES
 
 if [ "$FEATURES" ]; then
-  for f in $FEATURES; do
-    if [[ "$f" == *":"* ]]; then
-      feature=$(echo $f | cut -d: -f1)
-      params=$(echo $f | cut -d: -f2-)
-    else
-      feature=$f
-      params=
-    fi
-    ./bin/eva feature setup ${feature} ${params} || exit 12
-  done
+    for f in $FEATURES; do
+        if [[ "$f" == *":"* ]]; then
+            feature=$(echo $f | cut -d: -f1)
+            params=$(echo $f | cut -d: -f2-)
+        else
+            feature=$f
+            params=
+        fi
+        ./bin/eva feature setup ${feature} ${params} || exit 12
+    done
 fi
 
 
 # COMPLETED
 
 if [ $APPEND_MQTT -eq 1 ]; then
-  echo "MQTT connection is set up"
+    echo "MQTT connection is set up"
 elif [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
     echo "No products selected, nothing was installed"
     exit 0
@@ -1026,36 +995,34 @@ fi
 
 ln -sf eva bin/eva-shell
 
-if [ $APPEND_MQTT -ne 1 ]; then
-  echo "Setup completed!"
-  echo
-  echo "EVA ICS v$(./sbin/eva-tinyapi -V) build $(./sbin/eva-tinyapi -B)"
-  echo
-  echo "MASTERKEY: ${MASTERKEY}"
-  echo "Controller default key: ${DEFAULTKEY}"
-  echo "Operator key: ${OPKEY}"
-  echo
-  if [ $INSTALL_SFA -eq 1 ]; then
+echo "Setup completed!"
+echo
+echo "EVA ICS v$(./sbin/eva-tinyapi -V) build $(./sbin/eva-tinyapi -B)"
+echo
+echo "MASTERKEY: ${MASTERKEY}"
+echo "Controller default key: ${DEFAULTKEY}"
+echo "Operator key: ${OPKEY}"
+echo
+if [ $INSTALL_SFA -eq 1 ]; then
     echo "Default user: operator"
     echo "Password: ${OPPASSWD}"
     echo
-  fi
 fi
 
 mkdir -p backup
 chmod 700 backup
 
-echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
-echo "LINK=$LINK" >> ./etc/easy_setup
+./sbin/key-set-flag data/easy_setup:mqtt-discovery-enabled $MQTT_DISCOVERY_ENABLED > /dev/null || exit 8
+./sbin/key-set-flag data/easy_setup:link $LINK > /dev/null || exit 8
 
 if [ "${DEPLOY_FILE}" ]; then
-  if ! [[ ${DEPLOY_FILE} == http://* ]] && ! [[ ${DEPLOY_FILE} == https://* ]]; then
-    P=$(realpath "${DEPLOY_FILE}")
-    cd "$(dirname "${P}")" || exit 13
-    DEPLOY_FILE="$(basename "$DEPLOY_FILE")"
-  fi
-  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "${DEPLOY_FILE}" -s -y -c "srv=$(hostname)"
-  cd "${EVA_DIR}" || exit 13
+    if ! [[ ${DEPLOY_FILE} == http://* ]] && ! [[ ${DEPLOY_FILE} == https://* ]]; then
+        P=$(realpath "${DEPLOY_FILE}")
+        cd "$(dirname "${P}")" || exit 13
+        DEPLOY_FILE="$(basename "$DEPLOY_FILE")"
+    fi
+    "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "${DEPLOY_FILE}" -s -y -c "srv=$(hostname)"
+    cd "${EVA_DIR}" || exit 13
 fi
 
 if [ $BENCHMARK -eq 1 ]; then

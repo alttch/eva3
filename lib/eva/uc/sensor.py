@@ -14,9 +14,32 @@ from eva.uc.ucitem import UCItem
 
 class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
 
-    def __init__(self, sensor_id):
-        super().__init__(sensor_id, 'sensor')
+    fields = [
+        'description',
+        'expires',
+        'location',
+        'maintenance_duration',
+        'modbus_value',
+        'mqtt_update',
+        'notify_events',
+        'snmp_trap',
+        'update_delay',
+        'update_driver_config',
+        'update_exec',
+        'update_interval',
+        'update_timeout',
+        'value_condition',
+        'value_in_range_max',
+        'value_in_range_max_eq',
+        'value_in_range_min',
+        'value_in_range_min_eq',
+    ]
+
+    def __init__(self, sensor_id=None, create=False, **kwargs):
+        super().__init__(sensor_id, 'sensor', **kwargs)
         self._modbus_status_allowed = False
+        if create:
+            self.set_defaults(self.fields)
 
     def set_expired(self):
         if super().set_expired():

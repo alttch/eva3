@@ -221,11 +221,11 @@ class RemoteController(eva.item.Item):
                  static=True,
                  enabled=True,
                  ws_state_events=True,
-                 ws_buf_ttl=0):
+                 ws_buf_ttl=0,
+                 **kwargs):
         if item_id == None:
             item_id = ''
-        super().__init__(item_id, item_type)
-        self.respect_layout = False
+        super().__init__(item_id, item_type, **kwargs)
         if api:
             self.api = api
             self._key = api._key
@@ -249,6 +249,13 @@ class RemoteController(eva.item.Item):
         self.set_mqtt_notifier()
         self.ws_state_events = ws_state_events
         self.ws_buf_ttl = ws_buf_ttl
+
+    def get_rkn(self):
+        if self.item_id:
+            return (f'data/{eva.core.product.code}'
+                    f'/{self.item_type}/{self.item_id}')
+        else:
+            raise RuntimeError('controller object not configured')
 
     def set_connected(self, state, graceful_shutdown=False):
         if graceful_shutdown:
@@ -418,6 +425,8 @@ class RemoteController(eva.item.Item):
         if self.group != result['product_code']:
             self.set_group(result['product_code'])
             self.config_changed = True
+        else:
+            self.set_group(result['product_code'])
         self.product_build = result['product_build']
         logging.info('controller %s loaded' % self.full_id)
         self.version = result['version']
@@ -428,8 +437,11 @@ class RemoteController(eva.item.Item):
             logging.info(msg)
         return True
 
-    def save(self, fname=None):
-        return super().save(fname=fname) if self.static else True
+    def save(self):
+        if not self.item_id:
+            return False
+        else:
+            return super().save() if self.static else True
 
     def update_config(self, data):
         if cloud_manager:
@@ -470,7 +482,9 @@ class RemoteController(eva.item.Item):
         return self.reload_interval
 
     def set_prop(self, prop, val=None, save=False):
-        if prop == 'uri' and val:
+        if prop == 'notify_events':
+            return False
+        elif prop == 'uri' and val:
             if self.api._uri != val:
                 self.api.set_uri(val)
                 self.log_set(prop, val)
@@ -676,6 +690,8 @@ class RemoteController(eva.item.Item):
                                    info=info,
                                    props=props,
                                    notify=notify))
+        if 'notify_events' in d:
+            del d['notify_events']
         return d
 
     def destroy(self):
@@ -689,6 +705,7 @@ class RemoteUC(RemoteController):
     def __init__(self, uc_id=None, api=None, mqtt_update=None, static=True):
         super().__init__(uc_id, 'remote_uc', api, mqtt_update, static)
         self.api.set_product('uc')
+        self.set_group('uc')
 
     def create_remote_unit(self, state):
         return eva.client.remote_item.RemoteUnit(self, state)
@@ -728,6 +745,7 @@ class RemoteLM(RemoteController):
     def __init__(self, lm_id=None, api=None, mqtt_update=None, static=True):
         super().__init__(lm_id, 'remote_lm', api, mqtt_update, static)
         self.api.set_product('lm')
+        self.set_group('lm')
 
     def create_remote_lvar(self, state):
         return eva.client.remote_item.RemoteLVar(self, state)

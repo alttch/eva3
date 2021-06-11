@@ -27,6 +27,7 @@ import eva.lm.dmatrix
 import eva.lm.jobs
 import eva.lm.extapi
 import eva.lm.macro_api
+import eva.registry
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -89,19 +90,17 @@ remote_cache_clean_delay = 60
 
 def update_config(cfg):
     try:
-        use_core_pool = cfg.get('plc', 'use_core_pool')
-        use_core_pool = use_core_pool == 'yes'
+        use_core_pool = cfg.get('plc/use-core-pool', default=True)
     except:
         use_core_pool = True
-    logging.debug('plc.use_core_pool = %s' % ('yes' \
-                                if use_core_pool else 'no'))
+    logging.debug(f'plc.use_core_pool = {use_core_pool}')
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
     try:
-        cache_remote_state = float(cfg.get('plc', 'cache_remote_state'))
+        cache_remote_state = float(cfg.get('plc/cache-remote-state'))
     except:
         cache_remote_state = 0.0
-    logging.debug('plc.cache_remote_state = %u' % cache_remote_state)
+    logging.debug(f'plc.cache_remote_state = {cache_remote_state}')
     config.cache_remote_state = cache_remote_state
 
 
@@ -254,13 +253,7 @@ def get_lvar(lvar_id):
 
 
 @with_item_lock
-def append_item(item, start=False, load=True):
-    try:
-        if load and not item.load():
-            return False
-    except:
-        eva.core.log_traceback()
-        return False
+def append_item(item, start=False):
     if item.item_type == 'lvar':
         if not eva.core.config.enterprise_layout:
             lvars_by_id[item.item_id] = item
@@ -290,7 +283,7 @@ def save():
                 if not v.save():
                     return False
             try:
-                configs_to_remove.remove(v.get_fname())
+                configs_to_remove.remove(v.get_rkn())
             except:
                 pass
         dbt.commit()
@@ -308,7 +301,7 @@ def save():
                     return False
             try:
                 if i.static:
-                    configs_to_remove.remove(v.get_fname())
+                    configs_to_remove.remove(v.get_rkn())
             except:
                 pass
     finally:
@@ -318,7 +311,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in cycles_by_id.items():
@@ -326,7 +319,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in jobs.items():
@@ -334,7 +327,7 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in dm_rules.items():
@@ -342,12 +335,12 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for f in configs_to_remove:
         try:
-            os.unlink(f)
+            eva.registry.key_delete(f)
             logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
@@ -560,27 +553,18 @@ def load_lvars(start=False):
     _loaded = {}
     logging.info('Loading lvars')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lvar.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            lvar_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.config.enterprise_layout:
-                _id = lvar_id.split('___')[-1]
-                lvar_id = lvar_id.replace('___', '/')
-            else:
-                _id = lvar_id
-            u = eva.lm.lvar.LVar(_id)
-            if eva.core.config.enterprise_layout:
-                u.set_group('/'.join(lvar_id.split('/')[:-1]))
+        for i, ucfg in eva.registry.key_get_recursive('inventory/lvar'):
+            u = eva.lm.lvar.LVar(oid=f'lvar:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
-                _loaded[lvar_id] = u
+                _loaded[i] = u
         load_lvar_db_state(_loaded, clean=True)
         if start:
             for i, v in _loaded.items():
                 v.start_processors()
         return True
-    except:
-        logging.error('LVars load error')
+    except Exception as e:
+        logging.error(f'LVars load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -588,20 +572,17 @@ def load_lvars(start=False):
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_remote_uc.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            uc_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.lm.lremote.LRemoteUC(uc_id)
-            if u.load():
-                controller_lock.acquire()
-                try:
-                    remote_ucs[uc_id] = u
-                finally:
-                    controller_lock.release()
+        for i, cfg in eva.registry.key_get_recursive('data/lm/remote_uc'):
+            u = eva.lm.lremote.LRemoteUC(i)
+            u.load(cfg)
+            controller_lock.acquire()
+            try:
+                remote_ucs[i] = u
+            finally:
+                controller_lock.release()
         return True
-    except:
-        logging.error('UCs load error')
+    except Exception as e:
+        logging.error(f'UCs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -745,18 +726,15 @@ def load_macros():
     eva.lm.plc.load_macro_api_functions()
     logging.info('Loading macro configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lmacro.d/*.json', runtime = True)
-        for mcfg in glob.glob(fnames):
-            m_id = os.path.splitext(os.path.basename(mcfg))[0]
-            m = eva.lm.plc.Macro(m_id)
-            if m.load():
-                macros_by_id[m_id] = m
-                macros_by_full_id[m.full_id] = m
-                logging.debug('macro "%s" config loaded' % m_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/lmacro'):
+            m = eva.lm.plc.Macro(oid=f'lmacro:{i}')
+            m.load(cfg)
+            macros_by_id[m.item_id] = m
+            macros_by_full_id[m.full_id] = m
+            logging.debug(f'macro "{i}" config loaded')
         return True
-    except:
-        logging.error('Macro configs load error')
+    except Exception as e:
+        logging.error(f'Macro configs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -765,18 +743,15 @@ def load_macros():
 def load_cycles():
     logging.info('Loading cycle configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_lcycle.d/*.json', runtime = True)
-        for mcfg in glob.glob(fnames):
-            m_id = os.path.splitext(os.path.basename(mcfg))[0]
-            m = eva.lm.plc.Cycle(m_id)
-            if m.load():
-                cycles_by_id[m_id] = m
-                cycles_by_full_id[m.full_id] = m
-                logging.debug('cycle "%s" config loaded' % m_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/lcycle'):
+            m = eva.lm.plc.Cycle(oid=f'lcycle:{i}')
+            m.load(cfg)
+            cycles_by_id[m.item_id] = m
+            cycles_by_full_id[m.full_id] = m
+            logging.debug('cycle "%s" config loaded' % i)
         return True
-    except:
-        logging.error('Cycle configs load error')
+    except Exception as e:
+        logging.error(f'Cycle configs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -785,21 +760,19 @@ def load_cycles():
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_dmatrix_rule.d/*.json', runtime = True)
-        for rcfg in glob.glob(fnames):
-            r_id = os.path.splitext(os.path.basename(rcfg))[0]
-            r = eva.lm.dmatrix.DecisionRule(r_id)
-            if r.load():
-                dm_rules[r_id] = r
-                if eva.core.config.development:
-                    rule_id = r_id
-                else:
-                    rule_id = r_id[:14] + '...'
-                logging.debug('DM rule %s loaded' % rule_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/dmatrix_rule'):
+            r = eva.lm.dmatrix.DecisionRule(oid=f'dmatrix_rule:{i}')
+            r.load(cfg)
+            r_id = r.item_id
+            dm_rules[r_id] = r
+            if eva.core.config.development:
+                rule_id = r_id
+            else:
+                rule_id = r_id[:14] + '...'
+            logging.debug('DM rule %s loaded' % rule_id)
         return True
-    except:
-        logging.error('DM rules load error')
+    except Exception as e:
+        logging.error(f'DM rules load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -808,21 +781,18 @@ def load_dm_rules():
 def load_jobs():
     logging.info('Loading jobs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_job.d/*.json', runtime = True)
-        for rcfg in glob.glob(fnames):
-            r_id = os.path.splitext(os.path.basename(rcfg))[0]
-            r = eva.lm.jobs.Job(r_id)
+        for i, cfg in eva.registry.key_get_recursive('inventory/job'):
+            r = eva.lm.jobs.Job(oid=f'job:{i}')
             if r.load():
-                jobs[r_id] = r
+                jobs[i] = r
                 if eva.core.config.development:
-                    job_id = r_id
+                    job_id = i
                 else:
-                    job_id = r_id[:14] + '...'
+                    job_id = i[:14] + '...'
                 logging.debug('Job %s loaded' % job_id)
         return True
-    except:
-        logging.error('Jobs load error')
+    except Exception as e:
+        logging.error(f'Jobs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -871,13 +841,13 @@ def destroy_macro(m_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove macro "%s" config' % \
                         m_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (macros_by_id[i.item_id])
         del (macros_by_full_id[i.full_id])
         logging.info('macro "%s" removed' % i.full_id)
@@ -930,13 +900,13 @@ def destroy_cycle(m_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove cycle "%s" config' % \
                         m_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (cycles_by_id[i.item_id])
         del (cycles_by_full_id[i.full_id])
         logging.info('cycle "%s" removed' % i.full_id)
@@ -975,13 +945,13 @@ def destroy_dm_rule(r_id):
         DM.remove_rule(i)
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove DM rule %s config' % \
                         r_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (dm_rules[r_id])
         logging.info('DM rule %s removed' % r_id)
         return True
@@ -1014,13 +984,13 @@ def destroy_job(r_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove job %s config' % \
                         r_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (jobs[r_id])
         logging.info('Job %s removed' % r_id)
         return True
@@ -1115,6 +1085,7 @@ def append_controller(uri,
         remote_ucs[u.item_id] = u
     finally:
         controller_lock.release()
+    u.config_changed = True
     if save:
         u.save()
     logging.info('controller %s added to pool' % u.item_id)
@@ -1135,13 +1106,13 @@ def remove_controller(controller_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove controller %s config' % \
                         _controller_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (remote_ucs[_controller_id])
         logging.info('controller %s removed' % _controller_id)
         return True
@@ -1153,7 +1124,7 @@ def remove_controller(controller_id):
 
 
 @with_item_lock
-def create_item(item_id, item_type, group=None, save=False):
+def create_item(item_id, item_type, group=None, create=False, save=False):
     if not item_id:
         raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
@@ -1177,14 +1148,14 @@ def create_item(item_id, item_type, group=None, save=False):
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'LV' or item_type == 'lvar':
-        item = eva.lm.lvar.LVar(i)
+        item = eva.lm.lvar.LVar(i, create=create)
     if not item:
         return False
     cfg = {'group': grp}
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start=True, load=False)
+    append_item(item, start=True)
     if save:
         item.save()
     if item_type == 'LV' or item_type == 'lvar':
@@ -1195,7 +1166,11 @@ def create_item(item_id, item_type, group=None, save=False):
 
 @with_item_lock
 def create_lvar(lvar_id, group=None, save=False):
-    return create_item(item_id=lvar_id, item_type='LV', group=group, save=save)
+    return create_item(item_id=lvar_id,
+                       item_type='LV',
+                       group=group,
+                       create=True,
+                       save=save)
 
 
 @with_item_lock
@@ -1232,12 +1207,12 @@ def destroy_item(item):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove %s config' % i.full_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         logging.info('%s destroyed' % i.full_id)
         return True
     except ResourceNotFound:

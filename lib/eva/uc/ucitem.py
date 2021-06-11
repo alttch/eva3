@@ -23,7 +23,7 @@ import re
 
 class UCItem(eva.item.Item):
 
-    def __init__(self, item_id, item_type):
+    def __init__(self, item_id=None, item_type=None, **kwargs):
         self.update_driver_config = None
         self.modbus_value = None
         self.modbus_value_reg = None
@@ -37,7 +37,7 @@ class UCItem(eva.item.Item):
         self.value_in_range_max = None
         self.value_in_range_min_eq = False
         self.value_in_range_max_eq = False
-        super().__init__(item_id, item_type)
+        super().__init__(item_id, item_type, **kwargs)
 
     def update_config(self, data):
         if 'value_in_range_min' in data:

@@ -1,0 +1,147 @@
+server:
+  # system poll delay
+  polldelay: 0.01
+  # pid file
+  pid-file: var/uc.pid
+  # log file
+  log-file: log/uc.log
+  # custom primary log format
+  #log-format: '{ "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
+  # logging to local syslog
+  #syslog: true
+  # logging to non-standard (/dev/log) local syslog socket
+  #syslog: /var/run/syslog
+  # logging to remote syslog
+  #syslog: hostname:514
+  # custom syslog format
+  #syslog-format: 'EVA: { "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }'
+  # db updates - instant, manual or on-exit
+  db-update: instant
+  db-file: runtime/db/uc.db
+  # use MySQL instead of SQLite
+  #db: mysql+pymysql://user:password@localhost/dbname
+  # user db file, default = db-file
+  # one user db may be used by multiple controllers simultaneously
+  #userdb-file: runtime/db/users.db
+  # use MySQL instead of SQLite
+  #userdb: mysql+pymysql://user:password@localhost/dbname
+  # launch external script/program when user is created/got new
+  # password/destroyed. additional arguments:
+  #    1) create | set_password | destroy
+  #    2) user
+  #    3) password (for create and set_password operations)
+  #user-hook: "/opt/eva/xbin/htpasswd.sh /opt/eva/etc/htpasswd"
+  # keep action history in seconds
+  keep-action-history: 86400
+  # action cleaner interval, in seconds
+  action-cleaner-interval: 60
+  # keep memory log in seconds
+  keep-logmem: 86400
+  # minimal log level
+  #logging-level: warning
+  # keep extended API call log in user db in seconds (0 = disable logging)
+  #keep-api-log: 0
+  # notify states on start
+  notify-on-start: true
+  # debug mode
+  debug: false
+  # log code tracebacks
+  #show-traceback: true
+  # create crash dump on critical errors
+  dump-on-critical: true
+  # stop server on critical errors (will be restarted via safe-run)
+  # always - stop on all critical errors
+  # core - core errors only (ignore driver critical errors)
+  # false - don't stop
+  stop-on-critical: always
+  # default timeout
+  timeout: 5
+  # primary thread pool, min workers. comment to pre-spawn all workers
+  #pool-min-size: 0
+  # primary thread pool, max workers. comment to use automatic value (nCPUs * 5)
+  #pool-max-size: 100
+  # reactor thread pool size (used by Modbus slave and some utility workers)
+  #reactor-thread-pool: 15
+  #
+  # exec commands before/after config/db save,
+  # e.g. mount -o remount,rw / (then back to ro)
+  #
+  #exec-before-save: "mount -o remount,rw /"
+  #
+  #exec-after-save: "mount -o remount,ro /"
+  #
+  # default mqtt notifier for updates for new items
+  #mqtt-update-default: "eva_1:2"
+#msad:
+  # user authentication via MS Active Directory
+  #host: ad.yourdomain.com
+  #domain: yourdomain.com
+  #key-prefix: ""
+  #ou: EVA
+  #ca: /path/to/ca-file.crt
+  # cache credentials for the specified time (seconds)
+  # default: 86400 (1 day), 0 to disable caching
+  #cache-time: 86400
+upnp:
+  # allow UPnP discovery of this controller
+  listen: 0.0.0.0
+sysapi:
+  # enable remote file management functions
+  file-management: true
+  # allow entering setup mode (true for 60 sec or int for seconds)
+  setup-mode: true
+  # allow rpvt
+  rpvt: false
+webapi:
+  # web api listen on IP/port
+  listen: 0.0.0.0:8812
+  #ssl-listen: 0.0.0.0:8813
+  #ssl-module: builtin # or pyopenssl
+  #ssl-cert: test.crt
+  #ssl-key: test.key
+  #ssl-chain: test.pam
+  # session timeout, set to non-zero to enable API session tokens
+  session-timeout: 3600
+  # session tokens will expire even if active requests are received
+  #session-no-prolong: true
+  # server thread pool
+  #thread-pool: 15
+  # disable UC EI
+  #ei-enabled: false
+  # use frontend X-Real-IP header to get client real IP address
+  #x-real-ip: true
+snmptrap:
+  # snmp trap handler, default community is eva
+  listen: 127.0.0.1:162
+  community: eva
+  # hosts, allowed to send snmp traps
+  hosts-allow:
+    - 127.0.0.1/8
+udpapi:
+  # UDP API
+  listen: 127.0.0.1:8881
+  # hosts, allowed to send UDP commands
+  hosts-allow:
+    - 127.0.0.1/8
+  hosts-allow-encrypted:
+    - 0.0.0.0/0
+#modbus-slave:
+# modbus slave configuration
+# modbus slave memory space size: 10000 registers (starting from 0) for each
+# type (holding, input, coils, discrete inputs)
+#- proto: tcp # udp
+#  unit: "0x01"
+#  listen: 0.0.0.0:502
+# framer for serial: rtu, ascii or binary
+#- proto: rtu
+#  unit: "0x01"
+#  listen: /dev/ttyS0:9600:8:N:1
+#datapullers:
+# dp1:
+#   cmd: /opt/dp/datapuller1 -c /opt/dp/config.yml
+#   timeout: 10 # override default timeout
+#   event-timeout: 60 # restart if no events within specified interval
+# dp2:
+#   cmd: /opt/dp2/datapuller2
+# dp3:
+#   cmd: datapuller3 -c /etc/dp3.ini

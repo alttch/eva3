@@ -1,112 +1,115 @@
 #!/usr/bin/env bash
 
-D=`realpath $0`
-cd `dirname ${D}`/..
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
+
+EVA_DIR=$(pwd)
 
 MAX_START_WAIT=180
 
-export EVA_DIR=`pwd`
-if [ ! -f ./etc/eva_servers ]; then
-    echo "${EVA_DIR}/etc/eva_servers missing"
-    exit 2
+source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
+source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
+source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
+
+if [ "${FORCE_ALL}" == "1" ]; then
+  UC_ENABLED=1
+  LM_ENABLED=1
+  SFA_ENABLED=1
+else
+  if [ -z "$UC_ENABLED" ] || [ -z "${LM_ENABLED}" ] || [ -z "${SFA_ENABLED}" ]; then
+    echo "Unable to read registry key"
+    exit 8
+  fi
 fi
-source ./etc/eva_servers
 
 function controller_cmd() {
   c=${1,,}
   CN=${1^^}
-  CMD=$2
-  if [ ! $(eval "echo \$${CN}_SUPERVISORD") ] &&
-    [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
-    if [ "x$3" == "xA" ]; then
-      [ $3 == "status" ] && echo disabled || echo "${CN} is disabled"
-      return 1
-    else
-      return 0
-    fi
+  if [ ! "$(eval "echo \$${CN}_SUPERVISORD_PROGRAM")" ] &&
+    [ "$(eval "echo \$${CN}_ENABLED")" != "1" ]; then
+      if [ "x$3" == "xA" ]; then
+        [ "$3" = "status" ] && echo disabled || echo "${CN} is disabled"
+        return 1
+      else
+        return 0
+      fi
   fi
-  ./sbin/$c-control $2
-  if [ $2 == "start" ]; then
+  EVA_CONTROLLER=$c ./sbin/_control "$2"
+  if [ "$2" == "start" ]; then
     I=0
     sleep 0.5
-    ./sbin/eva-tinyapi -C $c -F test > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
     R=$?
     if [ $R -eq 9 ]; then
-        echo " configs missing!"
-        return 1
+      echo " configs missing!"
+      return 1
     fi
-    echo -n "$c: ." | tr "a-z" "A-Z"
+    echo -n "$c: ." | tr "[:lower:]" "[:upper:]"
     while [ $R -ne 0 ]; do
-        if [ $I -gt ${MAX_START_WAIT} ]; then
-            echo " failed to start!"
-            return 2
-        fi
-        I=`expr $I + 1`
-        sleep 0.5
-        echo -n "."
-        ./sbin/eva-tinyapi -C $c -F test > /dev/null 2>&1
-        R=$?
+      if [ $I -gt ${MAX_START_WAIT} ]; then
+        echo " failed to start!"
+        return 2
+      fi
+      (( I++ ))
+      sleep 0.5
+      echo -n "."
+      ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
+      R=$?
     done
     echo " started"
     return 0
   fi
 }
 
-CS_LIST="uc lm sfa"
-CSTOP_LIST="sfa lm uc"
-
-CS=""
-CSTOP=""
-
-for c in ${CS_LIST}; do
-  [ -f etc/${c}.ini ] && CS="${CS} ${c}"
-done
-
-for c in ${CSTOP_LIST}; do
-  [ -f etc/${c}.ini ] && CSTOP="${CSTOP} ${c}"
-done
+CS="uc lm sfa"
 
 case $1 in
-start)
-    if [ $2 ]; then
-      controller_cmd $2 start A || exit 1
+  start)
+    if [ "$2" ]; then
+      controller_cmd "$2" start A || exit 1
     else
       echo "Starting EVA"
       for C in ${CS}; do
-        controller_cmd ${C} start || exit 1
+        if [ "$(eval "echo \$${C^^}_ENABLED")" = "1" ]; then
+          controller_cmd "${C}" start || exit 1
+        fi
       done
     fi
-    [ "$INVOCATION_ID" ] && $EVA_DIR/sbin/sblock.sh &
+    [ "$INVOCATION_ID" ] && "$EVA_DIR/sbin/sblock.sh" &
     exit 0
     ;;
-stop)
-    if [ $2 ]; then
-      controller_cmd $2 stop A || exit 1
+  stop)
+    if [ "$2" ]; then
+      controller_cmd "$2" stop A || exit 1
     else
       echo "Stopping EVA"
-      for C in ${CSTOP}; do
-        controller_cmd ${C} stop || exit 1
+      for C in ${CS}; do
+        if [ "$(eval "echo \$${C^^}_ENABLED")" = "1" ]; then
+          controller_cmd "${C}" stop || exit 1
+        fi
       done
     fi
-    [ "$INVOCATION_ID" ] && (ps auxw|grep -v grep |grep $EVA_DIR/sbin/sblock.sh|awk '{ print $2 }'|xargs kill -9)
+    [ "$INVOCATION_ID" ] && pkill -KILL -f "$EVA_DIR/sbin/sblock.sh" >& /dev/null
     exit 0
     ;;
-restart)
-    ./sbin/eva-control stop $2
-    ./sbin/eva-control start $2
+  restart)
+    $0 stop "$2"
+    $0 start "$2"
     exit 0
     ;;
-status)
-    if [ $2 ]; then
-      controller_cmd $2 status A || exit 1
+  status)
+    if [ "$2" ]; then
+      controller_cmd "$2" status A || exit 1
     else
       for C in ${CS}; do
-        [ "x$(eval "echo \$${C^^}_ENABLED")" == "xyes" ] && echo -n "${C^^}: "
-        controller_cmd ${C} status
+        if [ "$(eval "echo \$${C^^}_ENABLED")" = "1" ]; then
+          echo -n "${C^^}: "
+          controller_cmd "${C}" status
+        fi
       done
     fi
     ;;
-*)
+  *)
     echo "Usage: eva-control start|stop|restart"
     exit 0
 esac

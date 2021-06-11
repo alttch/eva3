@@ -11,6 +11,8 @@ import glob
 import os
 
 import eva.core
+import eva.registry
+
 from eva.tools import format_json
 
 from eva.x import import_x
@@ -33,7 +35,7 @@ iec_functions = {}
 
 with_exts_lock = eva.core.RLocker('lm/extapi')
 
-_d = SimpleNamespace(modified=False)
+_d = SimpleNamespace(modified=set())
 
 # extension functions
 
@@ -72,15 +74,13 @@ def ext_constructor(f):
 
 
 def load_data(ext):
-    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
-    with open(datapath) as fh:
-        ext.data = rapidjson.loads(fh.read())
+    datapath = f'data/lm/extension_data/{ext.ext_id}'
+    ext.data = eva.registry.key_get(datapath, default={})
 
 
 def save_data(ext):
-    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
-    with open(datapath, 'w') as fh:
-        fh.write(rapidjson.dumps(ext.data))
+    datapath = f'data/lm/extension_data/{ext.ext_id}'
+    eva.registry.key_set(datapath, ext.data)
 
 
 # internal functions
@@ -154,11 +154,10 @@ def list_mods():
     mods = glob.glob(_get_ext_module_fname('*'))
     for p in mods:
         f = os.path.basename(p)[:-3]
-        if f != '__init__':
+        if f not in ('__init__', 'generic'):
             try:
                 d = serialize_x(p, 'LMExt', full=True)
-                if d['id'] != 'generic':
-                    result.append(d)
+                result.append(d)
             except:
                 eva.core.log_traceback()
                 pass
@@ -172,7 +171,8 @@ def load_ext(ext_id,
              start=True,
              rebuild=True,
              config_validated=False,
-             _o=None):
+             _o=None,
+             set_modified=True):
     if not ext_id:
         raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
@@ -210,7 +210,8 @@ def load_ext(ext_id,
     if ext_id in exts:
         exts[ext_id].stop()
     exts[ext_id] = ext
-    set_modified()
+    if set_modified:
+        _d.modified.add(ext_id)
     ext.load()
     if start:
         ext.start()
@@ -227,12 +228,15 @@ def unload_ext(ext_id, remove_data=False):
     try:
         ext.stop()
         del exts[ext_id]
-        set_modified()
+        _d.modified.add(ext_id)
         rebuild_env()
         if remove_data:
-            datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext_id}.json'
-            if os.path.isfile(datapath):
-                os.unlink(datapath)
+            if not eva.core.prepare_save():
+                raise RuntimeError('Unable to prepare save')
+            datapath = f'data/lm/extension_data/{ext.ext_id}'
+            eva.registry.key_delete(datapath)
+            if not eva.core.finish_save():
+                raise RuntimeError('Unable to finish save')
         return True
     except:
         eva.core.log_traceback()
@@ -278,25 +282,27 @@ def dump():
     return serialize(full=True, config=True)
 
 
+@with_exts_lock
 def load():
     try:
-        with open(eva.core.dir_runtime + '/lm_extensions.json') as fd:
-            data = rapidjson.loads(fd.read())
-        for p in data:
+        for i, cfg in eva.registry.key_get_recursive('config/lm/extensions'):
             try:
-                load_ext(p['id'],
-                         p['mod'],
-                         cfg=p['cfg'],
+                if i != cfg['id']:
+                    raise ValueError(f'Extension {i} id mismatch')
+                load_ext(cfg['id'],
+                         cfg['mod'],
+                         cfg=cfg['cfg'],
                          start=False,
-                         rebuild=False)
+                         rebuild=False,
+                         set_modified=False)
             except Exception as e:
                 logging.error(e)
                 eva.core.log_traceback()
-        _d.modified = False
+        _d.modified.clear()
         rebuild_env()
         return True
     except Exception as e:
-        logging.error('unable to load lm_extensions.json: {}'.format(e))
+        logging.error(f'Error loading LM extensions: {e}')
         eva.core.log_traceback()
         return False
 
@@ -304,22 +310,20 @@ def load():
 @eva.core.save
 @with_exts_lock
 def save():
-    if _d.modified:
-        try:
-            with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
-                fd.write(format_json(serialize(config=True), minimal=False))
-            _d.modified = False
-            for k, p in exts.items():
-                try:
-                    p.save()
-                except:
-                    logging.error(f'unable to save ext data for {p.ext_id}')
-                    log_traceback()
-            return True
-        except Exception as e:
-            logging.error('unable to save ext config: {}'.format(e))
-            eva.core.log_traceback()
-        return False
+    try:
+        for i in _d.modified:
+            # do not use KeyError, as it may be raised by serialize
+            kn = f'config/lm/extensions/{i}'
+            if i in exts:
+                eva.registry.key_set(kn, exts[i].serialize(config=True))
+            else:
+                eva.registry.key_delete(kn)
+        _d.modified.clear()
+        return True
+    except Exception as e:
+        logging.error(f'Error saving extensions: {e}')
+        eva.core.log_traceback()
+    return False
 
 
 @with_exts_lock
@@ -343,7 +347,3 @@ def stop():
             eva.core.log_traceback()
     if eva.core.config.db_update != 0:
         save()
-
-
-def set_modified():
-    _d.modified = True

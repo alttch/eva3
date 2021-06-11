@@ -59,6 +59,7 @@ import eva.tokens as tokens
 import eva.users
 
 import eva.notify
+import eva.registry
 
 from eva.tools import ConfigFile
 from eva.tools import ShellConfigFile
@@ -1054,10 +1055,11 @@ class UserAPI(object):
         """
         create API key
 
-        API keys are defined statically in etc/<controller>_apikeys.ini file as
-        well as can be created with API and stored in user database.
+        API keys are defined statically in EVA registry
+        config/<controller>/apikeys tree or can be created with API and stored
+        in the user database.
 
-        Keys with master permission can not be created.
+        Keys with the master permission can not be created.
 
         Args:
             k: .master
@@ -1080,8 +1082,7 @@ class UserAPI(object):
 
         .. note::
 
-            API keys, defined in etc/<controller>_apikeys.ini file can not be
-            managed with API.
+            API keys defined in EVA registry can not be managed with API.
 
         Args:
             k: .master
@@ -1497,16 +1498,15 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                                             c,
                                             raise_err=True)
         products = mod.flags.products
-        with eva.core.config_lock:
-            for p in prod:
-                if p in products:
-                    try:
-                        with ConfigFile(f'{p}.ini') as cf:
-                            cf.append('server', 'plugins', i)
-                            if p in configs:
-                                cf.add_section(f'plugin.{i}', configs[p])
-                    except FileNotFoundError:
-                        pass
+        for p in prod:
+            if p in products:
+                plugin_config = {
+                    'enabled': True,
+                }
+                if configs:
+                    if p in configs:
+                        plugin_config['config'] = configs[p]
+                eva.registry.key_set(f'config/{p}/plugins/{i}', plugin_config)
         return True
 
     @log_w
@@ -1520,14 +1520,8 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                                   'uninstall',
                                   raise_err=True)
         products = eva.core.plugin_modules[i].flags.products
-        with eva.core.config_lock:
-            for p in products:
-                try:
-                    with ConfigFile(f'{p}.ini') as cf:
-                        cf.remove('server', 'plugins', i)
-                        cf.remove_section(f'plugin.{i}')
-                except FileNotFoundError:
-                    pass
+        for p in products:
+            eva.registry.key_delete(f'config/{p}/plugins/{i}')
         return True
 
     @log_i
@@ -1755,23 +1749,22 @@ class SysHTTP_API_REST_abstract:
 
 def update_config(cfg):
     try:
-        config.api_file_management_allowed = (cfg.get(
-            'sysapi', 'file_management') == 'yes')
-    except:
+        config.api_file_management_allowed = cfg.get('sysapi/file-management')
+    except LookupError:
         pass
     try:
-        config.api_rpvt_allowed = (cfg.get('sysapi', 'rpvt') == 'yes')
-    except:
+        config.api_rpvt_allowed = cfg.get('sysapi/rpvt')
+    except LookupError:
         pass
-    logging.debug('sysapi.file_management = %s' % ('yes' \
-            if config.api_file_management_allowed else 'no'))
+    logging.debug(
+        f'sysapi.file_management = {config.api_file_management_allowed}')
     try:
-        s = cfg.get('sysapi', 'setup_mode')
-        s = 60 if s == 'yes' else int(s)
+        s = cfg.get('sysapi/setup-mode')
+        s = 60 if s is True else int(s)
         config.api_setup_mode = s
     except:
         pass
-    logging.debug('sysapi.setup_mode = %s' % config.api_setup_mode)
+    logging.debug(f'sysapi.setup_mode = {config.api_setup_mode}')
     return True
 
 

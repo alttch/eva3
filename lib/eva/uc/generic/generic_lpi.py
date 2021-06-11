@@ -117,7 +117,8 @@ class LPI(GenericX):
         d['id'] = self.driver_id
         d['mod'] = self.lpi_mod_id
         d['phi_id'] = self.phi_id
-        d['features'] = self.__features
+        if not config:
+            d['features'] = self.__features
         return d
 
     """

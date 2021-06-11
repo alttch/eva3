@@ -16,6 +16,7 @@ import eva.apikey
 import eva.item
 import eva.client.remote_controller
 import eva.client.coreapiclient
+import eva.registry
 
 from eva.tools import is_oid
 from eva.tools import oid_to_id
@@ -130,7 +131,7 @@ def save():
                 return False
         try:
             if i.static:
-                configs_to_remove.remove(v.get_fname())
+                configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for i, v in remote_lms.items():
@@ -139,12 +140,12 @@ def save():
                 return False
         try:
             if i.static:
-                configs_to_remove.remove(v.get_fname())
+                configs_to_remove.remove(v.get_rkn())
         except:
             pass
     for f in configs_to_remove:
         try:
-            os.unlink(f)
+            eva.registry.key_delete(f)
             logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
@@ -155,20 +156,17 @@ def save():
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_remote_uc.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            uc_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.client.remote_controller.RemoteUC(uc_id)
-            if u.load():
-                controller_lock.acquire()
-                try:
-                    remote_ucs[uc_id] = u
-                finally:
-                    controller_lock.release()
+        for i, cfg in eva.registry.key_get_recursive('data/sfa/remote_uc'):
+            u = eva.client.remote_controller.RemoteUC(i)
+            u.load(cfg)
+            controller_lock.acquire()
+            try:
+                remote_ucs[i] = u
+            finally:
+                controller_lock.release()
         return True
-    except:
-        logging.error('UCs load error')
+    except Exception as e:
+        logging.error(f'UCs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -176,20 +174,17 @@ def load_remote_ucs():
 def load_remote_lms():
     logging.info('Loading remote LMs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_remote_lm.d/*.json', runtime = True)
-        for lmfg in glob.glob(fnames):
-            lm_id = os.path.splitext(os.path.basename(lmfg))[0]
-            u = eva.client.remote_controller.RemoteLM(lm_id)
-            if u.load():
-                controller_lock.acquire()
-                try:
-                    remote_lms[lm_id] = u
-                finally:
-                    controller_lock.release()
+        for i, cfg in eva.registry.key_get_recursive('data/sfa/remote_lm'):
+            u = eva.client.remote_controller.RemoteLM(i)
+            u.load(cfg)
+            controller_lock.acquire()
+            try:
+                remote_lms[i] = u
+            finally:
+                controller_lock.release()
         return True
-    except:
-        logging.error('LMs load error')
+    except Exception as e:
+        logging.error(f'LMs load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -307,6 +302,7 @@ def append_uc(uri,
         remote_ucs[u.item_id] = u
     finally:
         controller_lock.release()
+    u.config_changed = True
     if save:
         u.save()
     logging.info('controller %s added to pool' % u.full_id)
@@ -322,13 +318,13 @@ def remove_uc(controller_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove controller %s config' % \
                         controller_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (remote_ucs[controller_id])
         logging.info('controller uc/%s removed' % controller_id)
         return True
@@ -384,6 +380,7 @@ def append_lm(uri,
         remote_lms[u.item_id] = u
     finally:
         controller_lock.release()
+    u.config_changed = True
     if save:
         u.save()
     logging.info('controller %s added to pool' % u.full_id)
@@ -399,13 +396,13 @@ def remove_lm(controller_id):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove controller %s config' % \
                         controller_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         del (remote_lms[controller_id])
         logging.info('controller lm/%s removed' % controller_id)
         return True
@@ -487,11 +484,10 @@ def init():
 
 def update_config(cfg):
     try:
-        config.cloud_manager = (cfg.get('cloud', 'cloud_manager') == 'yes')
+        config.cloud_manager = cfg.get('cloud/cloud-manager')
     except:
         pass
-    logging.debug('cloud.cloud_manager = %s' % ('yes' \
-                                if config.cloud_manager else 'no'))
+    logging.debug(f'cloud.cloud_manager = {config.cloud_manager}')
     eva.client.remote_controller.cloud_manager = config.cloud_manager
 
 

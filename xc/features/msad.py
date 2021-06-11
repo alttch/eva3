@@ -5,6 +5,8 @@ from eva.features import restart_controller, is_enabled
 from eva.features import InvalidParameter, FunctionFailed
 from eva.features import ConfigFile
 
+import eva.registry
+
 python_libs = ['easyad==1.0.9']
 
 
@@ -15,7 +17,7 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
         raise InvalidParameter
     if cache_time:
         try:
-            cache_time = float(cache_time)
+            cache_time = int(cache_time)
         except:
             raise InvalidParameter('cache_time is not a number')
     if OS_LIKE == 'debian':
@@ -27,20 +29,18 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
     append_python_libraries(python_libs)
     config = {'host': host, 'domain': domain}
     if key_prefix:
-        config['key_prefix'] = key_prefix
+        config['key-prefix'] = key_prefix
     if ca:
         config['ca'] = ca
     if cache_time and cache_time > 0:
-        config['cache_time'] = cache_time
-    with ConfigFile('sfa.ini') as fh:
-        fh.replace_section('msad', config)
+        config['cache-time'] = cache_time
+    eva.registry.key_set_field('config/sfa/main', 'msad', config)
     restart_controller('sfa')
 
 
 def remove():
     if not is_enabled('sfa'):
         raise FunctionFailed('SFA is not enabled')
-    with ConfigFile('sfa.ini') as fh:
-        fh.remove_section('msad')
+    eva.registry.key_delete_field('config/sfa/main', 'msad')
     remove_python_libraries(python_libs)
     restart_controller('sfa')

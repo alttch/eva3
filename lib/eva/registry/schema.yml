@@ -1,0 +1,740 @@
+config/uc/apikeys: &apikey
+  type: object
+  additionalProperties: false
+  properties:
+    key: &str
+      type: string
+    master: &bool
+      type: boolean
+    sysfunc: *bool
+    hosts-allow: &strarr
+      type: array
+      items: *str
+    hosts-assign: *strarr
+    items: *strarr
+    items-ro: *strarr
+    items-deny: *strarr
+    groups: *strarr
+    groups-ro: *strarr
+    groups-deny: *strarr
+    pvt: *strarr
+    rpvt: *strarr
+    allow: *strarr
+    cdata: *strarr
+  required:
+    - key
+config/lm/apikeys: *apikey
+config/sfa/apikeys: *apikey
+config/common/mailer:
+  type: object
+  additionalProperties: false
+  properties:
+    smtp: *str
+    from: *str
+    default-rcp:
+      anyOf:
+        - type: string
+        - <<: *strarr
+    ssl: *bool
+    tls: *bool
+    login: *str
+    password: *str
+config/watchdog:
+  type: object
+  additionalProperties: false
+  properties:
+    dump: *bool
+    interval: &intpositive
+      type: integer
+      minimum: 1
+    max-timeout: *intpositive
+  required:
+    - interval
+config/uc/service: &service
+  enabled: *bool
+  setup: *bool
+  user: *str
+  supervisord-program: &stringornull
+    anyOf:
+      - type: string
+      - type: "null"
+  required:
+    - enabled
+    - setup
+config/lm/service: *service
+config/sfa/service: *service
+config/uc/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: &server
+      type: object
+      additionalProperties: false
+      properties:
+        polldelay: &floatpositive
+          type: number
+          minimum: 0.001
+        pid-file: *str
+        log-file: *str
+        log-format: *str
+        syslog:
+          anyOf:
+            - type: boolean
+            - type: string
+        syslog-format: *str
+        db-update:
+          type: string
+          enum:
+            - instant
+            - manual
+            - on-exit
+        db-file: *str
+        db: *str
+        userdb-file: *str
+        userdb: *str
+        user-hook: *str
+        keep-action-history: &intzeropositive
+          type: integer
+          minimum: 0
+        action-cleaner-interval: *intpositive
+        keep-logmem: *intzeropositive
+        logging-level:
+          type: string
+          enum:
+            - debug
+            - info
+            - warning
+            - error
+            - critical
+        keep-api-log: *intzeropositive
+        notify-on-start: *bool
+        debug: *bool
+        development: *bool
+        show-traceback: *bool
+        dump-on-critical: *bool
+        stop-on-critical:
+          anyOf:
+            - type: string
+              enum:
+                - always
+                - core
+                - no
+            - type: boolean
+        timeout: *floatpositive
+        pool-min-size: *intzeropositive
+        pool-max-size: *intpositive
+        reactor-thread-pool: *intpositive
+        exec-before-save: *str
+        exec-after-save: *str
+        mqtt-update-default: *str
+    msad: &msad
+      type: object
+      additionalProperties: false
+      properties:
+        host: *str
+        domain: *str
+        key-prefix: *str
+        ou: *str
+        ca: *str
+        cache-time: *intzeropositive
+    upnp:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+    sysapi: &sysapi
+      type: object
+      additionalProperties: false
+      properties:
+        file-management: *bool
+        setup-mode: *bool
+        rpvt: *bool
+    webapi: &webapi
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        ssl-listen: *str
+        ssl-module:
+          type: string
+          enum:
+            - builtin
+            - pyopenssl
+        ssl-cert: *str
+        ssl-key: *str
+        ssl-chain: *str
+        session-timeout: *intzeropositive
+        session-no-prolong: *bool
+        thread-pool: *intpositive
+        ei-enabled: *bool
+        x-real-ip: *bool
+    snmptrap:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        community: *str
+        hosts-allow: *strarr
+    udpapi:
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        hosts-allow: *strarr
+        hosts-allow-encrypted: *strarr
+    modbus-slave:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          proto:
+            type: string
+            enum:
+              - tcp
+              - udp
+              - rtu
+              - ascii
+              - binary
+          unit:
+            anyOf:
+              - type: string
+              - type: integer
+                minimum: 1
+          listen: *str
+    datapullers:
+      type: object
+      patternProperties:
+        "^.*$": &datapuller
+          anyOf:
+            - type: string
+            - type: object
+              additionalProperties: false
+              properties:
+                cmd: *str
+                timeout: *floatpositive
+                event-timeout: *floatpositive
+              required:
+                - cmd
+    plugins: &plugins
+      type: object
+      patternProperties:
+        "^.*$": &plugin
+          type: object
+          additionalProperties: false
+          properties:
+            enabled: *bool
+            config:
+              type: object
+config/lm/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: *server
+    plc:
+      type: object
+      additionalProperties: false
+      properties:
+        use-core-pool: *bool
+        cache-remote-state: &floatzeropositive
+          type: number
+          minimum: 0
+    lurp: &lurp
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        buffer: *intpositive
+    msad: *msad
+    upnp: &upnpactive
+      type: object
+      additionalProperties: false
+      properties:
+        listen: *str
+        discover-on: *str
+    sysapi: *sysapi
+    webapi: *webapi
+    cloud:
+      type: object
+      additionalProperties: false
+      properties:
+        default-key: *str
+    plugins: *plugins
+config/sfa/main:
+  type: object
+  additionalProperties: false
+  properties:
+    server: *server
+    lurp: *lurp
+    msad: *msad
+    upnp: *upnpactive
+    sysapi: *sysapi
+    webapi: *webapi
+    cloud:
+      type: object
+      additionalProperties: false
+      properties:
+        default-key: *str
+        cloud-manager: *bool
+    plugins: *plugins
+config/uc/datapullers:
+  <<: *datapuller
+config/uc/plugins:
+  <<: *plugin
+config/lm/plugins:
+  <<: *plugin
+config/sfa/plugins:
+  <<: *plugin
+config/uc/notifiers: &notifier
+  type: object
+  additionalProperties: true
+  properties:
+    id: *str
+    type: *str
+    enabled: *bool
+    events:
+      type: array
+  required:
+    - id
+    - type
+    - enabled
+config/lm/notifiers:
+  <<: *notifier
+config/sfa/notifiers:
+  <<: *notifier
+config/uc/buses/modbus:
+  type: object
+  additionalProperties: false
+  properties:
+    id: *str
+    params: *str
+    lock: *bool
+    delay: *floatzeropositive
+    retries: *intzeropositive
+    timeout: *floatzeropositive
+  required:
+    - id
+    - params
+config/uc/buses/owfs:
+  type: object
+  additionalProperties: false
+  properties:
+    id: *str
+    location: *str
+    lock: *bool
+    delay: *floatzeropositive
+    retries: *intzeropositive
+    timeout: *floatzeropositive
+  required:
+    - id
+    - location
+config/uc/phis:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    mod: *str
+  required:
+    - id
+    - mod
+config/uc/drivers:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    lpi_id: *str
+    phi_id: *str
+    mod: *str
+  required:
+    - id
+    - lpi_id
+    - phi_id
+    - mod
+config/lm/extensions:
+  type: object
+  additionalProperties: false
+  properties:
+    cfg:
+      type: object
+    id: *str
+    mod: *str
+  required:
+    - id
+    - mod
+config/uc/cvars: {}
+config/lm/cvars: {}
+config/sfa/cvars: {}
+config/uc/cs: &cscfg
+  type: object
+  additionalProperties: false
+  properties:
+    mqtt-topics:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          qos: &qos
+            type: integer
+            enum:
+              - 0
+              - 1
+              - 2
+          topic: *str
+        required:
+          - topic
+config/lm/cs: *cscfg
+config/sfa/cs: *cscfg
+config/venv:
+  type: object
+  additionalProperties: false
+  properties:
+    use-system-pip: *bool
+    python: *str
+    system-site-packages: *bool
+    skip: *strarr
+    extra: *strarr
+    pip-extra-options: *str
+  required:
+    - python
+config/clouds/iote:
+  patternProperties:
+    "^.*$":
+      type: object
+      additionalProperties: false
+      properties:
+        account: *str
+      required:
+        - account
+data/easy_setup:
+  link: *bool
+  mqtt-discovery-enabled: *bool
+data/info:
+  type: object
+  additionalProperties: false
+  properties:
+    build:
+      type: integer
+    version: *str
+data/uc/boot-id: *intpositive
+data/lm/boot-id: *intpositive
+data/sfa/boot-id: *intpositive
+data/uc/plugin_data: {}
+data/lm/extension_data: {}
+data/lm/remote_uc: &remotecontroller
+  type: object
+  additionalProperties: false
+  properties:
+    enabled: *bool
+    full_id: *str
+    description: *str
+    group: *str
+    id: *str
+    key: *str
+    masterkey: *str
+    mqtt_update: *stringornull
+    oid: *str
+    reload_interval: *floatzeropositive
+    retries: *intzeropositive
+    ssl_verify: *bool
+    static: *bool
+    timeout: *floatpositive
+    type: *str
+    uri: *str
+    ws_buf_ttl: *floatzeropositive
+    ws_state_events: *bool
+  required:
+    - enabled
+    - full_id
+    - group
+    - id
+    - key
+    - oid
+    - timeout
+    - uri
+data/sfa/remote_uc:
+  <<: *remotecontroller
+data/sfa/remote_lm:
+  <<: *remotecontroller
+inventory/unit:
+  type: object
+  additionalProperties: false
+  properties:
+    action_allow_termination: *bool
+    action_always_exec: *bool
+    action_driver_config: &objectornull
+      anyOf:
+        - type: object
+        - type: "null"
+    action_enabled: *bool
+    action_exec: *stringornull
+    action_queue:
+      enum:
+      - 0
+      - 1
+      - 2
+      type: integer
+    action_timeout: &floatpositiveornull
+      anyOf:
+        - <<: *floatpositive
+        - type: "null"
+    auto_off: *floatzeropositive
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    location: {}
+    maintenance_duration: *floatzeropositive
+    modbus_status: *stringornull
+    modbus_value: *stringornull
+    mqtt_control: *stringornull
+    mqtt_update: *stringornull
+    notify_events: &notifyevents
+      enum:
+      - 0
+      - 1
+      - 2
+      type: integer
+    oid: *str
+    snmp_trap: {}
+    status_labels:
+      type: object
+    term_kill_interval: *floatpositiveornull
+    type:
+      const: unit
+    update_delay: *floatzeropositive
+    update_driver_config: *objectornull
+    update_exec: *stringornull
+    update_exec_after_action: *bool
+    update_if_action: *bool
+    update_interval: *floatzeropositive
+    update_state_after_action: *bool
+    update_timeout: *floatpositiveornull
+    value_in_range_max: &floatornull
+      anyOf:
+        - type: number
+        - type: "null"
+    value_in_range_max_eq: &boolornull
+      anyOf:
+        - type: boolean
+        - type: "null"
+    value_in_range_min: *floatornull
+    value_in_range_min_eq: *boolornull
+  required:
+    - id
+    - full_id
+    - group
+    - oid
+    - type
+inventory/sensor:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    location: {}
+    maintenance_duration: *floatzeropositive
+    modbus_status: *stringornull
+    modbus_value: *stringornull
+    mqtt_control: *stringornull
+    mqtt_update: *stringornull
+    notify_events: *notifyevents
+    oid: *str
+    snmp_trap: {}
+    term_kill_interval: *floatpositiveornull
+    type:
+      const: sensor
+    update_delay: *floatornull
+    update_driver_config: *objectornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
+    value_in_range_max: *floatornull
+    value_in_range_max_eq: *boolornull
+    value_in_range_min: *floatornull
+    value_in_range_min_eq: *boolornull
+  required:
+    - id
+    - full_id
+    - group
+    - oid
+    - type
+inventory/mu:
+  type: object
+  additionalProperties: false
+  properties:
+    full_id: *str
+    group: *str
+    id: *str
+    description: *str
+    items: *strarr
+    oid: *str
+    type:
+      const: mu
+    update_allow_check: *bool
+    update_delay: *floatornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
+  required:
+    - id
+    - full_id
+    - group
+    - oid
+    - type
+inventory/lvar:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    expires: *floatzeropositive
+    full_id: *str
+    group: *str
+    id: *str
+    mqtt_update: *stringornull
+    logic:
+      type: integer
+      enum:
+        - 0
+        - 1
+    notify_events: *notifyevents
+    oid: *str
+    type:
+      const: lvar
+    update_delay: *floatornull
+    update_exec: *stringornull
+    update_interval: *floatzeropositive
+    update_timeout: *floatpositiveornull
+  required:
+    - id
+    - full_id
+    - group
+    - oid
+    - type
+inventory/lmacro:
+  type: object
+  additionalProperties: false
+  properties:
+    action_enabled: *bool
+    action_exec: *str
+    description: *str
+    pass_errors: *bool
+    send_critical: *bool
+    id: *str
+    full_id: *str
+    group: *str
+    oid: *str
+    type:
+      const: lmacro
+  required:
+    - id
+    - full_id
+    - oid
+    - group
+inventory/lcycle:
+  type: object
+  additionalProperties: false
+  properties:
+    autostart: *bool
+    description: *str
+    full_id: *str
+    group: *str
+    ict: *intzeropositive
+    interval: *floatzeropositive
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    id: *str
+    oid: *str
+    type:
+      const: lcycle
+    on_error: *stringornull
+  required:
+    - id
+    - group
+    - oid
+    - type
+inventory/dmatrix_rule:
+  type: object
+  additionalProperties: false
+  properties:
+    break_after_exec: *bool
+    chillout_time: *floatzeropositive
+    description: *str
+    enabled: *bool
+    id: *str
+    oid: *str
+    for_initial:
+      anyOf:
+        - type: "null"
+        - type: string
+          enum:
+            - skip
+            - any
+            - only
+    for_item_group: *stringornull
+    for_item_id: *stringornull
+    for_item_type: *stringornull
+    for_prop:
+      type: string
+      enum:
+        - status
+        - value
+        - nstatus
+        - nvalue
+        - "#"
+    for_prop_bit:
+      anyOf:
+        - type: "null"
+        - type: integer
+          minimum: 0
+    in_range_max: *floatornull
+    in_range_max_eq: *bool
+    in_range_min: *floatornull
+    in_range_min_eq: *bool
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    priority: *intpositive
+    type:
+      const: dmatrix_rule
+  required:
+    - enabled
+    - for_prop
+    - id
+    - oid
+    - type
+inventory/job:
+  type: object
+  additionalProperties: false
+  properties:
+    description: *str
+    enabled: *bool
+    every: *str
+    id: *str
+    oid: *str
+    macro: *stringornull
+    macro_args:
+      type: array
+    macro_kwargs:
+      type: object
+    type:
+      const: job
+  required:
+    - enabled
+    - id
+    - oid
+    - type
+userdata: {}

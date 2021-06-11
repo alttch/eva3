@@ -1,30 +1,37 @@
 #!/usr/bin/env bash
 
 if [ "$1" ]; then
-  EVA_DIR=$1
-  D=`realpath $0`
-  MY_DIR=`dirname ${D}`
+  EVA_DIR="$1"
+  D=$(realpath "$0")
+  MY_DIR=$(dirname "${D}")
 else
-  D=`realpath $0`
-  MY_DIR=`dirname ${D}`
+  D=$(realpath "$0")
+  MY_DIR=$(dirname "${D}")
   EVA_DIR=${MY_DIR}/..
-  cd ${EVA_DIR}
+  cd "${EVA_DIR}" || exit 1
 fi
 
-EVA_DIR=`realpath ${EVA_DIR}`
+EVA_DIR=$(realpath "${EVA_DIR}")
 
-[ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+if [ -d ${EVA_DIR}/yedb ]; then
+  source <(${EVA_DIR}/sbin/key-as-source config/venv 2>/dev/null)
+  if [ -z "$PYTHON" ]; then
+    echo "Unable to read registry key"
+    exit 1
+  fi
+else
+  [ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+  [ -z $PYTHON ] && PYTHON=python3
+fi
 
-[ -z $PYTHON ] && PYTHON=python3
-
-if [ ! -f ${EVA_DIR}/python3/bin/pip3 ]; then
-  [ -d ${EVA_DIR}/python3 ] && rm -rf ${EVA_DIR}/python3
-  [ "$USE_SYSTEM_PIP" ] && O_PIP="" || O_PIP="--without-pip"
-  [ "${SYSTEM_SITE_PACKAGES}" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
-  ${PYTHON} -m venv ${O_PIP} ${O_SSITE} ${EVA_DIR}/python3 || exit 2
-  source ${EVA_DIR}/python3/bin/activate
-  if [ ! "$USE_SYSTEM_PIP" ]; then
-    ( curl https://bootstrap.pypa.io/get-pip.py | ${EVA_DIR}/python3/bin/python3 ) || exit 3
+if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then
+  [ -d "${EVA_DIR}/python3" ] && rm -rf "${EVA_DIR}/python3"
+  [ "$USE_SYSTEM_PIP" = "1" ] && O_PIP="" || O_PIP="--without-pip"
+  [ "${SYSTEM_SITE_PACKAGES}" = "1" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
+  "${PYTHON}" -m venv ${O_PIP} ${O_SSITE} "${EVA_DIR}/python3" || exit 2
+  source "${EVA_DIR}/python3/bin/activate"
+  if [ "$USE_SYSTEM_PIP" != "1" ]; then
+    ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/python3/bin/python3" ) || exit 3
   else
     pip3 install ${PIP_EXTRA_OPTIONS} wheel setuptools || exit 3
   fi
@@ -46,10 +53,10 @@ done
 PIP=${EVA_DIR}/python3/bin/pip3
 
 if [ "$PTS" ] || [ "$ETS" ]; then
-  [ ! $PTS ] && PTS=__undefined__
+  [ ! "$PTS" ] && PTS=__undefined__
   TMPFILE=$(mktemp /tmp/eva-venv.XXXXXX)
-  grep -vE "$PTS" ${MY_DIR}/mods.list > ${TMPFILE}
-  echo -e "\n`echo $ETS | tr '|' '\n'`" >> ${TMPFILE}
+  grep -vE "$PTS" "${MY_DIR}/mods.list" > "${TMPFILE}"
+  echo -e "\n$(echo "$ETS" | tr '|' '\n')" >> "${TMPFILE}"
   PKGLIST=${TMPFILE}
 else
   PKGLIST=${MY_DIR}/mods.list
@@ -58,6 +65,6 @@ fi
 ${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
 
-[ "$PTS" ] || [ "$ETS" ] && rm -f ${TMPFILE}
+[ "$PTS" ] || [ "$ETS" ] && rm -f "${TMPFILE}"
 
 exit ${E}

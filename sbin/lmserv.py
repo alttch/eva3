@@ -36,16 +36,15 @@ def usage(version_only=False):
         )
     if version_only:
         return
-    print("""Usage: lmserv.py [-f config_file ] [-d]
+    print("""Usage: lmserv.py [-d]
 
- -f config_file     start with an alternative config file
  -d                 run in background
 
 for production use lm-control only to start/stop LM PLC
 """)
 
 
-product_build = 2021050301
+product_build = 2021052901
 
 product_code = 'lm'
 
@@ -54,7 +53,6 @@ eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA Logic Manager'
 
 _fork = False
-_eva_ini = None
 
 try:
     optlist, args = getopt.getopt(sys.argv[1:], 'f:dhV')
@@ -65,8 +63,6 @@ except:
 for o, a in optlist:
     if o == '-d':
         _fork = True
-    if o == '-f':
-        _eva_ini = a
     if o == '-V':
         usage(version_only=True)
         sys.exit()
@@ -74,7 +70,7 @@ for o, a in optlist:
         usage()
         sys.exit()
 
-cfg = eva.core.load(fname=_eva_ini, initial=True)
+cfg = eva.core.load(initial=True)
 if not cfg:
     sys.exit(2)
 
@@ -85,13 +81,14 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.mailer.load()
+
 eva.lurp.update_config(cfg)
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1917
 eva.upnp._data.discover_ports = (1912,)
 eva.sysapi.update_config(cfg)
-eva.mailer.update_config(cfg)
 eva.lm.controller.update_config(cfg)
 
 eva.core.start()

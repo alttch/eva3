@@ -17,6 +17,8 @@ from sqlalchemy import text as sql
 from cryptography.fernet import Fernet
 from netaddr import IPNetwork
 
+import pyaltt2.config
+
 import eva.core
 import eva.item
 
@@ -30,6 +32,8 @@ from eva.tools import SimpleNamespace
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
+
+import eva.registry
 
 from functools import partial
 
@@ -353,148 +357,62 @@ class APIKey(object):
         return True
 
 
-def load(fname=None, load_from_db=True):
+def load(load_from_db=True):
     with key_lock:
         keys.clear()
         keys_by_id.clear()
         config.masterkey = None
         logging.info('Loading API keys')
-        fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
-        if not fname_full:
-            logging.warning('No file or product specified '
-                            'skipping loading API keys')
-            return False
         try:
-            cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-            cfg.read(fname_full)
-            for ks in cfg.sections():
+            configs = eva.registry.get_subkeys(
+                f'config/{eva.core.product.code}/apikeys')
+            for name, key in configs.items():
                 try:
-                    k = cfg.get(ks, 'key')
+                    cfg = pyaltt2.config.Config(key)
+                    k = cfg.get('key')
                     if k in keys.keys():
                         logging.warning(
-                            f'duplicate key {k}, problems might occur')
-                    key = APIKey(k, ks)
-                    try:
-                        key.master = (cfg.get(ks, 'master') == 'yes')
-                    except:
-                        pass
-                    try:
-                        key.sysfunc = (cfg.get(ks, 'sysfunc') == 'yes')
-                    except:
-                        pass
-                    try:
-                        _ha = cfg.get(ks, 'hosts_allow')
-                    except:
-                        _ha = None
+                            f'duplicate key {k}, problems may occur')
+                    key = APIKey(k, name)
+                    key.master = cfg.get('master', default=False)
+                    key.sysfunc = cfg.get('sysfunc', default=False)
+                    _ha = cfg.get('hosts-allow', default=[])
                     if _ha:
                         try:
-                            _hosts_allow = list(
-                                filter(None,
-                                       [x.strip() for x in _ha.split(',')]))
-                            key.hosts_allow = \
-                                    [ IPNetwork(h) for h in _hosts_allow ]
+                            key.hosts_allow = [IPNetwork(h) for h in _ha]
                         except:
                             logging.error(
-                                f'key {ks} invalid host acl!, skipping')
+                                f'key {name} invalid host acl!, skipping')
                             eva.core.log_traceback()
                             continue
-                    try:
-                        _ha = cfg.get(ks, 'hosts_assign')
-                    except:
-                        _ha = None
+                    _ha = cfg.get('hosts-assign', default=[])
                     if _ha:
                         try:
-                            _hosts_assign = list(
-                                filter(None,
-                                       [x.strip() for x in _ha.split(',')]))
-                            key.hosts_assign = \
-                                    [ IPNetwork(h) for h in _hosts_assign ]
+                            key.hosts_assign = [IPNetwork(h) for h in _ha]
                         except:
-                            logging.warning(f'key {ks} invalid hosts_assign')
+                            logging.warning(f'key {name} invalid hosts_assign')
                             eva.core.log_traceback()
-                    try:
-                        key.item_ids = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'items').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.groups = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'groups').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.item_ids_ro = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'items_ro').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.groups_ro = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'groups_ro').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.item_ids_deny = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'items_deny').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.groups_deny = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'groups_deny').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.pvt_files = list(filter(None,
-                            [x.strip() for x in \
-                                    cfg.get(ks, 'pvt').split(',')]))
-                    except:
-                        pass
-                    try:
-                        key.rpvt_uris = list(filter(None,
-                            [x.strip() for x in \
-                                    cfg.get(ks, 'rpvt').split(',')]))
-                    except:
-                        pass
-                    try:
-                        key.allow = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'allow').split(',')
-                            ]))
-                    except:
-                        pass
-                    try:
-                        key.allow = list(
-                            filter(None, [
-                                x.strip()
-                                for x in cfg.get(ks, 'cdata').split(',')
-                            ]))
-                    except:
-                        pass
+                    key.item_ids = cfg.get('items', default=[])
+                    key.groups = cfg.get('groups', default=[])
+                    key.item_ids_ro = cfg.get('items-ro', default=[])
+                    key.groups_ro = cfg.get('groups-ro', default=[])
+                    key.item_ids_deny = cfg.get('items-deny', default=[])
+                    key.groups_deny = cfg.get('groups-deny', default=[])
+                    key.pvt_files = cfg.get('pvt', default=[])
+                    key.rpvt_uris = cfg.get('rpvt', default=[])
+                    key.allow = cfg.get('allow', default=[])
+                    cdata = cfg.get('cdata', default=[])
+                    if not isinstance(cdata, list):
+                        cdata = [cdata]
+                    key.cdata = cdata
                     keys[k] = key
-                    keys_by_id[ks] = key
+                    keys_by_id[name] = key
                     if key.master and not config.masterkey:
                         config.masterkey = k
                         logging.info('+ masterkey loaded')
-                except:
-                    pass
+                except Exception as e:
+                    logging.error(f'Static key {name} load error: {e}')
+                    eva.core.log_traceback()
             if load_from_db:
                 _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
                 keys.update(_keys_from_db)

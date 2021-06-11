@@ -1,0 +1,17 @@
+server:
+  polldelay: 0.001
+  pid-file: var/uc.pid
+  db-update: on-exit
+  db-file: runtime/db/uc.db
+  keep-action-history: 86400
+  action-cleaner-interval: 60
+  keep-logmem: 86400
+  logging-level: warning
+  notify-on-start: true
+  debug: false
+  dump-on-critical: true
+  stop-on-critical: always
+  timeout: 5
+webapi:
+  listen: 0.0.0.0:8812
+  session-timeout: 3600

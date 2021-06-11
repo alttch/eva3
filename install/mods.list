@@ -7,7 +7,7 @@ urllib3==1.24.3
 requests==2.21.0
 aiosched==0.0.25
 neotasker==0.0.35
-pyaltt2==0.0.106
+pyaltt2==0.0.109
 argcomplete==1.9.4
 jinja2==2.11.2
 six==1.11.0
@@ -27,7 +27,7 @@ service_identity==18.1.0
 schedule==0.6.0
 pymodbus==2.2.0
 pysnmp==4.4.4
-pygments==2.2.0
+pygments==2.7.1
 python-rapidjson==0.7.2
 msgpack==1.0.2
 pytz==2018.9
@@ -43,3 +43,4 @@ jsonschema==3.2.0
 testresources==2.0.1
 cachetools==4.1.1
 sh==1.14.1
+yedb[cli]==0.2.15

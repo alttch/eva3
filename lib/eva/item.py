@@ -11,6 +11,7 @@ import uuid
 import queue
 import logging
 import rapidjson
+import eva.registry
 
 import eva.core
 import eva.notify
@@ -48,17 +49,30 @@ from neotasker import BackgroundEventWorker, BackgroundQueueWorker
 
 class Item(object):
 
-    def __init__(self, item_id, item_type):
+    def __init__(self, item_id=None, item_type=None, item_group=None, oid=None):
+        if oid:
+            item_type, i = parse_oid(oid)
+            if '/' in i:
+                item_group, item_id = i.split('/', 1)
+            else:
+                item_group = 'nogroup'
+                item_id = i
+        elif item_id is None or item_type is None:
+            raise RuntimeError('item init failed, no id provided')
         self.item_id = item_id
         self.item_type = item_type
-        self.set_group('nogroup')
+        self.set_group(item_group if item_group else 'nogroup')
         self.description = ''
         self._destroyed = False
         self.config_changed = False
         self.config_file_exists = False
-        # generate long config names or use IDs in enterprise layout
-        self.respect_layout = True
         self.notify_events = 2  # 2 - all events, 1 - state only, 0 - no
+
+    def set_defaults(self, fields):
+        defaults = eva.core.defaults.get(self.item_type, {})
+        for f in fields:
+            if f in defaults:
+                self.set_prop(f, defaults[f])
 
     def set_group(self, group=None):
         if group:
@@ -173,61 +187,37 @@ class Item(object):
             d['oid'] = self.oid
         return d
 
-    def get_fname(self, fname=None):
-        if fname:
-            return fname
-        else:
-            _id = self.full_id.replace('/', '___') if \
-                eva.core.config.enterprise_layout and self.respect_layout else \
-                        self.item_id
-            return eva.core.format_cfg_fname(eva.core.product.code + \
-                    '_%s.d/' % self.item_type + _id + '.json', \
-                    cfg = None, runtime = True)
+    def get_rkn(self):
+        return f'inventory/{self.item_type}/{self.full_id}'
 
-    def load(self, fname=None):
-        fname_full = self.get_fname(fname)
+    def load(self, data=None):
         try:
-            with open(fname_full) as fd:
-                raw = fd.read()
-        except:
-            logging.error('can not load %s config from %s' % \
-                                    (self.oid,fname_full))
-            eva.core.log_traceback()
-            return False
-        try:
-            data = rapidjson.loads(raw)
-            if data['id'] != self.item_id:
-                logging.error(f'{data["id"]} != {self.item_id}')
-                raise Exception('id mismatch, file %s' % \
-                            fname_full)
+            if data is None:
+                data = eva.registry.key_get(self.get_rkn())
+            if data['oid'] != self.oid:
+                logging.error(f'{data["oid"]} != {self.oid}')
+                raise ValueError('id mismatch')
             self.update_config(data)
-        except:
-            logging.error(
-                   'can not load %s config from %s, bad config format' % \
-                                    (self.oid,fname_full)
-                            )
-            eva.core.log_traceback()
-            return False
-        self.config_changed = False
-        self.config_file_exists = True
-        return True
-
-    def save(self, fname=None):
-        u = self.serialize(config=True)
-        fname_full = self.get_fname(fname)
-        data = self.serialize(config=True)
-        logging.debug('Saving %s configuration' % self.oid)
-        try:
-            with open(fname_full, 'w') as fd:
-                fd.write(format_json(data, minimal=False))
             self.config_changed = False
-        except:
-            logging.error('can not save %s config into %s' % \
-                (self.oid,fname_full))
+            self.config_file_exists = True
+            return True
+        except Exception as e:
+            logging.error(f'can not load {self.oid}: {e}')
             eva.core.log_traceback()
             return False
-        self.config_file_exists = True
-        return True
+
+    def save(self):
+        data = self.serialize(config=True)
+        logging.debug(f'Saving {self.oid} configuration')
+        try:
+            eva.registry.key_set(self.get_rkn(), data)
+            self.config_changed = False
+            self.config_file_exists = True
+            return True
+        except Exception as e:
+            logging.error(f'can not save {self.oid} config: {e}')
+            eva.core.log_traceback()
+            return False
 
     def set_modified(self, save):
         if save:
@@ -251,8 +241,8 @@ class Item(object):
 
 class PhysicalItem(Item):
 
-    def __init__(self, item_id, item_type):
-        super().__init__(item_id, item_type)
+    def __init__(self, item_id=None, item_type=None, **kwargs):
+        super().__init__(item_id, item_type, **kwargs)
         self.loc_x = None
         self.loc_y = None
         self.loc_z = None
@@ -321,8 +311,8 @@ class PhysicalItem(Item):
 
 class UpdatableItem(Item):
 
-    def __init__(self, item_id, item_type):
-        super().__init__(item_id, item_type)
+    def __init__(self, item_id=None, item_type=None, **kwargs):
+        super().__init__(item_id, item_type, **kwargs)
         self.update_exec = None
         self.update_interval = 0
         self.update_delay = 0
@@ -340,11 +330,20 @@ class UpdatableItem(Item):
         self._updates_allowed = True
         self.update_xc = None
         # default status: 0 - off, 1 - on, -1 - error
-        self.status = 0
-        self.value = ''
+        d = eva.core.defaults.get(item_type, {})
+        try:
+            self.status = int(d.get('status', 0))
+        except ValueError:
+            logging.error(f'Invalid default status for {item_type}')
+            self.status = 0
+        self.value = d.get('value', '')
+        if self.value is None:
+            self.value = ''
+        else:
+            self.value = str(self.value)
         self.set_time = time.time()
         self.state_set_time = time.perf_counter()
-        self.ieid = [0, 0]
+        self.ieid = [eva.core.get_boot_id(), 1]
         self.expires = 0
         self.mqtt_update = None
         self.mqtt_update_notifier = None
@@ -856,8 +855,8 @@ class UpdatableItem(Item):
 
 class ActiveItem(Item):
 
-    def __init__(self, item_id, item_type):
-        super().__init__(item_id, item_type)
+    def __init__(self, item_id=None, item_type=None, **kwargs):
+        super().__init__(item_id, item_type, **kwargs)
         self.queue = queue.PriorityQueue()
         self.current_action = None
         self.action_enabled = False
@@ -1518,8 +1517,8 @@ class ItemAction(GenericAction):
 
 class MultiUpdate(UpdatableItem):
 
-    def __init__(self, mu_id):
-        super().__init__(mu_id, 'mu')
+    def __init__(self, mu_id=None, **kwargs):
+        super().__init__(mu_id, 'mu', **kwargs)
         self.items_to_update = []
         self._update_run_args = ()
         self.update_allow_check = True

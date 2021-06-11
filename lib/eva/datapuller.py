@@ -12,6 +12,8 @@ import eva.core
 import queue
 import signal
 
+import eva.registry
+
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import MethodNotImplemented
 
@@ -23,16 +25,35 @@ def preexec_function():
 
 
 def update_config(cfg):
+    c = cfg.get('datapullers', default={})
+    c.update(eva.registry.get_subkeys('config/uc/datapullers'))
     try:
-        c = dict(dict(cfg)['datapullers'])
-    except KeyError:
-        return
-    for i, v in c.items():
-        logging.info(f'+ data puller {i}: {v}')
-        append_data_puller(i, v)
+        for i, v in c.items():
+            if isinstance(v, dict):
+                cmd = v['cmd']
+                timeout = v.get('timeout')
+                if timeout:
+                    timeout = float(timeout)
+                event_timeout = v.get('event-timeout')
+                if event_timeout:
+                    event_timeout = float(event_timeout)
+            else:
+                cmd = v
+                timeout = None
+                event_timeout = None
+            logging.info(
+                f'+ data puller {i}: {cmd} (timeout: {timeout}/{event_timeout})'
+            )
+            append_data_puller(i,
+                               cmd,
+                               timeout=timeout,
+                               event_timeout=event_timeout)
+    except Exception as e:
+        logging.error(f'Datapuller init error: {e}')
+        eva.core.log_traceback()
 
 
-def append_data_puller(name, cmd):
+def append_data_puller(name, cmd, timeout, event_timeout):
     datapullers[name] = DataPuller(name,
                                    cmd,
                                    polldelay=eva.core.config.polldelay)
@@ -55,7 +76,13 @@ def serialize():
 
 class DataPuller:
 
-    def __init__(self, name, cmd, polldelay=0.1, tki=1):
+    def __init__(self,
+                 name,
+                 cmd,
+                 polldelay=0.1,
+                 tki=1,
+                 timeout=None,
+                 event_timeout=None):
         self.name = name
         self.cmd = cmd
         self.p = None
@@ -64,7 +91,9 @@ class DataPuller:
         self.tki = tki
         self.executor = None
         self.last_activity = None
-        self.timeout = eva.core.config.timeout
+        self.last_event = None
+        self.timeout = timeout if timeout else eva.core.config.timeout
+        self.event_timeout = event_timeout
         self.state = ''
 
     def serialize(self):
@@ -146,6 +175,7 @@ class DataPuller:
         else:
             i = cmd
             x = args.split(maxsplit=2)
+            self.last_event = time.perf_counter()
             item = eva.core.controllers[0].get_item(i)
             if item is None:
                 logging.debug(
@@ -246,10 +276,19 @@ class DataPuller:
                                   f'code {self.p.returncode}. restarting')
                     self.restart(auto=True)
                 break
-            if self.last_activity + self.timeout < time.perf_counter():
+            if self.event_timeout and self.last_event + self.event_timeout < time.perf_counter(
+            ):
                 if not eva.core.is_shutdown_requested() and self.active:
                     logging.error(
-                        f'data puller {self.name} timed out. restarting')
+                        f'data puller {self.name} timed out (no events). restarting'
+                    )
+                    self.restart(auto=True)
+                break
+            elif self.last_activity + self.timeout < time.perf_counter():
+                if not eva.core.is_shutdown_requested() and self.active:
+                    logging.error(
+                        f'data puller {self.name} timed out (no output). restarting'
+                    )
                     self.restart(auto=True)
                 break
 

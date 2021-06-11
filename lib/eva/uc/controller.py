@@ -22,6 +22,7 @@ import eva.uc.driverapi
 import eva.uc.modbus
 import eva.uc.owfs
 import eva.datapuller
+import eva.registry
 
 import rapidjson
 
@@ -209,13 +210,7 @@ def get_mu(mu_id):
 
 
 @with_item_lock
-def append_item(item, start=False, load=True):
-    try:
-        if load and not item.load():
-            return False
-    except:
-        eva.core.log_traceback()
-        return False
+def append_item(item, start=False):
     if item.item_type == 'unit':
         if not eva.core.config.enterprise_layout:
             units_by_id[item.item_id] = item
@@ -258,7 +253,7 @@ def save():
                 if not v.save():
                     return False
             try:
-                configs_to_remove.remove(v.get_fname())
+                configs_to_remove.remove(v.get_rkn())
             except:
                 pass
         dbt.commit()
@@ -270,7 +265,7 @@ def save():
             db.close()
     for f in configs_to_remove:
         try:
-            os.unlink(f)
+            eva.registry.key_delete(f)
             logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
@@ -424,27 +419,18 @@ def load_units(start=False):
     _loaded = {}
     logging.info('Loading units')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_unit.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            unit_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.config.enterprise_layout:
-                _id = unit_id.split('___')[-1]
-                unit_id = unit_id.replace('___', '/')
-            else:
-                _id = unit_id
-            u = eva.uc.unit.Unit(_id)
-            if eva.core.config.enterprise_layout:
-                u.set_group('/'.join(unit_id.split('/')[:-1]))
+        for i, ucfg in eva.registry.key_get_recursive('inventory/unit'):
+            u = eva.uc.unit.Unit(oid=f'unit:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
-                _loaded[unit_id] = u
+                _loaded[i] = u
         load_db_state(_loaded, 'U', clean=True)
         if start:
             for i, v in _loaded.items():
                 v.start_processors()
         return True
-    except:
-        logging.error('Units load error')
+    except Exception as e:
+        logging.error(f'Units load error: {e}')
         eva.core.log_traceback()
         return False
 
@@ -454,33 +440,47 @@ def load_sensors(start=False):
     _loaded = {}
     logging.info('Loading sensors')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_sensor.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            sensor_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.config.enterprise_layout:
-                _id = sensor_id.split('___')[-1]
-                sensor_id = sensor_id.replace('___', '/')
-            else:
-                _id = sensor_id
-            u = eva.uc.sensor.Sensor(_id)
-            if eva.core.config.enterprise_layout:
-                u.set_group('/'.join(sensor_id.split('/')[:-1]))
+        for i, ucfg in eva.registry.key_get_recursive('inventory/sensor'):
+            u = eva.uc.sensor.Sensor(oid=f'sensor:{i}')
+            u.load(ucfg)
             if append_item(u, start=False):
-                _loaded[sensor_id] = u
+                _loaded[i] = u
         load_db_state(_loaded, 'S', clean=True)
         if start:
             for i, v in _loaded.items():
                 v.start_processors()
         return True
-    except:
-        logging.error('sensors load error')
+    except Exception as e:
+        logging.error(f'sensors load error {e}')
         eva.core.log_traceback()
         return False
 
 
 @with_item_lock
-def create_item(item_id, item_type, group=None, start=True, save=False):
+def load_mu(start=False):
+    logging.info('Loading multi updates')
+    try:
+        for i, ucfg in eva.registry.key_get_recursive('inventory/mu'):
+            u = eva.uc.ucmu.UCMultiUpdate(oid=f'mu:{i}')
+            u.get_item_func = get_item
+            u.load(ucfg)
+            append_item(u, start=False)
+            if start:
+                u.start_processors()
+        return True
+    except Exception as e:
+        logging.error(f'multi updates load error: {e}')
+        eva.core.log_traceback()
+        return False
+
+
+@with_item_lock
+def create_item(item_id,
+                item_type,
+                group=None,
+                start=True,
+                create=False,
+                save=False):
     if not item_id:
         raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
@@ -504,9 +504,9 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'U' or item_type == 'unit':
-        item = eva.uc.unit.Unit(i)
+        item = eva.uc.unit.Unit(i, create=create)
     elif item_type == 'S' or item_type == 'sensor':
-        item = eva.uc.sensor.Sensor(i)
+        item = eva.uc.sensor.Sensor(i, create=create)
     elif item_type == 'MU' or item_type == 'mu':
         item = eva.uc.ucmu.UCMultiUpdate(i)
     if not item:
@@ -515,7 +515,7 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start=start, load=False)
+    append_item(item, start=start)
     if save:
         item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
@@ -528,9 +528,12 @@ def create_unit(unit_id, group=None, enabled=None, save=False):
                        item_type='U',
                        group=group,
                        start=False,
+                       create=True,
                        save=save and not enabled)
     if enabled:
         unit.set_prop('action_enabled', True, save=save)
+        unit.ieid = eva.core.generate_ieid()
+        unit.notify()
     unit.start_processors()
     return unit
 
@@ -541,6 +544,7 @@ def create_sensor(sensor_id, group=None, enabled=None, save=False):
                          item_type='S',
                          group=group,
                          start=False,
+                         create=True,
                          save=save)
     if enabled:
         sensor.update_set_state(status=1)
@@ -662,12 +666,12 @@ def destroy_item(item):
         i.destroy()
         if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
-                os.unlink(i.get_fname())
+                eva.registry.key_delete(i.get_rkn())
             except:
                 logging.error('Can not remove %s config' % i.full_id)
                 eva.core.log_traceback()
         elif i.config_file_exists:
-            configs_to_remove.add(i.get_fname())
+            configs_to_remove.add(i.get_rkn())
         logging.info('%s destroyed' % i.full_id)
         return True
     except ResourceNotFound:
@@ -675,34 +679,6 @@ def destroy_item(item):
     except Exception as e:
         eva.core.log_traceback()
         raise FunctionFailed(e)
-
-
-@with_item_lock
-def load_mu(start=False):
-    logging.info('Loading multi updates')
-    try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_mu.d/*.json', runtime = True)
-        for ucfg in glob.glob(fnames):
-            mu_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.config.enterprise_layout:
-                _id = mu_id.split('___')[-1]
-                mu_id = mu_id.replace('___', '/')
-            else:
-                _id = mu_id
-            u = eva.uc.ucmu.UCMultiUpdate(_id)
-            if eva.core.config.enterprise_layout:
-                u.set_group('/'.join(mu_id.split('/')[:-1]))
-            u.get_item_func = get_item
-            if u.load():
-                append_item(u, start=False)
-                if start:
-                    u.start_processors()
-        return True
-    except:
-        logging.error('multi updates load error')
-        eva.core.log_traceback()
-        return False
 
 
 @with_item_lock

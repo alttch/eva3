@@ -18,11 +18,6 @@ mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1
 mkdir -p ./runtime/data || exit 1
-mkdir -p ./runtime/uc_notify.d || exit 1
-chmod 700 ./runtime/uc_notify.d || exit 1
-mkdir -p ./runtime/uc_unit.d || exit 1
-mkdir -p ./runtime/uc_sensor.d || exit 1
-mkdir -p ./runtime/uc_mu.d || exit 1
 mkdir -p ./runtime/db || exit 1
 mkdir -p ./runtime/tpl || exit 1
 touch runtime/db/uc.db || exit 1
@@ -41,12 +36,6 @@ mkdir -p ./xc/drivers/lpi || exit 1
 (cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py) || exit 1
 
 echo "Performing initial config"
-
-[ -f ./runtime/uc_cvars.json ] || echo "{}" > ./runtime/uc_cvars.json
-[ -f ./runtime/uc_cs.json ] || echo "{}" > ./runtime/uc_cs.json
-[ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
-[ -f ./runtime/uc_modbus.json ] || echo "[]" > ./runtime/uc_modbus.json
-[ -f ./runtime/uc_owfs.json ] || echo "[]" > ./runtime/uc_owfs.json
 
 echo "Finished"
 

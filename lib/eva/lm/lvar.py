@@ -18,14 +18,28 @@ LOGIC_SIMPLE = 1
 
 class LVar(eva.item.VariableItem):
 
-    def __init__(self, var_id):
-        super().__init__(var_id, 'lvar')
+    fields = [
+        'description',
+        'expires',
+        'logic',
+        'mqtt_update',
+        'notify_events',
+        'update_delay',
+        'update_exec',
+        'update_interval',
+        'update_timeout',
+    ]
+
+    def __init__(self, var_id=None, create=False, **kwargs):
+        super().__init__(var_id, 'lvar', **kwargs)
         self.status = 1
         self.mqtt_update_topics.append('set_time')
         self.prv_value = None
         self.prv_status = 1
         self.update_lock = threading.RLock()
         self.logic = LOGIC_NORMAL
+        if create:
+            self.set_defaults(self.fields)
 
     def update_config(self, data):
         if 'logic' in data:
@@ -160,7 +174,7 @@ class LVar(eva.item.VariableItem):
         elif config:
             d['logic'] = self.logic
         d['expires'] = self.expires
-        if not props:
+        if not config and not props:
             d['set_time'] = self.set_time
         return d
 

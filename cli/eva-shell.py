@@ -20,6 +20,7 @@ dir_eva = Path(__file__).absolute().parents[1].as_posix()
 dir_backup = dir_eva + '/backup'
 dir_lib = dir_eva + '/lib'
 dir_etc = dir_eva + '/etc'
+dir_bin = dir_eva + '/bin'
 dir_sbin = dir_eva + '/sbin'
 dir_cli = dir_eva + '/cli'
 dir_runtime = dir_eva + '/runtime'
@@ -48,6 +49,8 @@ from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 from eva.client.cli import ComplUser
 from eva.client.cli import ComplKey
+
+import eva.registry
 
 
 class ComplSubshellCmd(ComplGeneric):
@@ -146,6 +149,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_common_functions()
         self.add_manager_control_functions()
         self.add_manager_backup_functions()
+        self.add_manager_registry_functions()
         self.add_manager_edit_functions()
         self.add_management_shells()
         self.add_manager_feature_functions()
@@ -155,11 +159,35 @@ class ManagementCLI(GenericCLI):
 
     def process_configuration(self):
         self.products_configured = []
-        for f in ['uc', 'lm', 'sfa']:
-            if os.path.isfile('{}/{}.ini'.format(
-                    dir_etc, f)) and os.path.isfile('{}/{}_apikeys.ini'.format(
-                        dir_etc, f)):
-                self.products_configured.append(f)
+        try:
+            for c in ['uc', 'lm', 'sfa']:
+                try:
+                    if eva.registry.key_get_field(f'config/{c}/service',
+                                                  'setup'):
+                        self.products_configured.append(c)
+                except:
+                    pass
+        except:
+            pass
+
+    def add_manager_registry_functions(self):
+        ap_registry = self.sp.add_parser('registry', help='Registry management')
+
+        sp_registry = ap_registry.add_subparsers(dest='_func',
+                                                 metavar='func',
+                                                 help='Registry commands')
+
+        sp_registry_manage = sp_registry.add_parser('manage',
+                                                    help='Manage registry')
+        sp_registry_manage.add_argument('key',
+                                        help='Registry key',
+                                        metavar='NAME',
+                                        nargs='?')
+        sp_ = sp_registry.add_parser('start', help='Start registry server')
+        sp_registry_stop = sp_registry.add_parser('stop',
+                                                  help='Stop registry server')
+        sp_registry_restart = sp_registry.add_parser(
+            'restart', help='Restart registry server')
 
     def add_manager_backup_functions(self):
         ap_backup = self.sp.add_parser('backup', help='Backup management')
@@ -243,7 +271,7 @@ class ManagementCLI(GenericCLI):
                                       '--access',
                                       choices=['local-only', 'remote'],
                                       metavar='ACCESS_TYPE',
-                                      help='Access type')
+                                      help='Access type (local-only / remote)')
 
     def add_manager_control_functions(self):
         eva.client.cli.shells_available = []
@@ -574,23 +602,15 @@ sys.argv = {argv}
         os.chdir(dir_eva)
 
     def iote_list(self, params):
-        if not os.path.isfile(dir_etc + '/iote.domains'):
-            return self.local_func_result_empty
-        with open(dir_etc + '/iote.domains') as f:
-            clouds = f.readlines()
-        if clouds:
-            result = []
-            for c in clouds:
-                if c:
-                    acc, dcloud, cid = c.strip().split(' ', 2)
-                    result.append({
-                        'account': acc,
-                        'domain': '{}.{}'.format(acc, dcloud),
-                        'cloud': cid
-                    })
-            return 0, result
-        else:
-            return self.local_func_result_empty
+        result = []
+        for k, v in eva.registry.key_get('config/clouds/iote',
+                                         default={}).items():
+            result.append({
+                'account': v['account'],
+                'domain': k,
+                'cloud': 'iote'
+            })
+        return 0, result
 
     def iote_leave(self, params):
         code = os.system(dir_sbin + '/iote.sh leave {} {}'.format(
@@ -606,28 +626,28 @@ sys.argv = {argv}
                 not code else self.local_func_result_failed
 
     def start_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('start', c)
         return self.local_func_result_ok
 
     def stop_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('stop', c)
         return self.local_func_result_ok
 
     def restart_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         self.exec_control_script('restart', c)
         return self.local_func_result_ok
 
     def status_controller(self, params):
-        c = params['p']
+        c = params.get('p')
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
         out = self.exec_control_script('status', c, collect_output=True)
@@ -647,65 +667,44 @@ sys.argv = {argv}
         return 0, result
 
     def enable_controller(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_ENABLED=yes\n".format(params['p'].upper()))
-            for line in lines:
-                if line.startswith("{}_SUPERVISORD".format(
-                        params['p'].upper())):
-                    self.print_err('Server is controlled by supervisord')
-                    return self.local_func_result_failed
-                if "{}_ENABLED".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
-            return self.local_func_result_ok
+        c = params['p']
+        if c in self.products_configured:
+            if eva.registry.key_get_field(f'config/{c}/service',
+                                          'supervisord-program'):
+                self.print_err('Server is controlled by supervisord')
+                return self.local_func_result_failed
+            else:
+                eva.registry.key_set_field(f'config/{c}/service', 'enabled',
+                                           True)
+                return self.local_func_result_ok
         return False
 
     def disable_controller(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_ENABLED=no\n".format(params['p'].upper()))
-            for line in lines:
-                if "{}_SUPERVISORD".format(params['p'].upper()) in line:
-                    self.print_err('Server is controlled by supervisord')
-                    return self.local_func_result_failed
-                if "{}_ENABLED".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
-            return self.local_func_result_ok
+        c = params['p']
+        if c in self.products_configured:
+            if eva.registry.key_get_field(f'config/{c}/service',
+                                          'supervisord-program'):
+                self.print_err('Server is controlled by supervisord')
+                return self.local_func_result_failed
+            else:
+                eva.registry.key_set_field(f'config/{c}/service', 'enabled',
+                                           False)
+                return self.local_func_result_ok
         return False
 
     def set_controller_user(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            new_lines = []
-            new_lines.append("{}_USER={}\n".format(params['p'].upper(),
-                                                   params['v']))
-            for line in lines:
-                if "{}_USER".format(params['p'].upper()) not in line:
-                    new_lines.append(line)
-            with open(dir_etc + '/eva_servers', "w") as f:
-                f.writelines(new_lines)
+        c = params['p']
+        if c in self.products_configured:
+            eva.registry.key_set_field(f'config/{c}/service', 'user',
+                                       params['v'])
             return self.local_func_result_ok
         return False
 
     def get_controller_user(self, params):
-        if params['p'] in self.products_configured:
-            f = open(dir_etc + '/eva_servers')
-            lines = f.readlines()
-            f.close()
-            u_dict = dict([(i.split('=')[0], i.split('=')[-1]) for i in lines])
-            return 0, u_dict.get("{}_USER".format(params['p'].upper())).rstrip()
+        c = params['p']
+        if c in self.products_configured:
+            return 0, eva.registry.key_set_field(f'config/{c}/service', 'user',
+                                                 '')
         return False
 
     def print_version(self, params):
@@ -785,6 +784,8 @@ sys.argv = {argv}
                 return self.local_func_result_failed
             return self.local_func_result_ok
         if params.get('full'):
+            self.stop_controller({})
+            self.registry_stop({})
             self.clear_runtime(full=True)
             self.clear_xc()
             self.clear_ui()
@@ -802,6 +803,11 @@ sys.argv = {argv}
                 return self.local_func_result_failed
             if not self.after_save():
                 return self.local_func_result_failed
+            self.registry_start({})
+            for cmd in ['import-registry-schema', 'import-registry-defaults']:
+                if os.system(f'{dir_eva}/install/{cmd}'):
+                    return self.local_func_result_failed
+            self.start_controller({})
             return self.local_func_result_ok
         try:
             if params.get('xc'):
@@ -876,11 +882,10 @@ sys.argv = {argv}
 
     def set_mirror(self, params):
 
-        from eva.tools import ConfigFile, ShellConfigFile
+        from eva.tools import ConfigFile
 
         url = params.get('MIRROR_URL')
         eva_shell_file = 'eva_shell.ini'
-        venv_file = 'venv'
         try:
             if os.path.exists(f'{dir_eva}/mirror'):
                 raise RuntimeError('Can not set mirror URLs on primary node. '
@@ -902,9 +907,9 @@ sys.argv = {argv}
                 with ConfigFile(eva_shell_file, init_if_missing=True) as cf:
                     cf.set('update', 'url', eva_mirror)
                 trusted_host = pypi_mirror.split('/', 3)[2].split(':', 1)[0]
-                with ShellConfigFile(venv_file, init_if_missing=True) as cf:
-                    cf.set('PIP_EXTRA_OPTIONS',
-                           f'-i {pypi_mirror} --trusted-host {trusted_host}')
+                with eva.registry.key_as_dict('config/venv') as k:
+                    k.set('pip-extra-options',
+                          f'-i {pypi_mirror} --trusted-host {trusted_host}')
             else:
                 try:
                     with ConfigFile(eva_shell_file,
@@ -912,12 +917,8 @@ sys.argv = {argv}
                         cf.delete('update', 'url')
                 except FileNotFoundError:
                     pass
-                try:
-                    with ShellConfigFile(venv_file,
-                                         init_if_missing=False) as cf:
-                        cf.delete('PIP_EXTRA_OPTIONS')
-                except FileNotFoundError:
-                    pass
+                with eva.registry.key_as_dict('config/venv') as k:
+                    k.delete('pip-extra-options')
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
@@ -929,11 +930,10 @@ sys.argv = {argv}
         return self.local_func_result_ok
 
     def update_mirror(self, params):
+        from eva.tools import ShellConfigFile
         try:
-            from configparser import ConfigParser
-            cp = ConfigParser(inline_comment_prefixes=';')
-            cp.read(dir_etc + '/sfa.ini')
-            sfa_listen = cp.get('webapi', 'listen')
+            sfa_listen = eva.registry.key_get_field('config/sfa/main',
+                                                    'webapi/listen')
             if sfa_listen.startswith('127.'):
                 self.print_err(
                     'The local SFA is configured to listen on the loopback only'
@@ -992,44 +992,45 @@ sys.argv = {argv}
                 print(f'Extra Python versions: '
                       f'{", ".join(mirror_extra_python_versions)}')
             print()
-            print(f'Modules: {len(mods)}')
-            print(self.colored('-' * 40, color='grey', attrs=[]))
-            # update modules
-            for mod in mods:
-                if mod:
+            if os.getenv('SKIP_PYTHON_MODULES') != '1':
+                print(f'Modules: {len(mods)}')
+                print(self.colored('-' * 40, color='grey', attrs=[]))
+                # update modules
+                for mod in mods:
+                    if mod:
+                        if os.system(f'{dir_sbin}/pypi-mirror '
+                                     f'download -p {pip} -b -d '
+                                     f'{dir_mirror_pypi}/downloads {mod}'):
+                            return self.local_func_result_failed
+                # update compiled mods for extra Python versions
+                cmods = Path(dir_mirror_pypi).glob(f'**/*-cp*.whl')
+                xmods = set()
+                srcs_req = set()
+                for c in cmods:
+                    m = c.name.split('-')
+                    mod_name, mod_version = m[0], m[1]
+                    xmods.add(f'{mod_name}=={mod_version}')
+                for pyver in mirror_extra_python_versions:
+                    for xmod in xmods:
+                        if os.system(f'{dir_sbin}/pypi-mirror '
+                                     f'download -p {pip} -b -d '
+                                     f'{dir_mirror_pypi}/downloads '
+                                     f'--python-version {pyver} {xmod}'):
+                            self.print_warn(f'No binary package for {xmod}, '
+                                            f'will download sources')
+                            srcs_req.add(xmod)
+                # download modules sources for missing binary mods
+                for s in srcs_req:
                     if os.system(f'{dir_sbin}/pypi-mirror '
-                                 f'download -p {pip} -b -d '
-                                 f'{dir_mirror_pypi}/downloads {mod}'):
+                                 f'download -p {pip} -d '
+                                 f'{dir_mirror_pypi}/downloads {s}'):
                         return self.local_func_result_failed
-            # update compiled mods for extra Python versions
-            cmods = Path(dir_mirror_pypi).glob(f'**/*-cp*.whl')
-            xmods = set()
-            srcs_req = set()
-            for c in cmods:
-                m = c.name.split('-')
-                mod_name, mod_version = m[0], m[1]
-                xmods.add(f'{mod_name}=={mod_version}')
-            for pyver in mirror_extra_python_versions:
-                for xmod in xmods:
-                    if os.system(f'{dir_sbin}/pypi-mirror '
-                                 f'download -p {pip} -b -d '
-                                 f'{dir_mirror_pypi}/downloads '
-                                 f'--python-version {pyver} {xmod}'):
-                        self.print_warn(f'No binary package for {xmod}, '
-                                        f'will download sources')
-                        srcs_req.add(xmod)
-            # download modules sources for missing binary mods
-            for s in srcs_req:
+                # update mirror index
                 if os.system(f'{dir_sbin}/pypi-mirror '
-                             f'download -p {pip} -d '
-                             f'{dir_mirror_pypi}/downloads {s}'):
+                             f'create -d {dir_mirror_pypi}/downloads '
+                             f'-m {dir_mirror_pypi}/local'):
                     return self.local_func_result_failed
-            # update mirror index
-            if os.system(f'{dir_sbin}/pypi-mirror '
-                         f'create -d {dir_mirror_pypi}/downloads '
-                         f'-m {dir_mirror_pypi}/local'):
-                return self.local_func_result_failed
-            print(self.colored('-' * 40, color='grey', attrs=[]))
+                print(self.colored('-' * 40, color='grey', attrs=[]))
             print('Updating EVA ICS mirror')
             print()
             build = self._get_build()
@@ -1037,7 +1038,8 @@ sys.argv = {argv}
             _update_repo = params.get('u')
             for d in [
                     dir_mirror_eva, f'{dir_mirror_eva}/{version}',
-                    f'{dir_mirror_eva}/{version}/nightly'
+                    f'{dir_mirror_eva}/{version}/nightly',
+                    f'{dir_mirror_eva}/yedb'
             ]:
                 try:
                     os.mkdir(d)
@@ -1046,27 +1048,35 @@ sys.argv = {argv}
             if not _update_repo:
                 _update_repo = update_repo
             manifest = None
+            yedb_manifest = None
+            with ShellConfigFile(f'{dir_lib}/eva/registry/required') as fh:
+                YEDB_VERSION = fh.get('YEDB')
+            yedb_uris = [f'yedb/yedb-manifest-{YEDB_VERSION}.json']
+            for yedb_arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
+                yedb_uris.append(f'yedb/yedb-{YEDB_VERSION}-{yedb_arch}.tar.gz')
             for idx, f in enumerate([
                     f'{version}/nightly/manifest-{build}.json',
                     f'{version}/nightly/UPDATE.rst',
                     f'{version}/nightly/eva-{version}-{build}.tgz',
                     f'{version}/nightly/update-{build}.sh'
-            ]):
+            ] + yedb_uris):
                 if idx != 1 and os.path.isfile(f'{dir_mirror_eva}/{f}'):
                     print(self.colored(f'- [exists] {f}', color='grey'))
-                    if idx == 0:
+                    if idx == 0 or f.startswith('yedb/yedb-manifest'):
                         with open(f'{dir_mirror_eva}/{f}', 'rb') as fh:
                             content = fh.read()
                 else:
                     content = safe_download(
                         f'{_update_repo}/{f}',
-                        manifest=manifest
-                        if not f.endswith('/UPDATE.rst') else None)
+                        manifest=yedb_manifest if f.startswith('yedb/') else
+                        manifest if not f.endswith('/UPDATE.rst') else None)
                     print(self.colored(f'+ [downloaded] {f}', color='green'))
                     with open(f'{dir_mirror_eva}/{f}', 'wb') as fh:
                         fh.write(content)
                 if idx == 0:
                     manifest = rapidjson.loads(content)
+                elif f.startswith('yedb/yedb-manifest'):
+                    yedb_manifest = rapidjson.loads(content)
             with open(f'{dir_mirror_eva}/update_info.json', 'w') as fh:
                 fh.write(
                     rapidjson.dumps(dict(version=str(version),
@@ -1316,8 +1326,8 @@ sys.argv = {argv}
         return self.local_func_result_ok
 
     def edit_venv(self, params):
-        editor = os.environ.get('EDITOR', 'vi')
-        code = os.system('{} {}/etc/venv'.format(editor, dir_eva))
+        code = os.system(
+            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/venv')
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
@@ -1331,13 +1341,8 @@ sys.argv = {argv}
         else:
             ok = True
             products_enabled = []
-            with open('{}/eva_servers'.format(dir_etc)) as fh:
-                for l in fh.readlines():
-                    k, v = l.strip().split('=')
-                    if k.endswith('_ENABLED') and v == 'yes':
-                        products_enabled.append(k.split('_')[0].lower())
-            for p in self.products_configured:
-                if p in products_enabled:
+            for c in self.products_configured:
+                if eva.registry.get(f'config/{c}/service', 'enabled'):
                     print('{}: '.format(
                         self.colored(p, color='blue', attrs=['bold'])),
                           end='')
@@ -1347,38 +1352,62 @@ sys.argv = {argv}
                         ok = False
             return self.local_func_result_empty if ok else (10, '')
 
+    def registry_manage(self, params):
+        key = params.get('key')
+        if key is None:
+            key = ''
+        params = f' edit {key}' if key else ''
+        if os.system(f'{dir_bin}/eva-registry{params}'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
+    def registry_restart(self, params):
+        if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
+            self.print_err(
+                'Unable to restart registry server while other EVA servers are running'
+            )
+            return self.local_func_result_failed
+        if os.system(f'{dir_sbin}/registry-control restart'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
+    def registry_stop(self, params):
+        if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
+            self.print_err(
+                'Unable to restart registry server while other EVA servers are running'
+            )
+            return self.local_func_result_failed
+        if os.system(f'{dir_sbin}/registry-control stop'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
+    def registry_start(self, params):
+        if os.system(f'{dir_sbin}/registry-control start'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_ok
+
     def set_masterkey(self, params):
 
         def set_masterkey_for(p, a, access):
             try:
-                in_section = False
-                key_found = False
-                nf = []
-                for st in open('{}/{}_apikeys.ini'.format(dir_etc,
-                                                          p)).readlines():
-                    st = st.strip()
-                    s = st.split(';')[0].strip()
-                    if s == '[masterkey]':
-                        in_section = True
-                    elif s.startswith('['):
-                        in_section = False
-                    elif s.find('=') != -1:
-                        i = s.split('=')[0].strip()
-                        if i == 'key' and in_section and a:
-                            key_found = True
-                            nf.append('key = {}'.format(a))
-                            continue
-                        if i == 'hosts_allow' and in_section and access:
-                            nf.append('hosts_allow = {}'.format(
-                                '127.0.0.1' if access ==
-                                'local-only' else '0.0.0.0/0'))
-                            continue
-                    nf.append(st)
-                if a and not key_found:
-                    raise Exception(
-                        'masterkey not found in {}_apikeys.ini'.format(p))
-                open('{}/{}_apikeys.ini'.format(dir_etc, p),
-                     'w').write('\n'.join(nf) + '\n')
+                if a is None:
+                    a = eva.registry.key_get_field(
+                        f'config/{p}/apikeys/masterkey', 'key')
+                masterkey_data = {
+                    'key':
+                        a,
+                    'master':
+                        True,
+                    'hosts-allow': [
+                        '127.0.0.0/8' if access == 'local-only' else '0.0.0.0/0'
+                    ]
+                }
+                eva.registry.key_set(f'config/{p}/apikeys/masterkey',
+                                     masterkey_data)
                 return True
             except Exception as e:
                 self.print_err(e)
@@ -1424,33 +1453,23 @@ sys.argv = {argv}
 
     @lru_cache(maxsize=None)
     def _feature_info(self, name):
-        import yaml
-        try:
-            yaml.warnings({'YAMLLoadWarning': False})
-        except:
-            pass
-        import jinja2
-        import importlib
+        from eva.tools import render_template
         from eva.tools import kb_uri
         fname = f'{dir_lib}/eva/features/{name}.yml'
         version = self._get_version()
         build = self._get_build()
-        with open(fname) as fh:
-            tplc = fh.read()
-        tpl = jinja2.Template(tplc)
-        tpl.globals['import_module'] = importlib.import_module
         setup_cmd = f'feature setup {name} '
         if not self.interactive:
             setup_cmd = 'eva ' + setup_cmd
-        ys = tpl.render({
-            'EVA_VERSION': version,
-            'EVA_BUILD': build,
-            'EVA_DIR': dir_eva,
-            'setup_cmd': setup_cmd,
-            'kb_uri': kb_uri
-        })
-        data = yaml.load(ys)
-        return data
+        with open(fname) as fh:
+            return render_template(
+                fh, {
+                    'EVA_VERSION': version,
+                    'EVA_BUILD': build,
+                    'EVA_DIR': dir_eva,
+                    'setup_cmd': setup_cmd,
+                    'kb_uri': kb_uri
+                })
 
     def list_features(self, params):
         import glob
@@ -1588,6 +1607,10 @@ _api_functions = {
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
+    'registry:manage': cli.registry_manage,
+    'registry:restart': cli.registry_restart,
+    'registry:start': cli.registry_start,
+    'registry:stop': cli.registry_stop,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
@@ -1651,7 +1674,7 @@ eva.features.cli = cli
 cli.default_prompt = '# '
 cli.arg_sections += [
     'backup', 'server', 'edit', 'masterkey', 'system', 'iote', 'mirror',
-    'feature'
+    'feature', 'registry'
 ]
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()

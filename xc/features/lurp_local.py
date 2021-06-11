@@ -2,6 +2,8 @@ from eva.features import InvalidParameter, dir_eva, print_warn, ConfigFile
 from eva.features import cli_call, is_enabled, exec_shell, restart_controller
 from eva.features import eva_jcmd
 
+import eva.registry
+
 
 def setup(buffer=None):
     if is_enabled('uc'):
@@ -36,10 +38,9 @@ def setup(buffer=None):
     else:
         buf_cfg = {}
     if is_enabled('lm'):
-        with ConfigFile('lm.ini') as fh:
-            cfg = {'listen': '127.0.0.1:8911'}
-            cfg.update(buf_cfg)
-            fh.replace_section('lurp', cfg)
+        cfg = {'listen': '127.0.0.1:8911'}
+        cfg.update(buf_cfg)
+        eva.registry.key_set_field('config/lm/main', 'lurp', cfg)
         if is_enabled('sfa'):
             nid = 'lurp_local_sfa'
             cli_call(f'ns lm',
@@ -58,10 +59,9 @@ def setup(buffer=None):
                      f'controller set uc/{sysname} ws_state_events 0 -y',
                      return_result=True)
     if is_enabled('sfa'):
-        with ConfigFile('sfa.ini') as fh:
-            cfg = {'listen': '127.0.0.1:8921'}
-            cfg.update(buf_cfg)
-            fh.replace_section('lurp', cfg)
+        cfg = {'listen': '127.0.0.1:8921'}
+        cfg.update(buf_cfg)
+        eva.registry.key_set_field('config/sfa/main', 'lurp', cfg)
         restart_controller('sfa')
         for c in ['uc', 'lm']:
             if is_enabled(c):
@@ -90,8 +90,7 @@ def remove(id=None):
     except:
         print_warn('LM notifier lurp_local_sfa was not setup')
     if is_enabled('lm'):
-        with ConfigFile('lm.ini') as fh:
-            fh.remove_section('lurp')
+        eva.registry.key_delete_field('config/lm/main', 'lurp')
         restart_controller('lm')
         if is_enabled('uc'):
             sysname = eva_jcmd('uc', 'test')['system']
@@ -99,8 +98,7 @@ def remove(id=None):
                      f'controller set uc/{sysname} ws_state_events 1 -y',
                      return_result=True)
     if is_enabled('sfa'):
-        with ConfigFile('sfa.ini') as fh:
-            fh.remove_section('lurp')
+        eva.registry.key_delete_field('config/sfa/main', 'lurp')
         restart_controller('sfa')
         for c in ['uc', 'lm']:
             if is_enabled(c):
