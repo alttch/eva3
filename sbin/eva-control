@@ -34,8 +34,12 @@ function controller_cmd() {
         return 0
       fi
   fi
-  EVA_CONTROLLER=$c ./sbin/_control "$2"
-  if [ "$2" == "start" ]; then
+  if [ "$2" == "launch" ]; then
+    EVA_CONTROLLER=$c ./sbin/_control "$2" &
+  else
+    EVA_CONTROLLER=$c ./sbin/_control "$2"
+  fi
+  if [ "$2" == "start" ] || [ "$2" == "launch" ]; then
     I=0
     sleep 0.5
     ./sbin/eva-tinyapi -C "$c" -F test > /dev/null 2>&1
@@ -64,14 +68,14 @@ function controller_cmd() {
 CS="uc lm sfa"
 
 case $1 in
-  start)
+  start|launch)
     if [ "$2" ]; then
-      controller_cmd "$2" start A || exit 1
+      controller_cmd "$2" "$1" A || exit 1
     else
       echo "Starting EVA"
       for C in ${CS}; do
         if [ "$(eval "echo \$${C^^}_ENABLED")" = "1" ]; then
-          controller_cmd "${C}" start || exit 1
+          controller_cmd "${C}" "$1" || exit 1
         fi
       done
     fi
