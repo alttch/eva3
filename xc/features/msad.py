@@ -17,7 +17,7 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
         raise InvalidParameter
     if cache_time:
         try:
-            cache_time = float(cache_time)
+            cache_time = int(cache_time)
         except:
             raise InvalidParameter('cache_time is not a number')
     if OS_LIKE == 'debian':
