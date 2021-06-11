@@ -76,7 +76,7 @@ echo "- Stopping everything"
 
 if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
   echo "EVA ICS obsolete configuration found. Checking..."
-  ./python3/bin/python3 ./_update/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
+  ./python3/bin/python3 ./_update/eva-${VERSION}/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
 fi
 
 echo "- Installing missing modules"
