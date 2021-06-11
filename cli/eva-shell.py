@@ -1253,7 +1253,8 @@ sys.argv = {argv}
                     not self.after_save():
                     self.print_err('FAILED TO APPLY UPDATE! '
                                    'TRYING TO BRING THE NODE BACK ONLINE')
-                    self.start_controller(dict(p=None))
+                    self.registry_start({})
+                    self.start_controller({})
                     return self.local_func_result_failed
                 print('Update completed', end='')
             finally:
