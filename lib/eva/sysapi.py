@@ -1503,8 +1503,9 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                 plugin_config = {
                     'enabled': True,
                 }
-                if p in configs:
-                    plugin_config['config'] = configs[p]
+                if configs:
+                    if p in configs:
+                        plugin_config['config'] = configs[p]
                 eva.registry.key_set(f'config/{p}/plugins/{i}', plugin_config)
         return True
 
