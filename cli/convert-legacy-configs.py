@@ -615,6 +615,17 @@ for c in prod:
         set(f'config/{c}/service', service)
         set(f'config/{c}/main', cfg)
 
+# controller boot ids
+
+for c in prod:
+    bifile = dir_runtime / f'{c}_bootid'
+    try:
+        with bifile.open() as fh:
+            boot_id = int(fh.read().strip())
+            set(f'data/{c}/boot-id', boot_id)
+    except FileNotFoundError:
+        pass
+
 # import inventory and notifiers
 
 INVENTORY = [
@@ -726,6 +737,50 @@ if check:
     print(colored('CHECK PASSED', color='cyan'))
 else:
     print(colored('IMPORT COMPLETED', color='green'))
-    # TODO cleanup
-
+    if a.clear:
+        print(colored('Cleaning up', color='yellow'))
+        ETC_FILES = [
+            'uc.ini', 'lm.ini', 'sfa.ini', 'uc_apikeys.ini', 'lm_apikeys.ini',
+            'sfa_apikeys.ini', 'watchdog', 'venv', 'easy_setup', 'iote.domains',
+            'eva_servers'
+        ]
+        RUNTIME_FILES = [
+            'lm_cvars.json', 'sfa_cvars.json', 'uc_cs.json', 'lm_cs.json',
+            'sfa_cs.json', 'uc_drivers.json', 'lm_extensions.json',
+            'uc_modbus.json', 'uc_owfs.json', 'uc_bootid', 'lm_bootid',
+            'sfa_bootid'
+        ]
+        for f in ETC_FILES:
+            try:
+                os.unlink(dir_etc / f)
+            except FileNotFoundError:
+                pass
+            try:
+                os.unlink(dir_etc / f'{f}-dist')
+            except FileNotFoundError:
+                pass
+        try:
+            os.unlink(dir_etc / 'uc.ini-benchmark')
+        except FileNotFoundError:
+            pass
+        for f in RUNTIME_FILES:
+            try:
+                os.unlink(dir_runtime / f)
+            except FileNotFoundError:
+                pass
+        import shutil
+        for d in ['lm_ext_data.d', 'virtual']:
+            try:
+                shutil.rmtree(dir_runtime / d)
+            except FileNotFoundError:
+                pass
+        for i in INVENTORY:
+            try:
+                shutil.rmtree(dir_runtime / i[0])
+            except FileNotFoundError:
+                pass
+        try:
+            os.unlink(dir_runtime / 'uc_cvars.json')
+        except FileNotFoundError:
+            pass
 print()
