@@ -967,8 +967,12 @@ sys.argv = {argv}
                 mods = [x.strip() for x in fh.readlines()]
             print('Updating PyPi mirror')
             print()
-            mods_skip = eva.registry.key_get_field('config/venv', 'skip', default=[])
-            mods_extra = eva.registry.key_get_field('config/venv', 'extra', default=[])
+            mods_skip = eva.registry.key_get_field('config/venv',
+                                                   'skip',
+                                                   default=[])
+            mods_extra = eva.registry.key_get_field('config/venv',
+                                                    'extra',
+                                                    default=[])
             for m in mods.copy():
                 if m in mods_skip or m.split('=', 1)[0] in mods_skip:
                     print(self.colored(f'- {m}', color='grey'))
@@ -1042,8 +1046,8 @@ sys.argv = {argv}
                 _update_repo = update_repo
             manifest = None
             yedb_manifest = None
-            with ShellConfigFile(f'{dir_lib}/eva/registry/required') as fh:
-                YEDB_VERSION = fh.get('YEDB')
+            with ShellConfigFile(f'{dir_lib}/eva/registry/info') as fh:
+                YEDB_VERSION = fh.get('YEDB_VERSION')
             yedb_uris = [f'yedb/yedb-manifest-{YEDB_VERSION}.json']
             for yedb_arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
                 yedb_uris.append(f'yedb/yedb-{YEDB_VERSION}-{yedb_arch}.tar.gz')
