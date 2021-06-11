@@ -115,7 +115,7 @@ case $1 in
       rm -f "${PIDFILE}"
     fi
     if pkill -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
-      sleep 10
+      sleep 5
       pkill -KILL -f "${CONTROLLER_PROGRAM}" >& /dev/null
     fi
     echo " stopped"
