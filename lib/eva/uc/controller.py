@@ -275,6 +275,7 @@ def save():
 
 def save_item_state(item, db=None):
     dbconn = db if db else eva.core.db()
+    dbt = dbconn.begin()
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
@@ -307,8 +308,10 @@ def save_item_state(item, db=None):
                            status=item.status,
                            value=item.value)
             logging.debug('{} state inserted into db'.format(item.oid))
+        dbt.commit()
         return True
     except:
+        dbt.rollback()
         logging.critical('db error')
         return False
 
