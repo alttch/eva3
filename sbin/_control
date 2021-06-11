@@ -34,7 +34,7 @@ WATCHDOG_PIDFILE=${EVA_DIR}/var/${CONTROLLER}_watchdog.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
-if [ "${CONTROLLER_SUPERVISORD_PROGRAM}" = "1" ]; then
+if [ "${CONTROLLER_SUPERVISORD_PROGRAM}" ] && [ "${CONTROLLER_SUPERVISORD_PROGRAM}" != "0" ]; then
   case $1 in
     start)
       supervisorctl start "${CONTROLLER_SUPERVISORD_PROGRAM}"
