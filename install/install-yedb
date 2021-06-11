@@ -9,7 +9,7 @@ source ./lib/eva/registry/info
 
 if [ ! -x ./yedb/yedb-cli ] || [ "${YEDB_FORCE_REINSTALL}" ]; then
   mkdir -p ./yedb
-  if [ "${YEDB_TARBALL_PATH}" ]; then
+  if [ "${YEDB_TARBALL_PATH}" ] && [ -f "$YEDB_TARBALL_PATH" ]; then
     echo "Extracting YEDB from ${YEDB_TARBALL_PATH}"
     tar xzf ${YEDB_TARBALL_PATH} -C ./yedb || exit 2
   else
