@@ -650,9 +650,6 @@ if [ $CLEAR -eq 1 ]; then
     echo "WARNING: all configs are deleted"
 fi
 
-./install/import-registry-schema || exit 8
-./install/import-registry-defaults || exit 8
-
 # check mods, build venv
 
 if [ -z $SKIP_VENV ]; then
@@ -660,6 +657,9 @@ if [ -z $SKIP_VENV ]; then
     ./install/build-venv || exit 1
     echo
 fi
+
+./install/import-registry-schema || exit 8
+./install/import-registry-defaults || exit 8
 
 # ASK SOME QUESTIONS
 
