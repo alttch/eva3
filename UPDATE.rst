@@ -59,4 +59,6 @@ If registry conversion fails
 
 - run EVA_DIR/install/convert-legacy-configs --dir /tmp/eva-legacy import
 
+- manually copy runtime/db and custom runtime folders into the new instance
+
 - start all services back
