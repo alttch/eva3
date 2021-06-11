@@ -907,9 +907,9 @@ sys.argv = {argv}
                 with ConfigFile(eva_shell_file, init_if_missing=True) as cf:
                     cf.set('update', 'url', eva_mirror)
                 trusted_host = pypi_mirror.split('/', 3)[2].split(':', 1)[0]
-                with eva.registry.key_as_dict('config/venv') as k:
-                    k.set('pip-extra-options',
-                          f'-i {pypi_mirror} --trusted-host {trusted_host}')
+                eva.registry.key_set_field(
+                    'config/venv', 'pip-extra-options',
+                    f'-i {pypi_mirror} --trusted-host {trusted_host}')
             else:
                 try:
                     with ConfigFile(eva_shell_file,
@@ -917,8 +917,8 @@ sys.argv = {argv}
                         cf.delete('update', 'url')
                 except FileNotFoundError:
                     pass
-                with eva.registry.key_as_dict('config/venv') as k:
-                    k.delete('pip-extra-options')
+                eva.registry.key_delete_field('config/venv',
+                                              'pip-extra-options')
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
@@ -967,15 +967,8 @@ sys.argv = {argv}
                 mods = [x.strip() for x in fh.readlines()]
             print('Updating PyPi mirror')
             print()
-            if os.path.isfile(dir_etc + '/venv'):
-                parser = dir_sbin + f'/parse-source-config {dir_etc}/venv'
-                with os.popen(f'{parser} SKIP') as fh:
-                    mods_skip = fh.read().strip().split()
-                with os.popen(f'{parser} EXTRA') as fh:
-                    mods_extra = fh.read().strip().split()
-            else:
-                mods_skip = []
-                mods_extra = []
+            mods_skip = eva.registry.key_get_field('config/venv', 'skip', default=[])
+            mods_extra = eva.registry.key_get_field('config/venv', 'extra', default=[])
             for m in mods.copy():
                 if m in mods_skip or m.split('=', 1)[0] in mods_skip:
                     print(self.colored(f'- {m}', color='grey'))
