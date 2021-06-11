@@ -116,7 +116,7 @@ case $1 in
     fi
     if pkill -f "${CONTROLLER_PROGRAM}" >& /dev/null; then
       sleep 10
-      pkill -KILL "${CONTROLLER_PROGRAM}" >& /dev/null
+      pkill -KILL -f "${CONTROLLER_PROGRAM}" >& /dev/null
     fi
     echo " stopped"
     ;;
