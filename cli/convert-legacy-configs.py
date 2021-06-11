@@ -483,7 +483,7 @@ for c in prod:
                     if k in FLOATS:
                         value = float(value)
                     elif k in INTS:
-                        value = int(value)
+                        value = int(float(value))
                     elif k in FORCE_ARRAY:
                         if not isinstance(value, list):
                             value = [value]
@@ -541,7 +541,7 @@ for c in prod:
                                 elif name in FLOATS:
                                     value = float(value)
                                 elif name in INTS:
-                                    value = int(value)
+                                    value = int(float(value))
                                 elif name in FORCE_ARRAY:
                                     if not isinstance(value, list):
                                         value = [value]
@@ -622,7 +622,7 @@ for c in prod:
     bifile = dir_runtime / f'{c}_bootid'
     try:
         with bifile.open() as fh:
-            boot_id = int(fh.read().strip())
+            boot_id = int(float(fh.read().strip()))
             set(f'data/{c}/boot-id', boot_id)
     except FileNotFoundError:
         pass
