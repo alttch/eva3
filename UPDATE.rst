@@ -49,3 +49,14 @@ Update instructions
 
 - Automatic converter imports mailer configuration from lm.ini only. If mailer
   configuration is defined elsewhere, import it into the registry manually.
+
+If registry conversion fails
+============================
+
+- Install EVA ICS instance, stop all services except registry
+
+- Put current "runtime" and "etc" folders e.g. to "/tmp/eva-legacy"
+
+- run EVA_DIR/install/convert-legacy-configs --dir /tmp/eva-legacy import
+
+- start all services back
