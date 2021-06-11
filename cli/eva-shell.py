@@ -1362,9 +1362,8 @@ sys.argv = {argv}
 
     def registry_restart(self, params):
         if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
-            self.print_err(
-                'Unable to restart registry server while other EVA servers are running'
-            )
+            self.print_err('Unable to restart registry server '
+                           'while other EVA servers are running')
             return self.local_func_result_failed
         if os.system(f'{dir_sbin}/registry-control restart'):
             return self.local_func_result_failed
@@ -1373,9 +1372,8 @@ sys.argv = {argv}
 
     def registry_stop(self, params):
         if not os.system(f'{dir_sbin}/eva-control status|grep \ running$'):
-            self.print_err(
-                'Unable to restart registry server while other EVA servers are running'
-            )
+            self.print_err('Unable to restart registry server '
+                           'while other EVA servers are running')
             return self.local_func_result_failed
         if os.system(f'{dir_sbin}/registry-control stop'):
             return self.local_func_result_failed
