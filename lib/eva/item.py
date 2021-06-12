@@ -53,7 +53,7 @@ class Item(object):
         if oid:
             item_type, i = parse_oid(oid)
             if '/' in i:
-                item_group, item_id = i.split('/', 1)
+                item_group, item_id = i.rsplit('/', 1)
             else:
                 item_group = 'nogroup'
                 item_id = i
