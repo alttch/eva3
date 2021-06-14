@@ -1252,8 +1252,32 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return eva.core.do_save()
 
     @log_w
+    @api_need_sysfunc
+    def registry_safe_purge(self, **kwargs):
+        """
+        Safely purge registry database
+
+        Clears registry trash and invalid files. Keeps broken keys
+
+        Args:
+            k: .sysfunc=yes
+        """
+        parse_api_params(kwargs)
+        try:
+            eva.registry.safe_purge()
+            return True
+        except Exception as e:
+            raise FunctionFailed(e)
+
+    @log_w
     @api_need_master
     def dump(self, **kwargs):
+        """
+        Create crash dump
+
+        Args:
+            k: .master
+        """
         parse_api_params(kwargs)
         return eva.core.create_dump()
 

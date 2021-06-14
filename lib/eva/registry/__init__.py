@@ -66,6 +66,10 @@ def config_get(key, **kwargs):
     return Config(key_get(key, **kwargs))
 
 
+def safe_purge():
+    return db.safe_purge()
+
+
 @safe
 def key_get(key, default=KeyError):
     try:

@@ -2142,9 +2142,9 @@ API keys
 create API key
 --------------
 
-API keys are defined statically in etc/<controller>_apikeys.ini file as well as can be created with API and stored in user database.
+API keys are defined statically in EVA registry config/<controller>/apikeys tree or can be created with API and stored in the user database.
 
-Keys with master permission can not be created.
+Keys with the master permission can not be created.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/create_key.rest
@@ -2185,7 +2185,7 @@ Lists API key permissons (including a key itself)
 
 .. note::
 
-    API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
+    API keys defined in EVA registry can not be managed with API.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/list_key_props.rest
@@ -2616,5 +2616,25 @@ Parameters:
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are allowed)
 * **save** save core script config after modification
+
+
+
+.. _ucapi_restful_cat_registry:
+
+Registry management
+===================
+
+
+
+.. _ucapi_restful_registry_safe_purge:
+
+Safely purge registry database
+------------------------------
+
+Clears registry trash and invalid files. Keeps broken keys
+
+Parameters:
+
+* **API Key** API key with *sysfunc=yes* permissions
 
 

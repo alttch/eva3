@@ -699,9 +699,9 @@ API keys
 create_key - create API key
 ---------------------------
 
-API keys are defined statically in etc/<controller>_apikeys.ini file as well as can be created with API and stored in user database.
+API keys are defined statically in EVA registry config/<controller>/apikeys tree or can be created with API and stored in the user database.
 
-Keys with master permission can not be created.
+Keys with the master permission can not be created.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/sysapi/create_key.req-jrpc
@@ -742,7 +742,7 @@ Lists API key permissons (including a key itself)
 
 .. note::
 
-    API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
+    API keys defined in EVA registry can not be managed with API.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/jrpc/sysapi/list_key_props.req-jrpc
@@ -1173,4 +1173,23 @@ Parameters:
 * **k** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are allowed)
 * **save** save core script config after modification
+
+
+.. _sysapi_cat_registry:
+
+Registry management
+===================
+
+
+
+.. _sysapi_registry_safe_purge:
+
+registry_safe_purge - Safely purge registry database
+----------------------------------------------------
+
+Clears registry trash and invalid files. Keeps broken keys
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
 
