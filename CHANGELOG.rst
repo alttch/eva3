@@ -15,6 +15,8 @@ Common
    * Notifier event buffering
    * "eva restore" now stops / starts all components automatically if runtime
      folder is restored.
+   * new API method: registry_safe_purge (clears registry trash but keeps
+     broken keys)
 
 UC
 --
