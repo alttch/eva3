@@ -265,10 +265,19 @@ Macro functions
 
 The following functions execute API macros:
 
-* **reboot_controller** executes "shutdown_core" method for the selected
-  controller, after - waits until the controller is back online. The parameter
-  "wait" regulates wait timeout (default: 30 sec). The function can be used in
-  for both "api" and "cm-api".
+reboot_controller
+"""""""""""""""""
+
+Executes "shutdown_core" method for the selected controller, after - waits
+until the controller is back online. The function can be used in for both "api"
+and "cm-api".
+
+Parameters:
+
+* **wait** wait until the controller should be back online, sec (default: 30)
+
+* **shutdown_delay** start testing the controller after the specified delay, sec
+  (default: 5)
 
 .. _iac_pkg:
 

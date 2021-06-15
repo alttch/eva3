@@ -1436,10 +1436,13 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     if func == 'reboot_controller':
                                         func = 'shutdown_core'
                                         wait = params.get('wait', 30)
-                                        try:
-                                            del params['wait']
-                                        except:
-                                            pass
+                                        shutdown_delay = params.get(
+                                            'shutdown_delay', 5)
+                                        for p in ['wait', 'shutdown_delay']:
+                                            try:
+                                                del params[p]
+                                            except:
+                                                pass
                                         wait_online = True
                                 except Exception as e:
                                     raise Exception(
@@ -1462,10 +1465,13 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     if func == 'reboot_controller':
                                         func = 'shutdown_core'
                                         wait = params.get('wait', 30)
-                                        try:
-                                            del params['wait']
-                                        except:
-                                            pass
+                                        shutdown_delay = params.get(
+                                            'shutdown_delay', 5)
+                                        for p in ['wait', 'shutdown_delay']:
+                                            try:
+                                                del params[p]
+                                            except:
+                                                pass
                                         wait_online = True
                                 except Exception as e:
                                     raise Exception(
@@ -1557,10 +1563,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     f'(max: {wait} sec)...',
                                     end='',
                                     flush=True)
-                                time_to_wait = time.perf_counter() + wait
-                                for i in range(10):
+                                for i in range(int(shutdown_delay * 2)):
                                     print('.', end='', flush=True)
                                     time.sleep(0.5)
+                                time_to_wait = time.perf_counter() + wait
                                 code = -1
                                 while code != apiclient.result_ok:
                                     print('.', end='', flush=True)
