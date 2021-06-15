@@ -1,6 +1,6 @@
-from eva.features import InvalidParameter, dir_eva
+from eva.features import InvalidParameter, dir_eva, FunctionFailed
 from eva.features import restart_controller, val_to_boolean
-from eva.features import append_python_libraries
+from eva.features import append_python_libraries, is_enabled
 
 import eva.registry
 
@@ -25,6 +25,8 @@ def setup(controller=None,
           redirect=None):
     if controller not in ['uc', 'lm', 'sfa']:
         raise InvalidParameter
+    if not is_enabled(controller):
+        raise FunctionFailed(f'{controller} is not enebled')
     if listen is None or ':' not in listen:
         raise InvalidParameter
     if module is None:
@@ -57,6 +59,8 @@ def setup(controller=None,
 def remove(controller=None):
     if controller not in ['uc', 'lm', 'sfa']:
         raise InvalidParameter
+    if not is_enabled(controller):
+        raise FunctionFailed(f'{controller} is not enebled')
     for field in [
             'ssl-listen', 'ssl-module', 'ssl-cert', 'ssl-key', 'ssl-chain',
             'ssl-force-redirect'
