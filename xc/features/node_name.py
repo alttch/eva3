@@ -61,7 +61,7 @@ def setup(name=None):
     with ConfigFile('eva_shell.ini', init_if_missing=True) as cf:
         cf.set('shell', 'nodename', name)
     eva.registry.SYSTEM_NAME = current_name
-    print('Starting controllers back')
+    print('Starting controllers back...')
     for c in ['uc', 'lm', 'sfa']:
         if is_enabled(c):
             start_controller(c)
