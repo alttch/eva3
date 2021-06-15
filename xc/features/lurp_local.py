@@ -1,4 +1,4 @@
-from eva.features import InvalidParameter, dir_eva, print_warn, ConfigFile
+from eva.features import InvalidParameter, dir_eva, print_warn
 from eva.features import cli_call, is_enabled, exec_shell, restart_controller
 from eva.features import eva_jcmd
 

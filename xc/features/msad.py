@@ -3,7 +3,6 @@ from eva.features import append_python_libraries, remove_python_libraries
 from eva.features import restart_controller, is_enabled
 
 from eva.features import InvalidParameter, FunctionFailed
-from eva.features import ConfigFile
 
 import eva.registry
 
