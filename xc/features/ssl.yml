@@ -1,0 +1,18 @@
+description: SSL for WebAPI / UI
+help: |
+  Enables SSL for WebAPI and UI
+example: {{ setup_cmd }} controller=sfa,cert=ssl/cert.pem,key=ssl/key.pem,listen=0.0.0.0:8829
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/
+setup:
+  mandatory-args:
+    controller: Controller to enable SSL on
+    cert: SSL certificate file
+    key: SSL key file
+    listen: ip / port to listen on
+  optional-args:
+    module: SSL module (builtin or pyopenssl)
+    chain: SSL chain file
+    redirect: Force SSL redirect
+remove:
+  mandatory-args:
+    controller: Controller to disable SSL on
