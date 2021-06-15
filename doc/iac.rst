@@ -260,6 +260,16 @@ Additionally, local SFA resources, allowed to be deployed:
 * API keys
 * user accounts
 
+Macro functions
+^^^^^^^^^^^^^^^
+
+The following functions execute API macros:
+
+* **reboot_controller** executes "shutdown_core" method for the selected
+  controller, after - waits until the controller is back online. The parameter
+  "wait" regulates wait timeout (default: 30 sec). The function can be used in
+  for both "api" and "cm-api".
+
 .. _iac_pkg:
 
 Installing packages

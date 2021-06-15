@@ -34,6 +34,7 @@ SFA
    * Locale files can be stored in both "pvt" and "ui"
    * Custom UI error pages
    * Deployment error codes explanation
+   * "reboot_controller" special deployment API function
 
 
 3.3.2 (2021-03-01)

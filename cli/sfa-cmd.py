@@ -1411,6 +1411,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 v, '{}-{}deploy'.format(step,
                                                         'un' if und else ''),
                             []):
+                            wait_online = False
                             if 'install-pkg' in a:
                                 a['api'] = 'install_pkg'
                                 fname = a['install-pkg']
@@ -1432,6 +1433,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                             del params[p]
                                         except:
                                             pass
+                                    if func == 'reboot_controller':
+                                        func = 'shutdown_core'
+                                        wait = params.get('wait', 30)
+                                        try:
+                                            del params['wait']
+                                        except:
+                                            pass
+                                        wait_online = True
                                 except Exception as e:
                                     raise Exception(
                                         ('Controller {}, '
@@ -1450,6 +1459,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                             del params[p]
                                         except:
                                             pass
+                                    if func == 'reboot_controller':
+                                        func = 'shutdown_core'
+                                        wait = params.get('wait', 30)
+                                        try:
+                                            del params['wait']
+                                        except:
+                                            pass
+                                        wait_online = True
                                 except Exception as e:
                                     raise Exception(
                                         ('Controller {}, '
@@ -1530,6 +1547,37 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                         raise Exception(msg)
                             else:
                                 raise RuntimeError('Invalid section')
+                            if wait_online:
+                                if 'api' in a:
+                                    cname = c
+                                elif 'cm-api' in a:
+                                    cname = 'local'
+                                print(
+                                    f'waiting controller {cname} back online '
+                                    f'(max: {wait} sec)...',
+                                    end='',
+                                    flush=True)
+                                time_to_wait = time.perf_counter() + wait
+                                for i in range(10):
+                                    print('.', end='', flush=True)
+                                    time.sleep(0.5)
+                                code = -1
+                                while code != apiclient.result_ok:
+                                    print('.', end='', flush=True)
+                                    if 'api' in a:
+                                        code, data = api.call(
+                                            'test_controller', {'i': c},
+                                            timeout=custom_timeout)
+                                    elif 'cm-api' in a:
+                                        code, data = api.call(
+                                            'test', timeout=custom_timeout)
+                                    else:
+                                        raise RuntimeError
+                                    time.sleep(0.5)
+                                    if time.perf_counter() > time_to_wait:
+                                        print()
+                                        raise RuntimeError('wait timeout')
+                                print()
 
             execute_custom_tasks('before')
             # ===== CALL DEPLOY/UNDEPLOY =====
