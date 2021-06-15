@@ -1,8 +1,7 @@
 from eva.features import restart_controller
 from eva.features import InvalidParameter
 from eva.features import is_enabled
-
-from eva.tools import val_to_boolean
+from eva.features import val_to_boolean
 
 import eva.registry
 

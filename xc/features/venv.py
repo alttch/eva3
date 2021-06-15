@@ -1,8 +1,7 @@
 from eva.features import OS_ID, OS_LIKE, UnsupportedOS
 from eva.features import exec_shell, rebuild_python_venv, dir_eva
 from eva.features import install_system_packages
-
-from eva.tools import val_to_boolean
+from eva.features import val_to_boolean
 
 
 def setup(from_scratch=False):

@@ -1,8 +1,7 @@
 from eva.features import OS_ID, OS_LIKE, UnsupportedOS
 from eva.features import append_python_libraries, remove_python_libraries
 from eva.features import install_system_packages
-
-from eva.tools import val_to_boolean
+from eva.features import val_to_boolean
 
 python_libs = ['onewire==0.2']
 

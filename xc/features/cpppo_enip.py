@@ -1,8 +1,6 @@
 from eva.features import append_python_libraries, remove_python_libraries
-
 from eva.features import download_phis, remove_phis
-
-from eva.tools import val_to_boolean
+from eva.features import val_to_boolean
 
 python_libraries = ['cpppo==4.0.6']
 

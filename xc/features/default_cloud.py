@@ -1,7 +1,6 @@
 from eva.features import InvalidParameter, dir_eva
 from eva.features import cli_call, is_enabled, exec_shell, restart_controller
-
-from eva.tools import val_to_boolean
+from eva.features import val_to_boolean
 
 from textwrap import dedent
 
