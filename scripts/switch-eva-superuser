@@ -34,8 +34,16 @@ if [ -f "$SYSTEMD_FILE" ]; then
    echo "Unable to stop EVA ICS"
    exit 3
  fi
+ if ! systemctl stop eva-ics-registry; then
+   echo "Unable to stop EVA ICS registry"
+   exit 3
+ fi
  else
  echo "Stopping EVA ICS..."
+ if ! "$EVA_DIR/sbin/registry-control" stop; then
+   echo "Unable to stop EVA ICS registry"
+   exit 3
+ fi
  if ! "$EVA_DIR/sbin/eva-control" stop; then
    echo "Unable to stop EVA ICS"
    exit 3
@@ -68,12 +76,20 @@ fi
 
 if [ -f "$SYSTEMD_FILE" ]; then
  echo "Starting EVA ICS via systemctl..."
+ if ! systemctl start eva-ics-registry; then
+   echo "Unable to start EVA ICS registry"
+   exit 3
+ fi
  if ! systemctl start eva-ics; then
    echo "Unable to start EVA ICS"
    exit 3
  fi
  else
  echo "Starting EVA ICS..."
+ if ! "$EVA_DIR/sbin/registry-control" start; then
+   echo "Unable to start EVA ICS registry"
+   exit 3
+ fi
  if ! "$EVA_DIR/sbin/eva-control" start; then
    echo "Unable to start EVA ICS"
    exit 3
