@@ -18,7 +18,7 @@ Common
    * new API method: registry_safe_purge (clears registry trash but keeps
      broken keys)
    * "ssl-force-redirect" option for WebAPI (GET methods only)
-   * new feature quick setup/remove: WebAPI SSL
+   * new feature quick setup/remove: ssl, node_name
 
 UC
 --
