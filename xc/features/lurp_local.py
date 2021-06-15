@@ -71,7 +71,7 @@ def setup(buffer=None):
                          return_result=True)
 
 
-def remove(id=None):
+def remove():
     need_restart = False
     try:
         cli_call(f'ns uc', f'destroy lurp_local_lm', return_result=True)
