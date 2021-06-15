@@ -8,7 +8,7 @@ fi
 USER=$1
 
 SYSTEMD_FILE=/etc/systemd/system/eva-ics.service
-SYSTEMD_REGISTRY_FILE=/etc/systemd/system/eva-ics.service
+SYSTEMD_REGISTRY_FILE=/etc/systemd/system/eva-ics-registry.service
 
 if [ -z "$USER" ]; then
     echo "Usage: $0 <username>"
