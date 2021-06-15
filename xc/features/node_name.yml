@@ -1,0 +1,9 @@
+description: Rename the current node
+help: |
+  Renames the current node, sets the proper SYSTEM_NAME in etc/eva_config,
+  renames registry and schema keys, fixes local controllers' inter-connection.
+example: {{ setup_cmd }}name=plant_new
+doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/
+setup:
+  mandatory-args:
+    name: New node name

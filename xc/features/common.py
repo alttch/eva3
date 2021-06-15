@@ -123,6 +123,16 @@ def restart_controller(controller=''):
                passthru=True)
 
 
+def stop_controller(controller=''):
+    print(f'Stopping {CONTROLLERS.get(controller)}...')
+    exec_shell(f'{dir_eva}/sbin/eva-control stop {controller}', passthru=True)
+
+
+def start_controller(controller=''):
+    print(f'Starting {CONTROLLERS.get(controller)}...')
+    exec_shell(f'{dir_eva}/sbin/eva-control start {controller}', passthru=True)
+
+
 def append_python_libraries(libs, rebuild_venv=True):
     import eva.registry as registry
     need_modify = False

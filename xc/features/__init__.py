@@ -18,6 +18,8 @@ from .common import val_to_boolean
 
 from .common import restart_controller, cli_call, eva_jcmd, exec_shell
 
+from .common import stop_controller, start_controller
+
 from .common import ConfigFile, ShellConfigFile
 
 from .common import InvalidParameter, FunctionFailed
