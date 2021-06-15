@@ -163,6 +163,7 @@ config/uc/main:
         ssl-cert: *str
         ssl-key: *str
         ssl-chain: *str
+        ssl-force-redirect: *bool
         session-timeout: *intzeropositive
         session-no-prolong: *bool
         thread-pool: *intpositive

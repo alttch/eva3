@@ -64,6 +64,7 @@ config = SimpleNamespace(host='127.0.0.1',
                          ssl_cert=None,
                          ssl_key=None,
                          ssl_chain=None,
+                         ssl_force_redirect=False,
                          session_timeout=0,
                          session_no_prolong=False,
                          thread_pool=15,
@@ -492,6 +493,7 @@ def update_config(cfg):
         config.ssl_chain = cfg.get('webapi/ssl-chain')
         if config.ssl_chain[0] != '/':
             config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
+        config.ssl_force_redirect = cfg.get('webapi/ssl-force-redirect')
     except:
         pass
     try:
@@ -1950,6 +1952,8 @@ def start():
         if config.ssl_module:
             server_ssl.ssl_module = config.ssl_module
         server_ssl.subscribe()
+    else:
+        config.ssl_force_redirect = False
     if not eva.core.config.development:
         cherrypy.config.update({'environment': 'production'})
         cherrypy.log.access_log.propagate = False
