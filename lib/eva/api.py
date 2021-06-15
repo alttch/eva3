@@ -162,6 +162,20 @@ def api_need_master(f):
 
 
 def init_api_call(http_call=True, **kwargs):
+    if config.ssl_force_redirect:
+        req = cherrypy.serving.request
+        if req.scheme == 'http' and req.method == 'GET':
+            host = req.headers.get('Host')
+            if host:
+                host = host.rsplit(':', 1)[0]
+            else:
+                host = config.ssl_host
+            try:
+                path = req.request_line.split(maxsplit=2)[1]
+            except:
+                path = ''
+            url = f'https://{host}:{config.ssl_port}{path}'
+            raise cherrypy.HTTPRedirect(url, 301)
     aci = kwargs.copy() if kwargs else {}
     if http_call:
         aci['id'] = str(cherrypy.serving.request.unique_id)
