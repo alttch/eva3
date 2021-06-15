@@ -8,6 +8,7 @@ fi
 USER=$1
 
 SYSTEMD_FILE=/etc/systemd/system/eva-ics.service
+SYSTEMD_REGISTRY_FILE=/etc/systemd/system/eva-ics.service
 
 if [ -z "$USER" ]; then
     echo "Usage: $0 <username>"
@@ -51,7 +52,11 @@ fi
 if [ -f "$SYSTEMD_FILE" ]; then
   echo "Changing systemd user for EVA ICS..."
   if ! sed -i "s/^User=.*/User=$USER/g" "$SYSTEMD_FILE"; then
-   echo "Unable to change systemd user"
+   echo "Unable to change systemd user for eva-ics.service"
+   exit 5
+  fi
+  if ! sed -i "s/^User=.*/User=$USER/g" "$SYSTEMD_REGISTRY_FILE"; then
+   echo "Unable to change systemd user for eva-ics-registry"
    exit 5
   fi
   echo "Reloading systemd..."
