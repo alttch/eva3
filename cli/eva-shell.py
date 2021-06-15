@@ -584,7 +584,10 @@ sys.argv = {argv}
             except SystemExit:
                 pass
             return True
-        except:
+        except Exception as e:
+            self.print_err(e)
+            import traceback
+            traceback.print_exc()
             return False
         finally:
             if self.interactive:
