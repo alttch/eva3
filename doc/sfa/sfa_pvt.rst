@@ -203,6 +203,38 @@ if you use this parameter for requests, web browser will not cache a file (if
 random value is used). Besides, the server will set **Cache-Control**,
 **Expires** and **Pragma** headers to the values which prohibit any caching.
 
+Serving private structured data
+===============================
+
+See :doc:`/sfa/serve_as`.
+
+.. _sfa_pvt_registry:
+
+Serving registry objects
+========================
+
+To serve private structured data from :doc:`EVA ICS registry</registry>`, use
+the following request:
+
+.. code-block:: bash
+
+    http(s)://<IP_address_SFA:Port>/%pvt/REGISTRY-KEY
+
+where REGISTRY-KEY - key name, relative to *eva3/HOST/userdata/pvt*, e.g.
+to request a key "eva3/HOST/userdata/pvt/codes/code1" use the following request:
+
+.. code-block:: bash
+
+    http(s)://<IP_address_SFA:Port>/%pvt/codes/code1
+
+The session key should have permissions either to the whole pvt data ("#") or
+to specific registry folders/keys. ACLs for registry keys should start with
+"%/", e.g. to grant an access to the above key, pvt ACL should be
+"%/codes/code1". Wildcards in paths ("#") are supported.
+
+By default, registry data is served in JSON. To change format or add locale
+translation, see :doc:`/sfa/serve_as`.
+
 .. _sfa_rpvt:
 
 Remote content

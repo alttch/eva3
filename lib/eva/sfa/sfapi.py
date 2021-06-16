@@ -88,6 +88,8 @@ import eva.sfa.controller
 import eva.sfa.cloudmanager
 import eva.sysapi
 
+import eva.registry
+
 from eva.sfa.sfatpl import j2_handler, serve_j2
 
 api = None
@@ -1553,17 +1555,28 @@ def _tool_error_response(e, code=500):
     return str(e).encode()
 
 
-def serve_pvt(*args, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
+def serve_pvt(*args,
+              k=None,
+              f=None,
+              c=None,
+              ic=None,
+              nocache=None,
+              regdata=False,
+              **kwargs):
     if f is None:
         f = '/'.join(args)
     _k = cp_client_key(k, from_cookie=True, _aci=True)
     _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
     if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
         raise cp_api_404()
-    if not key_check(_k, pvt_file=f, ip=http_real_ip(), ro_op=True):
+    if not key_check(
+            _k, pvt_file='%/' + f if regdata else f, ip=http_real_ip(),
+            ro_op=True):
         logging.warning('pvt %s file %s access forbidden' % (_r, f))
         raise cp_forbidden_key()
-    if f.endswith('.j2'):
+    if regdata:
+        return serve_json_yml(f, dts='%pvt')
+    elif f.endswith('.j2'):
         return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
     elif f.endswith('.json') or f.endswith('.yml') or f.endswith('.yaml'):
         return serve_json_yml(f, dts='pvt')
@@ -1642,16 +1655,38 @@ def serve_json_yml(fname, dts='ui'):
         kw = cherrypy.serving.request.params
         kw['f'] = fname[5:]
         return serve_pvt(**kw)
-    infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
-    if not os.path.isfile(infile):
-        raise cp_api_404()
-    with open(infile) as fd:
-        data = fd.read()
+    elif fname.startswith('/%pvt/'):
+        kw = cherrypy.serving.request.params
+        kw['f'] = fname[6:]
+        kw['regdata'] = True
+        return serve_pvt(**kw)
+    elif fname.startswith('/%pub/'):
+        try:
+            data = eva.registry.key_get('userdata/pub/{}'.format(
+                fname[6:].replace('..', '')))
+        except KeyError:
+            raise cp_api_404()
+    elif dts == '%pvt':
+        try:
+            data = eva.registry.key_get('userdata/pvt/{}'.format(
+                fname.replace('..', '')))
+        except KeyError:
+            raise cp_api_404()
+    else:
+        infile = '{}/{}/{}'.format(eva.core.dir_eva, dts,
+                                   fname).replace('..', '')
+        if not os.path.isfile(infile):
+            raise cp_api_404()
+        with open(infile) as fd:
+            data = fd.read()
     cas = cherrypy.serving.request.params.get('as')
     lang = cherrypy.serving.request.params.get('lang')
+    if not isinstance(data, str) and not cas:
+        cas = 'json'
     if cas or lang:
         try:
-            data = yaml.load(data)
+            if isinstance(data, str):
+                data = yaml.load(data)
             if lang:
                 document_name = fname.rsplit('.')[0]
                 if document_name.startswith('/'):
@@ -1728,7 +1763,9 @@ def html_hook(*args, **kwargs):
 
 def json_yml_hook(*args, **kwargs):
     if cherrypy.serving.request.path_info[-5:] in ['.json', 'yaml'] or \
-        cherrypy.serving.request.path_info[-4:] == '.yml':
+        cherrypy.serving.request.path_info[-4:] == '.yml' or \
+        cherrypy.serving.request.path_info.startswith('/%pub/') or \
+        cherrypy.serving.request.path_info.startswith('/%pvt/'):
         cherrypy.serving.request.handler = json_yml_handler
 
 
