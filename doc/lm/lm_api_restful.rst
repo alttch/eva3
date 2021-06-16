@@ -211,10 +211,9 @@ For MQTT API calls a small shutdown delay usually should be specified to let the
     :request: http-examples/sysapi/shutdown_core.rest
     :response: http-examples/sysapi/shutdown_core.resp-rest
 
-Parameters:
+Returns:
 
-* **API Key** API key with *master* permissions
-* **t** shutdown delay (seconds)
+current boot id. This allows client to check is the controller restarted later, by comparing returned boot id and new boot id (obtained with "test" command)
 
 
 .. _lmapi_restful_set_debug:

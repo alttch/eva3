@@ -303,10 +303,9 @@ For MQTT API calls a small shutdown delay usually should be specified to let the
     :request: http-examples/jrpc/sysapi/shutdown_core.req-jrpc
     :response: http-examples/jrpc/sysapi/shutdown_core.resp-jrpc
 
-Parameters:
+Returns:
 
-* **k** API key with *master* permissions
-* **t** shutdown delay (seconds)
+current boot id. This allows client to check is the controller restarted later, by comparing returned boot id and new boot id (obtained with "test" command)
 
 .. _sysapi_login:
 

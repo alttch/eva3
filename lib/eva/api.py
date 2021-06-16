@@ -954,6 +954,7 @@ class GenericAPI(API):
                 result['db_update'] = eva.core.config.db_update
                 result['polldelay'] = eva.core.config.polldelay
                 result['threads'] = len(threading.enumerate())
+                result['boot_id'] = eva.core._flags.boot_id
                 if eva.core.config.development:
                     result['development'] = True
                 if eva.benchmark.enabled and eva.benchmark.intervals:

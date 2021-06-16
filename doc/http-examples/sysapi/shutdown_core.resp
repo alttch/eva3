@@ -6,5 +6,5 @@ Expires: 0
 Pragma: no-cache
 
 {
-    "result": "OK"
+    "boot_id": 307
 }

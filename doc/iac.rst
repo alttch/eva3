@@ -276,9 +276,6 @@ Parameters:
 
 * **wait** wait until the controller should be back online, sec (default: 30)
 
-* **shutdown_delay** start testing the controller after the specified delay, sec
-  (default: 5)
-
 .. _iac_pkg:
 
 Installing packages

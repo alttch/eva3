@@ -1436,9 +1436,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     if func == 'reboot_controller':
                                         func = 'shutdown_core'
                                         wait = params.get('wait', 30)
-                                        shutdown_delay = params.get(
-                                            'shutdown_delay', 5)
-                                        for p in ['wait', 'shutdown_delay']:
+                                        for p in ['wait']:
                                             try:
                                                 del params[p]
                                             except:
@@ -1465,9 +1463,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     if func == 'reboot_controller':
                                         func = 'shutdown_core'
                                         wait = params.get('wait', 30)
-                                        shutdown_delay = params.get(
-                                            'shutdown_delay', 5)
-                                        for p in ['wait', 'shutdown_delay']:
+                                        for p in ['wait']:
                                             try:
                                                 del params[p]
                                             except:
@@ -1554,6 +1550,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             else:
                                 raise RuntimeError('Invalid section')
                             if wait_online:
+                                prev_boot_id = data.get('boot_id', 0)
+                                boot_id = prev_boot_id
                                 if 'api' in a:
                                     cname = c
                                 elif 'cm-api' in a:
@@ -1563,26 +1561,30 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                     f'(max: {wait} sec)...',
                                     end='',
                                     flush=True)
-                                for i in range(int(shutdown_delay * 2)):
-                                    print('.', end='', flush=True)
-                                    time.sleep(0.5)
                                 time_to_wait = time.perf_counter() + wait
                                 code = -1
-                                while code != apiclient.result_ok:
+                                while boot_id <= prev_boot_id:
+                                    time.sleep(0.5)
+                                    if time.perf_counter() > time_to_wait:
+                                        print()
+                                        raise RuntimeError('wait timeout')
                                     print('.', end='', flush=True)
                                     if 'api' in a:
-                                        code, data = api.call(
-                                            'test_controller', {'i': c},
-                                            timeout=custom_timeout)
+                                        result = macall({
+                                            'i': c,
+                                            'f': 'test',
+                                            'p': {},
+                                            't': custom_timeout
+                                        })[1]
+                                        code = result.get('code')
+                                        data = result.get('data', {})
                                     elif 'cm-api' in a:
                                         code, data = api.call(
                                             'test', timeout=custom_timeout)
                                     else:
                                         raise RuntimeError
-                                    time.sleep(0.5)
-                                    if time.perf_counter() > time_to_wait:
-                                        print()
-                                        raise RuntimeError('wait timeout')
+                                    if code == apiclient.result_ok:
+                                        boot_id = data.get('boot_id')
                                 print()
 
             execute_custom_tasks('before')

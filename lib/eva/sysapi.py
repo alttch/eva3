@@ -1463,6 +1463,11 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         For MQTT API calls a small shutdown delay usually should be specified
         to let the core send the correct API response.
 
+        Returns:
+            current boot id. This allows client to check is the controller
+            restarted later, by comparing returned boot id and new boot id
+            (obtained with "test" command)
+
         Args:
             k: .master
             t: shutdown delay (seconds)
@@ -1477,7 +1482,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
         t = parse_api_params(kwargs, 't', 'n')
         threading.Thread(target=delayed_shutdown, args=(t,)).start()
-        return True, api_result_accepted
+        return {'boot_id': eva.core._flags.boot_id}, api_result_accepted
 
     @log_w
     @api_need_master
