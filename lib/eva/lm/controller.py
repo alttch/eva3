@@ -1041,7 +1041,8 @@ def handle_discovered_controller(notifier_id, controller_id, location,
             location,
             key='${}'.format(eva.core.config.default_cloud_key),
             mqtt_update=notifier_id if location.startswith('mqtt:') else None,
-            static=False)
+            static=eva.core.config.discover_as_static,
+            save=eva.core.config.discover_as_static)
     except:
         logging.warning('Unable to process controller, discovered from ' +
                         notifier_id)

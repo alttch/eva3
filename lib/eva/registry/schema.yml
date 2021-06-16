@@ -260,6 +260,7 @@ config/lm/main:
       additionalProperties: false
       properties:
         default-key: *str
+        discover-as-static: *bool
     plugins: *plugins
 config/sfa/main:
   type: object
@@ -276,6 +277,7 @@ config/sfa/main:
       additionalProperties: false
       properties:
         default-key: *str
+        discover-as-static: *bool
         cloud-manager: *bool
     plugins: *plugins
 config/uc/datapullers:

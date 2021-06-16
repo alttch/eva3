@@ -29,6 +29,11 @@ UC
    * "randomize" and "increment" auto modify for virtual sensor driver
    * data puller states
 
+LM PLC
+------
+
+    * Discover controllers as static
+
 SFA
 ---
 
@@ -37,6 +42,7 @@ SFA
    * Deployment error codes explanation
    * "reboot_controller" special deployment API function
    * serving public and private structured data from EVA ICS Registry
+   * Discover controllers as static
 
 
 3.3.2 (2021-03-01)

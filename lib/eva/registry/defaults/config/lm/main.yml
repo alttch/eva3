@@ -125,3 +125,5 @@ webapi:
 cloud:
   # default API key ID
   default-key: default
+  # discover controllers as static
+  #discover-as-static: true

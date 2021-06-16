@@ -119,3 +119,5 @@ cloud:
   cloud-manager: false
   # default API key ID
   default-key: default
+  # discover controllers as static
+  #discover-as-static: true

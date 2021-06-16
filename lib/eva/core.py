@@ -94,6 +94,7 @@ config = SimpleNamespace(pid_file=None,
                          system_name=platform.node(),
                          controller_name=None,
                          default_cloud_key='default',
+                         discover_as_static=False,
                          development=False,
                          show_traceback=False,
                          stop_on_critical='always',
@@ -907,6 +908,11 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
     except LookupError:
         pass
     logging.debug(f'cloud.default_key = {config.default_cloud_key}')
+    try:
+        config.discover_as_static = cfg.get('cloud/discover-as-static')
+    except LookupError:
+        pass
+    logging.debug(f'cloud.discover_as_static = {config.discover_as_static}')
     defaults.clear()
     d = eva.registry.key_get(f'config/{product.code}/defaults', default=None)
     if d:
