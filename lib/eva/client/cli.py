@@ -702,6 +702,11 @@ class GenericCLI(GCLI):
                                 help='Display full log records',
                                 dest='_full_display',
                                 action='store_true')
+        sp_log_get.add_argument('-x',
+                                '--regex',
+                                help='Filter by regex',
+                                metavar='REGEX',
+                                dest='x')
         sp_log_get.add_argument('-f',
                                 '--follow',
                                 help='Follow log until C-c',
@@ -1242,6 +1247,13 @@ class GenericCLI(GCLI):
             timeout = api._timeout
 
             n = params.get('n')
+            x = params.get('x')
+
+            if x:
+                import re
+                rgx = re.compile(f'.*{x}.*', re.IGNORECASE)
+            else:
+                rgx = None
 
             if uri.startswith('https://'):
                 ws_uri = 'wss' + uri[5:]
@@ -1271,7 +1283,11 @@ class GenericCLI(GCLI):
                     'l': log_level_id
                 }),
                         opcode=0x02)
-                code, data = api.call('log_get', {'l': log_level_id, 'n': n})
+                code, data = api.call('log_get', {
+                    'l': log_level_id,
+                    'n': n,
+                    'x': x
+                })
                 if code != eva.client.apiclient.result_ok:
                     raise Exception
                 for d in data:
@@ -1284,10 +1300,12 @@ class GenericCLI(GCLI):
                         data = msgpack.loads(frame.data, raw=False)
                         if data.get('s') == 'log':
                             for d in data['d']:
-                                print(
-                                    format_log_msg(
-                                        d,
-                                        full=self.cur_api_func_is_full == '_'))
+                                if rgx is None or re.match(rgx, d['msg']):
+                                    print(
+                                        format_log_msg(
+                                            d,
+                                            full=self.cur_api_func_is_full ==
+                                            '_'))
             finally:
                 ws.close()
         except KeyboardInterrupt:

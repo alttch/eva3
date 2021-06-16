@@ -1445,6 +1445,7 @@ Optionally:
 
 * **t** get log records not older than t seconds
 * **n** the maximum number of log records you want to obtain
+* **x** regex pattern filter
 
 
 .. _sfapi_restful_log_rotate:

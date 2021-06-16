@@ -510,17 +510,21 @@ class LogAPI(object):
                 - critical)
             t: get log records not older than t seconds
             n: the maximum number of log records you want to obtain
+            x: regex pattern filter
         """
         import pyaltt2.logs
         import eva.logs
-        l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
+        l, t, n, x = parse_api_params(kwargs, 'ltnx', '.iis')
         if not l:
             l = 'i'
         try:
             l = int(l)
         except:
             l = eva.logs.get_log_level_by_name(l)
-        return pyaltt2.logs.get(level=l, t=t, n=n)
+        try:
+            return pyaltt2.logs.get(level=l, t=t, n=n, pattern=x)
+        except Exception as e:
+            raise FunctionFailed(e)
 
     # don't wrap - calls other self functions
     def log(self, **kwargs):

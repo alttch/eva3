@@ -19,6 +19,7 @@ Common
      broken keys)
    * "ssl-force-redirect" option for WebAPI (GET methods only)
    * new feature quick setup/remove: ssl, node_name
+   * filter log records by regex
 
 UC
 --

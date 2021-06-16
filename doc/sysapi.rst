@@ -616,6 +616,7 @@ Optionally:
 * **l** log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50 - critical)
 * **t** get log records not older than t seconds
 * **n** the maximum number of log records you want to obtain
+* **x** regex pattern filter
 
 .. _sysapi_log_rotate:
 
