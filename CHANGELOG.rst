@@ -41,7 +41,7 @@ SFA
    * Custom UI error pages
    * Deployment error codes explanation
    * "reboot_controller" special deployment API function
-   * serving public and private structured data from EVA ICS Registry
+   * Serving public and private structured data from EVA ICS Registry
    * Discover controllers as static
 
 
