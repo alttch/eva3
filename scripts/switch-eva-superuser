@@ -74,6 +74,14 @@ if [ -f "$SYSTEMD_FILE" ]; then
   fi
 fi
 
+for c in uc lm sfa; do
+  FNAME="/etc/logrotate.d/eva-$c"
+  if [ -f "${FNAME}" ]; then
+    echo "Changing user in ${FNAME}"
+    sed -i "s/create 640 .*/create 640 ${USER} adm/g" "${FNAME}"
+  fi
+done
+
 if [ -f "$SYSTEMD_FILE" ]; then
  echo "Starting EVA ICS via systemctl..."
  if ! systemctl start eva-ics-registry; then
