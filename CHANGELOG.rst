@@ -20,7 +20,8 @@ Common
    * "ssl-force-redirect" option for WebAPI (GET methods only)
    * new feature quick setup/remove: ssl, node_name
    * filter log records by regex
-   * Plugins API v3: "handle_api_call" method to intercept API calls
+   * Plugins API v3: "handle_api_call", "handle_api_call_result" method to
+     intercept API calls
 
 UC
 --

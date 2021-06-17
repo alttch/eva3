@@ -18,7 +18,7 @@ import eva.core
 import eva.crypto
 from eva import apikey
 
-from eva.core import plugins_event_apicall
+from eva.core import plugins_event_apicall, plugins_event_apicall_result
 
 from eva.tools import format_json
 from eva.tools import parse_host_port
@@ -753,7 +753,11 @@ def notify_plugins(f):
         if plugins_event_apicall(f, kwargs) is False:
             return False
         else:
-            return f(self, *args, **kwargs)
+            result = f(self, *args, **kwargs)
+            if plugins_event_apicall_result(f, kwargs, result) is False:
+                return False
+            else:
+                return result
 
     return do
 

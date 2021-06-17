@@ -2023,6 +2023,9 @@ class SFA_HTTP_Root:
                                  'content': content,
                                  'data': info
                              })
+            if eva.core.plugins_event_apicall_result('upload', params,
+                                                     result) is False:
+                raise FunctionFailed
         except ResourceNotFound as e:
             logging.error(e)
             eva.core.log_traceback()

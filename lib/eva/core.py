@@ -1412,6 +1412,17 @@ def plugins_event_apicall(method, params):
             pass
 
 
+def plugins_event_apicall_result(method, params, result):
+    for p, v in plugin_modules.items():
+        try:
+            f = getattr(v, 'handle_api_call_result')
+            # do not spawn in bg
+            if f(method.__name__, params, result) is False:
+                return False
+        except AttributeError:
+            pass
+
+
 def _t_exec_plugin_method(p, f, *args, **kwargs):
     try:
         return f(*args, **kwargs)
