@@ -29,6 +29,7 @@ from eva.api import GenericHTTP_API
 from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
+from eva.api import notify_plugins
 
 from eva.api import key_check
 from eva.api import key_check_master
@@ -144,6 +145,7 @@ class LockAPI(object):
 
     @log_i
     @api_need_lock
+    @notify_plugins
     def lock(self, **kwargs):
         """
         acquire lock
@@ -211,6 +213,7 @@ class LockAPI(object):
 
     @log_i
     @api_need_lock
+    @notify_plugins
     def get_lock(self, **kwargs):
         """
         get lock status
@@ -232,6 +235,7 @@ class LockAPI(object):
 
     @log_i
     @api_need_lock
+    @notify_plugins
     def unlock(self, **kwargs):
         """
         release lock
@@ -325,6 +329,7 @@ class CMDAPI(object):
 
     @log_i
     @api_need_cmd
+    @notify_plugins
     def cmd(self, **kwargs):
         """
         execute a remote system command
@@ -370,6 +375,7 @@ class CMDAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def update_node(self, **kwargs):
         v, uri, yes = parse_api_params(kwargs, 'vuy', 'sss')
         env = f'EVA_UPDATE_FORCE_VERSION="{v}"' if v else ''
@@ -391,6 +397,7 @@ class LogAPI(object):
 
     @log_i
     @api_need_sysfunc
+    @notify_plugins
     def log_rotate(self, **kwargs):
         """
         rotate log file
@@ -405,6 +412,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_debug(self, **kwargs):
         """
         put debug message to log file
@@ -423,6 +431,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_info(self, **kwargs):
         """
         put info message to log file
@@ -441,6 +450,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_warning(self, **kwargs):
         """
         put warning message to log file
@@ -459,6 +469,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_error(self, **kwargs):
         """
         put error message to log file
@@ -477,6 +488,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_critical(self, **kwargs):
         """
         put critical message to log file
@@ -495,6 +507,7 @@ class LogAPI(object):
 
     @log_d
     @api_need_sysfunc
+    @notify_plugins
     def log_get(self, **kwargs):
         """
         get records from the controller log
@@ -564,6 +577,7 @@ class FileAPI(object):
     @log_w
     @api_need_file_management
     @api_need_master
+    @notify_plugins
     def install_pkg(self, **kwargs):
         """
         install a package
@@ -633,6 +647,7 @@ class FileAPI(object):
     @log_i
     @api_need_file_management
     @api_need_master
+    @notify_plugins
     def file_unlink(self, **kwargs):
         """
         delete file from runtime folder
@@ -659,6 +674,7 @@ class FileAPI(object):
     @log_i
     @api_need_file_management
     @api_need_master
+    @notify_plugins
     def file_get(self, **kwargs):
         """
         get file contents from runtime folder
@@ -684,6 +700,7 @@ class FileAPI(object):
     @log_i
     @api_need_file_management
     @api_need_master
+    @notify_plugins
     def file_put(self, **kwargs):
         """
         put file to runtime folder
@@ -730,6 +747,7 @@ class FileAPI(object):
     @log_i
     @api_need_file_management
     @api_need_master
+    @notify_plugins
     def file_set_exec(self, **kwargs):
         """
         set file exec permission
@@ -763,6 +781,7 @@ class CSAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_corescript_mqtt_topics(self, **kwargs):
         """
         List MQTT topics core scripts react on
@@ -775,6 +794,7 @@ class CSAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def reload_corescripts(self, **kwargs):
         """
         Reload core scripts if some was added or deleted
@@ -788,6 +808,7 @@ class CSAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def subscribe_corescripts_mqtt(self, **kwargs):
         """
         Subscribe core scripts to MQTT topic
@@ -811,6 +832,7 @@ class CSAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def unsubscribe_corescripts_mqtt(self, **kwargs):
         """
         Unsubscribe core scripts from MQTT topic
@@ -828,6 +850,7 @@ class CSAPI(object):
 class UserAPI(object):
 
     @log_d
+    @notify_plugins
     def api_log_get(self, **kwargs):
         """
         get API call log
@@ -907,6 +930,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def create_user(self, **kwargs):
         """
         create user account
@@ -928,6 +952,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def user_set(self, **kwargs):
         """
         .set user property
@@ -948,6 +973,7 @@ class UserAPI(object):
             raise InvalidParameter('Property unknown: {}'.format(p))
 
     @log_w
+    @notify_plugins
     def set_user_password(self, **kwargs):
         """
         set user password
@@ -979,6 +1005,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def set_user_key(self, **kwargs):
         """
         assign API key to user
@@ -995,6 +1022,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_user(self, **kwargs):
         """
         delete user account
@@ -1009,6 +1037,7 @@ class UserAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_users(self, **kwargs):
         """
         list user accounts
@@ -1021,6 +1050,7 @@ class UserAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_user(self, **kwargs):
         """
         get user account info
@@ -1034,6 +1064,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def list_keys(self, **kwargs):
         """
         list API keys
@@ -1055,6 +1086,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def create_key(self, **kwargs):
         """
         create API key
@@ -1078,6 +1110,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def list_key_props(self, **kwargs):
         """
         list API key permissions
@@ -1099,6 +1132,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def set_key_prop(self, **kwargs):
         """
         set API key permissions
@@ -1119,6 +1153,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def regenerate_key(self, **kwargs):
         """
         regenerate API key
@@ -1136,6 +1171,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_key(self, **kwargs):
         """
         delete API key
@@ -1150,6 +1186,7 @@ class UserAPI(object):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_tokens(self, **kwargs):
         """
         List active session tokens
@@ -1161,6 +1198,7 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def drop_tokens(self, **kwargs):
         """
         Drop session token(s)
@@ -1190,6 +1228,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_rpvt
+    @notify_plugins
     def rpvt(self, **kwargs):
         k, f, ic, nocache = parse_function_params(kwargs,
                                                   ['k', 'f', 'ic', 'nocache'],
@@ -1239,6 +1278,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_i
     @api_need_sysfunc
+    @notify_plugins
     def save(self, **kwargs):
         """
         save database and runtime configuration
@@ -1257,6 +1297,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_sysfunc
+    @notify_plugins
     def registry_safe_purge(self, **kwargs):
         """
         Safely purge registry database
@@ -1275,6 +1316,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def dump(self, **kwargs):
         """
         Create crash dump
@@ -1287,6 +1329,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_plugins(self, **kwargs):
         """
         get list of loaded core plugins
@@ -1301,6 +1344,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_cvar(self, **kwargs):
         """
         get the value of user-defined variable
@@ -1332,6 +1376,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_cvar(self, **kwargs):
         """
         set the value of user-defined variable
@@ -1348,6 +1393,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_notifiers(self, **kwargs):
         """
         list notifiers
@@ -1363,6 +1409,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_notifier(self, **kwargs):
         """
         get notifier configuration
@@ -1379,6 +1426,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def enable_notifier(self, **kwargs):
         """
         enable notifier
@@ -1401,6 +1449,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def disable_notifier(self, **kwargs):
         """
         disable notifier
@@ -1423,6 +1472,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def set_debug(self, **kwargs):
         """
         switch debugging mode
@@ -1445,6 +1495,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def setup_mode(self, **kwargs):
         setup = parse_api_params(kwargs, ('setup',), 'B')
         if not config.api_setup_mode:
@@ -1457,6 +1508,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def shutdown_core(self, **kwargs):
         """
         shutdown the controller
@@ -1490,6 +1542,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def notify_leaving(self, **kwargs):
         """
         notify cloud about leaving. event will be sent at server restart
@@ -1507,6 +1560,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def install_plugin(self, **kwargs):
         prod = ['uc', 'lm', 'sfa']
         from eva.x import import_x
@@ -1544,6 +1598,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def uninstall_plugin(self, **kwargs):
         i = parse_api_params(kwargs, 'i', 'S')
         if not i in eva.core.plugin_modules:
@@ -1559,6 +1614,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def clear_lang_cache(self, **kwargs):
         """
         Clear language cache

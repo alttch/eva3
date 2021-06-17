@@ -1396,16 +1396,27 @@ def plugins_event_state(source, data):
     for p, v in plugin_modules.items():
         try:
             f = getattr(v, 'handle_state_event')
-            spawn(_t_handle_state_event, p, f, source, data)
+            spawn(_t_exec_plugin_method, p, f, source, data)
         except AttributeError:
             pass
 
 
-def _t_handle_state_event(p, f, source, data):
+def plugins_event_apicall(method, params):
+    for p, v in plugin_modules.items():
+        try:
+            f = getattr(v, 'handle_api_call')
+            # do not spawn in bg
+            if f(method.__name__, params) is False:
+                return False
+        except AttributeError:
+            pass
+
+
+def _t_exec_plugin_method(p, f, *args, **kwargs):
     try:
-        f(source, data)
+        return f(*args, **kwargs)
     except:
-        logging.error(f'Error executing {p}.handle_state_event method')
+        logging.error(f'Error executing {p}.{f.__name__} method')
         log_traceback()
 
 

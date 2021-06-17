@@ -18,6 +18,8 @@ import eva.core
 import eva.crypto
 from eva import apikey
 
+from eva.core import plugins_event_apicall
+
 from eva.tools import format_json
 from eva.tools import parse_host_port
 from eva.tools import parse_function_params
@@ -741,6 +743,21 @@ def log_d(f):
     return do
 
 
+def notify_plugins(f):
+    """
+    API method decorator to notify plugins about the API call
+    """
+
+    @wraps(f)
+    def do(self, *args, **kwargs):
+        if plugins_event_apicall(f, kwargs) is False:
+            return False
+        else:
+            return f(self, *args, **kwargs)
+
+    return do
+
+
 def log_i(f):
     """
     API method decorator to log API call as INFO
@@ -899,6 +916,7 @@ class GenericAPI(API):
         fp += params if isinstance(params, list) else [params]
 
     @log_d
+    @notify_plugins
     def test(self, **kwargs):
         """
         test API/key and get system info
@@ -977,6 +995,7 @@ class GenericAPI(API):
         return True, result
 
     @log_d
+    @notify_plugins
     def state_history(self, **kwargs):
         """
         get item state history
@@ -1198,6 +1217,7 @@ class GenericAPI(API):
             return format_result(result, x, c)
 
     @log_d
+    @notify_plugins
     def state_log(self, **kwargs):
         """
         get item state log
@@ -1275,6 +1295,7 @@ class GenericAPI(API):
 
     # return version for embedded hardware
     @log_d
+    @notify_plugins
     def info(self, **kwargs):
         return {
             'platfrom': 'eva',
@@ -1284,6 +1305,7 @@ class GenericAPI(API):
         }
 
     @log_d
+    @notify_plugins
     def set_token_readonly(self, **kwargs):
         """
         Set token read-only
@@ -1309,6 +1331,7 @@ class GenericAPI(API):
         return True
 
     @log_i
+    @notify_plugins
     def login(self, **kwargs):
         """
         log in and get authentication token
@@ -1409,6 +1432,7 @@ class GenericAPI(API):
         return {'user': u, 'key': key, 'token': token}
 
     @log_i
+    @notify_plugins
     def logout(self, **kwargs):
         """
         log out and purge authentication token
@@ -1430,6 +1454,7 @@ class GenericCloudAPI(object):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def remove_controller(self, **kwargs):
         """
         disconnect controller
@@ -1443,6 +1468,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_controller_props(self, **kwargs):
         """
         get controller connection parameters
@@ -1456,6 +1482,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_controller(self, **kwargs):
         """
         get connected controller information
@@ -1469,6 +1496,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def test_controller(self, **kwargs):
         """
         test connection to remote controller
@@ -1487,6 +1515,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_controller_prop(self, **kwargs):
         """
         set controller connection parameters
@@ -1514,6 +1543,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def enable_controller(self, **kwargs):
         """
         enable connected controller
@@ -1531,6 +1561,7 @@ class GenericCloudAPI(object):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def disable_controller(self, **kwargs):
         """
         disable connected controller

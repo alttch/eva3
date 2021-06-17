@@ -33,6 +33,7 @@ from eva.api import MethodNotFound
 from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
+from eva.api import notify_plugins
 
 from eva.tools import dict_from_str
 from eva.tools import oid_to_id
@@ -146,6 +147,7 @@ class UC_API(GenericAPI):
         return True
 
     @log_d
+    @notify_plugins
     def groups(self, **kwargs):
         """
         get item group list
@@ -182,6 +184,7 @@ class UC_API(GenericAPI):
                 return []
 
     @log_d
+    @notify_plugins
     def state(self, **kwargs):
         """
         get item state
@@ -230,6 +233,7 @@ class UC_API(GenericAPI):
             return sorted(result, key=lambda k: k['oid'])
 
     @log_i
+    @notify_plugins
     def action(self, **kwargs):
         """
         unit control action
@@ -274,6 +278,7 @@ class UC_API(GenericAPI):
                                                action_uuid=u))
 
     @log_i
+    @notify_plugins
     def action_toggle(self, **kwargs):
         """
         toggle unit status
@@ -310,6 +315,7 @@ class UC_API(GenericAPI):
                                                action_uuid=u))
 
     @log_i
+    @notify_plugins
     def disable_actions(self, **kwargs):
         """
         disable unit actions
@@ -329,6 +335,7 @@ class UC_API(GenericAPI):
         return item.disable_actions()
 
     @log_i
+    @notify_plugins
     def enable_actions(self, **kwargs):
         """
         enable unit actions
@@ -349,6 +356,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def start_item_maintenance(self, **kwargs):
         """
         start item maintenance mode
@@ -368,6 +376,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def stop_item_maintenance(self, **kwargs):
         """
         stop item maintenance mode
@@ -383,6 +392,7 @@ class UC_API(GenericAPI):
         return item.stop_maintenance_mode()
 
     @log_i
+    @notify_plugins
     def result(self, **kwargs):
         """
         get action status
@@ -407,6 +417,7 @@ class UC_API(GenericAPI):
         return self._result(k, u, i, g, s, rtp='unit')
 
     @log_i
+    @notify_plugins
     def update(self, **kwargs):
         """
         update the status and value of the item
@@ -445,6 +456,7 @@ class UC_API(GenericAPI):
             return True, api_result_accepted
 
     @log_i
+    @notify_plugins
     def push_phi_state(self, **kwargs):
         """
         push state to PHI module
@@ -468,6 +480,7 @@ class UC_API(GenericAPI):
         return phi.push_state(payload=p)
 
     @log_w
+    @notify_plugins
     def kill(self, **kwargs):
         """
         kill unit actions
@@ -498,6 +511,7 @@ class UC_API(GenericAPI):
         }
 
     @log_w
+    @notify_plugins
     def q_clean(self, **kwargs):
         """
         clean action queue of unit
@@ -517,6 +531,7 @@ class UC_API(GenericAPI):
         return item.q_clean()
 
     @log_w
+    @notify_plugins
     def terminate(self, **kwargs):
         """
         terminate action execution
@@ -555,6 +570,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_config(self, **kwargs):
         """
         get item configuration
@@ -576,6 +592,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def save_config(self, **kwargs):
         """
         save item configuration
@@ -598,6 +615,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list(self, **kwargs):
         """
         list items
@@ -655,6 +673,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_props(self, **kwargs):
         """
         list item properties
@@ -675,6 +694,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_prop(self, **kwargs):
         """
         set item property
@@ -702,6 +722,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_unit(self, **kwargs):
         """
         create new unit
@@ -725,6 +746,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_sensor(self, **kwargs):
         """
         create new sensor
@@ -748,6 +770,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_mu(self, **kwargs):
         """
         create multi-update
@@ -769,6 +792,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create(self, **kwargs):
         """
         create new item
@@ -796,6 +820,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def clone(self, **kwargs):
         """
         clone item
@@ -820,6 +845,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def clone_group(self, **kwargs):
         """
         clone group
@@ -848,6 +874,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy(self, **kwargs):
         """
         delete item or group
@@ -870,6 +897,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_device
+    @notify_plugins
     def list_device_tpl(self, **kwargs):
         """
         list device templates
@@ -890,6 +918,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_device
+    @notify_plugins
     def deploy_device(self, **kwargs):
         """
         deploy device items from template
@@ -953,6 +982,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_device
+    @notify_plugins
     def update_device(self, **kwargs):
         """
         update device items
@@ -1077,6 +1107,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_device
+    @notify_plugins
     def undeploy_device(self, **kwargs):
         """
         delete device items
@@ -1175,6 +1206,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_modbus_port(self, **kwargs):
         """
         create virtual Modbus port
@@ -1227,6 +1259,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_modbus_port(self, **kwargs):
         """
         delete virtual Modbus port
@@ -1246,6 +1279,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_modbus_ports(self, **kwargs):
         """
         list virtual Modbus ports
@@ -1259,6 +1293,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_modbus_port(self, **kwargs):
         """
         get virtual Modbus port configuration
@@ -1272,6 +1307,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def test_modbus_port(self, **kwargs):
         """
         test virtual Modbus port
@@ -1302,6 +1338,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def read_modbus_port(self, **kwargs):
         """
         read Modbus register(s) from remote slave
@@ -1459,6 +1496,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def write_modbus_port(self, **kwargs):
         """
         write Modbus register(s) to remote slave
@@ -1587,6 +1625,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_modbus_slave_data(self, **kwargs):
         """
         get Modbus slave data
@@ -1657,6 +1696,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_owfs_bus(self, **kwargs):
         """
         create OWFS bus
@@ -1695,6 +1735,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_owfs_bus(self, **kwargs):
         """
         delete OWFS bus
@@ -1720,6 +1761,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_owfs_buses(self, **kwargs):
         """
         list OWFS buses
@@ -1732,6 +1774,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_owfs_bus(self, **kwargs):
         """
         get OWFS bus configuration
@@ -1745,6 +1788,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def test_owfs_bus(self, **kwargs):
         """
         test OWFS bus
@@ -1769,6 +1813,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def scan_owfs_bus(self, **kwargs):
         """
         scan OWFS bus
@@ -1843,6 +1888,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_datapullers(self, **kwargs):
         """
         List data pullers
@@ -1857,6 +1903,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_datapuller(self, **kwargs):
         """
         Get data puller
@@ -1877,6 +1924,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def start_datapuller(self, **kwargs):
         """
         Start data puller
@@ -1895,6 +1943,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def stop_datapuller(self, **kwargs):
         """
         Stop data puller
@@ -1913,6 +1962,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def restart_datapuller(self, **kwargs):
         """
         Restart data puller
@@ -1933,6 +1983,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def load_phi(self, **kwargs):
         """
         load PHI module
@@ -1961,6 +2012,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_phi(self, **kwargs):
         """
         get loaded PHI information
@@ -1978,6 +2030,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_phi_prop(self, **kwargs):
         """
         set PHI configuration property
@@ -2001,6 +2054,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_phi(self, **kwargs):
         """
         list loaded PHIs
@@ -2015,6 +2069,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def test_phi(self, **kwargs):
         """
         test PHI
@@ -2041,6 +2096,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def exec_phi(self, **kwargs):
         """
         execute additional PHI commands
@@ -2072,6 +2128,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_phi_ports(self, **kwargs):
         """
         get list of PHI ports
@@ -2090,6 +2147,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def unload_phi(self, **kwargs):
         """
         unload PHI
@@ -2113,6 +2171,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def unlink_phi_mod(self, **kwargs):
         """
         delete PHI module file
@@ -2130,6 +2189,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def put_phi_mod(self, **kwargs):
         """
         upload PHI module
@@ -2150,6 +2210,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modinfo_phi(self, **kwargs):
         """
         get PHI module info
@@ -2163,6 +2224,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def phi_discover(self, **kwargs):
         """
         discover installed equipment supported by PHI module
@@ -2182,6 +2244,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modhelp_phi(self, **kwargs):
         """
         get PHI usage help
@@ -2196,6 +2259,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_phi_mods(self, **kwargs):
         """
         get list of available PHI modules
@@ -2207,6 +2271,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_phi_map(self, **kwargs):
         phi_id, action_map = parse_api_params(kwargs, 'ia', 'S.')
         return eva.uc.driverapi.get_map(phi_id, action_map)
@@ -2215,6 +2280,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def load_driver(self, **kwargs):
         """
         load a driver
@@ -2246,6 +2312,7 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def unload_driver(self, **kwargs):
         """
         unload driver
@@ -2264,6 +2331,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_drivers(self, **kwargs):
         """
         list loaded drivers
@@ -2278,6 +2346,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_driver(self, **kwargs):
         """
         get loaded driver information
@@ -2297,6 +2366,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_driver_prop(self, **kwargs):
         """
         set driver (LPI) configuration property
@@ -2322,6 +2392,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_lpi_mods(self, **kwargs):
         """
         get list of available LPI modules
@@ -2333,6 +2404,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modinfo_lpi(self, **kwargs):
         """
         get LPI module info
@@ -2346,6 +2418,7 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modhelp_lpi(self, **kwargs):
         """
         get LPI usage help
@@ -2360,6 +2433,7 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def assign_driver(self, **kwargs):
         """
         assign driver to item

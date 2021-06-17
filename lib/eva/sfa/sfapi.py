@@ -63,6 +63,7 @@ from eva.api import HTTP_API_Logger
 from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
+from eva.api import notify_plugins
 
 from eva.api import key_check
 from eva.api import key_check_master
@@ -154,6 +155,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor
+    @notify_plugins
     def supervisor_message(self, **kwargs):
         """
         send broadcast message
@@ -193,6 +195,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @log_w
     @api_need_supervisor
     @with_supervisor_lock
+    @notify_plugins
     def supervisor_lock(self, **kwargs):
         """
         set supervisor API lock
@@ -267,6 +270,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @log_w
     @api_need_supervisor
     @with_supervisor_lock
+    @notify_plugins
     def supervisor_unlock(self, **kwargs):
         """
         clear supervisor API lock
@@ -287,6 +291,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def management_api_call(self, **kwargs):
         if not eva.sfa.controller.config.cloud_manager:
             raise MethodNotFound
@@ -303,6 +308,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return controller.management_api_call(f, params, timeout=t)
 
     @log_d
+    @notify_plugins
     def test(self, **kwargs):
         """
         test API/key and get system info
@@ -343,6 +349,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return True, result
 
     @log_d
+    @notify_plugins
     def state(self, **kwargs):
         """
         get item state
@@ -396,6 +403,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result, key=lambda k: k['oid'])
 
     @log_d
+    @notify_plugins
     def groups(self, **kwargs):
         """
         get item group list
@@ -427,6 +435,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def action(self, **kwargs):
         """
         create unit control action
@@ -470,6 +479,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def action_toggle(self, **kwargs):
         """
         toggle unit status
@@ -505,6 +515,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                                      q=q))
 
     @log_i
+    @notify_plugins
     def result(self, **kwargs):
         """
         get action status or macro run result
@@ -565,6 +576,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def disable_actions(self, **kwargs):
         """
         disable unit actions
@@ -587,6 +599,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def enable_actions(self, **kwargs):
         """
         enable unit actions
@@ -609,6 +622,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_supervisor_pass
+    @notify_plugins
     def terminate(self, **kwargs):
         """
         terminate action execution
@@ -650,6 +664,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_supervisor_pass
+    @notify_plugins
     def kill(self, **kwargs):
         """
         kill unit actions
@@ -682,6 +697,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_supervisor_pass
+    @notify_plugins
     def q_clean(self, **kwargs):
         """
         clean action queue of unit
@@ -703,6 +719,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def set(self, **kwargs):
         """
         set lvar state
@@ -732,6 +749,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def reset(self, **kwargs):
         """
         reset lvar state
@@ -755,6 +773,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def clear(self, **kwargs):
         """
         clear lvar state
@@ -778,6 +797,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def toggle(self, **kwargs):
         """
         clear lvar state
@@ -801,6 +821,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def increment(self, **kwargs):
         """
         increment lvar value
@@ -823,6 +844,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def decrement(self, **kwargs):
         """
         decrement lvar value
@@ -844,6 +866,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.decrement(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_d
+    @notify_plugins
     def list_macros(self, **kwargs):
         """
         get macro list
@@ -886,6 +909,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result, key=lambda k: k['id'])
 
     @log_d
+    @notify_plugins
     def groups_macro(self, **kwargs):
         """
         get macro groups list
@@ -905,6 +929,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_supervisor_pass
+    @notify_plugins
     def run(self, **kwargs):
         """
         execute macro
@@ -940,6 +965,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                            uuid=u))
 
     @log_d
+    @notify_plugins
     def list_cycles(self, **kwargs):
         """
         get cycle list
@@ -986,6 +1012,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result, key=lambda k: k['id'])
 
     @log_d
+    @notify_plugins
     def get_cycle(self, **kwargs):
         """
         get cycle information
@@ -1005,6 +1032,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return item.serialize(full=True)
 
     @log_d
+    @notify_plugins
     def groups_cycle(self, **kwargs):
         """
         get cycle groups list
@@ -1024,6 +1052,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_controllers(self, **kwargs):
         """
         get controllers list
@@ -1048,6 +1077,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def append_controller(self, **kwargs):
         """
         connect remote controller via HTTP
@@ -1095,6 +1125,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def matest_controller(self, **kwargs):
         """
         test management API connection to remote controller
@@ -1109,6 +1140,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def reload_controller(self, **kwargs):
         """
         reload controller
@@ -1145,6 +1177,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def upnp_rescan_controllers(self, **kwargs):
         """
         rescan controllers via UPnP
@@ -1162,6 +1195,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_remote(self, **kwargs):
         """
         get a list of items from connected controllers
@@ -1923,6 +1957,18 @@ class SFA_HTTP_Root:
                q=None,
                rdr=None,
                **kwargs):
+        params = {
+            'k': k,
+            'ufile': ufile,
+            'process_macro_id': process_macro_id,
+            'w': w,
+            'p': p,
+            'q': q,
+            'rdr': rdr
+        }
+        params.update(kwargs)
+        if eva.core.plugins_event_apicall('upload', params) is False:
+            raise FunctionFailed
         from neotasker import g
         try:
             if ufile is None:

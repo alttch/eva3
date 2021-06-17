@@ -31,6 +31,7 @@ from eva.api import MethodNotFound
 from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
+from eva.api import notify_plugins
 
 from eva.api import key_check
 from eva.api import key_check_master
@@ -67,6 +68,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         super().__init__()
 
     @log_d
+    @notify_plugins
     def groups(self, **kwargs):
         """
         get item group list
@@ -100,6 +102,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                 return []
 
     @log_d
+    @notify_plugins
     def state(self, **kwargs):
         """
         get lvar state
@@ -144,6 +147,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             return sorted(result, key=lambda k: k['oid'])
 
     @log_i
+    @notify_plugins
     def set(self, **kwargs):
         """
         set lvar state
@@ -176,6 +180,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return True
 
     @log_i
+    @notify_plugins
     def reset(self, **kwargs):
         """
         reset lvar state
@@ -192,6 +197,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return self.set(k=k, i=i, s=1, v='1')
 
     @log_i
+    @notify_plugins
     def clear(self, **kwargs):
         """
         clear lvar state
@@ -213,6 +219,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return self.set(k=k, i=i, s=0 if item.expires > 0 else 1, v='0')
 
     @log_i
+    @notify_plugins
     def toggle(self, **kwargs):
         """
         toggle lvar state
@@ -238,6 +245,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             return self.reset(k=k, i=i)
 
     @log_i
+    @notify_plugins
     def increment(self, **kwargs):
         """
         increment lvar value
@@ -258,6 +266,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return item.increment()
 
     @log_i
+    @notify_plugins
     def decrement(self, **kwargs):
         """
         decrement lvar value
@@ -278,6 +287,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return item.decrement()
 
     @log_i
+    @notify_plugins
     def run(self, **kwargs):
         """
         execute macro
@@ -334,6 +344,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                                          action_uuid=u))
 
     @log_i
+    @notify_plugins
     def result(self, **kwargs):
         """
         macro execution result
@@ -361,6 +372,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_rule(self, **kwargs):
         """
         create new rule
@@ -397,6 +409,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_rule(self, k=None, i=None):
         """
         delete rule
@@ -410,6 +423,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return eva.lm.controller.destroy_dm_rule(i)
 
     @log_d
+    @notify_plugins
     def list_rule_props(self, **kwargs):
         """
         list rule properties
@@ -438,6 +452,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return result
 
     @log_i
+    @notify_plugins
     def set_rule_prop(self, **kwargs):
         """
         set rule parameters
@@ -481,6 +496,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return True
 
     @log_i
+    @notify_plugins
     def list_rules(self, **kwargs):
         """
         get rules list
@@ -511,6 +527,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return result
 
     @log_i
+    @notify_plugins
     def get_rule(self, **kwargs):
         """
         get rule information
@@ -537,6 +554,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_job(self, **kwargs):
         """
         create new job
@@ -573,6 +591,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_job(self, k=None, i=None):
         """
         delete job
@@ -587,6 +606,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_job_props(self, **kwargs):
         """
         list job properties
@@ -608,6 +628,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_job_prop(self, **kwargs):
         """
         set job parameters
@@ -640,6 +661,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_jobs(self, **kwargs):
         """
         get jobs list
@@ -658,6 +680,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_job(self, **kwargs):
         """
         get job information
@@ -676,6 +699,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_macro_function(self, **kwargs):
         i = parse_api_params(kwargs, 'i', 'S')
         f = eva.lm.controller.get_macro_function(i)
@@ -685,6 +709,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_macro_functions(self, **kwargs):
         fn = eva.lm.controller.get_macro_function()
         result = []
@@ -696,6 +721,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def put_macro_function(self, **kwargs):
         name, description, i, o, code = parse_api_params(
             kwargs, ['function', 'description', 'input', 'output', 'src'],
@@ -711,6 +737,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def reload_macro_function(self, **kwargs):
         i, tp = parse_api_params(kwargs, 'ip', 'ss')
         if not eva.lm.controller.reload_macro_function(fname=i, tp=tp):
@@ -720,6 +747,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_macro_function(self, **kwargs):
         i = parse_api_params(kwargs, 'i', 'S')
         return eva.lm.controller.destroy_macro_function(i)
@@ -727,6 +755,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 # macros
 
     @log_d
+    @notify_plugins
     def groups_macro(self, **kwargs):
         """
         get macro groups list
@@ -746,6 +775,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return sorted(result)
 
     @log_d
+    @notify_plugins
     def list_macros(self, **kwargs):
         """
         get macro list
@@ -768,6 +798,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_macro(self, **kwargs):
         """
         create new macro
@@ -787,6 +818,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_macro(self, **kwargs):
         """
         delete macro
@@ -802,6 +834,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_macro_props(self, **kwargs):
         """
         get macro configuration properties
@@ -818,6 +851,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_macro_prop(self, **kwargs):
         """
         set macro configuration property
@@ -844,6 +878,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return self._set_prop(macro, p, v, save)
 
     @log_d
+    @notify_plugins
     def get_macro(self, **kwargs):
         """
         get macro information
@@ -867,6 +902,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 # cycle functions
 
     @log_d
+    @notify_plugins
     def groups_cycle(self, **kwargs):
         """
         get cycle groups list
@@ -886,6 +922,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return sorted(result)
 
     @log_d
+    @notify_plugins
     def list_cycles(self, **kwargs):
         """
         get cycle list
@@ -908,6 +945,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_cycle(self, **kwargs):
         """
         create new cycle
@@ -938,6 +976,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_cycle(self, **kwargs):
         """
         delete cycle
@@ -954,6 +993,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_cycle_props(self, **kwargs):
         """
         get cycle configuration properties
@@ -970,6 +1010,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_cycle_prop(self, **kwargs):
         """
         set cycle property
@@ -996,6 +1037,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return self._set_prop(cycle, p, v, save)
 
     @log_d
+    @notify_plugins
     def get_cycle(self, **kwargs):
         """
         get cycle information
@@ -1014,6 +1056,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return item.serialize(info=True)
 
     @log_i
+    @notify_plugins
     def start_cycle(self, **kwargs):
         """
         start cycle
@@ -1033,6 +1076,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return cycle.start()
 
     @log_i
+    @notify_plugins
     def stop_cycle(self, **kwargs):
         """
         stop cycle
@@ -1054,6 +1098,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         return (True, api_result_accepted) if not wait else True
 
     @log_i
+    @notify_plugins
     def reset_cycle_stats(self, **kwargs):
         """
         reset cycle statistic
@@ -1075,6 +1120,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def get_config(self, **kwargs):
         """
         get lvar configuration
@@ -1096,6 +1142,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def save_config(self, **kwargs):
         """
         save lvar configuration
@@ -1118,6 +1165,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list(self, **kwargs):
         """
         list lvars
@@ -1170,6 +1218,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_props(self, **kwargs):
         """
         list lvar properties
@@ -1190,6 +1239,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_prop(self, **kwargs):
         """
         set lvar property
@@ -1217,6 +1267,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create_lvar(self, **kwargs):
         """
         create lvar
@@ -1238,6 +1289,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def create(self, **kwargs):
         """
         alias for create_lvar
@@ -1246,6 +1298,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy_lvar(self, **kwargs):
         """
         delete lvar
@@ -1262,6 +1315,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def destroy(self, **kwargs):
         """
         alias for destroy_lvar
@@ -1272,6 +1326,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_remote(self, **kwargs):
         """
         get a list of items from connected UCs
@@ -1330,6 +1385,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def list_controllers(self, **kwargs):
         """
         get controllers list
@@ -1346,6 +1402,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def append_controller(self, **kwargs):
         """
         connect remote UC via HTTP
@@ -1380,6 +1437,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def reload_controller(self, **kwargs):
         """
         reload controller
@@ -1397,6 +1455,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def upnp_rescan_controllers(self, **kwargs):
         """
         rescan controllers via UPnP
@@ -1417,6 +1476,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def load_ext(self, **kwargs):
         """
         load extension module
@@ -1445,6 +1505,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_w
     @api_need_master
+    @notify_plugins
     def unload_ext(self, **kwargs):
         """
         unload macro extension
@@ -1461,6 +1522,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_ext(self, **kwargs):
         """
         get list of available macro extensions
@@ -1477,6 +1539,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def get_ext(self, **kwargs):
         """
         get loaded extension information
@@ -1494,6 +1557,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def list_ext_mods(self, **kwargs):
         """
         get list of available extension modules
@@ -1505,6 +1569,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modinfo_ext(self, **kwargs):
         """
         get extension module info
@@ -1518,6 +1583,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     @api_need_master
+    @notify_plugins
     def modhelp_ext(self, **kwargs):
         """
         get extension usage help
@@ -1532,6 +1598,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    @notify_plugins
     def set_ext_prop(self, **kwargs):
         """
         set extension configuration property

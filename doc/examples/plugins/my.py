@@ -135,6 +135,23 @@ def handle_state_event(source, data, **kwargs):
     logger.info(data)
 
 
+def handle_api_call(method, params, **kwargs):
+    """
+    Called before API methods
+
+    If returned False, API raises FunctionFailed exception
+    If any standard PluginAPI exception is raised, API returns the correspoding
+    error
+
+    Args:
+        method: method name
+        params: method params
+    """
+    logger.info(f'API METHOD CALLED: {method} with params {params}')
+    if method == 'destroy':
+        raise pa.AccessDenied('Method is disabled')
+
+
 # custom plugin code
 
 weekend = ['Sat', 'Sun']
