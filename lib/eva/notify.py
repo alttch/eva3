@@ -699,6 +699,7 @@ class GenericNotifier_Client(GenericNotifier):
         self.apikey = apikey
         self.token = token
         self.subscribe('server')
+        self.client_id = None
 
     def format_data(self, subject, data):
         if not subject or not data:
@@ -4125,6 +4126,15 @@ def notify_leaving():
 @with_notify_lock
 def mark_leaving(n):
     notify_leave_data.add(n)
+
+
+@with_notify_lock
+def get_clients_by_id(client_id):
+    clients = []
+    for k, n in _get_notifiers_copy().items():
+        if n.nt_client and n.client_id == client_id:
+            clients.append(n)
+    return clients
 
 
 @background_worker(delay=notifier_client_clean_delay,
