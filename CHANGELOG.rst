@@ -23,6 +23,8 @@ Common
    * filter log records by regex
    * Plugins API v3: "handle_api_call", "handle_api_call_result" method to
      intercept API calls
+   * client ids and "get_neighbor_clients" API method (requires EVA JS Framework
+     0.3.24+)
 
 UC
 --

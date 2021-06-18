@@ -1334,6 +1334,30 @@ class GenericAPI(API):
         tokens.set_token_mode(token_id, tokens.TOKEN_MODE_RO)
         return True
 
+    @log_d
+    @notify_plugins
+    def get_neighbor_clients(self, **kwargs):
+        """
+        Get neighbor clients
+
+        Args:
+            i: neightbor client id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        clients = []
+        for c in eva.notify.get_clients_by_id(i):
+            if c.token is not None:
+                try:
+                    token = eva.tokens.get_token(c.token)
+                    clients.append({
+                        'u': token['u'],
+                        'utp': token['utp'],
+                        'ki': token['ki']
+                    })
+                except KeyError:
+                    pass
+        return clients
+
     @log_i
     @notify_plugins
     def login(self, **kwargs):
