@@ -17,14 +17,16 @@ If your plugin is more complex or you want to redistribute it e.g. via PyPi -
 create Python module called "evacontrib.<yourpluginname>" and install it either
 globally or in EVA ICS venv.
 
-Plugin configuration
+Plugin configuration:
 
-Put a section [plugin.<pluginname>] in controller config, e.g. for this plugin:
+use either "eva <controller> edit plugin-config <plugin-name>" command or
+create a registry key eva3/HOST/config/<controller>/plugins/<plugin-name>
 
 ......
-[plugin.my]
-var1 = value1
-var2 = value2
+enabled: true
+config:
+  var1: value1
+  var2: value2
 ......
 """
 
