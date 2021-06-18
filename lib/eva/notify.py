@@ -1147,6 +1147,96 @@ class SQLANotifier(GenericNotifier):
         self.history_cleaner.stop()
 
 
+class TimescaleNotifier(SQLANotifier):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notifier_type = 'timescaledb'
+        self.state_storage = 'sql+tsdb'
+
+    def get_state(self,
+                  oid,
+                  t_start=None,
+                  t_end=None,
+                  fill=None,
+                  limit=None,
+                  prop=None,
+                  time_format=None,
+                  xopts=None,
+                  tz=None,
+                  **kwargs):
+        if fill is None:
+            return super().get_state(oid=oid,
+                                     t_start=t_start,
+                                     t_end=t_end,
+                                     fill=fill,
+                                     limit=limit,
+                                     prop=prop,
+                                     time_format=time_format,
+                                     xopts=xopts,
+                                     tz=tz,
+                                     **kwargs)
+        import pytz
+        import dateutil.parser
+        import eva.item
+        import datetime
+        if not tz:
+            tz = pytz.timezone(time.tzname[0])
+        l = int(limit) if limit else None
+        sfr = False
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = time.time()
+        else:
+            t_s = time.time()
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = time.time()
+        else:
+            t_e = time.time()
+        req_status = False
+        req_value = False
+        if prop in ['status', 'S']:
+            props = 'locf(avg(status)) as status'
+            req_status = True
+        elif prop in ['value', 'V']:
+            props = 'locf(avg(cast(value as double precision))) as value'
+            req_value = True
+        else:
+            props = ('locf(avg(status)) as status, '
+                     'locf(avg(cast(value as double precision))) as value')
+            req_status = True
+            req_value = True
+        space = self.space if self.space is not None else ''
+        sec = int(fill[:-1]) * eva.item._p_periods[fill[-1].upper()],
+        dbconn = self.db()
+        q = 'select time_bucket_gapfill(\'%u seconds\'::interval, ' % sec + \
+             'to_timestamp(t), start=>to_timestamp(%f), ' % t_s + \
+             'finish=>to_timestamp(%f)) as period, ' % t_e + props + \
+             ' from state_history where space=:space and oid=:oid ' + \
+             'and t>=:t_s and t<=:t_e group by period order by period desc'
+        if limit:
+            q += ' limit %u' % limit
+        stmt = dbconn.execute(sql(q), space=space, oid=oid, t_s=t_s, t_e=t_e)
+        data = []
+        while True:
+            d = stmt.fetchone()
+            if not d:
+                break
+            data.append([d[0].timestamp()] + list(d[1:]))
+        return list(reversed(data[1:] if sfr else data))
+
+
 class GenericHTTPNotifier(GenericNotifier):
 
     def __init__(self,
@@ -3698,6 +3788,20 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          space=space,
                          buf_ttl=buf_ttl,
                          interval=interval)
+    elif ncfg['type'] == 'timescaledb':
+        db = ncfg.get('db')
+        keep = ncfg.get('keep')
+        space = ncfg.get('space')
+        buf_ttl = ncfg.get('buf_ttl', 0)
+        interval = ncfg.get('interval')
+        simple_cleaning = ncfg.get('simple_cleaning')
+        n = TimescaleNotifier(notifier_id,
+                              db_uri=db,
+                              keep=keep,
+                              simple_cleaning=simple_cleaning,
+                              space=space,
+                              buf_ttl=buf_ttl,
+                              interval=interval)
     elif ncfg['type'] == 'http-json':
         space = ncfg.get('space')
         ssl_verify = ncfg.get('ssl_verify')

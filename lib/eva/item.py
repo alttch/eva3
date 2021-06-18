@@ -1883,7 +1883,7 @@ def get_state_history(a=None,
     n = eva.notify.get_stats_notifier(a)
     if not n:
         raise ResourceNotFound('notifier')
-    if n.state_storage not in ['sql', 'tsdb']:
+    if n.state_storage not in ['sql', 'tsdb', 'sql+tsdb']:
         raise MethodNotImplemented
     if fill:
         tf = 'iso'
@@ -1906,7 +1906,8 @@ def get_state_history(a=None,
                              tz=tz)
     except:
         raise FunctionFailed
-    if n.state_storage == 'sql':
+    if n.state_storage == 'sql' or (n.state_storage == 'sql+tsdb' and
+                                    fill is None):
         parse_df = True
         parse_tsdb = False
     else:
@@ -2078,8 +2079,8 @@ def get_state_log(a=None,
     n = eva.notify.get_stats_notifier(a)
     if not n:
         raise ResourceNotFound('notifier')
-    if n.state_storage not in ['sql'] and ('#' in oid or
-                                           '+' in oid):  #, 'tsdb']:
+    if n.state_storage not in ['sql', 'sql+tsdb'] and ('#' in oid or
+                                                       '+' in oid):
         raise MethodNotImplemented(
             'state log by mask is supported by SQL notifiers only')
 

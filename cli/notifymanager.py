@@ -92,6 +92,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             mqtt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
+            timescaledb:db_uri
             udp:host:port
             influxdb:http(s)://uri#[org/]database
             prometheus:'''),
@@ -335,6 +336,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                         db_uri=db_uri,
                                         keep=None,
                                         space=space)
+        elif p[0] == 'timescaledb':
+            db_uri = ':'.join(p[1:])
+            n = eva.notify.TimescaleNotifier(notifier_id=notifier_id,
+                                             db_uri=db_uri,
+                                             keep=None,
+                                             space=space)
         elif p[0] == 'udp':
             if len(p) > 3:
                 return self.local_func_result_failed
@@ -380,7 +387,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 method = getattr(i, 'method', None)
                 n['params'] = 'uri: {}{} '.format(
                     i.uri, ('#{}'.format(method) if method else ''))
-            elif isinstance(i, eva.notify.SQLANotifier):
+            elif isinstance(i, eva.notify.SQLANotifier) or isinstance(i, eva.notify.TimescaleNotifier):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
                 n['params'] = 'uri: {}, db: {}, api: v{}'.format(
