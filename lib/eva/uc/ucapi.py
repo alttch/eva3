@@ -1886,6 +1886,56 @@ class UC_API(GenericAPI):
 
     # master functions for data pullers
 
+    @log_i
+    @api_need_master
+    @notify_plugins
+    def create_datapuller(self, **kwargs):
+        """
+        create data puller
+
+        Creates :doc:`data puller</datapullers>` with the specified
+        configuration.
+
+        Args:
+            k: .master
+            i: data puller id
+            c: data puller command
+
+        Optional:
+            t: data puller timeout (in seconds, default: default timeout)
+            e: event timeout (default: none)
+            save: save datapuller config after creation
+
+        Returns:
+            If datapuller with the selected ID is already created, error is not
+            returned and datapuller is recreated.
+        """
+        i, c, t, e, save = parse_api_params(kwargs, 'icteS', 'SSnnb')
+        eva.datapuller.create_data_puller(i,
+                                          c,
+                                          timeout=t,
+                                          event_timeout=e,
+                                          save=save)
+        return True
+
+    @log_i
+    @api_need_master
+    @notify_plugins
+    def destroy_datapuller(self, **kwargs):
+        """
+        destroy data puller
+
+        Creates :doc:`data puller</datapullers>` with the specified
+        configuration.
+
+        Args:
+            k: .master
+            i: data puller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        eva.datapuller.destroy_data_puller(i)
+        return True
+
     @log_d
     @api_need_master
     @notify_plugins

@@ -213,8 +213,16 @@ config/uc/main:
               additionalProperties: false
               properties:
                 cmd: *str
-                timeout: *floatpositive
-                event-timeout: *floatpositive
+                timeout:
+                  anyOf:
+                    - type: "null"
+                    - type: number
+                      minimum: 0.001
+                event-timeout:
+                  anyOf:
+                    - type: "null"
+                    - type: number
+                      minimum: 0.001
               required:
                 - cmd
     plugins: &plugins

@@ -32,7 +32,9 @@ UC
    * item "update_delay" property is returned back
    * unit actions check value ranges if defined
    * "randomize" and "increment" auto modify for virtual sensor driver
-   * data puller states
+   * data puller states, data pullers can be created / destroyed without the
+     controller restart, new API methods "create_datapuller",
+     "destroy_datapuller"
 
 LM PLC
 ------

@@ -1400,6 +1400,32 @@ class UC_CLI(GenericCLI, ControllerCLI):
                                      help='Data puller commands')
 
         sp_dp_list = sp_dp.add_parser('list', help='List data pullers')
+        sp_dp_create = sp_dp.add_parser('create', help='Create data puller')
+        sp_dp_create.add_argument('i', help='Data puller name', metavar='NAME')
+        sp_dp_create.add_argument('c',
+                                  help='Data puller command',
+                                  metavar='COMMAND')
+        sp_dp_create.add_argument('-t',
+                                  '--timeout',
+                                  help='Custom timeout',
+                                  dest='t',
+                                  metavar='SEC',
+                                  type=float)
+        sp_dp_create.add_argument('--event-timeout',
+                                  help='Event timeout',
+                                  dest='e',
+                                  metavar='SEC',
+                                  type=float)
+        sp_dp_create.add_argument('-y',
+                                  '--save',
+                                  help='Save datapuller config after creation',
+                                  dest='_save',
+                                  action='store_true')
+
+        sp_dp_destroy = sp_dp.add_parser('destroy', help='Destroy data puller')
+        sp_dp_destroy.add_argument(
+            'i', help='Data puller name',
+            metavar='NAME').completer = self.ComplDataPuller(self)
 
         sp_dp_start = sp_dp.add_parser('start', help='Start data puller')
         sp_dp_start.add_argument(
@@ -1600,6 +1626,8 @@ _api_functions = {
     'driver:unload': 'unload_driver',
     'driver:assign': 'assign_driver',
     'driver:unassign': 'assign_driver',
+    'datapuller:create': 'create_datapuller',
+    'datapuller:destroy': 'destroy_datapuller',
     'datapuller:list': 'list_datapullers',
     'datapuller:stop': 'stop_datapuller',
     'datapuller:start': 'start_datapuller',

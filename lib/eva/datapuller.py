@@ -16,19 +16,26 @@ import eva.registry
 
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import MethodNotImplemented
+from eva.exceptions import FunctionFailed
+from eva.exceptions import InvalidParameter
 
 datapullers = {}
+
+dp_destroyed = set()
+
+dp_lock = eva.core.RLocker('datapullers')
 
 
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
+@dp_lock
 def update_config(cfg):
     c = cfg.get('datapullers', default={})
     c.update(eva.registry.get_subkeys('config/uc/datapullers'))
-    try:
-        for i, v in c.items():
+    for i, v in c.items():
+        try:
             if isinstance(v, dict):
                 cmd = v['cmd']
                 timeout = v.get('timeout')
@@ -44,19 +51,79 @@ def update_config(cfg):
             logging.info(
                 f'+ data puller {i}: {cmd} (timeout: {timeout}/{event_timeout})'
             )
-            append_data_puller(i,
-                               cmd,
-                               timeout=timeout,
-                               event_timeout=event_timeout)
-    except Exception as e:
-        logging.error(f'Datapuller init error: {e}')
-        eva.core.log_traceback()
+            dp = DataPuller(i,
+                            cmd,
+                            polldelay=eva.core.config.polldelay,
+                            timeout=timeout,
+                            event_timeout=event_timeout)
+            dp.saved = True
+            datapullers[i] = dp
+        except Exception as e:
+            logging.error(f'Datapuller init error: {e}')
+            eva.core.log_traceback()
 
 
-def append_data_puller(name, cmd, timeout, event_timeout):
-    datapullers[name] = DataPuller(name,
-                                   cmd,
-                                   polldelay=eva.core.config.polldelay)
+@dp_lock
+def create_data_puller(name, cmd, timeout=None, event_timeout=None, save=False):
+    try:
+        if datapullers[name].active:
+            raise FunctionFailed('Data puller exists and is active')
+    except KeyError:
+        pass
+    dp = DataPuller(name,
+                    cmd,
+                    polldelay=eva.core.config.polldelay,
+                    timeout=timeout,
+                    event_timeout=event_timeout)
+    datapullers[name] = dp
+    try:
+        dp_destroyed.remove(name)
+    except KeyError:
+        pass
+    if timeout is not None and timeout <= 0:
+        raise InvalidParameter('timeout must be greater than zero')
+    if event_timeout is not None and event_timeout <= 0:
+        raise InvalidParameter('event timeout must be greater than zero')
+    if save:
+        if not eva.core.prepare_save():
+            raise FunctionFailed('prepare save error')
+        eva.registry.key_set(f'config/uc/datapullers/{name}', {
+            'cmd': cmd,
+            'timeout': timeout,
+            'event-timeout': event_timeout
+        })
+        if not eva.core.finish_save():
+            raise FunctionFailed('finish save error')
+        dp.saved = True
+
+
+@eva.core.save
+@dp_lock
+def save():
+    for d in dp_destroyed:
+        eva.registry.key_delete(f'config/uc/datapullers/{d}')
+    for i, dp in datapullers:
+        if not dp.saved:
+            eva.registry.key_set(
+                f'config/uc/datapullers/{i}', {
+                    'cmd': dp.cmd,
+                    'timeout': dp._timeout,
+                    'event-timeout': dp.event_timeout
+                })
+
+
+@dp_lock
+def destroy_data_puller(name):
+    try:
+        if datapullers[name].active:
+            raise FunctionFailed('Data puller is active')
+    except KeyError:
+        raise ResourceNotFound
+    del datapullers[name]
+    if eva.core.config.db_update == 1:
+        eva.registry.key_delete(f'config/uc/datapullers/{name}')
+    else:
+        dp_destroyed.add(name)
 
 
 def start():
@@ -93,8 +160,10 @@ class DataPuller:
         self.last_activity = None
         self.last_event = None
         self.timeout = timeout if timeout else eva.core.config.timeout
+        self._timeout = timeout
         self.event_timeout = event_timeout
         self.state = ''
+        self.saved = False
 
     def serialize(self):
         return {
@@ -276,19 +345,18 @@ class DataPuller:
                                   f'code {self.p.returncode}. restarting')
                     self.restart(auto=True)
                 break
-            if self.event_timeout and self.last_event + self.event_timeout < time.perf_counter(
+            if self.event_timeout and self.last_event and \
+                    self.last_event + self.event_timeout < time.perf_counter(
             ):
                 if not eva.core.is_shutdown_requested() and self.active:
-                    logging.error(
-                        f'data puller {self.name} timed out (no events). restarting'
-                    )
+                    logging.error(f'data puller {self.name} '
+                                  f'timed out (no events). restarting')
                     self.restart(auto=True)
                 break
             elif self.last_activity + self.timeout < time.perf_counter():
                 if not eva.core.is_shutdown_requested() and self.active:
-                    logging.error(
-                        f'data puller {self.name} timed out (no output). restarting'
-                    )
+                    logging.error(f'data puller {self.name} timed '
+                                  f'out (no output). restarting')
                     self.restart(auto=True)
                 break
 
