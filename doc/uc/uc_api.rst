@@ -1576,6 +1576,49 @@ Data pullers
 
 
 
+.. _ucapi_create_datapuller:
+
+create_datapuller - create data puller
+--------------------------------------
+
+Creates :doc:`data puller</datapullers>` with the specified configuration.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/ucapi/create_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/create_datapuller.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller id
+* **c** data puller command
+
+Optionally:
+
+* **t** data puller timeout (in seconds, default: default timeout)
+* **e** event timeout (default: none)
+* **save** save datapuller config after creation
+
+Returns:
+
+If datapuller with the selected ID is already created, error is not returned and datapuller is recreated.
+
+.. _ucapi_destroy_datapuller:
+
+destroy_datapuller - destroy data puller
+----------------------------------------
+
+Creates :doc:`data puller</datapullers>` with the specified configuration.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/ucapi/destroy_datapuller.req-jrpc
+    :response: http-examples/jrpc/ucapi/destroy_datapuller.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** data puller id
+
 .. _ucapi_get_datapuller:
 
 get_datapuller - Get data puller

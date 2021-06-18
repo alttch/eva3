@@ -365,6 +365,17 @@ To exit read-only mode, user must either re-login or, to keep the current token,
     :request: http-examples/jrpc/sysapi/set_token_readonly.req-jrpc
     :response: http-examples/jrpc/sysapi/set_token_readonly.resp-jrpc
 
+.. _sysapi_get_neighbor_clients:
+
+get_neighbor_clients - Get neighbor clients
+-------------------------------------------
+
+
+
+Parameters:
+
+* **i** neightbor client id
+
 
 .. _sysapi_cat_cvar:
 

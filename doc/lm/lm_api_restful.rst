@@ -290,6 +290,32 @@ The method works for token-authenticated API calls only.
 To exit read-only mode, user must either re-login or, to keep the current token, call "login" API method with both token and user credentials.
 
 
+.. _lmapi_restful_get_neighbor_clients:
+
+Get neighbor clients
+--------------------
+
+
+
+Parameters:
+
+* **API Key** valid API key
+* **i** neightbor client id
+
+
+.. _lmapi_restful_get_neighbor_clients:
+
+Get neighbor clients
+--------------------
+
+
+
+Parameters:
+
+* **API Key** valid API key
+* **i** neightbor client id
+
+
 
 .. _lmapi_restful_cat_lvar:
 
