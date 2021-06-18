@@ -216,6 +216,7 @@ class GenericNotifier(object):
                              **kwargs)
 
         def run(self, event, o, **kwargs):
+            o._count()
             o.send_notification(subject=event[0],
                                 data=event[1],
                                 retain=event[2],
@@ -234,6 +235,7 @@ class GenericNotifier(object):
                     with o.buf_lock:
                         buf = o.buf[c]
                         o.buf[c] = []
+                    o._count()
                     o.send_notification(subject=c, data=buf)
 
     class ScheduledNotifyWorker(BackgroundIntervalWorker):
@@ -275,6 +277,11 @@ class GenericNotifier(object):
 
     event_topics = ['state', 'action', 'log', 'server']
 
+    def _count(self):
+        self.frame_counter += 1
+        if self.frame_counter > 4294967295:
+            self.frame_counter = 0
+
     def __init__(self,
                  notifier_id,
                  notifier_type=None,
@@ -297,6 +304,7 @@ class GenericNotifier(object):
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
         self.buf_lock = threading.RLock()
+        self.frame_counter = 0
         try:
             for c in self.event_topics:
                 self.buf[c] = []
@@ -544,6 +552,15 @@ class GenericNotifier(object):
                 (subject, data_to_send, retain, unpicklable))
         return True
 
+    def serialize_info(self):
+        return {
+            'id': self.notifier_id,
+            'type': self.notifier_type,
+            'enabled': self.enabled,
+            'connected': self.connected,
+            'frame_counter': self.frame_counter
+        }
+
     def serialize(self, props=False):
         d = {}
         if not props:
@@ -690,7 +707,7 @@ class GenericNotifier_Client(GenericNotifier):
             _id = notifier_id
         _tp = 'client'
         if notifier_subtype:
-            _tp += notifier_subtype
+            _tp += '-' + notifier_subtype
         else:
             _tp += 'generic'
         super().__init__(_id, _tp, buf_ttl=buf_ttl)
@@ -2616,9 +2633,8 @@ class GenericMQTTNotifier(GenericNotifier):
                     if item:
                         item.mqtt_set_state(None, frame)
                     else:
-                        logging.info(
-                            f'.{self.notifier_id} skipped {frame[oid]} state in bulk update'
-                        )
+                        logging.info(f'.{self.notifier_id} skipped '
+                                     f'{frame[oid]} state in bulk update')
         except:
             eva.core.log_traceback(notifier=True)
 
@@ -3134,6 +3150,7 @@ class UDPNotifier(GenericNotifier):
 
     def test(self):
         try:
+            self._count()
             self.send_notification('test', None)
             return True
         except Exception as e:
@@ -3571,9 +3588,11 @@ class WSNotifier_Client(GenericNotifier_Client):
                 eva.core.log_traceback(notifier=True)
 
     def send_reload(self):
+        self._count()
         self.send_notification('reload', 'asap')
 
     def send_supervisor_event(self, subject, data=None):
+        self._count()
         self.send_notification(f'supervisor.{subject}', data)
 
     def is_client_dead(self):
@@ -4027,10 +4046,10 @@ def get_stats_notifier(notifier_id):
     return n if n and n.state_storage else None
 
 
-def get_notifiers():
+def get_notifiers(include_clients=False):
     result = []
     for i, n in _get_notifiers_copy().items():
-        if not n.nt_client:
+        if not n.nt_client or include_clients:
             result.append(n)
     return result
 

@@ -1403,8 +1403,8 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         """
         parse_api_params(kwargs)
         result = []
-        for n in eva.notify.get_notifiers():
-            result.append(n.serialize())
+        for n in eva.notify.get_notifiers(include_clients=True):
+            result.append(n.serialize_info())
         return sorted(result, key=lambda k: k['id'])
 
     @log_d
@@ -1420,7 +1420,8 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         try:
-            return eva.notify.get_notifier(i, get_default=False).serialize()
+            return eva.notify.get_notifier(
+                i, get_default=False).serialize(info=True)
         except:
             raise ResourceNotFound
 

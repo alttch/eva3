@@ -189,6 +189,9 @@ class GenericCLI(GCLI):
                 ],
                 'list_plugins': [
                     'name', 'version', 'ready', 'author', 'license'
+                ],
+                'list_notifiers': [
+                    'id', 'type', 'enabled', 'connected', 'frame_counter'
                 ]
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
@@ -1889,6 +1892,13 @@ class ControllerCLI(object):
         if 'corescript' not in self.arg_sections:
             self.arg_sections.append('corescript')
 
+        ap_notifier = self.sp.add_parser('notifier',
+                                         help='Notifier online functions')
+        sp_notifier = ap_notifier.add_subparsers(dest='_func',
+                                                 metavar='func',
+                                                 help='Notifier commands')
+        ap_list = sp_notifier.add_parser('list', help='List loaded notifiers')
+
         ap_controller = self.sp.add_parser(
             'server', help='Controller server management functions')
         sp_controller = ap_controller.add_subparsers(dest='_func',
@@ -2063,7 +2073,8 @@ class ControllerCLI(object):
             'corescript:reload': 'reload_corescripts',
             'corescript:mqtt-topics': 'list_corescript_mqtt_topics',
             'corescript:mqtt-subscribe': 'subscribe_corescripts_mqtt',
-            'corescript:mqtt-unsubscribe': 'unsubscribe_corescripts_mqtt'
+            'corescript:mqtt-unsubscribe': 'unsubscribe_corescripts_mqtt',
+            'notifier:list': 'list_notifiers'
         })
 
     @staticmethod
