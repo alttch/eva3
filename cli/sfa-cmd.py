@@ -279,7 +279,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
     def prepare_result_dict(self, data, api_func, itype):
         if api_func == 'status_controller':
             return self.prepare_controller_status_dict(data)
-        elif api_func == 'result' and 'created' in data:
+        elif api_func in ['result', 'run', 'action', 'action_toggle'
+                         ] and 'created' in data:
             from datetime import datetime
             for x in data.keys():
                 import pytz

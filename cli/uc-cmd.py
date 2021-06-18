@@ -391,7 +391,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def prepare_result_dict(self, data, api_func, itype):
         if api_func == 'status_controller':
             return self.prepare_controller_status_dict(data)
-        elif api_func == 'result' and 'created' in data:
+        elif api_func in ['result', 'action', 'action_toggle'
+                         ] and 'created' in data:
             import pytz
             import time
             tz = pytz.timezone(time.tzname[0])
