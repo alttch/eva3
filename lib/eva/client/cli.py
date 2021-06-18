@@ -1945,6 +1945,11 @@ class ControllerCLI(object):
     def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
+        sp_edit_plugin_config = parser.add_parser(
+            'plugin-config', help='Edit plugin configuration')
+        sp_edit_plugin_config.add_argument('i',
+                                           help='Plugin name',
+                                           metavar='NAME')
         sp_edit_corescript = parser.add_parser('corescript',
                                                help='Edit core script')
         sp_edit_corescript.add_argument(
@@ -1957,7 +1962,20 @@ class ControllerCLI(object):
             return self.local_func_result_failed
         code = os.system(f'AUTO_PREFIX=1 {self.dir_sbin}/eva-registry-cli '
                          f'edit config/{self._management_controller_id}/main')
-        return self.local_func_result_ok if \
+        return self.local_func_result_empty if \
+                not code else self.local_func_result_failed
+
+    def edit_plugin_config(self, params):
+        i = params['i']
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        code = os.system(
+            f'AUTO_PREFIX=1 {self.dir_sbin}/eva-registry-cli '
+            f'edit config/{self._management_controller_id}/plugins/{i}'
+            f' --default {dir_eva}/lib/eva/'
+            'registry/setup-defaults/config/plugin.yml')
+        return self.local_func_result_empty if \
                 not code else self.local_func_result_failed
 
     def edit_corescript(self, params):
@@ -2037,6 +2055,7 @@ class ControllerCLI(object):
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
             'edit:server-config': self.edit_server_config,
+            'edit:plugin-config': self.edit_plugin_config,
             'edit:corescript': self.edit_corescript,
             'corescript:list': self.list_corescripts,
             'corescript:edit': self.edit_corescript,
