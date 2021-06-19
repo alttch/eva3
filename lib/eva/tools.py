@@ -10,7 +10,6 @@ import socket
 import struct
 import threading
 import logging
-import hashlib
 import uuid
 import string
 import random
