@@ -26,6 +26,8 @@ Common
    * client ids and "get_neighbor_clients" API method (requires EVA JS Framework
      0.3.24+)
    * notifier frame counter and online info with "notifier list" CLI command
+   * Alpine Linux support (3.13+)
+   * OWFS feature installs libow from source if no package exists
 
 UC
 --
