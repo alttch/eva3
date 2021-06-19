@@ -25,6 +25,9 @@ if [ ! -x ./yedb/yedb-cli ] || [ "${YEDB_FORCE_REINSTALL}" ]; then
       x86_64)
         SFX=x86_64-musl
         ;;
+      aarch64)
+        SFX=aarch64-musl
+        ;;
       *)
         echo "Unsupported architecture. Please install YEDB manually"
         exit 4

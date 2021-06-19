@@ -5,7 +5,7 @@ cd "$(dirname "${D}")/.." || exit 1
 
 . ./lib/eva/registry/info
 
-PLATFORMS="arm-musleabihf i686-musl x86_64-musl"
+PLATFORMS="arm-musleabihf i686-musl x86_64-musl aarch64-musl"
 
 if [ -z "$YEDB_VERSION" ]; then
   echo "version not specified"

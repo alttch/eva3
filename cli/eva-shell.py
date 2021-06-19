@@ -1052,7 +1052,9 @@ sys.argv = {argv}
             with ShellConfigFile(f'{dir_lib}/eva/registry/info') as fh:
                 YEDB_VERSION = fh.get('YEDB_VERSION')
             yedb_uris = [f'yedb/yedb-manifest-{YEDB_VERSION}.json']
-            for yedb_arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
+            for yedb_arch in [
+                    'arm-musleabihf', 'i686-musl', 'x86_64-musl', 'aarch64-musl'
+            ]:
                 yedb_uris.append(f'yedb/yedb-{YEDB_VERSION}-{yedb_arch}.tar.gz')
             for idx, f in enumerate([
                     f'{version}/nightly/manifest-{build}.json',

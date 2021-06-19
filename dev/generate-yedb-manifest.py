@@ -23,7 +23,7 @@ a = ap.parse_args()
 
 content = {}
 priv_key = open(f'{dir_eva}/.keys/private.key', 'rb').read()
-for arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
+for arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl', 'aarch64-musl']:
     f = f'yedb-{a.version}-{arch}.tar.gz'
     with open(f'/tmp/{f}', 'rb') as fh:
         c = fh.read()
@@ -31,13 +31,7 @@ for arch in ['arm-musleabihf', 'i686-musl', 'x86_64-musl']:
     s.update(c)
     signature = eva.crypto.sign(c, priv_key)
     eva.crypto.verify_signature(c, signature)
-    content[f] = dict(size=len(c),
-                      sha256=s.hexdigest(),
-                      signature=signature)
+    content[f] = dict(size=len(c), sha256=s.hexdigest(), signature=signature)
 
 with open(a.out, 'w') as fh:
-    fh.write(
-        json.dumps({
-            'version': a.version,
-            'content': content
-        }))
+    fh.write(json.dumps({'version': a.version, 'content': content}))
