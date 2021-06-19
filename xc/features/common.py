@@ -96,6 +96,9 @@ def install_system_packages(packages, prepare=True):
         elif OS_LIKE == 'fedora':
             pre_cmd = None
             installer = f'{sudo}yum install -y '
+        elif OS_LIKE == 'alpine':
+            pre_cmd = f'{sudo}apk update'
+            installer = f'{sudo}apk add '
         if pre_cmd and prepare:
             print('Preparing...')
             exec_shell(pre_cmd)

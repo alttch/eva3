@@ -10,6 +10,8 @@ def setup():
         install_system_packages(['libsnmp-dev'])
     elif OS_LIKE == 'fedora':
         install_system_packages(['net-snmp-devel'])
+    elif OS_LIKE == 'alpine':
+        install_system_packages(['net-snmp-dev'])
     else:
         raise UnsupportedOS
     append_python_libraries(python_libs)
