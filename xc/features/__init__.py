@@ -9,7 +9,7 @@ from .common import OS_ID, OS_LIKE, dir_eva
 
 from .common import UnsupportedOS
 
-from .common import install_system_packages
+from .common import install_system_packages, build_system_package
 
 from .common import append_python_libraries, rebuild_python_venv
 from .common import remove_python_libraries

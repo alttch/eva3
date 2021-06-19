@@ -54,6 +54,56 @@ OS_ID, OS_LIKE = get_os()
 CONTROLLERS = {'uc': 'UC', 'lm': 'LM PLC', 'sfa': 'SFA'}
 
 
+def build_system_package(src,
+                         sha256=None,
+                         configure_args=[],
+                         tdir=None,
+                         update_ld=False,
+                         allow_mp_build=True):
+    from io import BytesIO
+    buf = BytesIO()
+    if src.startswith('http://') or src.startswith('https://'):
+        print(f'Downloading source tarball from {src} ...')
+        import requests
+        r = requests.get(src, timeout=10)
+        if not r.ok:
+            raise RuntimeError(f'http error for {src}: {r.status_code}')
+        buf.write(r.content)
+    else:
+        with open(src, 'rb') as fh:
+            buf.write(fh.read())
+    buf.seek(0)
+    import tarfile, tempfile, hashlib
+    if sha256 is not None:
+        if hashlib.sha256(buf.read()).hexdigest() != sha256:
+            raise RuntimeError('checksum error')
+        buf.seek(0)
+    f = tarfile.open(fileobj=buf)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        f.extractall(path=tmpdirname)
+        pwd = os.getcwd()
+        try:
+            os.chdir(tmpdirname + (f'/{tdir}' if tdir else ''))
+            if configure_args:
+                args = '"' + '" "'.join(configure_args) + '"'
+            else:
+                args = ''
+            exec_shell(f'./configure {args}', passthru=True)
+            if allow_mp_build:
+                import multiprocessing
+                cpus = multiprocessing.cpu_count()
+                xargs = f'-j {cpus}'
+            else:
+                xargs = ''
+            exec_shell(f'make {xargs}', passthru=True)
+            exec_shell('make install', passthru=True)
+        finally:
+            os.chdir(pwd)
+    if update_ld:
+        if os.system('ldconfig') == 127:
+            raise RuntimeError('ldconfig exec failed')
+
+
 def exec_shell(cmd, input=None, passthru=False):
     from . import print_err
     if passthru:
