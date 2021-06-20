@@ -1109,6 +1109,16 @@ sys.argv = {argv}
             print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
             print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port}'
                   f'/mirror/pypi/local --trusted-host {hostname}"')
+            print()
+            print('To automatically set the mirror config on'
+                  ' other nodes, execute there a command:')
+            print()
+            print(
+                self.colored(
+                    f'    eva mirror set http://{hostname}:{sfa_port}/mirror/',
+                    color='green',
+                    attrs=['bold']))
+            print()
             if first_install:
                 print()
                 print(
