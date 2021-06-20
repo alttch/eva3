@@ -1028,7 +1028,7 @@ sys.argv = {argv}
                     if os.system(f'{dir_sbin}/pypi-mirror '
                                  f'download -p {pip} -d '
                                  f'{dir_mirror_pypi}/downloads {s}'):
-                        return self.local_func_result_failed
+                        self.print_warn(f'Unable to download sources for {s}')
                 # update mirror index
                 if os.system(f'{dir_sbin}/pypi-mirror '
                              f'create -d {dir_mirror_pypi}/downloads '
