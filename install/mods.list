@@ -1,4 +1,6 @@
 setuptools==57.0.0
+setuptools-rust==0.12.1
+wheel==0.36.2
 python-dateutil==2.7.3
 pyasn1==0.4.8
 cryptography==3.4.7
