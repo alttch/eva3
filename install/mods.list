@@ -1,3 +1,4 @@
+setuptools==57.0.0
 python-dateutil==2.7.3
 pyasn1==0.4.8
 cryptography==3.4.7
