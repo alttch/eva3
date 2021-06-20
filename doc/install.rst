@@ -884,6 +884,20 @@ updating the mirror:
 This will ask "mirror update" to download binary modules for the specified
 Python versions as well.
 
+If the cluster contains nodes with different architectures, it is recommended
+to forcibly mirror sources of the all modules, including "source" option in
+Python version list:
+
+.. code::
+
+    [update]
+    mirror_extra_python_versions = 3.7, 3.9, source
+
+.. note::
+
+    GNU C Lib (Ubuntu/Debian/RedHat etc.) and musl libc (Alpine and similar)
+    are considered as the different architectures.
+
 Configuring secondary nodes
 ---------------------------
 

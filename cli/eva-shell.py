@@ -1011,16 +1011,20 @@ sys.argv = {argv}
                     mod_name, mod_version = m[0], m[1]
                     xmods.add(f'{mod_name}=={mod_version}')
                 for pyver in mirror_extra_python_versions:
-                    for xmod in xmods:
-                        if os.system(f'{dir_sbin}/pypi-mirror '
-                                     f'download -p {pip} -b -d '
-                                     f'{dir_mirror_pypi}/downloads '
-                                     f'--python-version {pyver} {xmod}'):
-                            self.print_warn(f'No binary package for {xmod}, '
-                                            f'will download sources')
-                            srcs_req.add(xmod)
-                # download modules sources for missing binary mods
-                for s in srcs_req:
+                    if pyver != 'source':
+                        for xmod in xmods:
+                            if os.system(f'{dir_sbin}/pypi-mirror '
+                                         f'download -p {pip} -b -d '
+                                         f'{dir_mirror_pypi}/downloads '
+                                         f'--python-version {pyver} {xmod}'):
+                                self.print_warn(
+                                    f'No binary package for {xmod}, '
+                                    f'will download sources')
+                                srcs_req.add(xmod)
+                # download modules sources for missing binary mods or for all
+                for s in srcs_req \
+                        if 'source' not in mirror_extra_python_versions \
+                        else mods:
                     if os.system(f'{dir_sbin}/pypi-mirror '
                                  f'download -p {pip} -d '
                                  f'{dir_mirror_pypi}/downloads {s}'):

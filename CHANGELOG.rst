@@ -28,6 +28,7 @@ Common
    * notifier frame counter and online info with "notifier list" CLI command
    * Alpine Linux support (3.13+)
    * OWFS feature installs libow from source if no package exists
+   * Built-in PyPi mirror option to forcibly download sources of all modules
 
 UC
 --
