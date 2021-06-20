@@ -14,6 +14,8 @@ fi
 
 export EVA_REPOSITORY_URL
 
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
 OBS="./sbin/layout-converter ./sbin/uc-control ./sbin/lm-control ./sbin/sfa-control"
 
 UC_NEW_DIR="runtime/xc/uc/cs"
