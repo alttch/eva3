@@ -50,6 +50,15 @@ Update instructions
 - Automatic converter imports mailer configuration from lm.ini only. If mailer
   configuration is defined elsewhere, import it into the registry manually.
 
+- If updating from a mirror and failed, try removing system-wide
+  "python3-cffi-backend" and run the update again.
+
+- Some binary Python modules were switched to Rust. To avoid venv update
+  problems, consider installing on Rust manually: "curl --proto '=https'
+  --tlsv1.2 -sSf https://sh.rustup.rs | sh".  All new (3.4+) EVA ICS nodes have
+  Rust installed by default, if installed
+  with the automatic installer.
+
 If registry conversion fails
 ============================
 
