@@ -24,6 +24,8 @@ else
   [ -z $PYTHON ] && PYTHON=python3
 fi
 
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
 if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then
   [ -d "${EVA_DIR}/python3" ] && rm -rf "${EVA_DIR}/python3"
   [ "$USE_SYSTEM_PIP" = "1" ] && O_PIP="" || O_PIP="--without-pip"
