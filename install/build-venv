@@ -69,4 +69,10 @@ E=$?
 
 [ "$PTS" ] || [ "$ETS" ] && rm -f "${TMPFILE}"
 
+echo "Flushing data to disk..."
+
+sync
+
+echo "VENV rebuilded successfully"
+
 exit ${E}
