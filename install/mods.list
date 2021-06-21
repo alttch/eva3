@@ -15,12 +15,12 @@ neotasker==0.0.35
 pyaltt2==0.0.110
 argcomplete==1.9.4
 jinja2==2.11.2
-six==1.11.0
+six==1.16.0
 pyyaml==3.12
 netaddr==0.7.19
 netifaces==0.10.9
 paho-mqtt==1.4.0
-pandas==0.25.3
+pandas==1.1.5
 pillow==8.1.0
 psutil==5.4.6
 pygal==2.4.0
@@ -35,7 +35,7 @@ pysnmp==4.4.4
 pygments==2.7.1
 python-rapidjson==0.7.2
 msgpack==1.0.2
-pytz==2018.9
+pytz==2021.1
 neotermcolor==2.0.8
 cheroot==8.5.1
 cherrypy==17.4.1
