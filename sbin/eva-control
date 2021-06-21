@@ -66,6 +66,7 @@ function controller_cmd() {
 }
 
 CS="uc lm sfa"
+CS_REV="sfa lm uc"
 
 case $1 in
   start|launch)
@@ -87,7 +88,7 @@ case $1 in
       controller_cmd "$2" stop A || exit 1
     else
       echo "Stopping EVA"
-      for C in ${CS}; do
+      for C in ${CS_REV}; do
         if [ "$(eval "echo \$${C^^}_ENABLED")" = "1" ]; then
           controller_cmd "${C}" stop || exit 1
         fi
