@@ -8,6 +8,16 @@ _lm-cmd_server() {
   fi
 }
 
+_lm-cmd_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _lm-cmd_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -62,7 +72,7 @@ _lm-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'corescript macro server-config' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript macro plugin-config server-config' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -152,10 +162,10 @@ _lm-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set slog state test toggle unlock user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro notifier remote reset rule save server set slog state test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[1]}" in
-      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|notifier|rule|server|user)
         _lm-cmd_${words[1]}
         ;;
       *)

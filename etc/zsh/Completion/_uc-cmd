@@ -10,6 +10,16 @@ _uc-cmd_server() {
   fi
 }
 
+_uc-cmd_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
 _uc-cmd_corescript() {
   local cword
   let cword=CURRENT-1
@@ -24,7 +34,7 @@ _uc-cmd_datapuller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" list restart start stop
+    compadd "$@" create destroy list restart start stop
   else
     _files
   fi
@@ -134,7 +144,7 @@ _uc-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" action corescript server-config template update
+    compadd "$@" action corescript plugin-config server-config template update
   else
     _files
   fi
@@ -204,10 +214,10 @@ _uc-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server slog state test unlock update user watch
+    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave notifier owfs phi save server slog state test unlock update user watch
   else
     case "${words[2]}" in
-      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|notifier|owfs|phi|server|user)
         _uc-cmd_${words[2]}
         ;;
       *)

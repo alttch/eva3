@@ -38,6 +38,16 @@ _eva_sfa_server() {
   fi
 }
 
+_eva_sfa_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_sfa_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -92,7 +102,7 @@ _eva_sfa_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'corescript pvt server-config ui' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript plugin-config pvt server-config ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -182,10 +192,10 @@ _eva_sfa() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set slog state supervisor test toggle unlock user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notifier notify remote reset save server set slog state supervisor test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notifier|notify|server|supervisor|user)
         _eva_sfa_${words[2]}
         ;;
       *)
@@ -200,6 +210,16 @@ _eva_lm_server() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_lm_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -259,7 +279,7 @@ _eva_lm_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'corescript macro server-config' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript macro plugin-config server-config' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -349,10 +369,10 @@ _eva_lm() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set slog state test toggle unlock user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro notifier remote reset rule save server set slog state test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[2]}" in
-      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|notifier|rule|server|user)
         _eva_lm_${words[2]}
         ;;
       *)
@@ -372,6 +392,16 @@ _eva_uc_server() {
   fi
 }
 
+_eva_uc_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_uc_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -386,7 +416,7 @@ _eva_uc_datapuller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'list restart start stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy list restart start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -496,7 +526,7 @@ _eva_uc_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'action corescript server-config template update' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action corescript plugin-config server-config template update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -566,10 +596,10 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server slog state test unlock update user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave notifier owfs phi save server slog state test unlock update user watch' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|notifier|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
       *)
@@ -594,6 +624,16 @@ _eva_edit() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'crontab venv' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_eva_registry() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'manage restart start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -633,10 +673,10 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup edit feature iote lm masterkey mirror ns save server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit feature iote lm masterkey mirror ns registry save server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
-      backup|edit|feature|iote|lm|masterkey|mirror|server|sfa|system|uc)
+      backup|edit|feature|iote|lm|masterkey|mirror|registry|server|sfa|system|uc)
         _eva_${words[1]}
         ;;
       *)

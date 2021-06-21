@@ -10,6 +10,16 @@ _sfa-cmd_server() {
   fi
 }
 
+_sfa-cmd_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
 _sfa-cmd_corescript() {
   local cword
   let cword=CURRENT-1
@@ -64,7 +74,7 @@ _sfa-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" corescript pvt server-config ui
+    compadd "$@" corescript plugin-config pvt server-config ui
   else
     _files
   fi
@@ -154,10 +164,10 @@ _sfa-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set slog state supervisor test toggle unlock user watch
+    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notifier notify remote reset save server set slog state supervisor test toggle unlock user watch
   else
     case "${words[2]}" in
-      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notifier|notify|server|supervisor|user)
         _sfa-cmd_${words[2]}
         ;;
       *)

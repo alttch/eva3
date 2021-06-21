@@ -8,6 +8,16 @@ _uc-cmd_server() {
   fi
 }
 
+_uc-cmd_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _uc-cmd_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -22,7 +32,7 @@ _uc-cmd_datapuller() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'list restart start stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy list restart start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -132,7 +142,7 @@ _uc-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action corescript server-config template update' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action corescript plugin-config server-config template update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -202,10 +212,10 @@ _uc-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server slog state test unlock update user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave notifier owfs phi save server slog state test unlock update user watch' -- "$cur" ))
   else
     case "${words[1]}" in
-      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|notifier|owfs|phi|server|user)
         _uc-cmd_${words[1]}
         ;;
       *)

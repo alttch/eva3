@@ -10,6 +10,16 @@ _lm-cmd_server() {
   fi
 }
 
+_lm-cmd_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
 _lm-cmd_corescript() {
   local cword
   let cword=CURRENT-1
@@ -64,7 +74,7 @@ _lm-cmd_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" corescript macro server-config
+    compadd "$@" corescript macro plugin-config server-config
   else
     _files
   fi
@@ -154,10 +164,10 @@ _lm-cmd() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set slog state test toggle unlock user watch
+    compadd "$@" clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro notifier remote reset rule save server set slog state test toggle unlock user watch
   else
     case "${words[2]}" in
-      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|notifier|rule|server|user)
         _lm-cmd_${words[2]}
         ;;
       *)

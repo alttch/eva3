@@ -8,6 +8,16 @@ _sfa-cmd_server() {
   fi
 }
 
+_sfa-cmd_notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _sfa-cmd_corescript() {
   local cur prev words cword
   _init_completion || return
@@ -62,7 +72,7 @@ _sfa-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'corescript pvt server-config ui' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'corescript plugin-config pvt server-config ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -152,10 +162,10 @@ _sfa-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set slog state supervisor test toggle unlock user watch' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notifier notify remote reset save server set slog state supervisor test toggle unlock user watch' -- "$cur" ))
   else
     case "${words[1]}" in
-      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notifier|notify|server|supervisor|user)
         _sfa-cmd_${words[1]}
         ;;
       *)

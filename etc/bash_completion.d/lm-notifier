@@ -2,17 +2,7 @@ _lm-notifier_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins restart start status stop' -- "$cur" ))
-  else
-    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
-  fi
-}
-
-_lm-notifier_corescript() {
-  local cur prev words cword
-  _init_completion || return
-  if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'delete edit list mqtt-subscribe mqtt-topics mqtt-unsubscribe reload' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'launch restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -22,10 +12,10 @@ _lm-notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'config corescript create destroy disable enable list props server set subscribe test unsubscribe' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'config create destroy disable enable list props server set subscribe test unsubscribe' -- "$cur" ))
   else
     case "${words[1]}" in
-      corescript|server)
+      server)
         _lm-notifier_${words[1]}
         ;;
       *)

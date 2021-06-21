@@ -40,6 +40,16 @@ _eva_sfa_server() {
   fi
 }
 
+_eva_sfa_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
 _eva_sfa_corescript() {
   local cword
   let cword=CURRENT-1
@@ -94,7 +104,7 @@ _eva_sfa_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" corescript pvt server-config ui
+    compadd "$@" corescript plugin-config pvt server-config ui
   else
     _files
   fi
@@ -184,10 +194,10 @@ _eva_sfa() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notify remote reset save server set slog state supervisor test toggle unlock user watch
+    compadd "$@" action clear cloud cmd controller corescript cvar cycle debug dump edit file history key lock log macro notifier notify remote reset save server set slog state supervisor test toggle unlock user watch
   else
     case "${words[3]}" in
-      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notify|server|supervisor|user)
+      action|cloud|controller|corescript|cvar|cycle|edit|file|key|log|macro|notifier|notify|server|supervisor|user)
         _eva_sfa_${words[3]}
         ;;
       *)
@@ -202,6 +212,16 @@ _eva_lm_server() {
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
     compadd "$@" cleanup launch pkg-install plugins reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_lm_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" list
   else
     _files
   fi
@@ -261,7 +281,7 @@ _eva_lm_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" corescript macro server-config
+    compadd "$@" corescript macro plugin-config server-config
   else
     _files
   fi
@@ -351,10 +371,10 @@ _eva_lm() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set slog state test toggle unlock user watch
+    compadd "$@" clear cmd config controller corescript create cvar cycle debug destroy dump edit ext file history job key list lock log macro notifier remote reset rule save server set slog state test toggle unlock user watch
   else
     case "${words[3]}" in
-      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+      config|controller|corescript|cvar|cycle|edit|ext|file|job|key|log|macro|notifier|rule|server|user)
         _eva_lm_${words[3]}
         ;;
       *)
@@ -374,6 +394,16 @@ _eva_uc_server() {
   fi
 }
 
+_eva_uc_notifier() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
 _eva_uc_corescript() {
   local cword
   let cword=CURRENT-1
@@ -388,7 +418,7 @@ _eva_uc_datapuller() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" list restart start stop
+    compadd "$@" create destroy list restart start stop
   else
     _files
   fi
@@ -498,7 +528,7 @@ _eva_uc_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" action corescript server-config template update
+    compadd "$@" action corescript plugin-config server-config template update
   else
     _files
   fi
@@ -568,10 +598,10 @@ _eva_uc() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server slog state test unlock update user watch
+    compadd "$@" action clone cmd config corescript create cvar datapuller debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave notifier owfs phi save server slog state test unlock update user watch
   else
     case "${words[3]}" in
-      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|corescript|cvar|datapuller|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|notifier|owfs|phi|server|user)
         _eva_uc_${words[3]}
         ;;
       *)
@@ -596,6 +626,16 @@ _eva_edit() {
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
     compadd "$@" crontab venv
+  else
+    _files
+  fi
+}
+
+_eva_registry() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" manage restart start stop
   else
     _files
   fi
@@ -635,10 +675,10 @@ _eva() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" backup edit feature iote lm masterkey mirror ns save server sfa system uc update version
+    compadd "$@" backup edit feature iote lm masterkey mirror ns registry save server sfa system uc update version
   else
     case "${words[2]}" in
-      backup|edit|feature|iote|lm|masterkey|mirror|server|sfa|system|uc)
+      backup|edit|feature|iote|lm|masterkey|mirror|registry|server|sfa|system|uc)
         _eva_${words[2]}
         ;;
       *)
