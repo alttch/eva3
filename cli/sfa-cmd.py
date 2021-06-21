@@ -295,6 +295,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def setup_parser(self):
         super().setup_parser()
+        self.full_management = True
         self.enable_controller_management_functions('sfa')
         self.enable_le_functions()
 

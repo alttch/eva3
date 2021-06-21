@@ -418,6 +418,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def setup_parser(self):
         super().setup_parser()
+        self.full_management = True
         self.enable_controller_management_functions('uc')
 
     def add_functions(self):

@@ -1742,9 +1742,6 @@ class ControllerCLI(object):
                 return True
             return sorted([v['topic'] for v in data])
 
-    def __init__(self):
-        self.management_controller_id = None
-
     def start_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1838,66 +1835,76 @@ class ControllerCLI(object):
         return result
 
     def add_manager_control_functions(self):
-        ap_corescript = self.sp.add_parser('corescript',
-                                           help='Controller core scripts')
-        sp_corescript = ap_corescript.add_subparsers(
-            dest='_func', metavar='func', help='Core script commands')
+        try:
+            full_management = self.full_management
+        except AttributeError:
+            full_management = False
+        if full_management:
+            ap_corescript = self.sp.add_parser('corescript',
+                                               help='Controller core scripts')
+            sp_corescript = ap_corescript.add_subparsers(
+                dest='_func', metavar='func', help='Core script commands')
 
-        sp_delete = sp_corescript.add_parser('delete',
-                                             help='Delete core script')
-        sp_delete.add_argument('i', help='Core script name',
-                               metavar='NAME').completer = ComplCoreScript(self)
+            sp_delete = sp_corescript.add_parser('delete',
+                                                 help='Delete core script')
+            sp_delete.add_argument(
+                'i', help='Core script name',
+                metavar='NAME').completer = ComplCoreScript(self)
 
-        sp_edit = sp_corescript.add_parser('edit', help='Edit core script')
-        sp_edit.add_argument('i', help='Core script name',
-                             metavar='NAME').completer = ComplCoreScript(self)
+            sp_edit = sp_corescript.add_parser('edit', help='Edit core script')
+            sp_edit.add_argument(
+                'i', help='Core script name',
+                metavar='NAME').completer = ComplCoreScript(self)
 
-        sp_list = sp_corescript.add_parser('list', help='List core scripts')
+            sp_list = sp_corescript.add_parser('list', help='List core scripts')
 
-        sp_list_mqtt = sp_corescript.add_parser(
-            'mqtt-topics', help='List subscribed mqtt topics')
+            sp_list_mqtt = sp_corescript.add_parser(
+                'mqtt-topics', help='List subscribed mqtt topics')
 
-        sp_sub_mqtt = sp_corescript.add_parser(
-            'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
-        sp_sub_mqtt.add_argument(
-            't',
-            help='MQTT topic (for default notifier) or <notifier_id>:<topic>',
-            metavar='TOPIC')
-        sp_sub_mqtt.add_argument('-q',
-                                 '--qos',
-                                 dest='q',
-                                 help='MQTT QoS',
-                                 metavar='QoS',
-                                 type=int)
-        sp_sub_mqtt.add_argument('-y',
-                                 '--save',
-                                 help='Save core script config after set',
-                                 dest='_save',
-                                 action='store_true')
+            sp_sub_mqtt = sp_corescript.add_parser(
+                'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
+            sp_sub_mqtt.add_argument(
+                't',
+                help=
+                'MQTT topic (for default notifier) or <notifier_id>:<topic>',
+                metavar='TOPIC')
+            sp_sub_mqtt.add_argument('-q',
+                                     '--qos',
+                                     dest='q',
+                                     help='MQTT QoS',
+                                     metavar='QoS',
+                                     type=int)
+            sp_sub_mqtt.add_argument('-y',
+                                     '--save',
+                                     help='Save core script config after set',
+                                     dest='_save',
+                                     action='store_true')
 
-        sp_unsub_mqtt = sp_corescript.add_parser(
-            'mqtt-unsubscribe', help='Unsubscribe core scripts from MQTT topic')
-        sp_unsub_mqtt.add_argument(
-            't', help='MQTT topic',
-            metavar='TOPIC').completer = self.ComplCSMQTT(self)
-        sp_unsub_mqtt.add_argument('-y',
-                                   '--save',
-                                   help='Save core script config after set',
-                                   dest='_save',
-                                   action='store_true')
+            sp_unsub_mqtt = sp_corescript.add_parser(
+                'mqtt-unsubscribe',
+                help='Unsubscribe core scripts from MQTT topic')
+            sp_unsub_mqtt.add_argument(
+                't', help='MQTT topic',
+                metavar='TOPIC').completer = self.ComplCSMQTT(self)
+            sp_unsub_mqtt.add_argument('-y',
+                                       '--save',
+                                       help='Save core script config after set',
+                                       dest='_save',
+                                       action='store_true')
 
-        sp_reload = sp_corescript.add_parser('reload',
-                                             help='Reload core scripts')
+            sp_reload = sp_corescript.add_parser('reload',
+                                                 help='Reload core scripts')
 
-        if 'corescript' not in self.arg_sections:
-            self.arg_sections.append('corescript')
+            if 'corescript' not in self.arg_sections:
+                self.arg_sections.append('corescript')
 
-        ap_notifier = self.sp.add_parser('notifier',
-                                         help='Notifier online functions')
-        sp_notifier = ap_notifier.add_subparsers(dest='_func',
-                                                 metavar='func',
-                                                 help='Notifier commands')
-        ap_list = sp_notifier.add_parser('list', help='List loaded notifiers')
+            ap_notifier = self.sp.add_parser('notifier',
+                                             help='Notifier online functions')
+            sp_notifier = ap_notifier.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Notifier commands')
+            ap_list = sp_notifier.add_parser('list',
+                                             help='List loaded notifiers')
 
         ap_controller = self.sp.add_parser(
             'server', help='Controller server management functions')
@@ -1923,31 +1930,34 @@ class ControllerCLI(object):
                                help='Show notifier event logs',
                                action='store_true')
 
-        ap_plugins = sp_controller.add_parser('plugins',
-                                              help='List loaded core plugins')
-        ap_pkg_install = sp_controller.add_parser(
-            'pkg-install', help='Install package tarball')
-        ap_pkg_install.add_argument('_fname',
-                                    help='Package file or URL',
-                                    metavar='FILE').completer = self.ComplGlob(
-                                        ['*.tgz', '*.tar.gz', '*.tar'])
-        ap_pkg_install.add_argument('-o',
-                                    '--options',
-                                    dest='o',
-                                    help='Package setup options',
-                                    metavar='OPTS')
-        ap_pkg_install.add_argument('-w',
-                                    '--wait',
-                                    metavar='SEC',
-                                    default=1,
-                                    dest='w',
-                                    help='Wait until the package is installed')
-        ap_cleanup = sp_controller.add_parser(
-            'cleanup',
-            help='Cleanup controller: remove non-critical DB entries etc.')
+        if full_management:
 
-        self.append_api_functions({'server:plugins': 'list_plugins'})
-        self.append_api_functions({'server:pkg-install': 'install_pkg'})
+            ap_plugins = sp_controller.add_parser(
+                'plugins', help='List loaded core plugins')
+            ap_pkg_install = sp_controller.add_parser(
+                'pkg-install', help='Install package tarball')
+            ap_pkg_install.add_argument(
+                '_fname', help='Package file or URL',
+                metavar='FILE').completer = self.ComplGlob(
+                    ['*.tgz', '*.tar.gz', '*.tar'])
+            ap_pkg_install.add_argument('-o',
+                                        '--options',
+                                        dest='o',
+                                        help='Package setup options',
+                                        metavar='OPTS')
+            ap_pkg_install.add_argument(
+                '-w',
+                '--wait',
+                metavar='SEC',
+                default=1,
+                dest='w',
+                help='Wait until the package is installed')
+            ap_cleanup = sp_controller.add_parser(
+                'cleanup',
+                help='Cleanup controller: remove non-critical DB entries etc.')
+
+            self.append_api_functions({'server:plugins': 'list_plugins'})
+            self.append_api_functions({'server:pkg-install': 'install_pkg'})
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
