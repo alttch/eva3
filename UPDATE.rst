@@ -54,9 +54,12 @@ Update instructions
   "python3-cffi-backend" and run the update again.
 
 - Some binary Python modules were switched to Rust. To avoid venv update
-  problems, consider installing on Rust manually: "curl --proto '=https'
-  --tlsv1.2 -sSf https://sh.rustup.rs | sh".  All new (3.4+) EVA ICS nodes have
-  Rust installed by default, if installed with the automatic installer.
+  problems, consider installing on Rust manually (all new (3.4+) EVA ICS nodes
+  have Rust installed by default, if installed with the automatic installer).
+
+  .. code::
+  
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 If registry conversion fails
 ============================
