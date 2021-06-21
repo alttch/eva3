@@ -34,8 +34,6 @@ if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then
   source "${EVA_DIR}/python3/bin/activate"
   if [ "$USE_SYSTEM_PIP" != "1" ]; then
     ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/python3/bin/python3" ) || exit 3
-  else
-    pip3 install ${PIP_EXTRA_OPTIONS} wheel setuptools || exit 3
   fi
   deactivate
 fi
@@ -73,6 +71,6 @@ echo "Flushing data to disk..."
 
 sync
 
-echo "VENV rebuilded successfully"
+[ $E -eq 0 ] && echo "VENV rebuilded successfully"
 
 exit ${E}
