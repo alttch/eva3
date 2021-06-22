@@ -71,6 +71,9 @@ echo "Flushing data to disk..."
 
 sync
 
-[ $E -eq 0 ] && echo "VENV rebuilded successfully"
+if [ $E -eq 0 ]; then
+  echo "VENV rebuilded successfully"
+  [ ! -f ./python3/bin/yedb ] && ln -sf /usr/local/bin/yedb ./python3/bin/yedb
+fi
 
 exit ${E}
