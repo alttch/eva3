@@ -10,6 +10,7 @@ import configparser
 import platform
 import argparse
 import textwrap
+import subprocess
 
 from functools import lru_cache
 
@@ -136,7 +137,7 @@ class ManagementCLI(GenericCLI):
         return result
 
     def prepare_result_dict(self, data, api_func, itype):
-        if api_func not in ['status_controller']:
+        if api_func not in ['status_controller', 'registry_status']:
             return super().prepare_result_dict(data, api_func, itype)
         result = {}
         for k, v in data.copy().items():
@@ -186,6 +187,8 @@ class ManagementCLI(GenericCLI):
         sp_ = sp_registry.add_parser('start', help='Start registry server')
         sp_registry_stop = sp_registry.add_parser('stop',
                                                   help='Stop registry server')
+        sp_registry_status = sp_registry.add_parser(
+            'status', help='Status of registry server')
         sp_registry_restart = sp_registry.add_parser(
             'restart', help='Restart registry server')
 
@@ -1405,6 +1408,16 @@ sys.argv = {argv}
         else:
             return self.local_func_result_ok
 
+    def registry_status(self, params):
+        p = subprocess.run(f'{dir_sbin}/registry-control status',
+                           shell=True,
+                           stdout=subprocess.PIPE)
+        if p.returncode:
+            return self.local_func_result_failed
+        else:
+            status = p.stdout.decode().strip()
+            return 0, {'registry': status == 'running'}
+
     def set_masterkey(self, params):
 
         def set_masterkey_for(p, a, access):
@@ -1626,6 +1639,7 @@ _api_functions = {
     'registry:restart': cli.registry_restart,
     'registry:start': cli.registry_start,
     'registry:stop': cli.registry_stop,
+    'registry:status': cli.registry_status,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
     'masterkey:set': cli.set_masterkey
