@@ -374,33 +374,39 @@ def set(key, value, force_schema_key=None):
 
 # etc/venv
 
-with ShellConfigFile(f'{dir_etc}/venv') as f:
-    data = {
-        'use-system-pip': f.get('USE_SYSTEM_PIP', '0') == '1',
-        'system-site-packages': f.get('SYSTEM_SITE_PACKAGES', '0') == '1',
-        'python': f.get('PYTHON', 'python3'),
-    }
-    try:
-        data['pip-extra-options'] = f.get('PIP_EXTRA_OPTIONS')
-    except KeyError:
-        pass
-    for k in ['skip', 'extra']:
+try:
+    with ShellConfigFile(f'{dir_etc}/venv') as f:
+        data = {
+            'use-system-pip': f.get('USE_SYSTEM_PIP', '0') == '1',
+            'system-site-packages': f.get('SYSTEM_SITE_PACKAGES', '0') == '1',
+            'python': f.get('PYTHON', 'python3'),
+        }
         try:
-            d = f.get(k.upper())
+            data['pip-extra-options'] = f.get('PIP_EXTRA_OPTIONS')
         except KeyError:
-            continue
-        data[k] = list(filter(None, [z.strip() for z in d.split()]))
-    set('config/venv', data)
+            pass
+        for k in ['skip', 'extra']:
+            try:
+                d = f.get(k.upper())
+            except KeyError:
+                continue
+            data[k] = list(filter(None, [z.strip() for z in d.split()]))
+        set('config/venv', data)
+except FileNotFoundError:
+    pass
 
 # etc/watchdog
 
-with ShellConfigFile(f'{dir_etc}/watchdog') as f:
-    data = {
-        'dump': f.get('WATCHDOG_DUMP', 'no') == 'yes',
-        'max-timeout': int(f.get('WATCHDOG_TIMEOUT', 5)),
-        'interval': int(f.get('WATCHDOG_INTERVAL', 60))
-    }
-    set('config/watchdog', data)
+try:
+    with ShellConfigFile(f'{dir_etc}/watchdog') as f:
+        data = {
+            'dump': f.get('WATCHDOG_DUMP', 'no') == 'yes',
+            'max-timeout': int(f.get('WATCHDOG_TIMEOUT', 5)),
+            'interval': int(f.get('WATCHDOG_INTERVAL', 60))
+        }
+        set('config/watchdog', data)
+except FileNotFoundError:
+    pass
 
 # etc/easy_setup
 try:
