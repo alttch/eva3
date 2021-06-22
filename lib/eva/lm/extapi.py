@@ -61,7 +61,7 @@ def log_traceback():
 
 
 def ext_constructor(f):
-    from eva.lm.generic.generic_ext import LMExt as GenericExt
+    from eva.lm.extensions.generic import LMExt as GenericExt
 
     @wraps(f)
     def do(self, *args, **kwargs):
@@ -86,8 +86,12 @@ def save_data(ext):
 # internal functions
 
 
-def _get_ext_module_fname(mod):
-    return f'{eva.core.dir_xc}/extensions/{mod}.py'
+def _get_ext_module_fname(mod, get_system=True):
+    p = f'{eva.core.dir_lib}/eva/lm/extensions/{mod}.py'
+    if get_system and os.path.exists(p):
+        return p
+    else:
+        return f'{eva.core.dir_runtime}/lm-extensions/{mod}.py'
 
 
 @with_exts_lock
@@ -151,7 +155,7 @@ def modinfo(mod):
 
 def list_mods():
     result = []
-    mods = glob.glob(_get_ext_module_fname('*'))
+    mods = glob.glob(_get_ext_module_fname('*', get_system=False))
     for p in mods:
         f = os.path.basename(p)[:-3]
         if f not in ('__init__', 'generic'):
@@ -160,7 +164,14 @@ def list_mods():
                 result.append(d)
             except:
                 eva.core.log_traceback()
-                pass
+    for p in glob.glob(f'{eva.core.dir_lib}/eva/lm/extensions/*.py'):
+        f = os.path.basename(p)[:-3]
+        if f not in ('__init__', 'generic'):
+            try:
+                d = serialize_x(p, 'LMExt', full=True)
+                result.append(d)
+            except:
+                eva.core.log_traceback()
     return sorted(result, key=lambda k: k['mod'])
 
 

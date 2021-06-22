@@ -35,7 +35,7 @@ os.chdir(dir_eva)
 os.environ['EVA_DIR'] = dir_eva
 if not 'PATH' in os.environ:
     os.environ['PATH'] = ''
-os.environ['PATH'] = '{}/xc/shell:'.format(dir_eva) + os.environ['PATH']
+os.environ['PATH'] = '{}/runtime/xc/shell:'.format(dir_eva) + os.environ['PATH']
 
 exec_before_save = None
 exec_after_save = None
@@ -223,11 +223,6 @@ class ManagementCLI(GenericCLI):
             '--runtime',
             dest='r',
             help='Completely restore runtime (including databases)',
-            action='store_true')
-        sp_backup_restore.add_argument(
-            '--xc',
-            dest='xc',
-            help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
         sp_backup_restore.add_argument('--ui',
                                        dest='ui',
@@ -743,8 +738,7 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/drivers/phi',
-               'xc/extensions', 'etc', 'ui')
+               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -793,14 +787,11 @@ sys.argv = {argv}
             self.stop_controller({})
             self.registry_stop({})
             self.clear_runtime(full=True)
-            self.clear_xc()
             self.clear_ui()
             try:
                 if not self.backup_restore_runtime(fname=f, json_only=False):
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
-                    raise Exception('restore failed')
-                if not self.backup_restore_dir(fname=f, dirname='xc'):
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='ui'):
                     raise Exception('restore failed')
@@ -816,10 +807,6 @@ sys.argv = {argv}
             self.start_controller({})
             return self.local_func_result_ok
         try:
-            if params.get('xc'):
-                self.clear_xc()
-                if not self.backup_restore_dir(fname=f, dirname='xc'):
-                    raise Exception('restore failed')
             if params.get('ui'):
                 self.clear_ui()
                 if not self.backup_restore_dir(fname=f, dirname='ui'):
@@ -842,12 +829,6 @@ sys.argv = {argv}
         print('Removing runtime' + (' (completely)...' if full else '...'))
         cmd = 'rm -rf runtime/*' if full else \
                 'find runtime -type f -name "*.json" -exec rm -f {} \\;'
-        os.system(cmd)
-        return True
-
-    def clear_xc(self):
-        print('Removing xc')
-        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/*'
         os.system(cmd)
         return True
 

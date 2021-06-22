@@ -121,7 +121,7 @@ class ComplCoreScript(ComplGeneric):
     def __call__(self, prefix, **kwargs):
         import glob
         result = []
-        files = glob.glob(f'{dir_eva}/xc/{self.cli.product}/cs/*.py')
+        files = glob.glob(f'{dir_eva}/runtime/xc/{self.cli.product}/cs/*.py')
         for f in files:
             if os.path.isfile(f):
                 result.append(os.path.basename(f[:-3]))
@@ -2006,7 +2006,7 @@ class ControllerCLI(object):
         fname = params['i']
         if fname.endswith('.py'):
             fname = fname[:-3]
-        fname = '{}/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
+        fname = '{}/runtime/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
         need_reload = not os.path.exists(fname)
         if os.system(f'{editor} {fname}'):
             return self.local_func_result_failed
@@ -2031,7 +2031,7 @@ class ControllerCLI(object):
         fname = params['i']
         if fname.endswith('.py'):
             fname = fname[:-3]
-        fname = '{}/xc/{}/cs/{}.py'.format(
+        fname = '{}/runtime/xc/{}/cs/{}.py'.format(
             dir_eva, self.product,
             fname.replace('/', '').replace('..', ''))
         try:
@@ -2046,7 +2046,7 @@ class ControllerCLI(object):
             self.print_local_only()
             return self.local_func_result_failed
         import glob
-        files = glob.glob('{}/xc/{}/cs/*.py'.format(
+        files = glob.glob('{}/runtime/xc/{}/cs/*.py'.format(
             dir_eva,
             self.product,
         ))

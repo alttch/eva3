@@ -1,4 +1,4 @@
-.. include:: ../xc/drivers/phi/phi_devel.rst
+.. include:: phi_devel.rst
 
 DriverAPI resources
 ===================

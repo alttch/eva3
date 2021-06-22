@@ -4,9 +4,9 @@ VERSION=3.4.0
 BUILD=2021062202
 
 PYTHON3_MIN=6
-if [ ! -d ./venv ]; then 
+if [ ! -d ./venv ]; then
   PYTHON_MINOR=$(./python3/bin/python --version|cut -d. -f2)
-  else
+else
   PYTHON_MINOR=$(./venv/bin/python --version|cut -d. -f2)
 fi
 
@@ -111,32 +111,12 @@ rm -rf ./python3
 
 echo "- Installing new files"
 
-(cd ./lib/eva && ln -sf ../../plugins) || exit 1
+(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
 
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh
 
 cp -rf _update/eva-${VERSION}/* . || exit 1
-
-mkdir -p ./xc/drivers/phi || exit 1
-mkdir -p ./xc/drivers/lpi || exit 1
-mkdir -p ./xc/extensions || exit 1
-
-mkdir -p ./runtime/data || exit 1
-
-(cd lib/eva/uc && ln -sf ../../../xc/drivers . ) || exit 1
-(cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py . ) || exit 1
-(cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py . ) || exit 1
-(cd lib/eva/lm && ln -sf ../../../xc/extensions . ) || exit 1
-(cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
-(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
-
-if [ ! -d ./runtime/xc/cmd ]; then
-  if [ -d ./xc/cmd ]; then
-    mv -f ./xc/cmd runtime/xc/ || exit 1
-    (cd xc && ln -sf ../runtime/xc/cmd) || exit 1
-  fi
-fi
 
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
@@ -213,6 +193,43 @@ if [ ! -d runtime/tpl ]; then
   mkdir ./runtime/tpl
   if [ "$UC_USER" ]; then
     chown "${UC_USER}" ./runtime/tpl
+  fi
+fi
+
+mkdir -p ./runtime/data || exit 1
+mkdir -p ./runtime/lm-extensions || exit 1
+mkdir -p ./runtime/drivers || exit 1
+mkdir -p ./runtime/drivers/phi || exit 1
+mkdir -p ./runtime/drivers/lpi || exit 1
+mkdir -p ./runtime/plugins || exit 1
+
+touch ./runtime/plugins/__init__.py
+
+rm -f ./xc/drivers/phi/__init__.py
+rm -f ./xc/drivers/phi/generic_phi.py
+rm -f ./xc/drivers/phi/vrtrelay.py
+rm -f ./xc/drivers/phi/vrtsensors.py
+rm -f ./xc/extensions/__init__.py
+rm -f ./xc/extensions/audio.py
+rm -f ./xc/extensions/generic_ext.py
+rm -f ./xc/extensions/rpush.py
+rm -f ./xc/extensions/run_remote.py
+rm -f ./xc/extensions/tts.py
+
+[ -d ./xc/extensions ] && mv -f ./xc/extensions/* ./runtime/lm-extensions/
+[ -d ./xc/drivers/phi ] && mv -f ./xc/drivers/phi/* ./runtime/drivers/phi/
+[ -d ./xc/drivers/lpi ] && mv -f ./xc/drivers/lpi/* ./runtime/drivers/lpi/
+
+rm -rf ./xc
+
+if [ -d ./plugins ]; then
+  mv ./plugins/* ./runtime/plugins/
+  rm -rf ./plugins
+fi
+
+if [ ! -d ./runtime/xc/cmd ]; then
+  if [ -d ./xc/cmd ]; then
+    mv -f ./xc/cmd runtime/xc/ || exit 1
   fi
 fi
 

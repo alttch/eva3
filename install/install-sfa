@@ -22,12 +22,12 @@ mkdir -p ./runtime/xc/sfa/cs || exit 1
 mkdir -p ./runtime/db || exit 1
 touch runtime/db/sfa.db || exit 1
 mkdir -p ./runtime/xc/cmd || exit 1
+mkdir -p ./runtime/plugins || exit 1
+touch ./runtime/plugins/__init__.py
 mkdir -p pvt
 chmod 700 pvt
 
-(cd ./lib/eva && ln -sf ../../plugins) || exit 1
-(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
-(cd xc && ln -sf ../runtime/xc/cmd) || exit 1
+(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
 
 echo "Performing initial config"
 

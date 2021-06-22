@@ -284,12 +284,20 @@ def get_map(phi_id=None, action_map=False):
         return None
 
 
-def _get_phi_module_fname(mod):
-    return f'{eva.core.dir_xc}/drivers/phi/{mod}.py'
+def _get_phi_module_fname(mod, get_system=True):
+    p = f'{eva.core.dir_lib}/eva/uc/drivers/phi/{mod}.py'
+    if get_system and os.path.exists(p):
+        return p
+    else:
+        return f'{eva.core.dir_runtime}/drivers/phi/{mod}.py'
 
 
-def _get_lpi_module_fname(mod):
-    return f'{eva.core.dir_xc}/drivers/lpi/{mod}.py'
+def _get_lpi_module_fname(mod, get_system=True):
+    p = f'{eva.core.dir_lib}/eva/uc/drivers/lpi/{mod}.py'
+    if get_system and os.path.exists(p):
+        return p
+    else:
+        return f'{eva.core.dir_runtime}/drivers/lpi/{mod}.py'
 
 
 @with_drivers_lock
@@ -300,7 +308,7 @@ def unlink_phi_mod(mod):
         if p.phi_mod_id == mod:
             raise ResourceBusy('PHI module %s is in use, unable to unlink' %
                                mod)
-    fname = _get_phi_module_fname(mod)
+    fname = _get_phi_module_fname(mod, get_system=False)
     try:
         eva.core.prepare_save()
         try:
@@ -422,7 +430,7 @@ def modinfo_lpi(mod):
 
 def list_phi_mods():
     result = []
-    phi_mods = glob.glob(_get_phi_module_fname('*'))
+    phi_mods = glob.glob(_get_phi_module_fname('*', get_system=False))
     for p in phi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
@@ -432,13 +440,21 @@ def list_phi_mods():
                     result.append(d)
             except:
                 eva.core.log_traceback()
-                pass
+    for p in glob.glob(f'{eva.core.dir_lib}/eva/uc/drivers/phi/*.py'):
+        f = os.path.basename(p)[:-3]
+        if f != '__init__':
+            try:
+                d = serialize_x(p, 'PHI', full=True)
+                if d['equipment'][0] != 'abstract':
+                    result.append(d)
+            except:
+                eva.core.log_traceback()
     return sorted(result, key=lambda k: k['mod'])
 
 
 def list_lpi_mods():
     result = []
-    lpi_mods = glob.glob(_get_lpi_module_fname('*'))
+    lpi_mods = glob.glob(_get_lpi_module_fname('*', get_system=False))
     for p in lpi_mods:
         f = os.path.basename(p)[:-3]
         if f != '__init__':
@@ -448,7 +464,15 @@ def list_lpi_mods():
                     result.append(d)
             except:
                 eva.core.log_traceback()
-                pass
+    for p in glob.glob(f'{eva.core.dir_lib}/eva/uc/drivers/lpi/*.py'):
+        f = os.path.basename(p)[:-3]
+        if f != '__init__':
+            try:
+                d = serialize_x(p, 'LPI', full=True)
+                if d['logic'] != 'abstract':
+                    result.append(d)
+            except:
+                eva.core.log_traceback()
     return sorted(result, key=lambda k: k['mod'])
 
 

@@ -24,13 +24,11 @@ mkdir -p ./runtime/xc/lm || exit 1
 mkdir -p ./runtime/xc/lm/cs || exit 1
 mkdir -p ./runtime/xc/lm/functions || exit 1
 mkdir -p ./runtime/xc/cmd || exit 1
-mkdir -p ./xc/extensions || exit 1
+mkdir -p ./runtime/lm-extensions || exit 1
+mkdir -p ./runtime/plugins || exit 1
+touch ./runtime/plugins/__init__.py
 
-(cd ./lib/eva && ln -sf ../../plugins) || exit 1
-(cd xc && ln -sf ../runtime/xc/lm) || exit 1
-(cd xc && ln -sf ../runtime/xc/cmd) || exit 1
-(cd lib/eva/lm && ln -sf ../../../xc/extensions) || exit 1
-(cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
+(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
 
 echo "Performing initial config"
 

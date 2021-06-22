@@ -30,6 +30,10 @@ Removed and deprecated
 
 - mailer configuration is now unified for all components.
 
+- "plugins" and "xc/drivers" directories moved to runtime
+
+- "xc/extensions" directory moved to runtime as "lm-extensions"
+
 Update instructions
 ===================
 
@@ -63,6 +67,9 @@ Update instructions
 
 - Python virtual environment directory renamed to "venv". If you have custom
   scripts or use supervisord, correct paths to Python executable.
+
+- after applying the update, "xc" directory will be removed. If any custom
+  files are kept there (except drivers and extensions), backup them manually.
 
 If registry conversion fails
 ============================

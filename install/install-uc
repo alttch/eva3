@@ -25,15 +25,13 @@ mkdir -p ./runtime/xc || exit 1
 mkdir -p ./runtime/xc/uc || exit 1
 mkdir -p ./runtime/xc/uc/cs || exit 1
 mkdir -p ./runtime/xc/cmd || exit 1
-mkdir -p ./xc/drivers/phi || exit 1
-mkdir -p ./xc/drivers/lpi || exit 1
+mkdir -p ./runtime/drivers || exit 1
+mkdir -p ./runtime/drivers/lpi || exit 1
+mkdir -p ./runtime/drivers/phi || exit 1
+mkdir -p ./runtime/plugins || exit 1
+touch ./runtime/plugins/__init__.py
 
-(cd ./lib/eva && ln -sf ../../plugins) || exit 1
-(cd xc && ln -sf ../runtime/xc/uc) || exit 1
-(cd xc && ln -sf ../runtime/xc/cmd) || exit 1
-(cd lib/eva/uc && ln -sf ../../../xc/drivers) || exit 1
-(cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py) || exit 1
-(cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py) || exit 1
+(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
 
 echo "Performing initial config"
 

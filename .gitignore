@@ -13,9 +13,6 @@ dist
 lib/ei/css/ei.min.css
 lib/ei/js/lm.min.js
 lib/ei/js/uc.min.js
-lib/eva/uc/drivers
-lib/eva/lm/extensions
-lib/eva/features
 ui/js/eva_sfa.min.js
 log
 runtime
@@ -26,9 +23,6 @@ xc/sfa
 var
 backup
 etc/easy_setup
-xc/extensions/generic.py
-xc/drivers/lpi/generic_lpi.py
-xc/drivers/phi/generic_phi.py
 apidoc
 api-tests
 python3
