@@ -112,12 +112,16 @@ rm -rf ./python3
 
 echo "- Installing new files"
 
-(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
-
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh
 
+[ -l ./lib/eva/features ] && rm -f ./lib/eva/features
+[ -l ./lib/eva/uc/drivers ] && rm -f ./lib/eva/uc/drivers
+[ -l ./lib/eva/lm/extensions ] && rm -f ./lib/eva/lm/extensions
+
 cp -rf _update/eva-${VERSION}/* . || exit 1
+
+(cd ./lib/eva && ln -sf ../../runtime/plugins) || exit 1
 
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
