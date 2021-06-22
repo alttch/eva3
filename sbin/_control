@@ -25,7 +25,7 @@ if [ "$FORCE_ALL" == "1" ]; then
 fi
 
 
-PYTHON=${EVA_DIR}/python3/bin/python3
+PYTHON=${EVA_DIR}/venv/bin/python
 PIDFILE=${EVA_DIR}/var/${CONTROLLER}.pid
 CONTROLLER_PROGRAM=${EVA_DIR}/sbin/${CONTROLLER}serv.py
 CONTROLLER_ARGS=

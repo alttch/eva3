@@ -126,4 +126,4 @@ completion:
 
 env:
 	./install/build-venv
-	#./python3/bin/pip install ipython ipdb
+	#./venv/bin/pip install ipython ipdb

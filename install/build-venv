@@ -26,14 +26,14 @@ fi
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
-if [ ! -f "${EVA_DIR}/python3/bin/pip3" ]; then
-  [ -d "${EVA_DIR}/python3" ] && rm -rf "${EVA_DIR}/python3"
+if [ ! -f "${EVA_DIR}/venv/bin/pip3" ]; then
+  [ -d "${EVA_DIR}/venv" ] && rm -rf "${EVA_DIR}/venv"
   [ "$USE_SYSTEM_PIP" = "1" ] && O_PIP="" || O_PIP="--without-pip"
   [ "${SYSTEM_SITE_PACKAGES}" = "1" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
-  "${PYTHON}" -m venv ${O_PIP} ${O_SSITE} "${EVA_DIR}/python3" || exit 2
-  source "${EVA_DIR}/python3/bin/activate"
+  "${PYTHON}" -m venv ${O_PIP} ${O_SSITE} "${EVA_DIR}/venv" || exit 2
+  source "${EVA_DIR}/venv/bin/activate"
   if [ "$USE_SYSTEM_PIP" != "1" ]; then
-    ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/python3/bin/python3" ) || exit 3
+    ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/venv/bin/python" ) || exit 3
   fi
   deactivate
 fi
@@ -50,7 +50,7 @@ for s in $EXTRA; do
   ETS="$ETS$s"
 done
 
-PIP=${EVA_DIR}/python3/bin/pip3
+PIP=${EVA_DIR}/venv/bin/pip
 
 if [ "$PTS" ] || [ "$ETS" ]; then
   [ ! "$PTS" ] && PTS=__undefined__
@@ -73,7 +73,7 @@ sync
 
 if [ $E -eq 0 ]; then
   echo "VENV rebuilded successfully"
-  [ ! -f ./python3/bin/yedb ] && ln -sf /usr/local/bin/yedb ./python3/bin/yedb
+  [ ! -f ./venv/bin/yedb ] && ln -sf /usr/local/bin/yedb ./venv/bin/yedb
 fi
 
 exit ${E}

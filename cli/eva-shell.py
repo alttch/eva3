@@ -956,8 +956,8 @@ sys.argv = {argv}
             dir_mirror = dir_eva + '/mirror'
             dir_mirror_pypi = dir_mirror + '/pypi'
             dir_mirror_eva = dir_mirror + '/eva'
-            if os.path.isfile(dir_eva + '/python3/bin/pip'):
-                pip = dir_eva + '/python3/bin/pip'
+            if os.path.isfile(dir_eva + '/venv/bin/pip'):
+                pip = dir_eva + '/venv/bin/pip'
             else:
                 pip = 'pip3'
             first_install = not os.path.exists(dir_mirror)

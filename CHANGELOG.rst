@@ -6,6 +6,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
+   * Python virtual environment directory renamed to "venv"
    * Configs and runtime data moved to crash-free YEDB-based registry
    * Next-generation event replication engine
    * InfluxDB v2 support (v1 API via dbrp and v2 API)

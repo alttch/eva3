@@ -61,6 +61,9 @@ Update instructions
   
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
+- Python virtual environment directory renamed to "venv". If you have custom
+  scripts or use supervisord, correct paths to Python executable.
+
 If registry conversion fails
 ============================
 

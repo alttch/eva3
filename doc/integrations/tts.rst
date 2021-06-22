@@ -119,7 +119,7 @@ All extension options:
 * **g** default gain (-10..inf)
 * **cmd** external playback command (e.g. *play %f*)
 * **d** playback device, if no external command provided (list:
-  */opt/eva/python3/bin/python -m sounddevice*)
+  */opt/eva/venv/bin/python -m sounddevice*)
 
 Option *sdir* is used as "permanent cache" for audio files, e.g. you may put
 *sdir* on read-only partition, *cdir* on RAM drive and then periodically copy

@@ -147,7 +147,7 @@ reinstall pillow:
 
 .. code-block:: bash
 
-    <EVA_DIR>/python3/bin/pip3 install --no-cache-dir -I pillow
+    <EVA_DIR>/venv/bin/pip install --no-cache-dir -I pillow
 
 If everything is installed correctly, you can receive the processed image using
 the following request:

@@ -606,7 +606,7 @@ class FileAPI(object):
         def pip_install(mods):
             import os
             code = os.system(
-                f'{eva.core.dir_eva}/python3/bin/pip install {mods}')
+                f'{eva.core.dir_eva}/venv/bin/pip install {mods}')
             if code:
                 raise RuntimeError('pip exited with code {code}')
 

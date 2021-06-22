@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export EVA_DIR=$(realpath "$(dirname "$(realpath "$0")")/..")
-PYTHON="${EVA_DIR}"/python3/bin/python3
+PYTHON="${EVA_DIR}"/venv/bin/python
 export EVA_PRODUCT=`basename $0 | cut -d\- -f1`
 
 cd "$EVA_DIR" || exit 1
