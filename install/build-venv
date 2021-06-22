@@ -72,7 +72,7 @@ echo "Flushing data to disk..."
 sync
 
 if [ $E -eq 0 ]; then
-  echo "VENV rebuilded successfully"
+  echo "VENV rebuilt successfully"
   [ ! -f ./venv/bin/yedb ] && ln -sf /usr/local/bin/yedb ./venv/bin/yedb
 fi
 
