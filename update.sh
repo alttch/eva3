@@ -214,9 +214,21 @@ rm -f ./xc/drivers/phi/__init__.py
 rm -f ./xc/drivers/phi/generic_phi.py
 rm -f ./xc/drivers/phi/vrtrelay.py
 rm -f ./xc/drivers/phi/vrtsensors.py
+rm -f ./xc/drivers/phi/phi_devel.rst
+
+rm -f ./xc/drivers/lpi/__init__.py
+rm -f ./xc/drivers/lpi/basic.py
+rm -f ./xc/drivers/lpi/esensor.py
+rm -f ./xc/drivers/lpi/generic_lpi.py
+rm -f ./xc/drivers/lpi/multistep.py
+rm -f ./xc/drivers/lpi/sensor.py
+rm -f ./xc/drivers/lpi/ssp.py
+rm -f ./xc/drivers/lpi/usp.py
+
 rm -f ./xc/extensions/__init__.py
 rm -f ./xc/extensions/audio.py
 rm -f ./xc/extensions/generic_ext.py
+rm -f ./xc/extensions/generic.py
 rm -f ./xc/extensions/rpush.py
 rm -f ./xc/extensions/run_remote.py
 rm -f ./xc/extensions/tts.py
