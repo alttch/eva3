@@ -228,6 +228,10 @@ class ManagementCLI(GenericCLI):
                                        dest='ui',
                                        help='Restore ui folder',
                                        action='store_true')
+        sp_backup_restore.add_argument('--pvt',
+                                       dest='pvt',
+                                       help='Restore pvt folder',
+                                       action='store_true')
         sp_backup_restore.add_argument('-a',
                                        '--full',
                                        dest='full',
@@ -738,7 +742,8 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'etc', 'ui')
+               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'etc', 'ui',
+               'pvt')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -786,14 +791,17 @@ sys.argv = {argv}
         if params.get('full'):
             self.stop_controller({})
             self.registry_stop({})
-            self.clear_runtime(full=True)
+            self.clear_runtime()
             self.clear_ui()
+            self.clear_pvt()
             try:
-                if not self.backup_restore_runtime(fname=f, json_only=False):
+                if not self.backup_restore_runtime(fname=f):
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='ui'):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='pvt'):
                     raise Exception('restore failed')
             except:
                 self.after_save()
@@ -811,13 +819,20 @@ sys.argv = {argv}
                 self.clear_ui()
                 if not self.backup_restore_dir(fname=f, dirname='ui'):
                     raise Exception('restore failed')
-            else:
-                self.clear_runtime(full=params.get('r'))
-                if not self.backup_restore_runtime(
-                        fname=f, json_only=not params.get('r')):
+            if params.get('pvt'):
+                self.clear_pvt()
+                if not self.backup_restore_dir(fname=f, dirname='pvt'):
+                    raise Exception('restore failed')
+            if not params.get('ui') and not params.get('pvt'):
+                self.stop_controller({})
+                self.registry_stop({})
+                self.clear_runtime()
+                if not self.backup_restore_runtime(fname=f):
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
+                self.registry_start({})
+                self.start_controller({})
         except:
             self.after_save()
             return self.local_func_result_failed
@@ -825,10 +840,9 @@ sys.argv = {argv}
             return self.local_func_result_failed
         return self.local_func_result_ok
 
-    def clear_runtime(self, full=False):
-        print('Removing runtime' + (' (completely)...' if full else '...'))
-        cmd = 'rm -rf runtime/*' if full else \
-                'find runtime -type f -name "*.json" -exec rm -f {} \\;'
+    def clear_runtime(self):
+        print('Removing runtime')
+        cmd = 'rm -rf runtime/*'
         os.system(cmd)
         return True
 
@@ -838,16 +852,15 @@ sys.argv = {argv}
         os.system(cmd)
         return True
 
-    def backup_restore_runtime(self, fname, json_only=True):
-        print(
-            self.colored('Restoring runtime' + \
-                         (' (completely)...' if \
-                         not json_only else ' (json)...'),
-            color='green',
-            attrs=[]))
+    def clear_pvt(self):
+        print('Removing pvt')
+        cmd = 'rm -rf pvt/*'
+        os.system(cmd)
+        return True
+
+    def backup_restore_runtime(self, fname):
+        print(self.colored('Restoring runtime...', color='green', attrs=[]))
         cmd = ('tar', 'xpf', fname)
-        if json_only:
-            cmd += ('--wildcards', 'runtime/*.json')
         cmd += ('runtime',)
         return False if os.system(' '.join(cmd)) else True
 
