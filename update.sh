@@ -115,9 +115,9 @@ echo "- Installing new files"
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh
 
-[ -l ./lib/eva/features ] && rm -f ./lib/eva/features
-[ -l ./lib/eva/uc/drivers ] && rm -f ./lib/eva/uc/drivers
-[ -l ./lib/eva/lm/extensions ] && rm -f ./lib/eva/lm/extensions
+[ -x ./lib/eva/features ] && rm -f ./lib/eva/features
+[ -x ./lib/eva/uc/drivers ] && rm -f ./lib/eva/uc/drivers
+[ -x ./lib/eva/lm/extensions ] && rm -f ./lib/eva/lm/extensions
 
 cp -rf _update/eva-${VERSION}/* . || exit 1
 
