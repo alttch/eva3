@@ -27,6 +27,3 @@ done
 for p in ${INSTALL}; do
   ln -sf ../cli/venvl install/"${p}"
 done
-
-rm -f lib/eva/features
-ln -sf ../../xc/features lib/eva/features
