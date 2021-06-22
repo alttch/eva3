@@ -934,7 +934,7 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
         logging.debug('plugins = %s' % ', '.join(config.plugins))
         # init plugins
         for p in config.plugins:
-            fname = f'{dir_eva}/plugins/{p}.py'
+            fname = f'{dir_runtime}/plugins/{p}.py'
             if os.path.exists(fname):
                 try:
                     plugin_modules[p] = importlib.import_module(
