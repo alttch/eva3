@@ -51,13 +51,18 @@ config/watchdog:
   required:
     - interval
 config/uc/service: &service
-  enabled: *bool
-  setup: *bool
-  user: *str
-  supervisord-program: &stringornull
-    anyOf:
-      - type: string
-      - type: "null"
+  type: object
+  additionalProperties: false
+  properties:
+    enabled: *bool
+    setup: *bool
+    user: *str
+    supervisord-program: &stringornull
+      anyOf:
+        - type: string
+        - type: "null"
+    stdout: *stringornull
+    stderr: *stringornull
   required:
     - enabled
     - setup
@@ -76,6 +81,7 @@ config/uc/main:
           minimum: 0.001
         pid-file: *str
         log-file: *str
+        log-stdout: *bool
         log-format: *str
         syslog:
           anyOf:

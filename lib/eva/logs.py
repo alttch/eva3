@@ -72,7 +72,8 @@ def init():
         name=eva.core.product.code,
         host=eva.core.config.system_name,
         log_file=eva.core.config.log_file,
-        log_stdout=1 if os.environ.get('EVA_CORE_LOG_STDOUT') else 0,
+        log_stdout=1 if (os.environ.get('EVA_CORE_LOG_STDOUT') or
+                         eva.core.config.log_stdout) else 0,
         syslog=eva.core.config.syslog,
         level=eva.core.config.default_log_level_id,
         tracebacks=eva.core.config.show_traceback,

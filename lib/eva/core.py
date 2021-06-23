@@ -87,6 +87,7 @@ product = SimpleNamespace(name='', code='', build=None, usn='')
 
 config = SimpleNamespace(pid_file=None,
                          log_file=None,
+                         log_stdout=False,
                          auto_save=False,
                          db_uri=None,
                          userdb_uri=None,
@@ -725,6 +726,10 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
                 config.default_log_level_name = log_level
                 config.default_log_level_id = log_levels_by_name.get(log_level)
                 config.default_log_level = getattr(logging, log_level.upper())
+        except LookupError:
+            pass
+        try:
+            config.log_stdout = cfg.get('server/log-stdout')
         except LookupError:
             pass
         if init_log:

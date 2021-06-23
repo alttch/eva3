@@ -16,6 +16,11 @@ export EVA_DIR EVA_CONTROLLER
 
 source <(./sbin/key-as-source "config/${EVA_CONTROLLER}/service" CONTROLLER 2>/dev/null)
 
+[ "$CONTROLLER_STDOUT" == "0" ] && STDOUT= || STDOUT=$CONTROLLER_STDOUT
+[ "$CONTROLLER_STDERR" == "0" ] && STDERR= || STDERR=$CONTROLLER_STDERR
+
+export STDOUT STDERR
+
 if [ "$FORCE_ALL" == "1" ]; then
   CONTROLLER_ENABLED=1
   if [ -z "$CONTROLLER_ENABLED" ]; then
