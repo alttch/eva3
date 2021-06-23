@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[ -L ./venv/bin/yedb ] && rm -f ./venv/bin/yedb
+
 if [ "$1" ]; then
   EVA_DIR="$1"
   D=$(realpath "$0")
