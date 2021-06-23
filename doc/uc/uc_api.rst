@@ -1114,6 +1114,8 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** Modbus register(s)
+* **f** data type (u16, i16, u32, i32, u64, i64, f32 or bit)
+* **c** count, if register range not specified
 
 
 .. _ucapi_cat_phi:

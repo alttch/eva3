@@ -11,6 +11,7 @@ import time
 import logging
 import rapidjson
 import re
+import numpy as np
 
 import eva.core
 import eva.registry
@@ -41,6 +42,14 @@ ports = {}
 _d = SimpleNamespace(modified=set())
 
 # public functions
+
+
+def _parse_reg(reg):
+    reg_type = reg[0]
+    addr = safe_int(reg[1:])
+    if reg_type not in ['c', 'd', 'i', 'h']:
+        raise ValueError(f'Invalid register type: {reg_type}')
+    return reg_type, addr
 
 
 def set_data(addr, values, register='h'):
@@ -77,6 +86,102 @@ def get_data(addr, register='h', count=1):
         raise FunctionFailed(
             'Slave register {} not initialized'.format(register))
     return slave_registers[register].getValues(addr, count)
+
+
+def get_bool(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['c', 'd']:
+        return get_data(addr, reg_type, count)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+
+
+def get_u16(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        return get_data(addr, reg_type, count)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+
+
+def get_i16(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        return [
+            x if x < 32768 else x - 65536
+            for x in get_data(addr, reg_type, count)
+        ]
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+
+
+def get_u32(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        result = get_data(addr, reg_type, count=count * 2)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+    data = []
+    for i in range(0, len(result), 2):
+        data.append((result[i] << 16) + result[i + 1])
+    return data
+
+
+def get_i32(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        result = get_data(addr, reg_type, count=count * 2)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+    data = []
+    for i in range(0, len(result), 2):
+        x = (result[i] << 16) + result[i + 1]
+        data.append(x if x < 2147483648 else x - 4294967296)
+    return data
+
+
+def get_u64(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        result = get_data(addr, reg_type, count=count * 4)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+    data = []
+    for i in range(0, len(result), 4):
+        data.append((result[i] << 48) + (result[i + 1] << 32) +
+                    (result[i + 2] << 16) + result[i + 3])
+    return data
+
+
+def get_i64(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        result = get_data(addr, reg_type, count=count * 4)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+    data = []
+    for i in range(0, len(result), 4):
+        x = ((result[i] << 48) + (result[i + 1] << 32) + (result[i + 2] << 16) +
+             result[i + 3])
+        data.append(x if x < 9223372036854775808 else x - 18446744073709551616)
+    return data
+
+
+def get_f32(reg, count=1):
+    reg_type, addr = _parse_reg(reg)
+    if reg_type in ['i', 'h']:
+        result = get_data(addr, reg_type, count=count * 2)
+    else:
+        raise ValueError(f'Method not supported for register type {reg_type}')
+    data = []
+    for i in range(0, len(result), 2):
+        data.append(
+            np.array([
+                x for x in result[i].to_bytes(2, byteorder='little') +
+                result[i + 1].to_bytes(2, byteorder='little')
+            ],
+                     dtype=np.uint8).view(dtype=np.float32)[0])
+    return data
 
 
 def register_handler(addr, f, register='h'):

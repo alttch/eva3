@@ -1208,6 +1208,8 @@ Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of ho
 Parameters:
 
 * **API Key** API key with *master* permissions
+* **f** data type (u16, i16, u32, i32, u64, i64, f32 or bit)
+* **c** count, if register range not specified
 
 
 

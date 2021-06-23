@@ -1372,7 +1372,7 @@ class UC_API(GenericAPI):
         if c is None:
             c = 1
         elif c <= 0:
-            raise InvalidParameter('count have to be greater than zero')
+            raise InvalidParameter('count must be greater than zero')
 
         GETTERS = {
             'bit': mbtools.read_u16,
@@ -1643,8 +1643,28 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .i: Modbus register(s)
+            f: data type (u16, i16, u32, i32, u64, i64, f32 or bit)
+            c: count, if register range not specified
         """
-        i = parse_api_params(kwargs, 'i', '.')
+        import math
+        i, f, c = parse_api_params(kwargs, 'ifc', '.si')
+        if c is None:
+            c = 1
+        elif c <= 0:
+            raise InvalidParameter('count must be greater than zero')
+        GETTERS = {
+            'bit': eva.uc.modbus.get_u16,
+            'u16': eva.uc.modbus.get_u16,
+            'i16': eva.uc.modbus.get_i16,
+            'u32': eva.uc.modbus.get_u32,
+            'i32': eva.uc.modbus.get_i32,
+            'u64': eva.uc.modbus.get_u64,
+            'i64': eva.uc.modbus.get_i64,
+            'f32': eva.uc.modbus.get_f32,
+        }
+        TYPE_LENGTH = {'u32': 2, 'i32': 2, 'u64': 4, 'i64': 4, 'f32': 2}
+        if not f:
+            f = 'u16'
         if isinstance(i, str):
             regs = i.split(',')
         elif isinstance(i, list):
@@ -1652,6 +1672,14 @@ class UC_API(GenericAPI):
         else:
             raise InvalidParameter('registers')
         result = []
+        try:
+            getter = GETTERS[f]
+        except:
+            raise InvalidParameter('data type not supported')
+        try:
+            type_len = TYPE_LENGTH[f]
+        except KeyError:
+            type_len = 1
         for reg in regs:
             if not isinstance(reg, str) or len(reg) < 2:
                 raise InvalidParameter(reg)
@@ -1665,31 +1693,63 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter(reg)
             else:
-                addr = r
-                ae = addr
+                addr = int(r)
+                ae = addr + (c - 1) * type_len
             try:
                 addr = safe_int(addr)
             except:
                 raise InvalidParameter(reg)
             try:
                 ae = safe_int(ae)
-                if ae > eva.uc.modbus.slave_reg_max:
+                if ae > 65535:
                     raise Exception
             except:
                 raise InvalidParameter(reg)
             count = ae - addr + 1
+            rcnt = math.ceil(count / type_len)
             if count < 1:
                 raise InvalidParameter(reg)
-            data = eva.uc.modbus.get_data(addr, rtype, count)
-            for d in data:
-                if d is True:
-                    v = 1
-                elif d is False:
-                    v = 0
+            try:
+                if rtype in ['d', 'c']:
+                    data = eva.uc.modbus.get_bool(rtype + str(addr), count)
                 else:
-                    v = d
-                result.append({'addr': '{}{}'.format(rtype, addr), 'value': v})
-                addr += 1
+                    data = getter(rtype + str(addr), rcnt)
+            except Exception as e:
+                result.append({
+                    'addr': '{}{}'.format(rtype, addr),
+                    'error': str(e)
+                })
+                eva.core.log_traceback()
+            else:
+                cc = 1
+                for d in data:
+                    if d is True:
+                        v = 1
+                    elif d is False:
+                        v = 0
+                    elif f == 'f32':
+                        v = float(d)
+                    else:
+                        v = d
+                    tp = 'coil' if rtype in ['d', 'c'] else f
+                    if f == 'bit' and rtype not in ['d', 'c']:
+                        for i in range(16):
+                            result.append({
+                                'addr': f'{rtype}{addr}',
+                                'bit': i,
+                                'type': 'bit',
+                                'value': v >> i & 1
+                            })
+                    else:
+                        result.append({
+                            'addr': '{}{}'.format(rtype, addr),
+                            'type': tp,
+                            'value': v
+                        })
+                    addr += 1 if rtype in ['d', 'c'] else type_len
+                    cc += 1
+                    if cc > rcnt:
+                        break
         return sorted(result, key=lambda k: k['addr'])
 
     # master functions for owfs bus management

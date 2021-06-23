@@ -1071,6 +1071,20 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'separated, predicated by type (h, c, i, d), range may be ' +
             'specified. e.g. h1000-1010,c10-15',
             metavar='REGISTERS')
+        sp_modbus_slave_get.add_argument(
+            '-f',
+            '--data-type',
+            help='Data type (u16, i16, u32, i32, u64, i64, f32 or bit)',
+            metavar='TYPE',
+            choices=['u16', 'i16', 'u32', 'i32', 'u64', 'i64', 'f32', 'bit'],
+            dest='f')
+        sp_modbus_slave_get.add_argument(
+            '-c',
+            '--count',
+            help='count, if register range not specified',
+            metavar='NUM',
+            type=int,
+            dest='c')
 
     def add_uc_owfs_functions(self):
         ap_owfs = self.sp.add_parser('owfs', help='OWFS buses')

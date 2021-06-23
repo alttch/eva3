@@ -28,19 +28,12 @@ from eva.tools import safe_int
 from eva.tools import val_to_boolean
 from eva.uc.modbus import is_port
 from eva.uc.modbus import get_port as _get_port
+from eva.uc.modbus import _parse_reg
 
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceBusy
 
 import numpy as np
-
-
-def _parse_reg(reg):
-    reg_type = reg[0]
-    addr = safe_int(reg[1:])
-    if reg_type not in ['c', 'd', 'i', 'h']:
-        raise ValueError(f'Invalid register type: {reg_type}')
-    return reg_type, addr
 
 
 def get_port(port_id, timeout=None):

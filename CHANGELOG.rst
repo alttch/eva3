@@ -40,6 +40,8 @@ UC
    * data puller states, data pullers can be created / destroyed without the
      controller restart, new API methods "create_datapuller",
      "destroy_datapuller"
+   * Number type support in "get_modbus_slave_data" API function and
+     "modbus-slave get" CLI commands
 
 LM PLC
 ------
