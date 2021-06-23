@@ -742,8 +742,8 @@ sys.argv = {argv}
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__',
-               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'etc', 'ui',
-               'pvt')
+               '--exclude=*.md', '--exclude=*.rst', 'runtime/*', 'etc/*',
+               'ui/*', 'pvt/*')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -831,6 +831,11 @@ sys.argv = {argv}
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
+                for cmd in [
+                        'import-registry-schema', 'import-registry-defaults'
+                ]:
+                    if os.system(f'{dir_eva}/install/{cmd}'):
+                        return self.local_func_result_failed
                 self.registry_start({})
                 self.start_controller({})
         except:
