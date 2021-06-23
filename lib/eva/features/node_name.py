@@ -57,9 +57,6 @@ def setup(name=None):
     print('Setting new name in etc/eva_config ...')
     with ShellConfigFile('eva_config', init_if_missing=True) as cf:
         cf.set('SYSTEM_NAME', name)
-    print('Setting new name in etc/eva_shell.ini ...')
-    with ConfigFile('eva_shell.ini', init_if_missing=True) as cf:
-        cf.set('shell', 'nodename', name)
     eva.registry.SYSTEM_NAME = current_name
     print('Starting controllers back...')
     for c in ['uc', 'lm', 'sfa']:

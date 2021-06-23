@@ -14,8 +14,6 @@ import subprocess
 
 from functools import lru_cache
 
-nodename = platform.node()
-
 from pathlib import Path
 dir_eva = Path(__file__).absolute().parents[1].as_posix()
 dir_backup = dir_eva + '/backup'
@@ -1644,13 +1642,17 @@ _api_functions = {
     'masterkey:set': cli.set_masterkey
 }
 
+from eva.tools import ShellConfigFile
+
+try:
+    with ShellConfigFile('eva_config') as f:
+        nodename = f.get('SYSTEM_NAME')
+except (FileNotFoundError, KeyError):
+    pass
+
 cfg = configparser.ConfigParser(inline_comment_prefixes=';')
 try:
     cfg.read(dir_etc + '/eva_shell.ini')
-    try:
-        nodename = cfg.get('shell', 'nodename')
-    except:
-        pass
     try:
         exec_before_save = cfg.get('shell', 'exec_before_save')
     except:

@@ -8,5 +8,6 @@ REGISTRY_INI=${EVA_DIR}/etc/eva_config
 [ -f "${REGISTRY_INI}" ] && source "${REGISTRY_INI}"
 
 [ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=$EVA_DIR/var/registry.sock
+[ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
 
-YEDB_PS="eva:$(hostname)/registry" "$EVA_DIR/venv/bin/yedb" "$YEDB_SOCKET" "$@"
+YEDB_PS="eva:${SYSTEM_NAME}/registry" "$EVA_DIR/venv/bin/yedb" "$YEDB_SOCKET" "$@"
