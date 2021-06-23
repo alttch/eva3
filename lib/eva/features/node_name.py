@@ -1,22 +1,26 @@
 from eva.features import InvalidParameter, FunctionFailed
 from eva.features import is_enabled, ShellConfigFile, ConfigFile
 from eva.features import stop_controller, start_controller, print_warn
+from eva.features import val_to_boolean
 
 import eva.registry
 
 
-def setup(name=None):
+def setup(name=None, rename_only=None):
     if not name:
         raise InvalidParameter
+    if rename_only is not None:
+        rename_only = val_to_boolean(rename_only)
     current_name = eva.registry.SYSTEM_NAME
     try:
         eva.registry.db.key_get(key=f'eva3/{current_name}/config/venv')
     except Exception as e:
         raise FunctionFailed(f'Unable to setup registry config: {e}')
-    print('Stopping controllers...')
-    for c in ['sfa', 'lm', 'uc']:
-        if is_enabled(c):
-            stop_controller(c)
+    if not rename_only:
+        print('Stopping controllers...')
+        for c in ['sfa', 'lm', 'uc']:
+            if is_enabled(c):
+                stop_controller(c)
     if name != current_name:
         print('Setting local inter-connection for UC...')
         for c in ['lm', 'sfa']:
@@ -58,10 +62,11 @@ def setup(name=None):
     with ShellConfigFile('eva_config', init_if_missing=True) as cf:
         cf.set('SYSTEM_NAME', name)
     eva.registry.SYSTEM_NAME = current_name
-    print('Starting controllers back...')
-    for c in ['uc', 'lm', 'sfa']:
-        if is_enabled(c):
-            start_controller(c)
+    if not rename_only:
+        print('Starting controllers back...')
+        for c in ['uc', 'lm', 'sfa']:
+            if is_enabled(c):
+                start_controller(c)
     print()
     print_warn(f'Local node renamed to "{name}"')
     print_warn('If eva-shell is running in the interactive mode, '

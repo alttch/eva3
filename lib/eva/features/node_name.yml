@@ -7,3 +7,5 @@ doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/
 setup:
   mandatory-args:
     name: New node name
+  optional-args:
+    rename_only: Rename node only, do not restart controllers
