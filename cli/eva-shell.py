@@ -435,6 +435,12 @@ class ManagementCLI(GenericCLI):
     def add_manager_power_functions(self):
         if os.path.exists('/.dockerenv'):
             return
+        try:
+            with open('/proc/1/cpuset') as fh:
+                if fh.read().strip() != '/':
+                    return
+        except:
+            pass
         ap_system = self.sp.add_parser('system', help='System functions')
         sp_system = ap_system.add_subparsers(dest='_func',
                                              metavar='func',
