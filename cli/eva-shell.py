@@ -433,6 +433,8 @@ class ManagementCLI(GenericCLI):
                               action='store_true')
 
     def add_manager_power_functions(self):
+        if os.path.exists('/.dockerenv'):
+            return
         ap_system = self.sp.add_parser('system', help='System functions')
         sp_system = ap_system.add_subparsers(dest='_func',
                                              metavar='func',
