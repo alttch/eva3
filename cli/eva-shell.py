@@ -831,12 +831,12 @@ sys.argv = {argv}
                     raise Exception('restore failed')
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
+                self.registry_start({})
                 for cmd in [
                         'import-registry-schema', 'import-registry-defaults'
                 ]:
                     if os.system(f'{dir_eva}/install/{cmd}'):
                         return self.local_func_result_failed
-                self.registry_start({})
                 self.start_controller({})
         except:
             self.after_save()
