@@ -19,6 +19,9 @@ Removed and deprecated
   scripts. "eva-control" still supports controller management with
   supervisorctl (using "service/supervisord-program" registry key field).
 
+- Supervisord support is deprecated and will be removed from the standard
+  control scripts in EVA ICS 3.5
+
 - uc-control, lm-control and sfa-control scripts are removed. Consider using
   "eva" or "eva-control" only.
 
