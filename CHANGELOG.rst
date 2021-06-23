@@ -6,6 +6,9 @@ EVA ICS CHANGELOG
 Common
 ------
 
+   * fix: correct backups of symlinked directories
+   * fix: PVT backup
+
    * Python virtual environment directory renamed to "venv"
    * Configs and runtime data moved to crash-free YEDB-based registry
    * Next-generation event replication engine
