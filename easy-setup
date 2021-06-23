@@ -115,7 +115,7 @@ function option_error {
 
 
 function start_controller() {
-    "./sbin/eva-control" start $1 || return 5
+    "./sbin/eva-control" start "$1" || return 5
     I=0
     sleep 0.5
     ./sbin/eva-tinyapi -C "$1" -F test > /dev/null 2>&1
@@ -661,6 +661,10 @@ fi
 ./install/import-registry-schema || exit 8
 ./install/import-registry-defaults || exit 8
 
+if [ "$PREPARE_REGISTRY_SCRIPT" ]; then
+  $PREPARE_REGISTRY_SCRIPT || exit $?
+fi
+
 # ASK SOME QUESTIONS
 
 if [ $APPEND -ne 1 ]; then
@@ -957,13 +961,13 @@ fi
 if [ "$FEATURES" ]; then
     for f in $FEATURES; do
         if [[ "$f" == *":"* ]]; then
-            feature=$(echo $f | cut -d: -f1)
-            params=$(echo $f | cut -d: -f2-)
+            feature=$(echo "$f" | cut -d: -f1)
+            params=$(echo "$f" | cut -d: -f2-)
         else
             feature=$f
             params=
         fi
-        ./bin/eva feature setup ${feature} ${params} || exit 12
+        ./bin/eva feature setup "${feature}" ${params} || exit 12
     done
 fi
 
