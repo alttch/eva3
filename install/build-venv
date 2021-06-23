@@ -2,6 +2,8 @@
 
 [ -L ./venv/bin/yedb ] && rm -f ./venv/bin/yedb
 
+XOPTS=$PIP_EXTRA_OPTIONS
+
 if [ "$1" ]; then
   EVA_DIR="$1"
   D=$(realpath "$0")
@@ -63,6 +65,8 @@ if [ "$PTS" ] || [ "$ETS" ]; then
 else
   PKGLIST=${MY_DIR}/mods.list
 fi
+
+[ "$XOPTS" ] && PIP_EXTRA_OPTIONS=$XOPTS
 
 ${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
