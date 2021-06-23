@@ -105,7 +105,6 @@ eva.core.register_controller(eva.uc.controller)
 eva.core.load_cvars()
 eva.core.load_corescripts()
 
-eva.apikey.allows = ['cmd', 'lock', 'device']
 eva.apikey.init()
 eva.apikey.load()
 

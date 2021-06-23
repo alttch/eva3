@@ -838,4 +838,11 @@ def save():
 
 
 def init():
-    pass
+    allows.append('cmd')
+    allows.append('lock')
+    if eva.core.product.code == 'uc':
+        allows.append('device')
+    elif eva.core.product.code == 'lm':
+        pass
+    elif eva.core.product.code == 'sfa':
+        allows.append('supervisor')

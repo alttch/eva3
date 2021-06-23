@@ -1253,15 +1253,16 @@ def start(init_db_only=False):
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
-    generate_boot_id()
-    product.usn = str(
-        uuid.uuid5(uuid.NAMESPACE_URL,
-                   f'eva://{config.system_name}/{product.code}'))
-    update_corescript_globals({
-        'product': product,
-        'system_name': config.system_name,
-        'apikey': eva.apikey
-    })
+    if not init_db_only:
+        generate_boot_id()
+        product.usn = str(
+            uuid.uuid5(uuid.NAMESPACE_URL,
+                       f'eva://{config.system_name}/{product.code}'))
+        update_corescript_globals({
+            'product': product,
+            'system_name': config.system_name,
+            'apikey': eva.apikey
+        })
 
 
 def handle_corescript_mqtt_event(d, t, qos, retain):
