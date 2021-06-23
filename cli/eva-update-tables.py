@@ -5,7 +5,6 @@ __version__ = "3.4.0"
 
 import sys
 import os
-import getopt
 import sqlalchemy
 
 from pathlib import Path
@@ -14,8 +13,6 @@ sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 os.environ['EVA_DIR'] = Path(__file__).absolute().parents[1].as_posix()
 
 import eva.core
-import eva.notify
-import eva.traphandler
 
 
 def usage(version_only=False):
