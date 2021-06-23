@@ -71,6 +71,10 @@ Update instructions
 - after applying the update, "xc" directory will be removed. If any custom
   files are kept there (except drivers and extensions), backup them manually.
 
+- "auto-save" option added to controller server configs, auto-save is on by
+  default. To turn auto-save off, set the option to false. WARNING: "on-exit"
+  db-update value doesn't save configurations automatically any longer.
+
 If registry conversion fails
 ============================
 

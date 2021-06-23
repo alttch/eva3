@@ -1314,7 +1314,7 @@ class ActiveItem(Item):
         self.ieid = eva.core.generate_ieid()
         logging.info('%s actions disabled' % self.oid)
         self.notify()
-        if eva.core.config.db_update == 1:
+        if eva.core.config.auto_save:
             self.save()
         return True
 
@@ -1325,7 +1325,7 @@ class ActiveItem(Item):
         self.ieid = eva.core.generate_ieid()
         logging.info('%s actions enabled' % self.oid)
         self.notify()
-        if eva.core.config.db_update == 1:
+        if eva.core.config.auto_save:
             self.save()
         return True
 

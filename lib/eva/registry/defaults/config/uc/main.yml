@@ -72,6 +72,7 @@ server:
   #
   # default mqtt notifier for updates for new items
   #mqtt-update-default: "eva_1:2"
+  auto-save: true
 #msad:
   # user authentication via MS Active Directory
   #host: ad.yourdomain.com

@@ -30,6 +30,7 @@ Common
    * Alpine Linux support (3.13+)
    * OWFS feature installs libow from source if no package exists
    * Built-in PyPi mirror option to forcibly download sources of all modules
+   * "auto-save" option, auto-save is on by default
 
 UC
 --

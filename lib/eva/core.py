@@ -87,6 +87,7 @@ product = SimpleNamespace(name='', code='', build=None, usn='')
 
 config = SimpleNamespace(pid_file=None,
                          log_file=None,
+                         auto_save=False,
                          db_uri=None,
                          userdb_uri=None,
                          keep_api_log=0,
@@ -879,15 +880,20 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
         f'server.action_cleaner_interval = {config.action_cleaner_interval} sec'
     )
     try:
-        config.keep_logmem = int(cfg.get('server', 'keep-logmem'))
+        config.keep_logmem = int(cfg.get('server/keep-logmem'))
     except:
         pass
     logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
     try:
-        config.keep_api_log = int(cfg.get('server', 'keep-api-log'))
+        config.keep_api_log = int(cfg.get('server/keep-api-log'))
     except:
         pass
     logging.debug(f'server.keep_api_log = {config.keep_api_log} sec')
+    try:
+        config.auto_save = cfg.get('server/auto-save', default=True)
+    except:
+        pass
+    logging.debug(f'server.auto_save = {config.auto_save}')
     try:
         config.exec_before_save = cfg.get('server/exec-before-save')
     except:
@@ -1081,7 +1087,7 @@ def set_cvar(var, value=None):
         except:
             return False
     _flags.cvars_modified.add(var)
-    if config.db_update == 1:
+    if config.auto_save:
         save_cvars()
     return True
 
@@ -1305,7 +1311,7 @@ def corescript_mqtt_subscribe(topic, qos=None):
         n.handler_append(topic, handle_corescript_mqtt_event, qos)
         cs_data.topics.append({'topic': topic, 'qos': qos})
         _flags.cs_modified = True
-        if config.db_update == 1:
+        if config.auto_save:
             save_cs()
         return True
     except:
@@ -1330,7 +1336,7 @@ def corescript_mqtt_unsubscribe(topic):
                 n.handler_remove(topic, handle_corescript_mqtt_event)
                 cs_data.topics.remove(t)
                 _flags.cs_modified = True
-                if config.db_update == 1:
+                if config.auto_save:
                     save_cs()
                 return True
             except:

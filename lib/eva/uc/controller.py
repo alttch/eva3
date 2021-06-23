@@ -667,7 +667,7 @@ def destroy_item(item):
         if not items_by_group[i.group]:
             del items_by_group[i.group]
         i.destroy()
-        if eva.core.config.db_update == 1 and i.config_file_exists:
+        if eva.core.config.auto_save and i.config_file_exists:
             try:
                 eva.registry.key_delete(i.get_rkn())
             except:
@@ -783,8 +783,8 @@ def stop():
     eva.core.plugins_exec('before_stop')
     eva.uc.driverapi.stop_processors()
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.config.db_update == 1:
-        save()
+    # if eva.core.config.db_update == 1:
+        # save()
     for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if Q:

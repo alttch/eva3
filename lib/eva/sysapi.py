@@ -823,6 +823,7 @@ class CSAPI(object):
             save: save core script config after modification
         """
         t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
+        save = save or eva.core.config.auto_save
         if q is None:
             q = 1
         elif q < 0 or q > 2:
@@ -843,6 +844,7 @@ class CSAPI(object):
             save: save core script config after modification
         """
         t, save = parse_api_params(kwargs, 'tS', 'Sb')
+        save = save or eva.core.config.auto_save
         return eva.core.corescript_mqtt_unsubscribe(t) and (eva.core.save_cs()
                                                             if save else True)
 
@@ -1106,6 +1108,7 @@ class UserAPI(object):
             JSON with serialized key object
         """
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        save = save or eva.core.config.auto_save
         return eva.apikey.add_api_key(i, save)
 
     @log_w
@@ -1145,6 +1148,7 @@ class UserAPI(object):
             save: save configuration immediately
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'SS.b')
+        save = save or eva.core.config.auto_save
         tokens.remove_token(key_id=i)
         key = eva.apikey.keys_by_id.get(i)
         if not key:
@@ -1166,6 +1170,7 @@ class UserAPI(object):
             JSON dict with new key value in "key" field
         """
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        save = save or eva.core.config.auto_save
         tokens.remove_token(key_id=i)
         return eva.apikey.regenerate_key(i, save)
 

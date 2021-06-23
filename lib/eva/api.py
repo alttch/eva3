@@ -318,7 +318,7 @@ def restful_parse_params(*args, **kwargs):
         ii += l
     else:
         ii = None
-    save = val_to_boolean(kwargs.get('save'))
+    save = val_to_boolean(kwargs.get('save')) or eva.core.config.auto_save
     kind = kwargs.get('kind', kind)
     method = kwargs.get('method')
     for_dir = cherrypy.request.path_info.endswith('/')
@@ -1558,6 +1558,7 @@ class GenericCloudAPI(object):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        save = save or eva.core.config.auto_save
         controller = self.controller.get_controller(i)
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
@@ -1584,6 +1585,7 @@ class GenericCloudAPI(object):
             save: save configuration after successful call
         """
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        save = save or eva.core.config.auto_save
         controller = self.controller.get_controller(i)
         return controller.set_prop('enabled', True, save)
 
@@ -1602,6 +1604,7 @@ class GenericCloudAPI(object):
             save: save configuration after successful call
         """
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        save = save or eva.core.config.auto_save
         controller = self.controller.get_controller(i)
         return controller.set_prop('enabled', False, save)
 

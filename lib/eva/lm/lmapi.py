@@ -390,6 +390,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save rule configuration immediately
         """
         u, v, e, save = parse_api_params(kwargs, 'uveS', 's.bb')
+        save = save or eva.core.config.auto_save
         rule = eva.lm.controller.create_dm_rule(save=False, rule_uuid=u)
         if e:
             rule.set_prop('enabled', True)
@@ -475,6 +476,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         k, i, p, v, save = parse_function_params(kwargs, 'kipvS', '.s..b')
+        save = save or eva.core.config.auto_save
         item = eva.lm.controller.get_dm_rule(i)
         if not p and (not isinstance(v, dict) or not key_check_master(k)):
             raise InvalidParameter('property not specified')
@@ -572,6 +574,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save job configuration immediately
         """
         u, v, e, save = parse_api_params(kwargs, 'uveS', 's.bb')
+        save = save or eva.core.config.auto_save
         job = eva.lm.controller.create_job(save=False, job_uuid=u)
         if e:
             job.set_prop('enabled', True)
@@ -646,6 +649,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         k, i, p, v, save = parse_function_params(kwargs, 'kipvS', '.s..b')
+        save = save or eva.core.config.auto_save
         item = eva.lm.controller.get_job(i)
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
@@ -814,6 +818,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .g: macro group
         """
         k, i, g, save = parse_function_params(kwargs, 'kigS', '.Ssb')
+        save = save or eva.core.config.auto_save
         return eva.lm.controller.create_macro(i, g, save).serialize()
 
     @log_w
@@ -868,6 +873,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        save = save or eva.core.config.auto_save
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
         if is_oid(i):
@@ -961,6 +967,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .v: cycle properties (dict) or human-readable input
         """
         k, i, g, v, save = parse_function_params(kwargs, 'kigvS', '.Ss.b')
+        save = save or eva.core.config.auto_save
         cycle = eva.lm.controller.create_cycle(i, g, save)
         try:
             if v:
@@ -1027,6 +1034,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        save = save or eva.core.config.auto_save
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
         if is_oid(i):
@@ -1256,6 +1264,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        save = save or eva.core.config.auto_save
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
         if is_oid(i):
@@ -1283,6 +1292,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save lvar configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        save = save or eva.core.config.auto_save
         return eva.lm.controller.create_lvar(lvar_id=oid_to_id(i, 'lvar'),
                                              group=g,
                                              save=save).serialize()
@@ -1425,6 +1435,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         uri, key, mqtt_update, ssl_verify, timeout, save = parse_api_params(
             kwargs, 'uamstS', 'Sssbnb')
+        save = save or eva.core.config.auto_save
         c = eva.lm.controller.append_controller(uri=uri,
                                                 key=key,
                                                 mqtt_update=mqtt_update,
@@ -1493,6 +1504,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save extension configuration after successful call
         """
         i, m, c, save = parse_api_params(kwargs, 'imcS', 'SS.b')
+        save = save or eva.core.config.auto_save
         if isinstance(c, str):
             try:
                 c = dict_from_str(c)
@@ -1516,7 +1528,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.lm.extapi.unload_ext(i, remove_data=True)
-        if eva.core.config.db_update == 1:
+        if eva.core.config.auto_save:
             eva.lm.extapi.save()
         return True
 
@@ -1615,6 +1627,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        save = save or eva.core.config.auto_save
         eva.lm.extapi.set_ext_prop(i, p, v)
         if save:
             eva.lm.extapi.save()

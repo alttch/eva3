@@ -120,7 +120,7 @@ def destroy_data_puller(name):
     except KeyError:
         raise ResourceNotFound
     del datapullers[name]
-    if eva.core.config.db_update == 1:
+    if eva.core.config.auto_save:
         eva.registry.key_delete(f'config/uc/datapullers/{name}')
     else:
         dp_destroyed.add(name)

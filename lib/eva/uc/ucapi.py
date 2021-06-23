@@ -711,6 +711,7 @@ class UC_API(GenericAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        save = save or eva.core.config.auto_save
         if not p and not isinstance(v, dict):
             raise InvalidParameter('property not specified')
         if is_oid(i):
@@ -739,6 +740,7 @@ class UC_API(GenericAPI):
             save: save unit configuration immediately
         """
         i, g, e, save = parse_api_params(kwargs, 'igeS', 'Ssbb')
+        save = save or eva.core.config.auto_save
         return eva.uc.controller.create_unit(unit_id=oid_to_id(i, 'unit'),
                                              group=g,
                                              enabled=e,
@@ -763,6 +765,7 @@ class UC_API(GenericAPI):
             save: save sensor configuration immediately
         """
         i, g, e, save = parse_api_params(kwargs, 'igeS', 'Ssbb')
+        save = save or eva.core.config.auto_save
         return eva.uc.controller.create_sensor(sensor_id=oid_to_id(i, 'sensor'),
                                                group=g,
                                                enabled=e,
@@ -786,6 +789,7 @@ class UC_API(GenericAPI):
             save: save multi-update configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        save = save or eva.core.config.auto_save
         return eva.uc.controller.create_mu(mu_id=oid_to_id(i, 'mu'),
                                            group=g,
                                            save=save).serialize()
@@ -809,6 +813,7 @@ class UC_API(GenericAPI):
             save: save multi-update configuration immediately
         """
         k, i, g, e, save = parse_function_params(kwargs, 'kigeS', '.Osbb')
+        save = save or eva.core.config.auto_save
         t, i = parse_oid(i)
         if t == 'unit':
             return self.create_unit(k=k, i=i, e=e, save=save)
@@ -838,6 +843,7 @@ class UC_API(GenericAPI):
             save: save multi-update configuration immediately
         """
         i, n, g, save = parse_api_params(kwargs, 'ingS', 'SSsb')
+        save = save or eva.core.config.auto_save
         return eva.uc.controller.clone_item(item_id=i,
                                             new_item_id=n,
                                             group=g,
@@ -864,6 +870,7 @@ class UC_API(GenericAPI):
             save: save configuration immediately
         """
         g, n, p, r, save = parse_api_params(kwargs, 'gnprS', 'SSssb')
+        save = save or eva.core.config.auto_save
         if (p and not r) or (r and not p):
             raise InvalidParameter('both prefixes must be specified')
         return eva.uc.controller.clone_group(group=g,
@@ -937,6 +944,7 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
+        save = save or eva.core.config.auto_save
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
@@ -1002,6 +1010,7 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
+        save = save or eva.core.config.auto_save
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
         return self._do_update_device(cfg=cfg, save=save, validate_config=True)
@@ -1129,6 +1138,7 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
+        save = save or eva.core.config.auto_save
         cfg = self._load_device_config(tpl_config=tpl_config,
                                        device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
@@ -1246,6 +1256,7 @@ class UC_API(GenericAPI):
             returned and port is recreated.
         """
         i, p, l, t, d, r, save = parse_api_params(kwargs, 'ipltdrS', 'SSbnnib')
+        save = save or eva.core.config.auto_save
         result = eva.uc.modbus.create_modbus_port(i,
                                                   p,
                                                   lock=l,
@@ -1272,7 +1283,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.modbus.destroy_modbus_port(i)
-        if result and eva.core.config.db_update == 1:
+        if result and eva.core.config.auto_save:
             if not eva.uc.modbus.save():
                 raise FunctionFailed('port save error')
         return result
@@ -1787,6 +1798,7 @@ class UC_API(GenericAPI):
             returned and bus is recreated.
         """
         i, n, l, t, d, r, save = parse_api_params(kwargs, 'inltdrS', 'SSbnnib')
+        save = save or eva.core.config.auto_save
         eva.uc.owfs.create_owfs_bus(i, n, lock=l, timeout=t, delay=d, retries=r)
         if save:
             if not eva.uc.owfs.save():
@@ -1814,7 +1826,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.owfs.destroy_owfs_bus(i)
-        if result and eva.core.config.db_update == 1:
+        if result and eva.core.config.auto_save:
             if not eva.uc.owfs.save():
                 raise FunctionFailed('bus save error')
         return result
@@ -1971,6 +1983,7 @@ class UC_API(GenericAPI):
             returned and datapuller is recreated.
         """
         i, c, t, e, save = parse_api_params(kwargs, 'icteS', 'SSnnb')
+        save = save or eva.core.config.auto_save
         eva.datapuller.create_data_puller(i,
                                           c,
                                           timeout=t,
@@ -2110,6 +2123,7 @@ class UC_API(GenericAPI):
             save: save driver configuration after successful call
         """
         i, m, c, save = parse_api_params(kwargs, 'imcS', 'SS.b')
+        save = save or eva.core.config.auto_save
         if isinstance(c, str):
             try:
                 c = dict_from_str(c)
@@ -2157,6 +2171,7 @@ class UC_API(GenericAPI):
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
+        save = save or eva.core.config.auto_save
         eva.uc.driverapi.set_phi_prop(i, p, v)
         if save:
             eva.uc.driverapi.save()
@@ -2275,7 +2290,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_phi(i)
-        if eva.core.config.db_update == 1:
+        if eva.core.config.auto_save:
             eva.uc.driverapi.save()
         return True
 
@@ -2409,6 +2424,7 @@ class UC_API(GenericAPI):
             save: save configuration after successful call
         """
         i, m, p, c, save = parse_api_params(kwargs, 'impcS', 'SSS.b')
+        save = save or eva.core.config.auto_save
         if isinstance(c, str):
             try:
                 c = dict_from_str(c)
@@ -2435,7 +2451,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_driver(i)
-        if eva.core.config.db_update == 1:
+        if eva.core.config.auto_save:
             eva.uc.driverapi.save()
         return True
 
@@ -2493,6 +2509,7 @@ class UC_API(GenericAPI):
             save: save driver configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
+        save = save or eva.core.config.auto_save
         if i.split('.')[-1] == 'default':
             raise ResourceBusy('Properties for default drivers can not be set')
         eva.uc.driverapi.set_driver_prop(i, p, v)
@@ -2568,6 +2585,7 @@ class UC_API(GenericAPI):
             save: save item configuration after successful call
         """
         k, i, d, c, save = parse_function_params(kwargs, 'kidcS', '.S..b')
+        save = save or eva.core.config.auto_save
         if is_oid(i):
             t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)

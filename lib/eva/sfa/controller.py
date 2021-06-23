@@ -317,7 +317,8 @@ def remove_uc(controller_id):
     try:
         i = remote_ucs[controller_id]
         i.destroy()
-        if eva.core.config.db_update == 1 and i.config_file_exists:
+        if (eva.core.config.db_update == 1 or
+                eva.core.config.auto_save) and i.config_file_exists:
             try:
                 eva.registry.key_delete(i.get_rkn())
             except:
@@ -395,7 +396,8 @@ def remove_lm(controller_id):
     try:
         i = remote_lms[controller_id]
         i.destroy()
-        if eva.core.config.db_update == 1 and i.config_file_exists:
+        if (eva.core.config.db_update == 1 or
+                eva.core.config.auto_save) and i.config_file_exists:
             try:
                 eva.registry.key_delete(i.get_rkn())
             except:
@@ -455,8 +457,8 @@ def connect_remote_controller(pool, v):
 def stop():
     eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.config.db_update == 1:
-        save()
+    # if eva.core.config.db_update == 1:
+        # save()
     if uc_pool:
         uc_pool.stop()
     if lm_pool:

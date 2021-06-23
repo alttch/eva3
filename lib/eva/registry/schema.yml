@@ -127,6 +127,7 @@ config/uc/main:
         exec-before-save: *str
         exec-after-save: *str
         mqtt-update-default: *str
+        auto-save: *bool
     msad: &msad
       type: object
       additionalProperties: false

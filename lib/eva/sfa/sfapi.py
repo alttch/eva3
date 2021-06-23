@@ -1101,6 +1101,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         uri, group, key, makey, mqtt_update, ssl_verify, timeout, \
                 save = parse_api_params(kwargs, 'ugaxmstS', 'Sssssbnb')
+        save = save or eva.core.config.auto_save
         if group == 'uc' or group is None:
             c = eva.sfa.controller.append_uc(uri=uri,
                                              key=key,
