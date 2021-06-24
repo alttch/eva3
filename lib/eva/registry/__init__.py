@@ -63,15 +63,24 @@ def safe(func):
 
 
 def config_get(key, **kwargs):
+    """
+    Get key as configuration object
+    """
     return Config(key_get(key, **kwargs))
 
 
 def safe_purge():
+    """
+    Purge database, keep broken keys
+    """
     return db.safe_purge()
 
 
 @safe
 def key_get(key, default=KeyError):
+    """
+    Get key
+    """
     try:
         return db.key_get(key=f'{PFX}/{SYSTEM_NAME}/{key}')
     except KeyError:
@@ -83,6 +92,9 @@ def key_get(key, default=KeyError):
 
 @safe
 def key_get_field(key, field, default=KeyError):
+    """
+    Get key field
+    """
     try:
         return db.key_get_field(key=f'{PFX}/{SYSTEM_NAME}/{key}', field=field)
     except (KeyError, FieldNotFound) as e:
@@ -94,6 +106,9 @@ def key_get_field(key, field, default=KeyError):
 
 @safe
 def key_get_recursive(key):
+    """
+    Get keys recursive as [(key, value)] list
+    """
     _key = f'{PFX}/{SYSTEM_NAME}/{key}'
     l = len(_key) + 1
     for k, v in db.key_get_recursive(key=_key):
@@ -102,16 +117,25 @@ def key_get_recursive(key):
 
 @safe
 def key_increment(key):
+    """
+    Increment key value
+    """
     return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 
 @safe
 def key_decrement(key):
+    """
+    Decrement key value
+    """
     return db.key_increment(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 
 @safe
 def get_subkeys(key):
+    """
+    Get keys recursive as a dict
+    """
     _key = f'{PFX}/{SYSTEM_NAME}/{key}'
     l = len(_key) + 1
     return {k[l:]: v for k, v in db.key_get_recursive(key=_key)}
@@ -119,11 +143,17 @@ def get_subkeys(key):
 
 @safe
 def key_set(key, value, **kwargs):
+    """
+    Set key
+    """
     return db.key_set(key=f'{PFX}/{SYSTEM_NAME}/{key}', value=value, **kwargs)
 
 
 @safe
 def key_set_field(key, field, value, **kwargs):
+    """
+    Set key field
+    """
     return db.key_set_field(key=f'{PFX}/{SYSTEM_NAME}/{key}',
                             field=field,
                             value=value,
@@ -132,16 +162,25 @@ def key_set_field(key, field, value, **kwargs):
 
 @safe
 def key_delete(key):
+    """
+    Delete key
+    """
     return db.key_delete(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 
 @safe
 def key_delete_recursive(key):
+    """
+    Delete keys recursive
+    """
     return db.key_delete_recursive(key=f'{PFX}/{SYSTEM_NAME}/{key}')
 
 
 @safe
 def key_delete_field(key, field, **kwargs):
+    """
+    Delete key field
+    """
     return db.key_delete_field(key=f'{PFX}/{SYSTEM_NAME}/{key}',
                                field=field,
                                **kwargs)
@@ -149,6 +188,9 @@ def key_delete_field(key, field, **kwargs):
 
 @safe
 def key_import(key, fh):
+    """
+    Import key from stream or file
+    """
     import yaml
     if isinstance(fh, str):
         with open(fh) as f:
@@ -160,6 +202,11 @@ def key_import(key, fh):
 
 @safe
 def key_as_dict(key, **kwargs):
+    """
+    Work with key as with a dict
+
+    with key_as_dict(key): ...
+    """
     return db.key_as_dict(key=f'{PFX}/{SYSTEM_NAME}/{key}', **kwargs)
 
 

@@ -5,12 +5,12 @@ Starting from the version 3.4, EVA ICS uses structured document database as the
 primary storage of all configurations. In EVA ICS it is called "document
 registry system" or just "registry".
 
-.. toctree::
+.. contents::
 
 Technology
 ==========
 
-EVA ICS uses `yedb <https://www.yedb.org>`_ as the structured database. YEDB is
+EVA ICS uses `YEDB <https://www.yedb.org>`_ as the structured database. YEDB is
 fast, easy to repair and crash-free.
 
 Registry server is started with "/opt/eva/sbin/registry-control start" and MUST
@@ -44,6 +44,9 @@ locally.
 .. warning::
 
     It is highly recommended to keep strict data schema (enabled by default).
+
+If configuration file is not created, EVA ICS starts and uses registry server
+with the default settings.
 
 Maintenance
 ===========
@@ -94,3 +97,27 @@ config/inventory                     not rec.      inventory key (EVA ICS items)
 config/data                          forbidden     system objects
 config/userdata                      yes           any user-defined data
 ==================================== ============= ================================
+
+SDK
+===
+
+**eva.registry** module provides functions for registry management. All
+functions set key prefix ("eva3/<SYSTEM_NAME>/") automatically.
+
+The module can be imported and used in :doc:`plugins</plugins>`, :doc:`LM PLC
+macros </lm/macros>` or anywhere else. When imported by 3rd-party scripts with
+EVA ICS "lib" directory added to the import path, the module automatically
+initializes itself with the proper system name and connection settings from
+"eva_config" file.
+
+.. include:: ./pydoc/pydoc_registry.rst
+
+Module variables:
+
+ * **SYSTEM_NAME** name of the current node
+
+ * **db** `YEDB Python <https://github.com/alttch/yedb-py>`_ object, can be used
+   e.g. to manipulate keys without auto-prefixing.
+
+It is also possible to work with registry server using the official API and
+clients. See https://www.yedb.org/ for more details.
