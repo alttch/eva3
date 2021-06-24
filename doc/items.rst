@@ -173,9 +173,9 @@ Unit parameters
 
             { "status": 1 }
 
-  There is also a configuration parameter *mqtt_update_default* which can be
-  set in *etc/uc.ini* (default e.g. to *eva_1:2*) and applied to all newly
-  created items.
+  There is also a configuration field *server/mqtt-update-default* which can be
+  set in *config/uc/main* :doc:`registry</registry>` key (default e.g. to
+  *eva_1:2*) and applied to all newly created items.
 
 * **snmp_trap** if set, the item can receive active state updates via
   :ref:`snmp_traps`.

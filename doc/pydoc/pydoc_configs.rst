@@ -9,8 +9,8 @@
    
    .. rubric:: Example
    
-   with ConfigFile('uc.ini') as cf:
-       cf.set('plugin.my', 'field1', 'value1')
+   with ConfigFile('file.ini') as cf:
+       cf.set('section', 'field1', 'value1')
    
    
    .. py:method:: ConfigFile.add_section(section, values)
@@ -76,8 +76,8 @@
    
    .. rubric:: Example
    
-   with ShellConfigFile('venv') as cf:
-       cf.set('SYSTEM_SITE_PACKAGES', 0)
+   with ShellConfigFile('eva_config') as cf:
+       cf.set('KEYNAME', 0)
    
    
    .. py:method:: ShellConfigFile.append(name, value)
@@ -93,7 +93,7 @@
       Delete field
       
    
-   .. py:method:: ShellConfigFile.get(name)
+   .. py:method:: ShellConfigFile.get(name, default=<class 'KeyError'>)
       
    
       Get field value

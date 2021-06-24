@@ -3,3 +3,4 @@ skip:
   - "pandas"
 system-site-packages: true
 use-system-pip: false
+pip-extra-options: ""

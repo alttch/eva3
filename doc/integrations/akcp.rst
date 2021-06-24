@@ -23,7 +23,7 @@ traps on event.
 
 Both ways (using SNMP trap parser or PHIs), require SNMP trap handler to be
 properly configured and set in AKCP SensorProbe/SecurityProbe as a trap handler
-server (section *[snmptrap]* of :ref:`uc_ini`).
+server (field *snmptrap* of :ref:`uc_config`).
 
 Consider AKCP SensorProbe IP is 192.168.1.100, motion detector is installed on
 port 1, smoke detector - on port 2, temperature/humidity sensor - on port 4.

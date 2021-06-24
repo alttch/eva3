@@ -19,9 +19,9 @@ Sending data to EVA ICS UC
 It's highly recommended to use :doc:`/uc/uc_udp_api` to communicate with
 :doc:`/uc/uc` to avoid Arduino board freezing.
 
-To enable UDP API, you must firstly configure *listen* and *hosts_allow*
-options in *etc/uc.ini* (don't forget to restart :doc:`/uc/uc` after
-configuration is modified).
+To enable UDP API, you must firstly configure *udpapi/listen* and
+*udpapi/hosts-allow* options in *config/uc/main* :doc:`registry</registry>` key
+(don't forget to restart :doc:`/uc/uc` after configuration is modified).
 
 Example. Consider there are 2 motion (PIR) sensors connected with Arduino board
 on pins #2 and #3, the board has Ethernet shield to send events via UDP

@@ -293,18 +293,6 @@ which check/rebuild venv on every system update.
 Installing
 ----------
 
-.. warning::
-
-    If you want to run some components under restricted users, create **var**
-    and **log** folders in EVA installation dir and make sure the restricted
-    users have an access to these folders before running *easy-setup*. If
-    you've customized ini files in *etc*, make sure the restricted user has an
-    access to both <component>.ini and <component>_apikeys.ini.
-
-    If you want to make some initial customization, e.g. name the controllers
-    different from the host name, make changes in *etc/uc.ini*, *etc/lm.ini*
-    and *etc/sfa.ini* configs first.
-
 * For the interactive setup, run *./easy-setup* in EVA folder and follow the
   instructions.
 * For the automatic setup, run *./easy-setup -h* in EVA folder and choose
@@ -593,8 +581,9 @@ A primary :doc:`/sfa/sfa` instance is called cloud manager. There can be more
 than one Cloud manager in the cloud, having different secondary controllers
 with different permissions connected.
 
-The cloud manager (enabled by default in *etc/sfa.ini* section "cloud",
-option "cloud_manager = yes"), provides two features:
+The cloud manager (enabled by default in *config/sfa/main*
+:doc:`registry</registry>` key, field "cloud/cloud-manager: true", provides the
+following features:
 
 * The cloud manager interface is enabled on SFA node at
   \http://SFA_IP:SFA_PORT/cloudmanager/ (the default port is 8828).
@@ -662,8 +651,8 @@ Using NGINX as a frontend for SFA interface
 .. note::
 
     To properly log IP addresses of the requests, make sure the front-end sets
-    *X-Real-IP* header and set *[webapi]/x_real_ip=yes* option in
-    :ref:`sfa_ini`.
+    *X-Real-IP* header and set *webapi/x-real-ip: true* option in
+    *config/sfa/main* :doc:`registry</registry>` key.
 
 External authentication
 -----------------------
@@ -758,9 +747,9 @@ Using HTTP basic auth for EVA ICS authentication
 The following example demonstrates how to use basic authentication and
 automatically log in user into SFA UI.
 
-Firstly, set *user_hook* option in *./etc/sfa.ini*, this will allow EVA ICS to
-sync htpasswd file with SFA users (make sure *htpasswd* program is installed as
-well).
+Firstly, set *server/user-hook* option in *config/sfa/main*
+:doc:`registry</registry>` key, this allows EVA ICS sync htpasswd file with SFA
+users (make sure *htpasswd* program is installed as well).
 
 .. code-block:: ini
 

@@ -36,51 +36,26 @@ connected to :ref:`MQTT server<mqtt_>`.
 Since LM PLC is a part of EVA platform, its operating principles, settings, and
 configuration files generally match the other components.
 
-.. _lm_ini:
+.. _lm_config:
 
-etc/lm.ini configuration file
-=============================
+config/lm/main registry key
+===========================
 
-lm.ini - primary configuration file of LM PLC
+*config/lm/main* :doc:`registry</registry>` key contains the controller
+configuration.
 
-.. literalinclude:: ../../etc/lm.ini-dist
-    :language: ini
+.. literalinclude:: ../../lib/eva/registry/defaults/config/lm/main.yml
+    :language: yaml
 
 .. _lm_cvars:
 
-runtime/lm_cvars.json variables file
-====================================
+Custom variables
+================
 
-lm_cvars.json - file containing user variables passed to all logic control
-:doc:`macros<macros>`.
+All custom variables passed to logic control :doc:`macros<macros>` as-is.
 
-The file contains a JSON dict:
-
-.. code-block:: json
-
-    {
-     "VAR1": "value1",
-     "VAR2": "value2"
-    }
-
-
-Variables can be changed while the server is running via :doc:`/sysapi` as
-well as :doc:`eva lm</cli>` **cvar get** and **cvar set** commands.
-
-.. _lm_apikey:
-
-etc/lm_apikeys.ini API keys file
-================================
-
-API access keys are stored into *etc/lm_apikeys.ini* file. At least one full
-access key named **masterkey** should be present for proper functioning.
-Important: with master key and API anyone can receive full access to the system
-similar to root user (or the user LM is run under), that is why it is
-recommended to use this key only in supervisory networks or even restrict its
-usage to local host only.
-
-.. literalinclude:: ../../etc/lm_apikeys.ini-dist
-    :language: ini
+Variables can be changed while the server is running via :doc:`/sysapi` as well
+as :doc:`eva lm</cli>` **cvar get** and **cvar set** commands.
 
 .. _lm_remote_uc:
 

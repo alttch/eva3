@@ -58,7 +58,7 @@ where:
 
 * **g** filter by group (use :ref:`MQTT-style<mqtt_>` wildcards)
 
-* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
+* **k** API key (use key ID instead of key itself)
 
 The function is similar to SFA API :ref:`groups<sfapi_groups>` except that if
 API key is not specified, the current key is used.
@@ -81,7 +81,7 @@ where:
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required if ID is not in oid format
 
-* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
+* **k** API key (use key ID instead of key itself)
 
 The function is similar to SFA API :ref:`state<sfapi_state>` except that if API
 key is not specified, the current key is used.
@@ -101,7 +101,7 @@ where:
 
 * **params** API call parameters
 
-* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
+* **k** API key (use key ID instead of key itself)
 
 Example. Let's warn user when specified UC controller is not connected:
 

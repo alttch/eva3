@@ -43,19 +43,19 @@ EVA Controller configuration
 ----------------------------
 
 Put the following block in controller configuration (e.g. for
-:doc:`SFA</sfa/sfa>` edit */opt/eva/etc/sfa.ini*)
+:doc:`SFA</sfa/sfa>` edit *config/sfa/main* :doc:`registry</registry>` key)
 
-.. code:: ini
+.. code:: yaml
 
-    [msad]
-    host = ad.yourdomain.com
-    domain = yourdomain.com
-    key_prefix =
-    ou = EVA
-    ;ca = /path/to/ca-file.crt
-    ; cache credentials for the specified time (seconds)
-    ; default: 86400 (1 day), 0 to disable caching
-    ;cache_time = 86400
+    msad:
+        host: ad.yourdomain.com
+        domain: yourdomain.com
+        key_prefix: ""
+        ou: EVA
+        #ca: /path/to/ca-file.crt
+        # cache credentials for the specified time (seconds)
+        # default: 86400 (1 day), 0 to disable caching
+        #cache-time: 86400
 
 Host and domain should always be specified. Default key prefix is empty,
 default organizational unit is *EVA*. CA file is not used by default.

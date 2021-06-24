@@ -50,7 +50,7 @@ symbol. Example::
 Encryption and authentication
 =============================
 
-You may specify in :ref:`controller configuration<uc_ini>` to accept only
+You can specify in :ref:`controller configuration<uc_config>` to accept only
 encrypted packets from the specified hosts or networks. By default it's
 recommended to accept unencrypted packets without authentication only in
 trusted networks. The packet is encrypted and signed with API key and can not

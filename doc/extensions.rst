@@ -7,9 +7,9 @@ preferred for certain tasks.
 Tips and tricks
 ===============
 
-* put *development = yes* in *[server]* section of *etc/<controller>.ini*. This
-  option automatically enables traceback logging and debug mode (don't use on
-  production!)
+* put *development: true* in *server* field of *config/<controller>/main*
+  :doc:`registry</registry>` key. This option automatically enables traceback
+  logging and debug mode (don't use on production!)
 
 * instead of e.g. *eva uc server start*, run *eva uc server launch* to output
   everything to the system console.

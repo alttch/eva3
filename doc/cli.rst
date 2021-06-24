@@ -52,15 +52,21 @@ SCADA Final Aggregator
 * **sfa-notifier** configures SFA :doc:`notification system</notifiers>` (equal
   to *eva ns sfa*)
 
+Registry management
+-------------------
+
+* *eva-registry* primary :doc:`registry</registry>` management tool
+
+* *sbin/eva-registry-cli* fast command-line tool for scripting, use
+  AUTO_PREFIX=1 env. variable to set *eva3/<SYSTEM_NAME>/* key prefix
+  automatically.
+
 Other
 -----
 
 * **test-uc-xc** a special app to test UC :doc:`item scripts</item_scripts>`.
   Launches an item script with UC :ref:`cvars<uc_cvars>` and EVA paths set in
   the environment.
-
-* **sbin/layout-converter** allows to convert **simple** :ref:`item
-  layout<item_layout>` to **enterprise**.
 
 Device control apps
 ===================

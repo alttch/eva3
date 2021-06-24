@@ -433,7 +433,8 @@ dict with fields 'name' 'file', 'size' and 'time' { 'c': created, 'm': modified 
 mail - send email message
 -------------------------
 
-The function uses *[mailer]* section of the :ref:`LM PLC configuration<lm_ini>` to get sender address and list of the recipients (if not specified).
+The function uses *config/common/mailer* :doc:`registry</registry>` key to get
+sender address and list of the recipients (if not specified).
 
 .. code-block:: python
 

@@ -97,9 +97,9 @@ image from camera without VPN, port-forwarding. But keep resources in network
 
 **Step 1: prepare agent controller**
 
-Put *rpvt = yes* to *[sysapi]* section of */opt/eva/etc/uc.ini* (for UC or
-*lm.ini* for LM PLC) to enable rpvt agent feature. Restart the controller to
-activate it:
+Put *sysapi/rpvt: yes* field in *config/uc/main* :doc:`registry</registry>` key
+(for UC or *config/lm/main* for LM PLC) to enable rpvt agent feature. Restart
+the controller to activate it:
 
 .. code:: bash
 

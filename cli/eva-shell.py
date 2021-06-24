@@ -255,6 +255,10 @@ class ManagementCLI(GenericCLI):
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
         sp_edit_venv = sp_edit.add_parser(
             'venv', help='Edit Python virtual environment configuration')
+        sp_edit_watchdog_config = sp_edit.add_parser(
+            'watchdog-config', help='Edit controller watchdog configuration')
+        sp_edit_mailer_config = sp_edit.add_parser(
+            'mailer-config', help='Edit mailer configuration')
 
         ap_masterkey = self.sp.add_parser('masterkey',
                                           help='Masterkey management')
@@ -1358,6 +1362,18 @@ sys.argv = {argv}
         return self.local_func_result_empty if \
                 not code else self.local_func_result_failed
 
+    def edit_watchdog_config(self, params):
+        code = os.system(
+            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/watchdog')
+        return self.local_func_result_empty if \
+                not code else self.local_func_result_failed
+
+    def edit_mailer_config(self, params):
+        code = os.system(
+            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/common/mailer')
+        return self.local_func_result_empty if \
+                not code else self.local_func_result_failed
+
     def save(self, params):
         p = params['p']
         if p:
@@ -1649,6 +1665,8 @@ _api_functions = {
     'registry:status': cli.registry_status,
     'edit:crontab': cli.edit_crontab,
     'edit:venv': cli.edit_venv,
+    'edit:watchdog-config': cli.edit_watchdog_config,
+    'edit:mailer-config': cli.edit_mailer_config,
     'masterkey:set': cli.set_masterkey
 }
 

@@ -25,12 +25,12 @@ After the installation, the following API keys are created automatically:
   *allow=lock*
 
 Custom API keys can be created either in the controller key configuration
-(*etc/<controller>_apikeys.ini*, static, requires controller restart on
-changes), with :doc:`/sysapi` key management functions or with
-:doc:`command-line interface </cli>` (dynamic, stored either in "db" or in
-"userdb"). Master keys can be created only in the controller key configuration
-file, the default master key (with id *masterkey*) can also be changed for all
-installed components at once, using *eva masterkey* CLI command.
+in :doc:`/registry` (static, requires controller restart on changes), with
+:doc:`/sysapi` key management functions or with :doc:`command-line interface
+</cli>` (dynamic, stored either in "db" or in "userdb"). Master keys can be
+created only in the controller key configuration file, the default master key
+(with id *masterkey*) can also be changed for all installed components at once,
+using *eva masterkey* CLI command.
 
 .. note::
 

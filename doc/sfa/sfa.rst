@@ -34,51 +34,30 @@ server should be installed in the setup to let it work in real time.
 Since SFA is a part of EVA platform, its operating principles, settings, and
 configuration files generally match the other components.
 
-.. _sfa_ini:
+.. _sfa_config:
 
-etc/sfa.ini configuration file
-==============================
+config/sfa/main registry key
+============================
 
-sfa.ini - primary configuration file of SFA
+*config/sfa/main* :doc:`registry</registry>` key contains the controller
+configuration.
 
-.. literalinclude:: ../../etc/sfa.ini-dist
-    :language: ini
+.. literalinclude:: ../../lib/eva/registry/defaults/config/sfa/main.yml
+    :language: yaml
 
 .. _sfa_cvars:
 
-runtime/sfa_cvars.json variables file
-=====================================
+Custom variables
+================
 
-sfa_cvars.json - file containing user variables. All SFA user variables are
-directly available in :doc:`sfa_templates` and :ref:`js_framework` after login
-with any valid user or API key.
+Custom variables can be changed while the server is running via :doc:`/sysapi`
+as well as :doc:`eva sfa</cli>` **cvar_get** and **cvar_set** commands.
 
-The file contains a JSON dict:
-
-.. code-block:: json
-
-    {
-     "VAR1": "value1",
-     "VAR2": "value2"
-    }
+All SFA custom variables are directly available in :doc:`sfa_templates` and
+:ref:`js_framework` after login with any valid user or API key.
 
 Variables can be changed while the server is running via :doc:`/sysapi` as
 well as :doc:`eva sfa</cli>` **cvar get** and **cvar set** commands.
-
-.. _sfa_apikey:
-
-etc/sfa_apikeys.ini API keys file
-=================================
-
-API access keys are stored into *etc/sfa_apikeys.ini* file. At least one full
-access key named **masterkey** should be present for proper functioning.
-Important: with master key and API anyone can receive the full access to the
-system similar to root user (or the user SFA is run under), that is why it is
-recommended to use this key only in supervisory networks or even restrict its
-use to local host only.
-
-.. literalinclude:: ../../etc/sfa_apikeys.ini-dist
-    :language: ini
 
 .. _sfa_remote_c:
 

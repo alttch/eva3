@@ -10,8 +10,8 @@ Logging in
 ==========
 
 To log into the interface, open *\http://IP_address_UC:port/* url (the default
-port is 8812), enter :ref:`API KEY<uc_apikey>` and press Enter to log in or
-**Remember API key** to log in and make your browser remember the key.
+port is 8812), enter API key and press Enter to log in or **Remember API key**
+to log in and make your browser remember the key.
 
 .. figure:: ../ei-login.png
     :scale: 70%
@@ -87,6 +87,6 @@ Disabling the interface
 =======================
 
 For security reasons, it may be a good idea to disable the interface after the
-initial configuration and system debug. To do this, set *ei_enabled = no* in
-**webapi** section of :ref:`uc.ini<uc_ini>` and restart the controller.
-
+initial configuration and system debug. To do this, set
+*webapi/ei-enabled:false* in *config/uc/main* :doc:`registry</registry>` key
+and restart the controller.

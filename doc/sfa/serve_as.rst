@@ -147,8 +147,9 @@ Locale cache
 Message files are cached by EVA ICS gettext library, until the :doc:`/sfa/sfa`
 server is restarted.
 
-The cache can be turned off by setting development mode (*development = yes*)
-in *[server]* section of :ref:`sfa_ini`.
+The cache can be turned off by setting development mode
+(*server/development:true*) field of *config/sfa/main*
+:doc:`registry</registry>` key
 
 On production, the API method :ref:`clear_lang_cache <sysapi_clear_lang_cache>`
 can be used, either by calling it manually or during a :doc:`deployment

@@ -49,9 +49,9 @@ third-party server to receive traps, for example, `snmptrapd
 <http://net-snmp.sourceforge.net/docs/man/snmptrapd.html>`_ or trap handler
 included in EVA :doc:`/uc/uc`.
 
-Built-in trap handler should be enabled in :ref:`UC configuration
-file<uc_ini>`. Usually, SNMP traps server listen on the port 162. The embedded
-SNMP traps handler can work with SNMP v1 and SNMP v2c protocols.
+Built-in trap handler must be enabled in :ref:`UC configuration<uc_config>`.
+Usually, SNMP traps server listen on the port 162. The embedded SNMP traps
+handler can work with SNMP v1 and SNMP v2c protocols.
 
 Both :ref:`units<unit>` and :ref:`sensors<sensor>` can update their state
 through SNMP traps processing. After the item configuration param **snmp_trap**

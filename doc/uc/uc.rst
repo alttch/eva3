@@ -56,35 +56,24 @@ time of the commands.
 
 The minimum value of POLL DELAY is 0.001 (1 millisecond).
 
-.. _uc_ini:
+.. _uc_config:
 
-etc/uc.ini configuration file
-=============================
+config/uc/main registry key
+===========================
 
-uc.ini - primary configuration file of UC server
+*config/uc/main* :doc:`registry</registry>` key contains the controller
+configuration.
 
-.. literalinclude:: ../../etc/uc.ini-dist
-    :language: ini
+.. literalinclude:: ../../lib/eva/registry/defaults/config/uc/main.yml
+    :language: yaml
 
 .. _uc_cvars:
 
-runtime/uc_cvars.json variables file
-====================================
+Custom variables
+================
 
-uc_cvars.json - file containing user variables passed to all commands and
-:doc:`item scripts</item_scripts>` within the system environment.
-
-The file contains a JSON dict:
-
-.. code-block:: json
-
-    {
-     "VAR1": "value1",
-     "VAR2": "value2"
-    }
-
-Variables can be changed while the server is running via :doc:`/sysapi` as
-well as :doc:`eva uc</cli>` **cvar_get** and **cvar_set** commands.
+Custom variables can be changed while the server is running via :doc:`/sysapi`
+as well as :doc:`eva uc</cli>` **cvar_get** and **cvar_set** commands.
 
 For example, let's create a variable:
 
@@ -100,24 +89,9 @@ management script on the port 2 of the given relay will be the following:
     #!/bin/sh
     ${RELAY1_CMD}.1.2.0 i $2
 
-It's possible to assign different values for the variables used for different
+It is possible to assign different values for the variables used for different
 object groups with the same names, e.g. *group1/VAR1*, *group2/VAR1* etc. In
 this case the variable will be available only for the specified group.
-
-.. _uc_apikey:
-
-etc/uc_apikeys.ini API keys file
-================================
-
-API access keys are stored into *etc/uc_apikeys.ini* file. At least one full
-access key named **masterkey** should be present for proper functioning.
-Important: with master key and API anyone can receive full access to the system
-similar to root user (or the user UC is run under), that is why it is
-recommended to use this key only in supervisory networks or even restrict its
-use to local host only.
-
-.. literalinclude:: ../../etc/uc_apikeys.ini-dist
-    :language: ini
 
 .. _uc_queues:
 

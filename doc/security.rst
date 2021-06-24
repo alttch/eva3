@@ -1,8 +1,8 @@
 Security
 ********
 
-Common recommendations
-======================
+General recommendations
+=======================
 
 Traditionally, automation systems and protocols have been designed as not
 completely secure. As for reliability, you may agree that it would be a pity if
@@ -127,9 +127,6 @@ Universal Controller API keys
 
 * All external applications should have their own keys with restricted access
   rights to the required functions and items only.
-
-* After installation, make sure that *etc/uc_apikeys.ini* file has 0600
-  permissions (and owned by the user you are running the controller under)
 
 Logic Manager API keys
 ----------------------

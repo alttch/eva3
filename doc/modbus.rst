@@ -196,8 +196,18 @@ Modbus slave
 ============
 
 :doc:`/uc/uc` can work as Modbus slave. Ports, the slave listens to, are set in
-*etc/uc.ini*. Modbus over TCP, UDP and serial ports (rtu/ascii/binary) is
-supported.
+*config/uc/main* :doc:`registry</registry>` key. Supported: modbus over TCP,
+UDP and serial ports (rtu/ascii/binary).
+
+.. code:: yaml
+
+    modbus-slave:
+        - proto: tcp
+          listen: 127.0.0.1:5502
+          unit: 0x01
+        - proto: rtu
+          listen: /dev/ttyS0
+          unit: 2
 
 Controller uses single memory space for all ports it listens to, ports can have
 different Modbus addresses. Memory space has 10 000 holding registers, 10 000

@@ -5,10 +5,10 @@ python: python3
 # use system site packages
 system-site-packages: false
 # skip packages (enable system site packages to let venv use preinstalled)
-#skip:
+skip: []
 # - pandas
 # specify extra PIP3 options e.g., -v for verbose
-#pip-extra-options: "-v"
+pip-extra-options: ""
 # additional module
-#extra:
+extra: []
 #  - soundfile==0.10.2

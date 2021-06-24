@@ -362,9 +362,9 @@ in any convertible format.
 
 .. note::
 
-    There is also a configuration parameter *mqtt_update_default* which can be
-    set in *etc/uc.ini* (default e.g. to *eva_1:2*) and applied to all newly
-    created items.
+    There is also a configuration parameter *mqtt-update-default* which can be
+    set in *config/<controller>/main* :doc:`registry</registry>` keys (default
+    e.g. to *eva_1:2*) and applied to all newly created items.
 
 One item can be subscribed to a single MQTT notifier to get the state updates,
 but different items on the same controller can be subscribed to different MQTT

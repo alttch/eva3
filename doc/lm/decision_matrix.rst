@@ -190,9 +190,9 @@ If rule option **for_initial** is set to *any* or *only*, it is possible to
 cache previous item state to prevent false rule triggering. This may cause
 additional system overload.
 
-To enable state cache, set "cache_remote_state" option in section "plc" of
-:ref:`lm.ini<lm_ini>` to desired cache time-to-live in seconds (e.g. 604800 =
-time-to-live 1 week) and restart the controller.
+To enable state cache, set "plc/cache-remote-state" field in *config/lm/main*
+:doc:`registry</registry>` key to desired cache time-to-live in seconds (e.g.
+604800 = time-to-live 1 week) and restart the controller.
 
 Or use "feature" command:
 

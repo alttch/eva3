@@ -17,7 +17,7 @@ integration of the additional authentication methods.
 
 In most cases, it would be sufficient to delineate access to such content with
 the help of SFA PVT server. The access rights to the certain files and catalogs
-are regulated with **pvt** parameter in :ref:`SFA API keys<sfa_apikey>`.
+are regulated with **pvt** parameter of API key.
 
 The PVT server interface is available at *http(s)://<IP_address_SFA:Port>/pvt*,
 and the private content should be placed in **pvt** folder of EVA root
@@ -255,11 +255,9 @@ omitted.
 Example: you have a chart on storage server in local network displaying storage
 usage. The chart is located at http://192.168.1.20/charts/zfs.png
 
-Append the following permission string to :ref:`API key<sfa_apikey>`:
+Set prvt permissions of API key to:
 
-.. code-block:: ini
-
-    rpvt = 192.168.1.20/charts/#
+    192.168.1.20/charts/#
 
 This will grant access to all files on the specified host in /charts/ folder.
 

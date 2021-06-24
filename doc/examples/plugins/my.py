@@ -1,13 +1,12 @@
 """
 EVA ICS plugin example
 
-To load the plugin, put its name to controller config, section [server]
-
-e.g. edit etc/uc.ini:
+To load the plugin, put its config to the registry key,
+config/<controller>/plugins/<plugin_name>
 
 ...........................................
-[server]
-plugins = my ; plugin list, comma separated
+enabled: true
+config: {}
 ...........................................
 
 Plugins can be one-file, in this case they can be just put into plugins
@@ -20,7 +19,7 @@ globally or in EVA ICS venv.
 Plugin configuration:
 
 use either "eva <controller> edit plugin-config <plugin-name>" command or
-create a registry key eva3/HOST/config/<controller>/plugins/<plugin-name>
+edit the registry key eva3/HOST/config/<controller>/plugins/<plugin-name>
 
 ......
 enabled: true

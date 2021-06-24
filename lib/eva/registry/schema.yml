@@ -37,8 +37,18 @@ config/common/mailer:
         - <<: *strarr
     ssl: *bool
     tls: *bool
-    login: *str
-    password: *str
+    login: &stringornull
+      anyOf:
+        - type: string
+        - type: "null"
+    password: *stringornull
+  required:
+    - smtp
+    - from
+    - ssl
+    - tls
+    - login
+    - password
 config/watchdog:
   type: object
   additionalProperties: false
@@ -50,6 +60,8 @@ config/watchdog:
     max-timeout: *intpositive
   required:
     - interval
+    - dump
+    - max-timeout
 config/uc/service: &service
   type: object
   additionalProperties: false
@@ -57,10 +69,7 @@ config/uc/service: &service
     enabled: *bool
     setup: *bool
     user: *str
-    supervisord-program: &stringornull
-      anyOf:
-        - type: string
-        - type: "null"
+    supervisord-program: *stringornull
     stdout: *stringornull
     stderr: *stringornull
   required:

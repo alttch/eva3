@@ -8,20 +8,8 @@ environments<highload>`.
 Configuration
 =============
 
-Data pullers are defined in :doc:`/uc/uc` configuration, section
-*[datapullers]* as *<name> = <cmd>*, where:
-
-* **name** data puller name (unique)
-* **cmd** data puller startup command
-
-e.g.
-
-.. code:: ini
-
-    [datapullers]
-    dp1 = /opt/dp1/datapuller -c /opt/dp1/config.yml
-    dp2 = /opt/dp2/datapuller -c /etc/dp2.ini
-    dp3 = datapuller3
+Data pullers are defined either with "eva uc datapuller" :doc:`CLI</cli>`
+command or with corresponding :doc:`/uc/uc_api` methods.
 
 Execution
 =========
@@ -63,12 +51,15 @@ Health check
 ------------
 
 If there are no events, data puller SHOULD send *.ping* or empty string to
-STDOUT, otherwise it will be considered as dead after period equal to a default
-controller timeout and automatically restarted:
+STDOUT, otherwise it will be considered as dead after period equal to the data
+puller timeout (or the default controller timeout) and automatically restarted:
 
 .. code::
 
     .ping
+
+Additional parameter "event-timeout" asks UC to restart the data puller if
+there are no events from it.
 
 Data output
 -----------

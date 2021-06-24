@@ -10,12 +10,12 @@ logs.
 Prepare EVA ICS
 ===============
 
-For all configured node components ("/opt/eva/etc/uc.ini", "lm.ini" and
-"sfa.ini"): set log format to
+For all configured node components (*config/<controller>/main*
+:doc:`registry</registry>` keys).
 
-.. code-block:: ini
+.. code-block:: yaml
 
-    log_format = { "loggerName":"%%(name)s", "@timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s" }
+    log_format: { "loggerName":"%(name)s", "@timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s" }
 
 make sure "log_file" options are also set, and restart EVA ICS services
 

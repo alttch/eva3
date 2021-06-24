@@ -81,10 +81,10 @@ What you get with EVA
     install
     What's new <changelog>
     security
+    registry
     notifiers
     datapullers
     cli
-    tutorial/tutorial
     auth
     iac
     faq
