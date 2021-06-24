@@ -49,11 +49,13 @@ UC
      "destroy_datapuller"
    * Number type support in "get_modbus_slave_data" API function and
      "modbus-slave get" CLI commands
+   * customizable default configuration for units and sensors
 
 LM PLC
 ------
 
-    * Discover controllers as static
+   * Discover controllers as static
+   * customizable default configuration for lvars
 
 SFA
 ---
