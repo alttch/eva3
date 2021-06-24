@@ -37,8 +37,6 @@ Removed and deprecated
 
 - "xc/extensions" directory moved to runtime as "lm-extensions"
 
-- "nodename" option in eva_shell.ini is no longer valid
-
 Update instructions
 ===================
 
