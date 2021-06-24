@@ -23,11 +23,14 @@ Registry can be managed with "eva-registry", "eva registry manage" and
 Reasons
 =======
 
-* Crash-free storage of EVA ICS configuration files, inventory and data
-  objects.
-* Easy management with command line tools and API.
-* Strict data schemas.
-* Unification.
+Why did EVA ICS switch to the registry database, instead of using simple "ini"
+and "json" files:
+
+* Crash-free storage of configurations, inventory and data objects;
+* easy management with command line tools and API;
+* strict data schemas;
+* unification;
+* easy-to-use SDK.
 
 Configuration
 =============
