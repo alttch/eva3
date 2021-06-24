@@ -23,6 +23,7 @@ dir_bin = dir_eva + '/bin'
 dir_sbin = dir_eva + '/sbin'
 dir_cli = dir_eva + '/cli'
 dir_runtime = dir_eva + '/runtime'
+dir_venv = dir_eva + '/venv'
 sys.path.insert(0, dir_lib)
 
 import eva.features
@@ -31,9 +32,10 @@ dir_cwd = os.getcwd()
 
 os.chdir(dir_eva)
 os.environ['EVA_DIR'] = dir_eva
-if not 'PATH' in os.environ:
-    os.environ['PATH'] = ''
-os.environ['PATH'] = '{}/runtime/xc/shell:'.format(dir_eva) + os.environ['PATH']
+path = os.environ.get('PATH', '')
+if path:
+    path = ':' + path
+os.environ['PATH'] = f'{dir_eva}/runtime/xc/shell:{dir_venv}/bin' + path
 
 exec_before_save = None
 exec_after_save = None

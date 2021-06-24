@@ -152,6 +152,12 @@ dir_ui = dir_eva + '/ui'
 dir_pvt = dir_eva + '/pvt'
 dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
+dir_venv = dir_eva + '/venv'
+
+path = os.environ.get('PATH', '')
+if path:
+    path = ':' + path
+os.environ['PATH'] = dir_venv + '/bin' + path
 
 start_time = time.time()
 
