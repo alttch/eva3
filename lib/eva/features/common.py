@@ -186,7 +186,7 @@ def start_controller(controller=''):
     exec_shell(f'{dir_eva}/sbin/eva-control start {controller}', passthru=True)
 
 
-def append_python_libraries(libs, rebuild_venv=True):
+def append_python_libraries(libs, rebuild_venv=True, _silent=False):
     import eva.registry as registry
     need_modify = False
     with registry.key_as_dict('config/venv') as venv:
@@ -196,7 +196,8 @@ def append_python_libraries(libs, rebuild_venv=True):
             venv.set('extra', extra)
         for lib in libs:
             lib_id = lib.split('=', 1)[0]
-            print(f'Adding extra Python library dependency: {lib}')
+            if not _silent:
+                print(f'Adding extra Python library dependency: {lib}')
             for x in extra.copy():
                 x_id = x.split('=', 1)[0]
                 if x_id == lib_id:

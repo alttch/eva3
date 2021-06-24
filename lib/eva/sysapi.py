@@ -605,10 +605,13 @@ class FileAPI(object):
 
         def pip_install(mods):
             import os
-            code = os.system(
-                f'{eva.core.dir_eva}/venv/bin/pip install {mods}')
+            code = os.system(f'{eva.core.dir_eva}/venv/bin/pip install {mods}')
             if code:
                 raise RuntimeError('pip exited with code {code}')
+            from eva.features import append_python_libraries
+            if isinstance(mods, str):
+                mods = mods.split()
+            append_python_libraries(mods)
 
         try:
             raw = base64.b64decode(m)
