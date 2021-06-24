@@ -664,7 +664,9 @@ It is possible to re-define default initial item configuration by using
 "config/uc/defaults" (for units and sensors) and "config/lm/defaults" (for
 lvars) :doc:`registry</registry>` keys.
 
-E.g. let us make units to have actions enabled by default, when created.
+E.g. let us make units to have actions enabled by default, when created and
+sensors, enabled by default (when created or when there is no state in the
+state database).
 
 .. code:: shell
 
@@ -674,6 +676,8 @@ E.g. let us make units to have actions enabled by default, when created.
 
     unit:
         action_enabled: true
+    sensor:
+        status: 1
 
 .. code:: shell
 
