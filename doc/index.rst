@@ -20,8 +20,8 @@ is simple and available for everyone!
     This is the main EVA ICS documentation site. For troubleshooting, firstly
     check the `EVA ICS Knowledge base <https://kb.eva-ics.com/>`_.
 
-What is EVA
-===========
+What is EVA ICS
+===============
 
 * :doc:`Universal controllers</uc/uc>` for management and monitoring of all
   your equipment, on the basis of which you can develop your own automation
@@ -47,8 +47,8 @@ subsystems and collecting all data to a unified database.
 
 The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
-What you get with EVA
-=====================
+What you get with EVA ICS
+=========================
 
 * powerful :doc:`command-line interface (CLI)<cli>`
 * use pre-made :doc:`drivers</drivers>` or write simple
@@ -80,6 +80,7 @@ What you get with EVA
 
     install
     What's new <changelog>
+    quickstart
     security
     registry
     notifiers
