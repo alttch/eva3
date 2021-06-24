@@ -15,7 +15,6 @@ CLEAR=0
 APPEND=0
 APPEND_MQTT=0
 INTERACTIVE=1
-DEFAULT_USER=root
 INSTALL_UC=0
 INSTALL_LM=0
 INSTALL_SFA=0
@@ -31,7 +30,6 @@ MQTT_ANNOUNCE_ENABLED=0
 MQTT_DISCOVERY_ENABLED=0
 MQTT_NO_RETAIN=0
 LINK=0
-SKIP_ROOT=0
 BENCHMARK=0
 CLOUDMANAGER=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -218,11 +216,11 @@ function create_notifier {
         BATCH="$BATCH;subscribe state eva_1 -p '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
         BATCH="$BATCH;subscribe server eva_1"
-        if [ $MQTT_ANNOUNCE_ENABLED -eq 1 ]; then
+        if [ "$MQTT_ANNOUNCE_ENABLED" == "1" ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
             BATCH="$BATCH;set eva_1 announce_interval 30"
         fi
-        [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ "$T" != 'uc' ] && \
+        [ "$MQTT_DISCOVERY_ENABLED" == "1" ] && [ "$T" != 'uc' ] && \
             BATCH="$BATCH;set eva_1 discovery_enabled 1"
         [ "$MQTT_NO_RETAIN" = "1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
         BATCH="$BATCH;test eva_1"
@@ -255,7 +253,7 @@ function check_required_exec {
 }
 
 function askYN {
-    if [ $INTERACTIVE -ne 1 ]; then
+    if [ "$INTERACTIVE" != "1" ]; then
         VALUE=2
         return
     fi
@@ -290,7 +288,7 @@ function askYN {
 
 function askMQTT {
     while true; do
-        if [ $INTERACTIVE -eq 1 ]; then
+        if [ "$INTERACTIVE" == "1" ]; then
             echo -n "MQTT host, required for cloud setup (use empty value to skip MQTT connection for now): "
             read -r MQTT_HOST
             if [ -z "${MQTT_HOST}" ]; then
@@ -350,12 +348,12 @@ function askMQTT {
         if ! ./sbin/check-mqtt ${SSL_OPTS} \
             "${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE}" > /dev/null 2>&1
         then
-            if [ ${INTERACTIVE} -ne 1 ]; then
+            if [ "${INTERACTIVE}" != "1" ]; then
                 echo "MQTT test failed"
                 exit 5
             fi
         else
-            if [ $INTERACTIVE -eq 1 ]; then
+            if [ "$INTERACTIVE" == "1" ]; then
                 askYN "Enable node announcements and API calls via MQTT"
                 MQTT_ANNOUNCE_ENABLED=$VALUE
                 askYN "Enable autodiscovery of other nodes via MQTT"
@@ -366,26 +364,6 @@ function askMQTT {
             return
         fi
         echo "MQTT test failed"
-    done
-}
-
-function askUser {
-    USER=$2
-    [ $INTERACTIVE -ne 1 ] && return
-    while true; do
-        echo -n "$1 [$2]: "
-        read -r u
-        if [ -z "$u" ]; then
-            u=$2
-        fi
-        if id "$u" > /dev/null 2>&1; then
-            if su - "$u" -c "ls" > /dev/null 2>&1; then
-                USER=$u
-                return
-            fi
-            echo "User $u has no shell set"
-        fi
-        echo "Invalid user: $u"
     done
 }
 
@@ -449,11 +427,6 @@ do
             ;;
         --mqtt-disable-retain)
             MQTT_NO_RETAIN=1
-            shift
-            ;;
-        -u)
-            DEFAULT_USER="$2"
-            shift
             shift
             ;;
         --feature)
@@ -525,10 +498,6 @@ do
             shift
             shift
             ;;
-        --root)
-            SKIP_ROOT=1
-            shift
-            ;;
         --benchmark)
             echo "Will setup UC and do benchmark"
             INTERACTIVE=0
@@ -541,11 +510,6 @@ do
             ;;
     esac
 done
-
-if [ $SKIP_ROOT -ne 1 ] && [ "$(id -u)" != "0" ]; then
-    echo "Please run this script as root"
-    exit 1
-fi
 
 trap on_exit exit
 
@@ -602,7 +566,7 @@ source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
 source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
 
 if [ "$UC_ENABLED" == "1" ] || [ "${LM_ENABLED}" == "1" ] || [ "${SFA_ENABLED}" == "1" ]; then
-    if [ $CLEAR -ne 1 ]; then
+    if [ "$CLEAR" != "1" ]; then
         echo "Installed system detected"
         source <(./sbin/key-as-source data/easy_setup 2>/dev/null)
         [ "$UC_ENABLED" == "1" ] && PRD=uc
@@ -619,7 +583,7 @@ fi
 [ "$OPKEY" ] || OPKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
 [ "$OPPASSWD" ] || OPPASSWD=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null)
 
-if [ $INTERACTIVE -eq 1 ]; then
+if [ "$INTERACTIVE" == "1" ]; then
     echo
     echo "Your masterkey: ${MASTERKEY}"
     echo "Your controller default key: ${DEFAULTKEY}"
@@ -638,9 +602,9 @@ EOF
     echo
 fi
 
-[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && (./sbin/eva-control stop > /dev/null 2>&1 )
+[ "$FORCE" == "1" ] || [ "$CLEAR" == "1" ] && (./sbin/eva-control stop > /dev/null 2>&1 )
 
-if [ $CLEAR -eq 1 ]; then
+if [ "$CLEAR" == "1" ]; then
     KEYS_TO_CLEAR=(config/common config/clouds config/uc config/lm config/sfa config/watchdog data inventory)
     for k in "${KEYS_TO_CLEAR[@]}"; do
         AUTO_PREFIX=1 ./sbin/eva-registry-cli delete "${k}" -r > /dev/null || exit 8
@@ -667,7 +631,7 @@ fi
 
 # ASK SOME QUESTIONS
 
-if [ $APPEND -ne 1 ]; then
+if [ "$APPEND" != "1" ]; then
     echo
     askYN "Should this node grant API access for the remote instances"
     [ $VALUE == "0" ] && REMOTES="127.0.0.1"
@@ -679,7 +643,7 @@ fi
 
 [ "$MQTT_HOST" ] && APPEND_MQTT=1
 
-if [ $APPEND -ne 1 ]; then
+if [ "$APPEND" != "1" ]; then
     echo
     askYN "Link controllers statically"
     [ $VALUE == "1" ] && LINK=1
@@ -687,11 +651,11 @@ fi
 
 # INSTALL UC
 
-if [ "$UC_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
+if [ "$UC_ENABLED" != "1" ] || [ "$FORCE" == "1" ]; then
     echo
     askYN "Install EVA Universal Controller on this host"
     [ $VALUE == "1" ] && INSTALL_UC=1
-elif [ $APPEND_MQTT -eq 1 ]; then
+elif [ "$APPEND_MQTT" == "1" ]; then
     if ! ./bin/uc-notifier config eva_1 > /dev/null 2>&1; then
         echo "Setting up MQTT for UC"
         ./sbin/eva-control stop uc || exit 1
@@ -705,24 +669,13 @@ fi
 
 echo
 
-if [ $INSTALL_UC -eq 1 ]; then
+if [ "$INSTALL_UC" == "1" ]; then
     echo "Installing EVA Universal Controller"
     bash install/install-uc || exit 1
     ./sbin/key-set-flag config/uc/service:setup 1 > /dev/null || exit 8
     ./sbin/key-set-flag config/uc/service:enabled 1 > /dev/null || exit 8
     echo
-    askUser "Enter the user account to run under (root is recommended for UC)" "${DEFAULT_USER}"
-    if ! id "${USER}" > /dev/null 2>&1; then
-        echo "Invalid user: ${USER}"
-        exit 2
-    fi
-    if [ $SKIP_ROOT -ne 1 ]; then
-        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-            echo "User ${USER} has no valid shell set"
-            exit 2
-        fi
-    fi
-    if [ $BENCHMARK -eq 1 ]; then
+    if [ "$BENCHMARK" == "1" ]; then
         echo "Setting benchmark config"
         AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/main \
             - -p yaml < ./etc/setup/uc-benchmark.yml > /dev/null || exit 8
@@ -736,11 +689,6 @@ hosts-allow:
 EOF
     )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/uc/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier uc || exit 1
-    UC_USER=${USER}
-    if [ "$USER" != "root" ]; then
-        chmod 777 runtime/db
-        ./install/set-run-under-user uc "${USER}" || exit 1
-    fi
     if ! start_controller uc; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -755,10 +703,10 @@ fi
 
 # INSTALL LM
 
-if [ "$LM_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
+if [ "$LM_ENABLED" != "1" ] || [ "$FORCE" == "1" ]; then
     askYN "Install EVA Logical Manager PLC on this host"
     [ $VALUE == "1" ] && INSTALL_LM=1
-elif [ $APPEND_MQTT -eq 1 ]; then
+elif [ "$APPEND_MQTT" == "1" ]; then
     if ! ./bin/lm-notifier config eva_1 > /dev/null 2>&1; then
         echo "Setting up MQTT for LM PLC"
         ./sbin/eva-control stop lm || exit 1
@@ -772,23 +720,12 @@ fi
 
 echo
 
-if [ $INSTALL_LM -eq 1 ]; then
+if [ "$INSTALL_LM" == "1" ]; then
     echo "Installing EVA LM PLC"
     bash install/install-lm || exit 1
     ./sbin/key-set-flag config/lm/service:setup 1 > /dev/null || exit 8
     ./sbin/key-set-flag config/lm/service:enabled 1 > /dev/null || exit 8
     echo
-    askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
-    if ! id "${USER}" > /dev/null 2>&1; then
-        echo "Invalid user: ${USER}"
-        exit 2
-    fi
-    if [ $SKIP_ROOT -ne 1 ]; then
-        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-            echo "User ${USER} has no valid shell set"
-            exit 2
-        fi
-    fi
     echo "Setting LM master key"
     (cat <<EOF
 key: "${MASTERKEY}"
@@ -798,11 +735,6 @@ hosts-allow:
 EOF
     )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/lm/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier lm || exit 1
-    LM_USER=${USER}
-    if [ "$USER" != "root" ]; then
-        chmod 777 runtime/db
-        ./install/set-run-under-user lm "${USER}" || exit 1
-    fi
     if ! start_controller lm; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -812,8 +744,8 @@ EOF
     create_operator_key lm || exit 21
     create_default_key lm lock || exit 22
     save_controller_state lm || exit 23
-    if [ $LINK -eq 1 ]; then
-        if [ $INSTALL_UC -eq 1 ] || [ "$UC_ENABLED" == "1" ]; then
+    if [ "$LINK" == "1" ]; then
+        if [ "$INSTALL_UC" == "1" ] || [ "$UC_ENABLED" == "1" ]; then
             echo "Linking local UC to LM PLC"
             SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
             ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
@@ -836,10 +768,10 @@ fi
 
 # INSTALL SFA
 
-if [ "$SFA_ENABLED" != "1" ] || [ $FORCE -eq 1 ]; then
+if [ "$SFA_ENABLED" != "1" ] || [ "$FORCE" == "1" ]; then
     askYN "Install SCADA Final Aggregator on this host"
     [ $VALUE == "1" ] && INSTALL_SFA=1
-elif [ $APPEND_MQTT -eq 1 ]; then
+elif [ "$APPEND_MQTT" == "1" ]; then
     if ! ./bin/sfa-notifier config eva_1 > /dev/null 2>&1; then
         echo "Setting up MQTT for SFA"
         ./sbin/eva-control stop sfa || exit 1
@@ -853,7 +785,7 @@ fi
 
 echo
 
-if [ $INSTALL_SFA -eq 1 ]; then
+if [ "$INSTALL_SFA" == "1" ]; then
     echo "Installing EVA SFA"
     bash install/install-sfa || exit 1
     askYN "Enable SFA Cloud Manager"
@@ -861,18 +793,7 @@ if [ $INSTALL_SFA -eq 1 ]; then
     ./sbin/key-set-flag config/sfa/service:setup 1 > /dev/null || exit 8
     ./sbin/key-set-flag config/sfa/service:enabled 1 > /dev/null || exit 8
     echo
-    askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
-    if ! id "${USER}" > /dev/null 2>&1; then
-        echo "Invalid user: ${USER}"
-        exit 2
-    fi
-    if [ $SKIP_ROOT -ne 1 ]; then
-        if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
-            echo "User ${USER} has no valid shell set"
-            exit 2
-        fi
-    fi
-    if [ $CLOUDMANAGER -eq 1 ]; then
+    if [ "$CLOUDMANAGER" == "1" ]; then
       ./sbin/key-set-flag config/sfa/main:cloud/cloud-manager 1 > /dev/null || exit 8
     fi
     echo "Setting SFA master key"
@@ -885,11 +806,6 @@ EOF
     )| AUTO_PREFIX=1 ./sbin/eva-registry-cli set config/sfa/apikeys/masterkey - -p yaml > /dev/null || exit 8
     create_notifier sfa || exit 1
     create_db_notifier sfa || exit 1
-    SFA_USER=${USER}
-    if [ "$USER" != "root" ]; then
-        chmod 777 runtime/db
-        ./install/set-run-under-user sfa "${USER}" || exit 1
-    fi
     if ! start_controller sfa; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
@@ -901,8 +817,8 @@ EOF
     echo "Creating SFA operator user"
     create_operator_user sfa || exit 21
     save_controller_state sfa || exit 23
-    if [ $LINK -eq 1 ]; then
-        if [ $INSTALL_UC -eq 1 ] || [ "$UC_ENABLED" == "1" ]; then
+    if [ "$LINK" == "1" ]; then
+        if [ "$INSTALL_UC" == "1" ] || [ "$UC_ENABLED" == "1" ]; then
             echo "Linking local UC to SFA"
             SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
             ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
@@ -918,7 +834,7 @@ EOF
                 ./sbin/eva-control stop
                 exit 5
             fi
-            if [ $CLOUDMANAGER -eq 1 ]; then
+            if [ "$CLOUDMANAGER" == "1" ]; then
                 if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
                     i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
                     echo "Management API linking failed!"
@@ -927,7 +843,7 @@ EOF
                 fi
             fi
         fi
-        if [ $INSTALL_LM -eq 1 ]; then
+        if [ "$INSTALL_LM" == "1" ]; then
             echo "Linking local LM PLC to SFA"
             SNAME=lm/$(./sbin/eva-tinyapi -C lm -F test|jq -Mr .system)
             ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
@@ -943,7 +859,7 @@ EOF
                 ./sbin/eva-control stop
                 exit 5
             fi
-            if [ $CLOUDMANAGER -eq 1 ]; then
+            if [ "$CLOUDMANAGER" == "1" ]; then
                 if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
                     i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
                     echo "Management API linking failed!"
@@ -974,32 +890,11 @@ fi
 
 # COMPLETED
 
-if [ $APPEND_MQTT -eq 1 ]; then
+if [ "$APPEND_MQTT" == "1" ]; then
     echo "MQTT connection is set up"
-elif [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
+elif [ "$INSTALL_UC" != "1" ] && [ "$INSTALL_LM" != "1" ] && [ "$INSTALL_SFA" != "1" ]; then
     echo "No products selected, nothing was installed"
     exit 0
-fi
-
-USERS=
-
-[ "${UC_USER}" ] && [ "${UC_USER}" != "root" ] && USERS="${USERS} ${UC_USER}"
-[ "${LM_USER}" ] && [ "${LM_USER}" != "root" ] && USERS="${USERS} ${LM_USER}"
-[ "${SFA_USER}" ] && [ "${SFA_USER}" != "root" ] && USERS="${USERS} ${SFA_USER}"
-
-X=
-
-for u in ${USERS}; do
-    if [ "$X" ] && [ "$X" != "$u" ]; then
-        X=
-        break
-    fi
-    X=$u
-done
-
-if [ "$X" ]; then
-    chown "${X}" runtime/db
-    chmod 700 runtime/db
 fi
 
 ln -sf eva bin/eva-shell
@@ -1012,7 +907,7 @@ echo "MASTERKEY: ${MASTERKEY}"
 echo "Controller default key: ${DEFAULTKEY}"
 echo "Operator key: ${OPKEY}"
 echo
-if [ $INSTALL_SFA -eq 1 ]; then
+if [ "$INSTALL_SFA" == "1" ]; then
     echo "Default user: operator"
     echo "Password: ${OPPASSWD}"
     echo
@@ -1034,7 +929,7 @@ if [ "${DEPLOY_FILE}" ]; then
     cd "${EVA_DIR}" || exit 13
 fi
 
-if [ $BENCHMARK -eq 1 ]; then
+if [ "$BENCHMARK" == "1" ]; then
     echo "Starting CRT benchmark"
     echo
     ./tests/benchmark-uc-crt
