@@ -753,3 +753,17 @@ inventory/job:
     - oid
     - type
 userdata: {}
+config/uc/defaults:
+  type: object
+  additionalProperties: false
+  properties:
+    unit:
+      type: object
+    sensor:
+      type: object
+config/lm/defaults:
+  type: object
+  additionalProperties: false
+  properties:
+    lvar:
+      type: object

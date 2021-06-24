@@ -657,3 +657,30 @@ Device limitations
   have any device management functions, but devices on the connected UCs can be
   created from :ref:`logic macros<macro_api_deploy_device>`.
 
+Defaults
+========
+
+It is possible to re-define default initial item configuration by using
+"config/uc/defaults" (for units and sensors) and "config/lm/defaults" (for
+lvars) :doc:`registry</registry>` keys.
+
+E.g. let us make units to have actions enabled by default, when created.
+
+.. code:: shell
+
+    eva-registry edit eva3/$(hostname)/config/uc/defaults
+
+.. code:: yaml
+
+    unit:
+        action_enabled: true
+
+.. code:: shell
+
+    eva uc server restart
+    eva uc create unit:tests/unit1
+
+.. warning::
+
+    Changing defaults is considered as an advanced operation, if defaults are
+    set to incorrect values, controllers do not create items properly.
