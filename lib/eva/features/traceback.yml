@@ -1,0 +1,4 @@
+description: Enable/disable traceback logs
+help: |
+  Enables / disables traceback logs for all EVA ICS components
+example: {{ setup_cmd }}
