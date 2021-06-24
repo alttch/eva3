@@ -9,9 +9,10 @@ Common
    * fix: correct backups of symlinked directories
    * fix: PVT backup
 
-   * Python virtual environment directory renamed to "venv"
    * Configs and runtime data moved to crash-free YEDB-based registry
    * Next-generation event replication engine
+   * Python virtual environment directory renamed to "venv"
+   * plugins and custom drivers / extensions moved to "runtime"
    * InfluxDB v2 support (v1 API via dbrp and v2 API)
    * TimescaleDB support
    * "connected" property of the remote items in LM PLC and SFA
@@ -64,6 +65,16 @@ SFA
    * Serving public and private structured data from EVA ICS Registry
    * Discover controllers as static
 
+Removed and deprecated
+----------------------
+
+    * deprecated: running EVA ICS controllers under different users
+
+    * supervisord support is no longer out-of-the-box, however control scripts
+      still accept the corresponding settings (will be removed in 3.5)
+    * <controller>-control scripts are removed. Use "eva <controller>" instead.
+    * mailer configuration unified for all components
+    * removed "nodename" option of eva-shell.ini
 
 3.3.2 (2021-03-01)
 ==================
