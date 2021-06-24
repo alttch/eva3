@@ -11,8 +11,10 @@ install EVA ICS with the default settings:
 
     curl geteva.cc | sh /dev/stdin -a
 
-This installs all EVA ICS components on a single machine and automatically
-links them together.
+The above command prepares the system, installs all EVA ICS components on a
+single machine to "/opt/eva" directory and automatically links them together.
+"eva" and "eva-shell" commands are automatically added into system path with
+symlinks in "/usr/local/bin".
 
 Alternatively, `EVA ICS docker image
 <https://hub.docker.com/r/altertech/eva-ics>`_ can be used.
@@ -36,9 +38,16 @@ Equipment in EVA ICS is managed by :doc:`/uc/uc`.
 
 .. note::
 
-    It is much faster to use the interactive mode ("eva -I" or "eva-shell") but
-    in this document commands are provided as they should be executed from the
+    It is much faster to use the interactive mode ("eva -I" or "eva-shell"),
+    which has auto-completion for everything and other cool features, but in
+    this document commands are provided as they should be executed from the
     system shell.
+
+Why command-line? Where is a web interface? Well, EVA ICS has the web
+interface: :doc:`/cloudmanager/cloudmanager`. But setting up from command-line
+is much quicker and can be also automated with scripts, can't it? Furthermore,
+setting up production systems manually is absolutely not recommended, as EVA
+ICS has the very powerful and modern :doc:`/iac`.
 
 Download Modbus PHI modules:
 
@@ -47,8 +56,8 @@ Download Modbus PHI modules:
     eva uc phi download https://get.eva-ics.com/phi/modbus/modbus_xvunit.py
     eva uc phi download https://get.eva-ics.com/phi/modbus/modbus_sensor.py 
 
-Define Modbus virtual port. Consider it is on /dev/ttyS0 (system RS-232 port
-#1):
+Define Modbus virtual port. Consider the bus is on /dev/ttyS0 (system RS-232
+port #1):
 
 .. code:: shell
 
@@ -58,6 +67,9 @@ Define Modbus virtual port. Consider it is on /dev/ttyS0 (system RS-232 port
 
     If Docker image is used, either map ttyS0 device from the host or run the
     container in privileged mode.
+
+    If local port is used, either install/run EVA ICS under root, or make sure
+    the user has read-write access to the device.
 
 Create the items
 
@@ -105,22 +117,43 @@ rules </lm/decision_matrix>`.
 
 .. code:: shell
 
-    eva lm rule create if sensor:room1/temp.value > 25 then @action(unit:room1/fan, status=1)
-    eva lm rule create if sensor:room1/temp.value < 22 then @action(unit:room1/fan, status=0)
+    eva lm rule create if sensor:room1/temp.value \> 25 then @action\(unit:room1/fan, status=1\) -E
+    eva lm rule create if sensor:room1/temp.value \< 22 then @action\(unit:room1/fan, status=0\) -E
 
-Putting "@" symbol tells the rule to call macro function "action" directly,
-instead of compiling and executing a user-defined macro.
+As the rules are created from the system shell, do not forget to screen special
+symbols with slashes. Putting "@" symbol tells the rule to call macro function
+"action" directly, instead of compiling and executing a user-defined macro.
+
+Check that LM PLC has all states from UC:
+
+.. code:: shell
+
+    eva lm remote
+
+If the items are already loaded from UC, state is synchronized in real-time.
+This how EVA ICS works when everything is on a single machine, the same is when
+controllers are on different cloud nodes. This is the way EVA ICS works.
 
 .. note::
 
     The newly crated UC items are synced with LM PLC automatically every 30
-    seconds. To sync them manually, use "eva lm controller reload" command.
+    seconds by default. To sync them manually, use "eva lm controller reload"
+    command.
+
+The logic is ready. LM PLC will monitor the temperature and switch the fan
+automatically.
 
 Building a very simple Human-Machine Interface
 ==============================================
 
 Interfaces and combined API for 3rd-party applications in EVA ICS is provided
 by :doc:`/sfa/sfa`.
+
+Check that SFA has all states from UC:
+
+.. code:: shell
+
+    eva sfa remote
 
 Install `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_:
 
@@ -135,6 +168,7 @@ let us create a new API key and use it directly:
 
     eva sfa key create op
     eva sfa key set op key 123
+    eva sfa key set op groups '#'
 
 .. note::
 
@@ -142,8 +176,8 @@ let us create a new API key and use it directly:
     every 30 seconds. To sync them manually, use "eva lm controller reload"
     command.
 
-Put the following HTML to "ui/index.html". Any Javascript framework can be
-used, but in this example we will use pure vanilla JS only:
+Put the following HTML to "/opt/eva/ui/index.html". Any Javascript framework
+can be used, but in this example we will use pure vanilla JS only:
 
 .. code:: html
 
@@ -170,5 +204,15 @@ used, but in this example we will use pure vanilla JS only:
     </body>
     </html>
 
+Note that after calling fan action, UI app do not need to update the button
+value. The value is updated in real-time by "$eva.watch" as soon as the server
+reports that the action is completed.
+
 Go to http://localhost:8828 (or IP of your system) and HMI application is ready
-to go.
+to go:
+
+.. image:: quickstart.png
+
+That is all. After understanding this simple example, read other pages of EVA
+ICS documentation to discover the real power of the greatest open-source
+Industry-4.0 automation platform. Good luck!
