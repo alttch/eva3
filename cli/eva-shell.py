@@ -1658,7 +1658,7 @@ try:
     with ShellConfigFile('eva_config') as f:
         nodename = f.get('SYSTEM_NAME')
 except (FileNotFoundError, KeyError):
-    pass
+    nodename = platform.node()
 
 cfg = configparser.ConfigParser(inline_comment_prefixes=';')
 try:
