@@ -65,9 +65,8 @@ which can be also used to restore data if necessary.
 
 To list deleted and backup copies, use "ls -a" command of "eva-registry" tool.
 
-All data is stored in "runtime/registry" directory, which should not be
-accessed directly, unless data loss occur. If repair with built-in management
-tools.
+All data is stored in "runtime/registry" directory, which should
+not be accessed directly, unless data loss occur.
 
 Structure
 =========
