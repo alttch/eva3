@@ -66,10 +66,9 @@ port #1):
 .. note::
 
     If Docker image is used, either map ttyS0 device from the host or run the
-    container in privileged mode.
-
-    If local port is used, either install/run EVA ICS under root, or make sure
-    the user has read-write access to the device.
+    container in privileged mode. If local port is used, either install/run
+    EVA ICS under root, or make sure the user has read-write access to the
+    device.
 
 Create the items
 
