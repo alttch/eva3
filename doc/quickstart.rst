@@ -179,9 +179,9 @@ let us create a new API key and use it directly:
 
 .. note::
 
-    The newly crated UC and LM PLC items are synced with SFA automatically
-    every 30 seconds. To sync them manually, use "eva lm controller reload"
-    command.
+    The newly crated UC and LM PLC items are synced with SFA
+    automatically every 30 seconds. To sync them manually, use
+    "eva sfa controller reload" command.
 
 Put the following HTML to "/opt/eva/ui/index.html". Any Javascript front-end
 interface library can be used, but in this example we will use pure vanilla JS
