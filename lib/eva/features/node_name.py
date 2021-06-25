@@ -28,6 +28,9 @@ def setup(name=None, rename_only=None):
                 try:
                     with eva.registry.key_as_dict(
                             f'data/{c}/remote_uc/{current_name}') as k:
+                        if not k.data:
+                            raise KeyError
+                        k.get('id')
                         k.set('id', name)
                         k.set('full_id', f'uc/{name}')
                         k.set('oid', f'remote_uc:uc/{name}')
@@ -43,6 +46,8 @@ def setup(name=None, rename_only=None):
             try:
                 with eva.registry.key_as_dict(
                         f'data/sfa/remote_lm/{current_name}') as k:
+                    if not k.data:
+                        raise KeyError
                     k.set('id', name)
                     k.set('full_id', f'lm/{name}')
                     k.set('oid', f'remote_lm:lm/{name}')
