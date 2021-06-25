@@ -4,10 +4,10 @@ VERSION=3.4.0
 BUILD=2021062510
 
 PYTHON3_MIN=6
-if [ ! -d ./venv ]; then
-  PYTHON_MINOR=$(./python3/bin/python --version|cut -d. -f2)
-else
+if [ -d ./venv ]; then
   PYTHON_MINOR=$(./venv/bin/python --version|cut -d. -f2)
+else
+  PYTHON_MINOR=$(./python3/bin/python --version|cut -d. -f2)
 fi
 
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
