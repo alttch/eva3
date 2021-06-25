@@ -49,7 +49,9 @@ is much quicker and can be also automated with scripts, can't it? Furthermore,
 setting up production systems manually is absolutely not recommended, as EVA
 ICS has the very powerful and modern :doc:`/iac`.
 
-Download Modbus PHI modules:
+Download Modbus PHI modules. PHI = PHysical Interface modules, which are used
+by UC to form drivers. When PHI module is loaded, a "default" driver is created
+automatically, providing the most typical logic for the supported equipment.
 
 .. code:: shell
 
@@ -61,7 +63,11 @@ port #1):
 
 .. code:: shell
 
-    eva uc modbus create local0 rtu:/dev/ttyS0:8600:8:N:1
+    eva uc modbus create local0 rtu:/dev/ttyS0:8600:8:N:1 --lock
+
+EVA ICS modules use virtual ports for field buses. This allows different
+modules (e.g. drivers) to share the same port, locking it for commands if
+required. For Modbus over TCP or UDP locking is obviously not required.
 
 .. note::
 
@@ -70,7 +76,8 @@ port #1):
     EVA ICS under root, or make sure the user has read-write access to the
     device.
 
-Create the items
+Create the items. There are two types of equipment items in UC: units (can be
+controlled) and sensors (can be monitored only).
 
 .. code:: shell
 
