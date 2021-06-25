@@ -14,6 +14,8 @@ This feature is supported by both public UI ("/ui" URLs) and
 :doc:`/sfa/sfa_pvt` and enabled automatically for all files with suffixes
 ".yml", ".yaml" and ".json".
 
+.. _serve_as_format:
+
 Format conversion
 =================
 
@@ -38,6 +40,8 @@ copying JavaScript arrays and dicts is usually tricky, into the function, which
 returns the structured data on every call:
 
     /ui/filename.yml?as=js&func=myfunc
+
+.. _serve_as_locale:
 
 Multi-language
 ==============
@@ -154,3 +158,31 @@ The cache can be turned off by setting development mode
 On production, the API method :ref:`clear_lang_cache <sysapi_clear_lang_cache>`
 can be used, either by calling it manually or during a :doc:`deployment
 </iac>`.
+
+Serving structured data from EVA ICS Registry
+=============================================
+
+To serve structured data from :doc:`EVA ICS registry</registry>`, use the
+following request:
+
+.. code-block:: bash
+
+    http(s)://<IP_address_SFA:Port>/%pub/REGISTRY-KEY
+
+where REGISTRY-KEY - key name, relative to *eva3/HOST/userdata/pub*, e.g.
+to request a key "eva3/HOST/userdata/pub/settings" use the following request:
+
+.. code-block:: bash
+
+    http(s)://<IP_address_SFA:Port>/%pub/settings
+
+By default, registry data is served in JSON. To change format or add locale
+translation, see :ref:`serve_as_format` and :ref:`serve_as_locale`.
+
+To serve private data, see :ref:`sfa_pvt_registry`.
+
+Why serving structure data from registry is more convenient:
+
+* reliability
+* unified data storage
+* data schemas

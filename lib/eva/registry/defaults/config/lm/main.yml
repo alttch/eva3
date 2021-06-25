@@ -72,6 +72,7 @@ server:
   #
   # default mqtt notifier for updates for new items
   #mqtt-update-default: "eva_1:2"
+  # auto-save created items
   auto-save: true
 plc:
 # set "false" to let LM PLC launch macros without thread pool

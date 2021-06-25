@@ -203,15 +203,10 @@ if you use this parameter for requests, web browser will not cache a file (if
 random value is used). Besides, the server will set **Cache-Control**,
 **Expires** and **Pragma** headers to the values which prohibit any caching.
 
-Serving private structured data
-===============================
-
-See :doc:`/sfa/serve_as`.
-
 .. _sfa_pvt_registry:
 
-Serving registry objects
-========================
+Serving private data from EVA ICS Registry
+==========================================
 
 To serve private structured data from :doc:`EVA ICS registry</registry>`, use
 the following request:

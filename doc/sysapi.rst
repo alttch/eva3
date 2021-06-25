@@ -372,8 +372,13 @@ get_neighbor_clients - Get neighbor clients
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/get_neighbor_clients.req-jrpc
+    :response: http-examples/jrpc/sysapi/get_neighbor_clients.resp-jrpc
+
 Parameters:
 
+* **k** valid API key
 * **i** neightbor client id
 
 

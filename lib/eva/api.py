@@ -1341,6 +1341,7 @@ class GenericAPI(API):
         Get neighbor clients
 
         Args:
+            k:
             i: neightbor client id
         """
         i = parse_api_params(kwargs, 'i', 'S')
