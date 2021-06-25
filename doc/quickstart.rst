@@ -22,8 +22,8 @@ Alternatively, `EVA ICS docker image
 Task
 ====
 
-Let us have a temperature sensor and a fan, both controlled with modbus. We
-want to:
+Let us have a temperature sensor and a fan, both connected with Modbus to the
+local serial port. We want to:
 
 * Monitor state of both and control the fan from UI
 
@@ -50,8 +50,9 @@ setting up production systems manually is absolutely not recommended, as EVA
 ICS has the very powerful and modern :doc:`/iac`.
 
 Download Modbus PHI modules. PHI = PHysical Interface modules, which are used
-by UC to form drivers. When PHI module is loaded, a "default" driver is created
-automatically, providing the most typical logic for the supported equipment.
+by UC to form drivers. When PHI module is loaded, the "default" driver is
+created automatically, providing the most typical logic for the supported
+equipment.
 
 .. code:: shell
 
@@ -94,7 +95,7 @@ on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEEE
     eva uc phi load mctrl modbus_xvunit -c port=local0,unit=1
     eva uc phi load mmon modbus_sensor -c port=local0,unit=2
 
-    # for modbus drivers, "port" means a register
+    # for modbus drivers "port" means a register
     eva uc driver assign unit:room1/fan mctrl.default -c port=c0
     eva uc driver assign sensor:room1/temp mmon.default -c port=h0,_type=f32
 
