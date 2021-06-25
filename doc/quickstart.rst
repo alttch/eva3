@@ -80,7 +80,7 @@ Create the items
 
 Define drivers and assign them to the items. Consider the fan control relay is
 on Modbus unit 0x01 and is controlled by coil #0 and the temperature sensor is
-on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEE
+on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEEE
 754a 32-bit float.
 
 .. code:: shell
@@ -130,9 +130,9 @@ Check that LM PLC has all states from UC:
 
     eva lm remote
 
-If the items are already loaded from UC, state is synchronized in real-time.
-This how EVA ICS works when everything is on a single machine, the same is when
-controllers are on different cloud nodes. This is the way EVA ICS works.
+If the items are already loaded from UC, state is synchronized in real-time on
+a single machine, the same is when controllers are on different cloud nodes.
+Real-time always and everywhere, this is the way EVA ICS works.
 
 .. note::
 
@@ -146,7 +146,7 @@ automatically.
 Building a very simple Human-Machine Interface
 ==============================================
 
-Interfaces and combined API for 3rd-party applications in EVA ICS is provided
+Interfaces and combined API for 3rd-party applications in EVA ICS are provided
 by :doc:`/sfa/sfa`.
 
 Check that SFA has all states from UC:
@@ -176,15 +176,16 @@ let us create a new API key and use it directly:
     every 30 seconds. To sync them manually, use "eva lm controller reload"
     command.
 
-Put the following HTML to "/opt/eva/ui/index.html". Any Javascript framework
-can be used, but in this example we will use pure vanilla JS only:
+Put the following HTML to "/opt/eva/ui/index.html". Any Javascript front-end
+interface library can be used, but in this example we will use pure vanilla JS
+only:
 
 .. code:: html
 
     <html>
     <head>
         <title>My first cool EVA-ICS HMI</title>
-    <script type="text/javascript" src="eva.framework.min.js"></script>
+        <script type="text/javascript" src="eva.framework.min.js"></script>
     </head>
     <body>
         <div>Temperature: <span id="temp"></span></div>
@@ -193,12 +194,10 @@ can be used, but in this example we will use pure vanilla JS only:
                 onclick="$eva.call('action_toggle', 'unit:room1/fan')" /></div>
         <script type="text/javascript">
         $eva.apikey = "123";
-        $eva.watch('unit:room1/fan', function(state) {
-            document.getElementById('fan').value = state.status?'ON':'OFF';
-            });
-        $eva.watch('sensor:room1/temp', function(state) {
-            document.getElementById('temp').innerHTML = state.value;
-            });
+        $eva.watch('unit:room1/fan',
+            (state) => document.getElementById('fan').value = state.status?'ON':'OFF');
+        $eva.watch('sensor:room1/temp',
+            (state) => document.getElementById('temp').innerHTML = state.value);
         $eva.start();
         </script>
     </body>
