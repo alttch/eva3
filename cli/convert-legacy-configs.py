@@ -758,6 +758,7 @@ for f in (dir_runtime / 'lm_ext_data.d').glob('*.json'):
 print()
 
 if not check and system_name:
+    print(f'Renaming the node to "{system_name}"')
     if os.system(f'{dir_bin}/eva feature setup node_name name={system_name}'):
         raise RuntimeError
 
