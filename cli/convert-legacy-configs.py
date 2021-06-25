@@ -639,6 +639,12 @@ for c in prod:
         set(f'config/{c}/service', service)
         set(f'config/{c}/main', cfg)
 
+if not check and system_name:
+    print(f'Renaming the node to "{system_name}"')
+    if os.system(f'{dir_bin}/eva feature setup node_name name={system_name}'):
+        raise RuntimeError
+    eva.registry.SYSTEM_NAME = system_name
+
 # controller boot ids
 
 for c in prod:
@@ -756,11 +762,6 @@ for f in (dir_runtime / 'lm_ext_data.d').glob('*.json'):
     set(key, data)
 
 print()
-
-if not check and system_name:
-    print(f'Renaming the node to "{system_name}"')
-    if os.system(f'{dir_bin}/eva feature setup node_name name={system_name}'):
-        raise RuntimeError
 
 if check:
     print(colored('CHECK PASSED', color='cyan'))
