@@ -193,10 +193,10 @@ only:
                 onclick="$eva.call('action_toggle', 'unit:room1/fan')" /></div>
         <script type="text/javascript">
         $eva.apikey = "123";
-        $eva.watch('unit:room1/fan',
-            (state) => document.getElementById('fan').value = state.status?'ON':'OFF');
-        $eva.watch('sensor:room1/temp',
-            (state) => document.getElementById('temp').innerHTML = state.value);
+        $eva.watch("unit:room1/fan",
+            (state) => document.getElementById("fan").value = state.status?"ON":"OFF");
+        $eva.watch("sensor:room1/temp",
+            (state) => document.getElementById("temp").innerHTML = state.value);
         $eva.start();
         </script>
     </body>
