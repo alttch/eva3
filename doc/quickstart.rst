@@ -183,7 +183,7 @@ only:
 
     <html>
     <head>
-        <title>My first cool EVA-ICS HMI</title>
+        <title>My first cool EVA ICS HMI</title>
         <script type="text/javascript" src="eva.framework.min.js"></script>
     </head>
     <body>
