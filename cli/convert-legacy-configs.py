@@ -541,7 +541,7 @@ for c in prod:
         cfg = {}
         with ConfigFile(inifile.as_posix()) as cf:
             try:
-                name = cfg.get('server', 'name')
+                name = cf.get('server', 'name')
                 if system_name and system_name != name:
                     raise RuntimeError('Different server/name is set'
                                        ' for components. Can not continue')
