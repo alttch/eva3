@@ -625,7 +625,7 @@ _eva_edit() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" crontab venv
+    compadd "$@" crontab mailer-config venv watchdog-config
   else
     _files
   fi
@@ -635,7 +635,7 @@ _eva_registry() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" manage restart start stop
+    compadd "$@" manage restart start status stop
   else
     _files
   fi

@@ -623,7 +623,7 @@ _eva_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'crontab venv' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'crontab mailer-config venv watchdog-config' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -633,7 +633,7 @@ _eva_registry() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'manage restart start stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'manage restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
