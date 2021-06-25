@@ -80,7 +80,7 @@ Create the items
 
 Define drivers and assign them to the items. Consider the fan control relay is
 on Modbus unit 0x01 and is controlled by coil #0 and the temperature sensor is
-on Modbus unit 0x02 and its value is stored to holding registers h0-h1 as IEE
+on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEE
 754a 32-bit float.
 
 .. code:: shell
