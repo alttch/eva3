@@ -46,6 +46,7 @@
       :module: eva.pluginapi
    
       list of weak references to the object (if defined)
+      
 
 .. py:class:: MQTT(notifier_id)
    :module: eva.pluginapi
@@ -65,6 +66,7 @@
       :module: eva.pluginapi
    
       list of weak references to the object (if defined)
+      
    
    .. py:method:: MQTT.register(topic, func, qos=1)
       :module: eva.pluginapi
@@ -100,6 +102,7 @@
       :module: eva.pluginapi
    
       list of weak references to the object (if defined)
+      
 
 .. py:exception:: MethodNotImplemented(msg='', kb=None)
    :module: eva.pluginapi
@@ -505,25 +508,25 @@
    of the given arguments and keywords.
    
    
-   .. py:method:: partial.__call__
+   .. py:method:: partial.__call__(*args, **kwargs)
       :module: eva.pluginapi
    
       Call self as a function.
       
    
-   .. py:method:: partial.__delattr__
+   .. py:method:: partial.__delattr__(name, /)
       :module: eva.pluginapi
    
       Implement delattr(self, name).
       
    
-   .. py:method:: partial.__getattribute__
+   .. py:method:: partial.__getattribute__(name, /)
       :module: eva.pluginapi
    
       Return getattr(self, name).
       
    
-   .. py:method:: partial.__new__
+   .. py:method:: partial.__new__(**kwargs)
       :module: eva.pluginapi
    
       Create and return a new object.  See help(type) for accurate signature.
@@ -535,13 +538,13 @@
       Helper for pickle.
       
    
-   .. py:method:: partial.__repr__
+   .. py:method:: partial.__repr__()
       :module: eva.pluginapi
    
       Return repr(self).
       
    
-   .. py:method:: partial.__setattr__
+   .. py:method:: partial.__setattr__(name, value, /)
       :module: eva.pluginapi
    
       Implement setattr(self, name, value).
@@ -551,16 +554,19 @@
       :module: eva.pluginapi
    
       tuple of arguments to future partial calls
+      
    
    .. py:attribute:: partial.func
       :module: eva.pluginapi
    
       function object to use in future partial calls
+      
    
    .. py:attribute:: partial.keywords
       :module: eva.pluginapi
    
       dictionary of keyword arguments to future partial calls
+      
 
 .. py:function:: register_apix(o, sys_api=False, mod=None)
    :module: eva.pluginapi

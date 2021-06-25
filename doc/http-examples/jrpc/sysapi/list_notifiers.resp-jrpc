@@ -1,6 +1,6 @@
 HTTP/1.1 200 OK
 Cache-Control: no-cache, no-store, must-revalidate
-Content-Length: 729
+Content-Length: 764
 Content-Type: application/json
 Expires: 0
 Pragma: no-cache
@@ -30,6 +30,7 @@ Pragma: no-cache
                     "subject": "server"
                 }
             ],
+            "frame_counter": 297,
             "host": "localhost",
             "id": "eva_1",
             "retain_enabled": true,

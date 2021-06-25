@@ -398,6 +398,21 @@ To let unit responding to MQTT control messages, set its configuration param
 **mqtt_control** to the local MQTT ID. You may specify QoS as well via
 semicolon, similarly as for **mqtt_update**.
 
+.. _mqtt_bulk:
+
+MQTT and bulk events
+--------------------
+
+To send events in :ref:`bulk<bulk_notify>`:
+
+* set *buf_ttl* notifier option to the desired buffering time
+
+* on secondary controllers (senders) set *bulk_topic* notifier option to any
+  value (e.g.. *state/all*)
+
+* on primary controllers (receivers) set *bulk_subscribe* notifier option to
+  the same value (the option can have multiple values, set as comma separated)
+
 .. _mqtt_cloud:
 
 IoT Cloud setup
@@ -421,6 +436,43 @@ use any 3rd party MQTT servers without any risk.
 
 Optionally, controller can be a member of different clouds via different MQTT
 notifiers.
+
+.. _lurp:
+
+UDP notifiers (LURP)
+====================
+
+Starting from EVA ICS 3.4, there is a lightweight UDP notifier, which pushes
+events with simple UDP packets. In EVA ICS this method is called LURP
+(Lightweight UDP Replication Protocol).
+
+LURP is very fast and lightweight, however can cause data loss in unstable
+networks. Actually, Using LURP is equal of using :ref:`MQTT notifiers<mqtt_>`
+with QoS 0, but without the central data exchange point and with more
+lightweight UDP packets.
+
+To enable LURP, create "udp" notifier on secondary controllers (senders) and
+enable LURP ports on primary controllers (receivers) in :ref:`LM PLC
+config<lm_config>` or :ref:`SFA config<sfa_config>`.
+
+If :ref:`bulk notifications<bulk_notify>` are used, make sure LURP buffer
+option is enough to fit the largest expected data packet, otherwise data
+packets with size exceeding buffer are received broken and ignored.
+
+Turning on LURP does not mean that controllers stop sending events via other
+methods. To stop sending events via MQTT, unsubscribe MQTT notifiers from
+selected topics. To stop sending events via web sockets, set controller prop
+option (on the receiver) *ws_state_events* to *false*.
+
+To quickly turn on LURP for inter-connection on a local machine, the following
+command can be used:
+
+.. code:: shell
+
+    eva feature setup lurp_local
+
+The command automatically creates required notifier and reconfigures receivers,
+it also turns off web socket state events for local controllers.
 
 DB Notifiers
 ============
@@ -489,6 +541,16 @@ setting:
     set global innodb_default_row_format=dynamic;
 
 or put these options to database server configuration file.
+
+TimescaleDB
+-----------
+
+`Timescale <https://www.timescale.com>`_ is a plugin for PosgreSQL, which can
+be used to speed up time series data frames.
+
+"timescaledb" notifier is absolutely equal to RDBMS PosgreSQL notifier, except
+history functions use built-in methods of Timescale, instead of processing data
+by themselves.
 
 .. _influxdb_:
 
@@ -853,3 +915,37 @@ Basic authentication
 
 All HTTP notifiers support basic authentication. To start using it, set
 **username** and **password** notifier properties.
+
+.. _bulk_notify:
+
+Bulk (buffered) notifications
+=============================
+
+If there are lots of events between nodes, communication channels and
+controller processes may be flooded and work unstable.
+
+In this case, it is recommended to use bulk notifications by setting *buf_ttl*
+notifier option. E.g. if the option is set to 0.1, events are grouped in the
+buffer and sent every 100ms in bulk.
+
+To use bulk notifications with :ref:`MQTT<mqtt_bulk>`, additional options need
+to be set.
+
+To use bulk notifications with web sockets (between controllers and with `EVA
+JS Framework <https://github.com/alttch/eva-js-framework/>`_, *ws_buf_ttl*
+option need to be set in the controller props (on receivers), or in case of
+framework, with
+
+.. code:: javascript
+
+    $eva.intrval("ws_buf_ttl", 0.1);
+
+Notifier frame counters
+=======================
+
+To monitor load of notifiers, "notifier list" :doc:`CLI </cli>` command or
+:ref:`list_notifiers<sysapi_list_notifiers>` API method can be used.
+
+The obtained "frame_counter" value is a frame counter of total packets sent via
+the notifier. The counter is unsigned 32-bit integer, which means that after
+4,294,967,295 its value is reset to zero.
