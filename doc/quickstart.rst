@@ -91,7 +91,7 @@ on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEEE
     eva uc driver assign unit:room1/fan mctrl.default -c port=c0
     eva uc driver assign sensor:room1/temp mmon.default -c port=h0,_type=f32
 
-    # let us update sensor every 5 seconds
+    # let us query the sensor value every 5 seconds
     eva uc config set sensor:room1/temp update_interval 5
 
     # check the sensor value
@@ -102,7 +102,7 @@ on Modbus unit 0x02 and its value is stored in holding registers h0-h1 as IEEE
 
     eva uc action toggle unit:room1/fan -w 5
 
-    # check fan (visually and unit status)
+    # check the fan (visually and the unit status)
     eva uc state -p unit
 
 Defining logic
@@ -120,7 +120,7 @@ rules </lm/decision_matrix>`.
     eva lm rule create if sensor:room1/temp.value \< 22 then @action\(unit:room1/fan, status=0\) -E
 
 As the rules are created from the system shell, do not forget to screen special
-symbols with slashes. Putting "@" symbol tells the rule to call macro function
+symbols with slashes. "@" symbol tells the rule to call macro function
 "action" directly, instead of compiling and executing a user-defined macro.
 
 Check that LM PLC has all states from UC:
@@ -129,14 +129,14 @@ Check that LM PLC has all states from UC:
 
     eva lm remote
 
-If the items are already loaded from UC, state is synchronized in real-time on
-a single machine, the same is when controllers are on different cloud nodes.
-Real-time always and everywhere, this is the way EVA ICS works.
+If the items are already loaded from UC, their states are synchronized in
+real-time on a single machine, the same is when controllers are on different
+cloud nodes. Real-time always and everywhere, this is the way EVA ICS works.
 
 .. note::
 
-    The newly crated UC items are synced with LM PLC automatically every 30
-    seconds by default. To sync them manually, use "eva lm controller reload"
+    The newly created UC items are loaded to LM PLC automatically every 30
+    seconds by default. To load them manually, use "eva lm controller reload"
     command.
 
 The logic is ready. LM PLC will monitor the temperature and switch the fan
@@ -202,7 +202,7 @@ only:
     </body>
     </html>
 
-Note that after calling fan action, UI app do not need to update the button
+Note that after calling fan actions, UI app does not need to update the button
 value. The value is updated in real-time by "$eva.watch" as soon as the server
 reports that the action is completed.
 
@@ -211,6 +211,6 @@ to go:
 
 .. image:: quickstart.png
 
-That is all. After understanding this simple example, read other pages of EVA
-ICS documentation to discover the real power of the greatest open-source
+That is all. After understanding this simple example, read other sections of
+EVA ICS documentation to discover the real power of this mighty open-source
 Industry-4.0 automation platform. Good luck!
