@@ -88,8 +88,6 @@ update-version:
 	find sbin -name "*" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
 	find lib -name "*.py" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
 	find doc -name "*.py" -type f -not -path "*/.git/*" -exec sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" {} \;
-	sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" xc/features/common.py
-	sed -i "s/^__version__ = .*/__version__ = \"${VERSION}\"/g" xc/features/__init__.py
 	find . -name "*.js" ! -name "chart.min.js" -exec sed -i "s/* Version: .*/* Version: ${VERSION}/g" {} \;
 	find . -name "*.php" -exec sed -i "s/eva_version = .*/eva_version = '${VERSION}';/g" {} \;
 	find . -name "*.php" -exec sed -i "s/@version .*/@version     ${VERSION}/g" {} \;
