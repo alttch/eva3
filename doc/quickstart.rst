@@ -13,8 +13,8 @@ install EVA ICS with the default settings:
 
 The above command prepares the system, installs all EVA ICS components on a
 single machine to "/opt/eva" directory and automatically links them together.
-"eva" and "eva-shell" commands are automatically added into system path with
-symlinks in "/usr/local/bin".
+"eva" and "eva-shell" commands are automatically added into the system path
+with symlinks in "/usr/local/bin".
 
 Alternatively, `EVA ICS docker image
 <https://hub.docker.com/r/altertech/eva-ics>`_ can be used.
