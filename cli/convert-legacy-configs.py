@@ -641,7 +641,8 @@ for c in prod:
 
 if not check and system_name:
     print(f'Renaming the node to "{system_name}"')
-    if os.system(f'{dir_bin}/eva feature setup node_name name={system_name}'):
+    if os.system(f'{dir_bin}/eva feature setup '
+                 f'node_name name={system_name},rename_only=1'):
         raise RuntimeError
     eva.registry.SYSTEM_NAME = system_name
 
