@@ -1456,7 +1456,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                     return False
                 return True
         except Exception as e:
-            sel.log_error(message=e)
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
             return False
 
@@ -2629,12 +2629,13 @@ class GenericMQTTNotifier(GenericNotifier):
                 for frame in data['d']:
                     frame['t'] = t
                     frame['c'] = c
-                    item = eva.core.controllers[0].get_item(frame['oid'])
+                    oid = frame['oid']
+                    item = eva.core.controllers[0].get_item(oid)
                     if item:
                         item.mqtt_set_state(None, frame)
                     else:
-                        logging.info(f'.{self.notifier_id} skipped '
-                                     f'{frame[oid]} state in bulk update')
+                        logging.debug(f'.{self.notifier_id} skipped '
+                                      f'{oid} state in bulk update')
         except:
             eva.core.log_traceback(notifier=True)
 

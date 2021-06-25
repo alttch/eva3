@@ -249,7 +249,7 @@ elif func == 'generate':
             print('\nAPI call failed, code %u' % c)
             sys.exit(1)
         if r.get('type') not in ['unit', 'sensor']:
-            print_debug(' - type not supported: %s' % r, get('type'))
+            print_debug(' - type not supported: %s' % r.get('type'))
         section = r.get('type')
         full_id = c_replace(r.get('full_id'), config_rev)
         for f in ['full_id', 'oid', 'id', 'group', 'type', 'value_condition']:
