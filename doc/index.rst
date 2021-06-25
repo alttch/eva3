@@ -36,14 +36,14 @@ What is EVA ICS
 * :ref:`js_framework` and :doc:`SFA Templates</sfa/sfa_templates>`, allowing
   quick development of the interfaces for a specific configuration.
 
-EVA can be installed either partially or fully, it can be scaled up to many
+EVA ICS can be installed either partially or fully, it can be scaled up to many
 servers or all components can be installed onto the only one. The system is
 designed in such a way, that it can work on any hardware: from fat servers to
 mini-computers with only one smart card in the “read-only” mode.
 
-Architecture of EVA provides a high scalability: one system can support dozens
-and even hundreds of thousands of devices through processing events via separate
-subsystems and collecting all data to a unified database. 
+Architecture of EVA ICS provides a high scalability: one system can support
+dozens and even hundreds of thousands of devices through processing events via
+separate subsystems and collecting all data to unified databases.
 
 Ready to discover? Welcome and read :doc:`quick start guide<quickstart>`.
 
