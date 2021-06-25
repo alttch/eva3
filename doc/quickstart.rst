@@ -67,7 +67,7 @@ port #1):
 
 EVA ICS modules use virtual ports for field buses. This allows different
 modules (e.g. drivers) to share the same port, locking it for commands if
-required. For Modbus over TCP or UDP locking is obviously not required.
+required. For Modbus over TCP or UDP locking is obviously not necessary.
 
 .. note::
 
