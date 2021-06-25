@@ -36,6 +36,7 @@ from pathlib import Path
 
 dir_runtime = Path(a.dir) / 'runtime'
 dir_etc = Path(a.dir) / 'etc'
+dir_bin = Path(a.dir) / 'bin'
 
 if not dir_runtime.is_dir():
     raise RuntimeError(f'{dir_runtime} is not a directory!')
@@ -475,6 +476,8 @@ BOOLS = [
 ]
 TRY_BOOLS = ['syslog', 'stop-on-critical']
 
+system_name = None
+
 for c in prod:
     cu = c.upper()
     keyfile = dir_etc / f'{c}_apikeys.ini'
@@ -537,6 +540,14 @@ for c in prod:
         sch = SCHEMA[f'config/{c}/main']
         cfg = {}
         with ConfigFile(inifile.as_posix()) as cf:
+            try:
+                name = cfg.get('server', 'name')
+                if system_name and system_name != name:
+                    raise RuntimeError('Different server/name is set'
+                                       ' for components. Can not continue')
+                system_name = name
+            except KeyError:
+                pass
             try:
                 if cf.get('server', 'layout') == 'simple':
                     raise RuntimeError('Simple layout is no longer supported')
@@ -745,6 +756,10 @@ for f in (dir_runtime / 'lm_ext_data.d').glob('*.json'):
     set(key, data)
 
 print()
+
+if not check and system_name:
+    if os.system(f'{dir_bin}/eva feature setup node_name name={system__name}'):
+        raise RuntimeError
 
 if check:
     print(colored('CHECK PASSED', color='cyan'))
