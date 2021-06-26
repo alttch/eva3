@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ "$(id -u)" != "0" ]; then
-    echo "Please run this script as root"
-    exit 1
+  echo "Please run this script as root"
+  exit 1
 fi
 
 USER=$1
@@ -11,8 +11,8 @@ SYSTEMD_FILE=/etc/systemd/system/eva-ics.service
 SYSTEMD_REGISTRY_FILE=/etc/systemd/system/eva-ics-registry.service
 
 if [ -z "$USER" ]; then
-    echo "Usage: $0 <username>"
-    exit 1
+  echo "Usage: $0 <username>"
+  exit 1
 fi
 
 if ! id "$USER" > /dev/null 2>&1 ; then
@@ -29,48 +29,48 @@ if [ ! -d $EVA_DIR ] ; then
 fi
 
 if [ -f "$SYSTEMD_FILE" ]; then
- echo "Stopping EVA ICS via systemctl..."
- if ! systemctl stop eva-ics; then
-   echo "Unable to stop EVA ICS"
-   exit 3
- fi
- if ! systemctl stop eva-ics-registry; then
-   echo "Unable to stop EVA ICS registry"
-   exit 3
- fi
- else
- echo "Stopping EVA ICS..."
- if ! "$EVA_DIR/sbin/registry-control" stop; then
-   echo "Unable to stop EVA ICS registry"
-   exit 3
- fi
- if ! "$EVA_DIR/sbin/eva-control" stop; then
-   echo "Unable to stop EVA ICS"
-   exit 3
- fi
+  echo "Stopping EVA ICS via systemctl..."
+  if ! systemctl stop eva-ics; then
+    echo "Unable to stop EVA ICS"
+    exit 3
+  fi
+  if ! systemctl stop eva-ics-registry; then
+    echo "Unable to stop EVA ICS registry"
+    exit 3
+  fi
+else
+  echo "Stopping EVA ICS..."
+  if ! "$EVA_DIR/sbin/registry-control" stop; then
+    echo "Unable to stop EVA ICS registry"
+    exit 3
+  fi
+  if ! "$EVA_DIR/sbin/eva-control" stop; then
+    echo "Unable to stop EVA ICS"
+    exit 3
+  fi
 fi
 
 echo "Changing ownership of $EVA_DIR to $USER..."
 
 if ! chown -R "$USER" "$EVA_DIR"; then
-   echo "Unable to chown"
-   exit 4
+  echo "Unable to chown"
+  exit 4
 fi
 
 if [ -f "$SYSTEMD_FILE" ]; then
   echo "Changing systemd user for EVA ICS..."
   if ! sed -i "s/^User=.*/User=$USER/g" "$SYSTEMD_FILE"; then
-   echo "Unable to change systemd user for eva-ics.service"
-   exit 5
+    echo "Unable to change systemd user for eva-ics.service"
+    exit 5
   fi
   if ! sed -i "s/^User=.*/User=$USER/g" "$SYSTEMD_REGISTRY_FILE"; then
-   echo "Unable to change systemd user for eva-ics-registry"
-   exit 5
+    echo "Unable to change systemd user for eva-ics-registry"
+    exit 5
   fi
   echo "Reloading systemd..."
   if ! systemctl daemon-reload; then
-   echo "Unable to reload systemd"
-   exit 6
+    echo "Unable to reload systemd"
+    exit 6
   fi
 fi
 
@@ -83,23 +83,23 @@ for c in uc lm sfa; do
 done
 
 if [ -f "$SYSTEMD_FILE" ]; then
- echo "Starting EVA ICS via systemctl..."
- if ! systemctl start eva-ics-registry; then
-   echo "Unable to start EVA ICS registry"
-   exit 3
- fi
- if ! systemctl start eva-ics; then
-   echo "Unable to start EVA ICS"
-   exit 3
- fi
- else
- echo "Starting EVA ICS..."
- if ! "$EVA_DIR/sbin/registry-control" start; then
-   echo "Unable to start EVA ICS registry"
-   exit 3
- fi
- if ! "$EVA_DIR/sbin/eva-control" start; then
-   echo "Unable to start EVA ICS"
-   exit 3
- fi
+  echo "Starting EVA ICS via systemctl..."
+  if ! systemctl start eva-ics-registry; then
+    echo "Unable to start EVA ICS registry"
+    exit 3
+  fi
+  if ! systemctl start eva-ics; then
+    echo "Unable to start EVA ICS"
+    exit 3
+  fi
+else
+  echo "Starting EVA ICS..."
+  if ! "$EVA_DIR/sbin/registry-control" start; then
+    echo "Unable to start EVA ICS registry"
+    exit 3
+  fi
+  if ! "$EVA_DIR/sbin/eva-control" start; then
+    echo "Unable to start EVA ICS"
+    exit 3
+  fi
 fi
