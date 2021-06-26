@@ -1048,11 +1048,6 @@ sys.argv = {argv}
                              f'create -d {dir_mirror_pypi}/downloads '
                              f'-m {dir_mirror_pypi}/local'):
                     return self.local_func_result_failed
-                getpip = f'{dir_mirror_pypi}/get-pip.py'
-                print(f'https://bootstrap.pypa.io/get-pip.py -> {getpip}')
-                with open(getpip, 'wb') as fh:
-                    fh.write(
-                        safe_download('https://bootstrap.pypa.io/get-pip.py'))
                 print(self.colored('-' * 40, color='grey', attrs=[]))
             print('Updating EVA ICS mirror')
             print()

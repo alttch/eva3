@@ -38,12 +38,18 @@ if [ ! -f "${EVA_DIR}/venv/bin/pip3" ]; then
   source "${EVA_DIR}/venv/bin/activate"
   if [ "$USE_SYSTEM_PIP" != "1" ]; then
     curl --connect-timeout 5 https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/venv/bin/python"
-    if [ ! -x "${EVA_DIR}/venv/bin/pip" ] && [ "$EVA_REPOSITORY_URL" ]; then
-        PYPI_URL=$(echo "$EVA_REPOSITORY_URL" | rev |cut -d/ -f2-| rev)/pypi/get-pip.py
-        curl --connect-timeout 5 -L "$PYPI_URL" | "${EVA_DIR}/venv/bin/python"
-    fi
     if [ ! -x "${EVA_DIR}/venv/bin/pip" ]; then
-      exit 3
+      if [ -x "${EVA_DIR}/python3/bin/pip" ]; then
+        # try to move pip from the old venv
+        echo "Failed to download PIP, trying to move old PIP"
+        OLD_LIB_DIR=$(find "${EVA_DIR}/python3" -type d -name "site-packages" | head -1)
+        NEW_LIB_DIR=$(find "${EVA_DIR}/venv" -type d -name "site-packages" | head -1)
+        mv "${OLD_LIB_DIR}/pip" "${NEW_LIB_DIR}/" || exit 3
+        mv "${OLD_LIB_DIR}/pip-*" "${NEW_LIB_DIR}/" || exit 3
+        mv "${EVA_DIR}/python3/bin/pip*" "${EVA_DIR}/venv/bin/" || exit 3
+      else
+        exit 3
+      fi
     fi
   fi
   deactivate
