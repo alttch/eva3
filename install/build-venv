@@ -17,15 +17,15 @@ fi
 
 EVA_DIR=$(realpath "${EVA_DIR}")
 
-if [ -d ${EVA_DIR}/yedb ]; then
-  source <(${EVA_DIR}/sbin/key-as-source config/venv 2>/dev/null)
+if [ -d "${EVA_DIR}/yedb" ]; then
+  source <("${EVA_DIR}/sbin/key-as-source" config/venv 2>/dev/null)
   if [ -z "$PYTHON" ]; then
     echo "Unable to read registry key"
     exit 1
   fi
 else
-  [ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
-  [ -z $PYTHON ] && PYTHON=python3
+  [ -f "${EVA_DIR}/etc/venv" ] && source "${EVA_DIR}/etc/venv"
+  [ -z "$PYTHON" ] && PYTHON=python3
 fi
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
@@ -37,7 +37,14 @@ if [ ! -f "${EVA_DIR}/venv/bin/pip3" ]; then
   "${PYTHON}" -m venv ${O_PIP} ${O_SSITE} "${EVA_DIR}/venv" || exit 2
   source "${EVA_DIR}/venv/bin/activate"
   if [ "$USE_SYSTEM_PIP" != "1" ]; then
-    ( curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/venv/bin/python" ) || exit 3
+    if ! curl https://bootstrap.pypa.io/get-pip.py | "${EVA_DIR}/venv/bin/python"; then
+      if [ "$EVA_REPOSITORY_URL" ]; then
+        PYPI_URL=$(echo "$EVA_REPOSITORY_URL" | rev |cut -d/ -f2-| rev)/pypi/get-pip.py
+        (curl -L "$PYPI_URL" | "${EVA_DIR}/venv/bin/python") || exit 3
+      else
+        exit 3
+      fi
+    fi
   fi
   deactivate
 fi
