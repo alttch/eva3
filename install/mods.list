@@ -7,7 +7,7 @@ cryptography==3.4.7
 cairocffi==1.1.0
 cffi==1.14.5
 cairosvg==2.1.1
-jsonpickle==0.9.6
+jsonpickle==2.0.0
 urllib3==1.24.3
 requests==2.21.0
 aiosched==0.0.25
