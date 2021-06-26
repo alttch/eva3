@@ -28,8 +28,8 @@ if [ ! -d $EVA_DIR ] ; then
   exit 2
 fi
 
+echo "Stopping EVA ICS..."
 if [ -f "$SYSTEMD_FILE" ]; then
-  echo "Stopping EVA ICS via systemctl..."
   if ! systemctl stop eva-ics; then
     echo "Unable to stop EVA ICS"
     exit 3
@@ -38,16 +38,14 @@ if [ -f "$SYSTEMD_FILE" ]; then
     echo "Unable to stop EVA ICS registry"
     exit 3
   fi
-else
-  echo "Stopping EVA ICS..."
-  if ! "$EVA_DIR/sbin/registry-control" stop; then
-    echo "Unable to stop EVA ICS registry"
-    exit 3
-  fi
-  if ! "$EVA_DIR/sbin/eva-control" stop; then
-    echo "Unable to stop EVA ICS"
-    exit 3
-  fi
+fi
+if ! "$EVA_DIR/sbin/registry-control" stop; then
+  echo "Unable to stop EVA ICS registry"
+  exit 3
+fi
+if ! FORCE_ALL=1 "$EVA_DIR/sbin/eva-control" stop; then
+  echo "Unable to stop EVA ICS"
+  exit 3
 fi
 
 echo "Changing ownership of $EVA_DIR to $USER..."
@@ -84,11 +82,11 @@ done
 
 if [ -f "$SYSTEMD_FILE" ]; then
   echo "Starting EVA ICS via systemctl..."
-  if ! systemctl start eva-ics-registry; then
+  if ! systemctl restart eva-ics-registry; then
     echo "Unable to start EVA ICS registry"
     exit 3
   fi
-  if ! systemctl start eva-ics; then
+  if ! systemctl restart eva-ics; then
     echo "Unable to start EVA ICS"
     exit 3
   fi
