@@ -33,7 +33,7 @@ if [ ! -x ./yedb/yedb-cli ] || [ "${YEDB_FORCE_REINSTALL}" ]; then
         exit 4
         ;;
     esac
-    wget ${EVA_REPOSITORY_URL}/yedb/yedb-${YEDB_VERSION}-${SFX}.tar.gz -O yedb.tgz || exit 2
+    curl -L ${EVA_REPOSITORY_URL}/yedb/yedb-${YEDB_VERSION}-${SFX}.tar.gz -o yedb.tgz || exit 2
     tar xzf yedb.tgz -C ./yedb || exit 2
     rm -f yedb.tgz
   fi
