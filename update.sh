@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.4.0
-BUILD=2021062609
+BUILD=2021062610
 
 PYTHON3_MIN=6
 if [ -d ./venv ]; then
@@ -274,7 +274,7 @@ rm -rf _update
 
 CURRENT_BUILD=$(./sbin/eva-tinyapi -B)
 
-if [ "$CURRENT_BUILD" = "$BUILD" ]; then
+if [ "$CURRENT_BUILD" == "${BUILD}" ]; then
   echo "- Current build: ${BUILD}"
   echo "---------------------------------------------"
   echo "Update completed. Starting everything back"
