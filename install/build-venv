@@ -44,9 +44,9 @@ if [ ! -f "${EVA_DIR}/venv/bin/pip3" ]; then
         echo "Failed to download PIP, trying to move old PIP"
         OLD_LIB_DIR=$(find "${EVA_DIR}/python3" -type d -name "site-packages" | head -1)
         NEW_LIB_DIR=$(find "${EVA_DIR}/venv" -type d -name "site-packages" | head -1)
-        mv "${OLD_LIB_DIR}/pip" "${NEW_LIB_DIR}/" || exit 3
-        mv "${OLD_LIB_DIR}/pip-*" "${NEW_LIB_DIR}/" || exit 3
-        mv "${EVA_DIR}/python3/bin/pip*" "${EVA_DIR}/venv/bin/" || exit 3
+        cp -rvf "${OLD_LIB_DIR}/pip" "${NEW_LIB_DIR}/" || exit 3
+        find "${OLD_LIB_DIR}" -name "pip-*" -type d -exec cp -rvf {} "${NEW_LIB_DIR}" \; || exit 3
+        cp -vf "${EVA_DIR}/python3/bin/pip*" "${EVA_DIR}/venv/bin/" || exit 3
       else
         exit 3
       fi
