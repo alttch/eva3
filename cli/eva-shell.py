@@ -1125,7 +1125,7 @@ sys.argv = {argv}
                                attrs=['bold']))
             print()
             print(f'EVA ICS update: -u http://{hostname}:{sfa_port}/mirror/eva')
-            print(f'PIP_EXTRA_OPTIONS="-i http://{hostname}:{sfa_port}'
+            print(f'pip-extra-options: "-i http://{hostname}:{sfa_port}'
                   f'/mirror/pypi/local --trusted-host {hostname}"')
             print()
             print('To automatically set the mirror config on'
@@ -1370,7 +1370,8 @@ sys.argv = {argv}
 
     def edit_mailer_config(self, params):
         code = os.system(
-            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/common/mailer')
+            f'AUTO_PREFIX=1 {dir_sbin}/eva-registry-cli edit config/common/mailer'
+        )
         return self.local_func_result_empty if \
                 not code else self.local_func_result_failed
 
