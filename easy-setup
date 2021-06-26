@@ -40,7 +40,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 curl jq"
+REQUIRED="realpath python3 curl jq hostname"
 
 MAX_START_WAIT=180
 
