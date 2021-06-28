@@ -501,7 +501,9 @@ for c in prod:
                         value = int(float(value))
                     elif k in FORCE_ARRAY:
                         if not isinstance(value, list):
-                            value = [value]
+                            value = list(
+                                filter(None,
+                                       [v.strip() for v in value.split(',')]))
                     elif k in BOOLS:
                         if value == 'yes':
                             value = True
@@ -567,7 +569,11 @@ for c in prod:
                                     value = int(float(value))
                                 elif name in FORCE_ARRAY:
                                     if not isinstance(value, list):
-                                        value = [value]
+                                        value = list(
+                                            filter(None, [
+                                                v.strip()
+                                                for v in value.split(',')
+                                            ]))
                                 elif name in BOOLS:
                                     if value == 'yes':
                                         value = True
