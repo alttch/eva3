@@ -30,9 +30,9 @@ EVA JS Framework
 
 `EVA JS Framework <https://www.npmjs.com/package/@eva-ics/framework>`_ and `EVA
 JS Toolbox <https://www.npmjs.com/package/@eva-ics/toolbox>`_ are used to build
-web browser interfaces with HTML and JavaScript .
+web browser interfaces with HTML and JavaScript.
 
-Framework also can be used in `Node.js <https://nodejs.org/>`_ apps.
+Framework can be also used in `Node.js <https://nodejs.org/>`_ apps.
 
 .. note::
 
@@ -40,8 +40,8 @@ Framework also can be used in `Node.js <https://nodejs.org/>`_ apps.
     default. Previous EVA SFA Framework is deprecated and no longer supported.
 
 Framework requires **fetch** function, which is available in all modern
-web browsers. For old browsers polyfill should be used, `unfetch
-<https://github.com/developit/unfetch>`_ is a recommended one.
+web browsers. For old browsers, a polyfill must be used, `unfetch
+<https://github.com/developit/unfetch>`_ is the recommended one.
 
 API client for Python
 =====================
@@ -221,14 +221,14 @@ Let's call :doc:`/uc/uc_api` method **state** and obtain state of sensors:
 
     If using custom API client, you may still put API key to *X-Auth-Key*
     request header. This is against JSON RPC standard, so if you want to keep
-    it right, you must have *k* in params of each request.
+    it right, you must have *k* in params in each request.
 
 API result codes
 ----------------
 
-JSON RPC API responds in standard JSON RPC way with HTTP code *200 (OK)*. In
-case JSON RPC request has no **id**, no body is returned and HTTP response code
-will be *202 (Accepted)*.
+JSON RPC API responds in the standard JSON RPC way with HTTP code *200 (OK)*.
+In case JSON RPC request has no **id**, no body is returned and HTTP response
+code is *202 (Accepted)*.
 
-In case of API method errors, HTTP code is still *200 (OK)*. Error codes can
-be found in the response body.
+In case of API method errors, HTTP code is still *200 (OK)*. Error codes can be
+found in the response body.
