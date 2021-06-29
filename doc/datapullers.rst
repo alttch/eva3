@@ -1,27 +1,27 @@
 Data pullers
 ************
 
-Data pullers are external programs, used to pull state from the equipment as
-fast as possible. Data pullers are usually used in :doc:`high-load
+Data pullers are external programs, used to pull state from equipment as fast
+as possible. Data pullers are usually used in :doc:`high-load
 environments<highload>`.
 
 Configuration
 =============
 
-Data pullers are defined either with "eva uc datapuller" :doc:`CLI</cli>`
+Data pullers are created either with "eva uc datapuller" :doc:`CLI</cli>`
 command or with corresponding :doc:`/uc/uc_api` methods.
 
 Execution
 =========
 
-All data pullers are started automatically at :doc:`/uc/uc` start. Data pullers
-can be stopped or restarted later using :doc:`UC API functions
+All data pullers are started automatically at :doc:`/uc/uc` start. The data
+pullers can be stopped or restarted later using :doc:`UC API functions
 </uc/uc_api>` or :doc:`CLI<cli>` (*eva uc datapuller*).
 
-:doc:`/uc/uc` always tries to kill data puller and its child subprocesses on
-stop / shutdown. However to avoid critical situations, data puller SHOULD exit
-manually, if STDOUT / STDERR are not available any longer (standard programs do
-that by default).
+:doc:`/uc/uc` always tries to kill a data puller and its child subprocesses on
+stop / shutdown. However, to avoid critical situations, data puller SHOULD exit
+manually if STDOUT / STDERR are not available any longer (standard programs do
+this by default).
 
 Data exchange
 =============
@@ -38,21 +38,22 @@ When stop (SIGTERM signal) is received, data puller has 1 second to shut down
 itself gracefully, otherwise it (and its child processes) will be forcibly
 killed.
 
-If data puller process exits or crashes, it will be automatically restarted.
+If a data puller process exits or crashes, it will be automatically restarted.
 The automatic restart is performed with 1-second delay.
 
 The idea of data pullers is developing small programs in low-level programming
 languages to let EVA ICS receive only modified data. Data pullers are good for
-Ethernet/IP and Modbus slave equipment, as well as for SNMP-enabled equipment
+Ethernet/IP and Modbus-slave equipment, as well as for SNMP-enabled equipment
 without a support of SNMP traps or any other equipment, which is unable to send
 any state events.
 
 Health check
 ------------
 
-If there are no events, data puller SHOULD send *.ping* or empty string to
-STDOUT, otherwise it will be considered as dead after period equal to the data
-puller timeout (or the default controller timeout) and automatically restarted:
+If there are no events, a data puller SHOULD send *.ping* or empty string to
+STDOUT, otherwise it will be considered as dead after the period equal to the
+data puller timeout (or the default controller timeout) and automatically
+restarted:
 
 .. code::
 
@@ -64,7 +65,7 @@ there are no events from it.
 Data output
 -----------
 
-Data puller should collect data and output to STDOUT update commands in format,
+Data puller should collect data and output update commands to STDOUT in format,
 equal to :doc:`/uc/uc_udp_api`:
 
 .. code::
@@ -73,7 +74,7 @@ equal to :doc:`/uc/uc_udp_api`:
     # e.g.
     sensor:tests/test1 u 1 777.555
 
-If status or value need to be skipped, they should be set to "None":
+If the status or the value need to be skipped, they must be set to "None":
 
 .. code::
 
@@ -91,8 +92,8 @@ Data pullers SHOULD:
 Logging
 -------
 
-Data puller can send messages to :doc:`/uc/uc` logs. If stdout line starts with
-*.log*, it's considered to be the log command:
+Data puller can send messages to :doc:`/uc/uc` logs. If a stdout line starts
+with *.log*, it is considered to be a log command:
 
 .. code::
 
@@ -101,15 +102,15 @@ Data puller can send messages to :doc:`/uc/uc` logs. If stdout line starts with
     .log warning Some warning information
 
 Where level is the level of the message (debug, info, warning, error or
-critical, first letter is enough e.g. *w* for warning).
+critical, first letter is enough, e.g. *w* for warning).
 
-Data puller can also print messages to STDERR, they will be automatically
+The data puller can also print messages to STDERR, they will be automatically
 logged with *error* level.
 
 State reporting
 ---------------
 
-Data puller can report custom state messages (e.g. "loading", "working",
+A data puller can report custom state messages (e.g. "loading", "working",
 "having a problem") with lines starting with ".state":
 
 .. code::
@@ -127,21 +128,21 @@ the datapuller process system environment.
 Pulr
 ====
 
-`Pulr <https://github.com/alttch/pulr>`_ is a free data pulling tool, 100%
-compatible with EVA ICS. Refer to Pulr documentation about the tool
+`Pulr <https://github.com/alttch/pulr>`_ is a free data pulling tool,
+100%-compatible with EVA ICS. Refer to Pulr documentation about the tool
 configuration, here are few remarks how to use it:
 
 * In Pulr configuration, set *output: eva/datapuller* to output data in EVA ICS
   native format.
 
-* Set *beacon* value less than :doc:`/uc/uc` default timeout, otherwise the
+* Set *beacon* value to less than :doc:`/uc/uc` default timeout, otherwise the
   Pulr subprocesses will be killed and continuously restarted.
 
 * All fields in *process* sections must have *set-id* param, to convert pulled
   data IDs into EVA ICS item IDs (*<unit|sensor>:<group>/<id>*)
 
-* *set-id* must end with either *.status* or *.value* to set the proper
-  :doc:`EVA ICS items<items>` state fields. If no ending is specified, item
+* *set-id* must end either with *.status* or with *.value* to set the proper
+  :doc:`EVA ICS items<items>` state field. If no ending is specified, the item
   state value is updated.
 
 Pulr supports SNMP (v2), Modbus (TCP/UDP) and Ethernet/IP (Allen-Bradley

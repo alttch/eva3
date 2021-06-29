@@ -185,8 +185,8 @@ Used in default drivers for relay, sockets and similar PHIs, doesn't need to be
 configured when loaded.
 
 When assigning driver containing **basic** LPI mod to the specified item
-(*eva uc driver assign*), the assign configuration should contain port number
-(*-c port=N*) which usually matches the physical relay port.
+(*eva uc driver assign*), the assigning configuration should contain port
+number (*-c port=N*) which usually matches the physical relay port.
 
 Port number can be specified as a list (*-c port=N1|N2|N3*), in this case all
 listed ports will be used in commands.
@@ -205,9 +205,9 @@ Basic sensor monitiring, used to get data from specified sensors.
 
 Used in default drivers for sensors, doesn't need to be configured when loaded.
 
-LPI doesn't provide *action* functionality. When assigning driver containing
+LPI does not provide *action* functionality. When assigning driver containing
 **sensor** LPI mod to the specified item (*eva uc driver assign*), the assign
-configuration should contain port or bus address number.
+configuration should contain a port or a bus address number.
 
 ssp LPI
 -------
@@ -385,9 +385,9 @@ relays:
 
 All of **cfg**, **get** and **set** have an option **host** which should be
 defined ether in PHI configutation (*eva uc phi load* with *host* config option
-or in item driver configuration (*eva uc driver assign* with *_host* config
-option). Setting different **host** option value in item driver configuration
-lets one *sr201* PHI manage all available SR-201 relays.
+or in the item driver configuration (*eva uc driver assign* with *_host* config
+option). Setting a different **host** option value in the item driver
+configuration lets one *sr201* PHI manage all available SR-201 relays.
 
 Physical events
 ---------------

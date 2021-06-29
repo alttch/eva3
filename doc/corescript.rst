@@ -12,7 +12,7 @@ Core scripts
 What are EVA ICS core scripts
 =============================
 
-* Core scripts are Python 3 scripts, which run directly inside core of the
+* Core scripts are Python 3 scripts, which run directly inside the core of a
   controller and are launched on particular events.
 
 * Core scripts are similar to web server modules, where request and response
@@ -22,15 +22,15 @@ What are EVA ICS core scripts
 * All core scripts are always executed on all events. Core scripts are executed
   by alphabetical order, one by one.
 
-* You may combine handling of the multiple events inside one core script file.
+* It is possible to handle multiple events by a single core script.
 
-* Code of the special file **common.py** is included in all core scripts.
+* The code of the special file **common.py** is included in all core scripts.
 
 What are core scripts for
 =========================
 
-Core scripts are not recommended for the enterprise-level configurations, it's
-a vehicle to quickly implement:
+Core scripts are not recommended for Enterprise-level configurations, it is a
+vehicle to quickly implement:
 
 * data collection from HTTP/POST and :ref:`MQTT <mqtt_>`, without :doc:`drivers
   </drivers>`
@@ -42,35 +42,36 @@ a vehicle to quickly implement:
 Core script globals and functions
 =================================
 
-* All API functions of current controller are directly available to call
+* All API functions of the current controller are directly available to call
 
 * **print** function is mapped to *logging.info*
 
-* **spawn(func, \*args, \*\*kwargs)** run function in background as a controller thread
+* **spawn(func, \*args, \*\*kwargs)** runs a target function in the background
+  as a controller thread
 
 * *logging*, *time*, *json (rapidjson)* and *eva.apikey* modules are imported
-  by default.
+  by default
 
 * **dir_eva** EVA ICS directory
 
-* **event** event info name space
+* **event** event info namespace
 
-* **g** special name space, shared across all core scripts
+* **g** special namespace, shared across all core scripts
 
-* **masterkey** controller master key
+* **masterkey** the controller's master key
 
-* **product** controller info name space:
+* **product** the controller info name space:
 
     * **product.code** "uc", "lm" or "sfa"
     * **product.build** current EVA ICS build
 
-* **system_name** system name
+* **system_name** the system name
 
 Core script events
 ==================
 
-A special core script globals name space **event** contains the event info core
-script was called for:
+The special core script globals name space **event** contains the event info
+core script was called for:
 
 State event
 -----------
@@ -139,8 +140,8 @@ E.g. the following JSON RPC API request:
             }
     }
 
-will generate an event with *event.topic="myfunc"* and *event.data* containing
-the params.
+generates an event with *event.topic="myfunc"* and *event.data* containing the
+params.
 
 Core scripts can not return API responses. Also note that core scripts should
 handle any authentication by themselves.
@@ -150,7 +151,7 @@ Periodic event
 
 Periodic events allow core scripts to act as scheduled jobs.
 
-Currently periodic events are launched every minute only. However it is highly
+Currently periodic events are launched every minute only. However, it is highly
 recommended to check the event topic to have corescripts backward-compatible
 with the future EVA ICS releases.
 
@@ -159,7 +160,7 @@ with the future EVA ICS releases.
   event.type == CS_EVENT_PERIODIC
 
 * **event.topic** "M" for every-minute event.
-* **event.iteration** iteration since controller start
+* **event.iteration** iteration since the controller start
 
 Example:
 
@@ -201,8 +202,8 @@ Triggered on system events
 
 * **event.topic** event topic:
 
-  * **startup** triggered after controller startup
-  * **shutdown** triggered before controller shutdown
+  * **startup** triggered after the controller startup
+  * **shutdown** triggered before the controller shutdown
 
 .. note::
 
@@ -215,7 +216,6 @@ Setting up packages
 
 See :doc:`/packages`
 
-
 Logging
 =======
 
@@ -224,29 +224,29 @@ Core script globals contain pre-defined "logger" variable, which points to
 
 .. code-block:: python
 
-    logger.warning('This is core script')
+    logger.warning('This is a core script')
 
 Creating and managing core script files
 ========================================
 
 * Core scripts are available for all controllers and stored in
-  **xc/{controller}/cs** (e.g. **xc/uc/cs** for :doc:`/uc/uc`).
+  **runtime/xc/{controller}/cs** (e.g. **rumtime/xc/uc/cs** for :doc:`/uc/uc`).
 
 * Core script files should have *.py* extension.
 
 * If core script code is modified, controller reloads it automatically. However
-  if core script is added or deleted, it's required to either exec
+  if core script is added or deleted, it is required to either exec
   *reload_corescripts* :doc:`/sysapi` method (or *eva <controller> corescript
   reload* console command) or restart the controller.
 
 Code examples
 =============
 
-Core script code should be always started with "if", checking event type:
+Core script code should be always started with "if", checking an event type:
 
 .. code-block:: python
 
-   # turn on the lights when motion sensor is triggered
+   # turn on the lights when the motion sensor is triggered
    if event.type == CS_EVENT_STATE and \
       event.source.oid == 'sensor:security/motion1' and \
       event.data['value'] == '1':
@@ -255,11 +255,11 @@ Core script code should be always started with "if", checking event type:
 .. note::
 
    * Item status/value can be obtained by accessing event.source.status and
-     event.source.value fields as well. However it's highly recommended to use
-     event.data dict instead - it contains "fixed" state snapshot. Actual item
-     state can be modified while core script is running.
+     event.source.value fields as well. However it is highly recommended to use
+     event.data dict instead - it contains the "fixed" state snapshot, as
+     actual item state can be modified while core script is running.
 
-   * In core scripts, item state value is always a string
+   * In the core scripts, item state value is always a string
 
 .. code-block:: python
 
@@ -270,7 +270,7 @@ Core script code should be always started with "if", checking event type:
 
 .. code-block:: python
 
-   # update sensor state according to MQTT JSON message { "temperature": N }
+   # update the sensor state according to MQTT JSON message { "temperature": N }
    if event.type == CS_EVENT_MQTT and event.topic == 'some/device/telemetry':
      update(
       k=masterkey,
