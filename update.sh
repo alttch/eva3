@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.4.0
-BUILD=2021062802
+BUILD=2021070601
 
 PYTHON3_MIN=6
 if [ -d ./venv ]; then
