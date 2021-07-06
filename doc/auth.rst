@@ -14,63 +14,65 @@ checking.
 
 After the installation, the following API keys are created automatically:
 
-* **masterkey** primary (super) key with an unlimited access to any resource.
-  One master key always should be present in the controller configuration.
+* **masterkey** the primary (super) key with the unlimited access to any
+  resource. At least one master key always must be present in the controller
+  configuration.
 
-* **default** default key for controller inter-connections. Has an access to
-  all :doc:`items<items>`, no access to system and master functions and has
+* **default** the default key for controller inter-connections. Has an access
+  to all :doc:`items<items>`, no access to system and master functions and has
   *allow=cmd,[device]*
 
-* **operator** default user key. Similar to the default key, but with
+* **operator** the default user key. Similar to the "default" key, but with
   *allow=lock*
 
 Custom API keys can be created either in the controller key configuration
 in :doc:`/registry` (static, requires controller restart on changes), with
 :doc:`/sysapi` key management functions or with :doc:`command-line interface
 </cli>` (dynamic, stored either in "db" or in "userdb"). Master keys can be
-created only in the controller key configuration file, the default master key
-(with id *masterkey*) can also be changed for all installed components at once,
-using *eva masterkey* CLI command.
+created only in the registry.
+
+The default master key (with id *masterkey*) can be changed for all installed
+components in bulk, using *eva masterkey* CLI command.
 
 .. note::
 
-    Each EVA ICS component has own key set, even if all components are running
-    under the same installation. Sharing API keys configurations and/or
+    Each EVA ICS component has its own key pack, even if all components are
+    running under the same installation. Sharing API keys configurations and/or
     database is not recommended.
     
-    All API keys are loaded and cached during the controller startup, to speed
-    up API responses.
+    To speed up API responses, all API keys are loaded and cached during the
+    controller startup.
 
 API key properties and ACL
 --------------------------
 
 The current ACL can be obtained with "test" API/CLI command. Key properties can
 be modified with :doc:`/sysapi` key management functions or with
-:doc:`command-line interface </cli>`. "Static" keys, defined in the key
-configuration files, can not be re-configured dynamically.
+:doc:`command-line interface</cli>`. "Static" keys, defined in the registry,
+can not be re-configured dynamically.
 
 API key properties:
 
-* **allow** key allow list:
+* **allow** the key allow list:
 
-    * **cmd** access to remote command call service functions
+    * **cmd** access to remote command call functions
     * **lock** access to lock management functions
     * **device** (for :doc:`/uc/uc` only) access to device templates functions
 
 * **cdata** list of custom data. Can be set to any custom values (up to 16384
-  characters), appears in serialized ACL as-is. The field is a list, if set
-  from string, it is automatically split with commas.
+  characters), appears in serialized ACL as-is. The field is a list. If set
+  from a string, it is automatically split with commas.
 
-* **dynamic** read-only value, specifying is the key "dynamic" (True, stored in
-  the db) or "static" (False, defined in the key config file)
+* **dynamic** read-only value, which shows is the key "dynamic" (True, stored
+  in the db) or "static" (False, defined in the :doc:`registry</registry>`).
 
-* **groups** comma-separated item groups the key has an access to (despite of
+* **groups** comma-separated item groups the key has the access to (despite of
   item types). MQTT-style wildcards ('#', '+') are allowed (e.g. "#" = access
   to the all items).
 
-* **groups_deny** comma-separated item groups the key has no access to (e.g.
-  wildcard is used in *groups* but some groups are excluded from ACL). The key
-  still has read-only access if allowed with other ACL properties.
+* **groups_deny** comma-separated item groups the key has forbidden access to
+  (e.g. a wildcard is used in *groups* but some groups are excluded from ACL).
+  The key still has read-only access if allowed with other ACL properties.
 
 * **groups_ro** same as *groups* but for read-only access.
 
@@ -78,17 +80,17 @@ API key properties:
   from.
 
 * **hosts_assign** comma-separated list of hosts/networks to automatically set
-  the key for any non-authenticated API requests
+  the key for any non-authenticated API requests.
 
-* **id** key ID, unique
+* **id** the key ID, unique.
 
-* **items**, **items_ro** same as groups, but grant an access to the specified
-  items. Wildcards aren't possible.
+* **items**, **items_ro** same as groups, but grants an access to the specified
+  items. Wildcards are not allowed.
 
-* **items_deny** same as *groups_deny* but for individual items
+* **items_deny** same as *groups_deny* but for individual items.
 
-* **key** key itself (up to 64 characters). Filled with 32 random chars
-  automatically after creation
+* **key** the key itself (up to 64 characters). Filled with 32 random chars
+  automatically after creation.
 
 * **master** key is the master key if set to True
 
@@ -104,14 +106,14 @@ opposite way: API keys are the primary entities and there could be one or more
 users linked to the each one. Consider, for the users, API keys act as ACL
 groups.
 
-The approach may look strange, but there's a strong reason to work in this way:
-all external resources (EVA ICS controller inter-connections, 3rd party apps)
-should always use API keys only, while user accounts are generally used only
-for authentication via web-interfaces. Majority EVA ICS installations have no
-user accounts at all, while all setups require API keys for control and
+The approach may look unusual, but there is a strong reason to work this way:
+all external resources (EVA ICS controller inter-connections, 3rd party
+apps) should always use API keys only, while user accounts are generally used
+only for authentication via web-interfaces. Majority of EVA ICS installations
+have no user accounts at all, while all setups require API keys for control and
 management.
 
-When such approach is used, there's also no reason to have "service" user
+When such approach is used, there is also no reason to have "service" user
 accounts for the service functions.
 
 Users can be created with :doc:`/sysapi` user management functions or with
@@ -133,8 +135,8 @@ If more than one key (so more than one ACL) is assigned:
 * item ACLs, cdata and allow/assign hosts/networks are merged as-is, including
   deny ACLs
 
-* special ACLs are merged with higher access level (e.g. if one of keys has
-  master access, the combined ACL will have master access as well)
+* special ACLs are merged basing on a higher access level (e.g. if one of keys
+  has master access, the combined ACL will have master access as well)
 
 * to assign multiple API keys to a local user, separate them either with commas
   (in :doc:`CLI </cli>`) or send as list (:ref:`create_user

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.4.0
-BUILD=2021062603
+BUILD=2021070601
 
 PYTHON3_MIN=6
 if [ -d ./venv ]; then
@@ -85,6 +85,10 @@ if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./ru
   echo "EVA ICS obsolete configuration found. Checking..."
   [ -f ./venv/bin/python3 ] && PYTHON=./venv/bin/python || PYTHON=./python3/bin/python3
   $PYTHON ./_update/eva-${VERSION}/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
+  if [ -d ./venv ]; then
+    echo "Removing new-style venv in case of a failed previous update..."
+    rm -rf ./venv
+  fi
 fi
 
 echo "- Installing missing modules"
@@ -115,9 +119,9 @@ echo "- Installing new files"
 rm -f _update/eva-${VERSION}/ui/index.html
 rm -f _update/eva-${VERSION}/update.sh
 
-[ -x ./lib/eva/features ] && rm -f ./lib/eva/features
-[ -x ./lib/eva/uc/drivers ] && rm -f ./lib/eva/uc/drivers
-[ -x ./lib/eva/lm/extensions ] && rm -f ./lib/eva/lm/extensions
+[ -L ./lib/eva/features ] && rm -f ./lib/eva/features
+[ -L ./lib/eva/uc/drivers ] && rm -f ./lib/eva/uc/drivers
+[ -L ./lib/eva/lm/extensions ] && rm -f ./lib/eva/lm/extensions
 
 cp -rf _update/eva-${VERSION}/* . || exit 1
 
@@ -270,7 +274,7 @@ rm -rf _update
 
 CURRENT_BUILD=$(./sbin/eva-tinyapi -B)
 
-if [ "$CURRENT_BUILD" = "$BUILD" ]; then
+if [ "$CURRENT_BUILD" == "${BUILD}" ]; then
   echo "- Current build: ${BUILD}"
   echo "---------------------------------------------"
   echo "Update completed. Starting everything back"

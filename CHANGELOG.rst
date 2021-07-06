@@ -9,6 +9,7 @@ Common
 
    * fix: correct backups of symlinked directories
    * fix: PVT backup
+   * fix: "dump" on Python 3.9.5+
 
    * Configs and runtime data moved to crash-free YEDB-based registry
    * Next-generation event replication engine
