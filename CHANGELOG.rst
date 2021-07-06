@@ -21,8 +21,8 @@ Common
    * UDP Notifiers
    * LURP event replication protocol
    * Notifier event buffering
-   * "eva restore" now stops / starts all components automatically if runtime
-     folder is restored.
+   * "eva backup restore" now stops / starts all components automatically if
+     runtime folder is restored.
    * new API method: registry_safe_purge (clears registry trash but keeps
      broken keys)
    * "ssl-force-redirect" option for WebAPI (GET methods only)
