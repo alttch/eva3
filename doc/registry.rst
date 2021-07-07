@@ -92,9 +92,8 @@ config/<controller>/service          may           startup configuration
 config/<controller>/plugins/<plugin> yes           plugin configuration
 config/uc/datapullers/<datapuller>   may           datapuller configuration
 config/uc/drivers                    not rec.      UC drivers
-config/uc/defaults/unit              yes           defaults for units
-config/uc/defaults/sensor            yes           defaults for sensors
-config/lm/defaults/lvar              yes           defaults for lvars
+config/uc/defaults                   yes           item defaults
+config/lm/defaults                   yes           item defaults
 config/inventory                     not rec.      inventory key (EVA ICS items)
 config/data                          forbidden     system objects
 config/userdata                      yes           any user-defined data
