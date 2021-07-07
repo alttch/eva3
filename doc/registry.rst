@@ -56,7 +56,8 @@ Maintenance
 
 When deploying / undeploying lots of :doc:`items</items>`, old registry keys
 are not deleted but moved to the database trash. It is a good idea to clean it
-from time to time wit "eva-registry purge" or "registry_safe_purge" API method.
+from time to time with "eva-registry purge" or "registry_safe_purge" API
+method.
 
 ".trash" folder can also be used to restore keys deleted by accident.
 
