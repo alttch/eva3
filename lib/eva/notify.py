@@ -784,7 +784,7 @@ class SQLANotifier(GenericNotifier):
                              loop='cleaners',
                              **kwargs)
 
-        def run(self, o, **kwargs):
+        async def run(self, o, **kwargs):
             dbconn = o.db()
             space = o.space if o.space is not None else ''
             logging.debug('.cleaning records older than %u sec' % o.keep)
@@ -804,6 +804,9 @@ class SQLANotifier(GenericNotifier):
                         space=space,
                         oid=r.oid,
                         maxt=r.maxt)
+
+        def after_stop(self):
+            self.o.db().close()
 
     def __init__(self,
                  notifier_id,
@@ -830,6 +833,8 @@ class SQLANotifier(GenericNotifier):
                                                    o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
+        self.sql_queue = Queue()
+        self.sql_queue_processor = None
 
     def set_db(self, db_uri=None):
         self._db = db_uri
@@ -1087,33 +1092,25 @@ class SQLANotifier(GenericNotifier):
             self.connected = False
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
-        dbconn = self.db()
+        sqls = []
         try:
             if subject == 'state':
-                try:
-                    dbt = dbconn.begin()
-                    for d in data:
-                        if 'status' in d:
-                            v = d['value'] if 'value' in d and \
-                                    d['value'] != '' else None
-                            space = self.space if self.space is not None else ''
-                            try:
-                                dbconn.execute(sql('insert into state_history '
-                                                   '(space, t, oid, status, '
-                                                   'value) values (:space, :t, '
-                                                   ':oid, :status, :value)'),
-                                               space=space,
-                                               t=d['set_time'],
-                                               oid=d['oid'],
-                                               status=d['status'],
-                                               value=v)
-                            except sa.exc.IntegrityError:
-                                pass
-                            except:
-                                raise
-                    dbt.commit()
-                except:
-                    dbt.rollback()
+                for d in data:
+                    if 'status' in d:
+                        v = d['value'] if 'value' in d and \
+                                d['value'] != '' else None
+                        space = self.space if self.space is not None else ''
+                        sqls.append((sql('insert into state_history '
+                                        '(space, t, oid, status, '
+                                        'value) values (:space, :t, '
+                                        ':oid, :status, :value)'),
+                                    dict(
+                                    space=space,
+                                    t=d['set_time'],
+                                    oid=d['oid'],
+                                    status=d['status'],
+                                    value=v)))
+            self.sql_queue.put(sqls)
             return True
         except Exception as e:
             self.log_error(message=str(e))
@@ -1163,6 +1160,42 @@ class SQLANotifier(GenericNotifier):
 
     def disconnect(self):
         self.history_cleaner.stop()
+
+    def start(self):
+        super().start()
+        self.sql_queue_processor = eva.core.spawn(self._t_sql_queue_processor,
+                                                  self.db, self.sql_queue,
+                                                  self.log_error)
+
+    @staticmethod
+    def _t_sql_queue_processor(get_db, queue, error_log_fn):
+        while True:
+            try:
+                d = queue.get()
+                if d is None:
+                    break
+                else:
+                    dbconn = get_db()
+                    dbt = dbconn.begin()
+                    for q in d:
+                        try:
+                            dbconn.execute(q[0], **q[1])
+                        except sa.exc.InterfaceError:
+                            pass
+                        except Exception as e:
+                            if e.__class__.__name__ != 'IntegrityError':
+                                error_log_fn(e)
+                    dbt.commit()
+            except:
+                eva.core.log_traceback(notifier=True)
+                error_log_fn('sql queue processor died, restarting')
+        get_db().close()
+
+    def stop(self):
+        if self.sql_queue_processor:
+            self.sql_queue.put(None)
+            self.sql_queue_processor.result()
+        super().stop()
 
 
 class TimescaleNotifier(SQLANotifier):
