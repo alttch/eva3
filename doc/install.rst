@@ -21,7 +21,9 @@ Recommended for enterprise setups
 
 * `RedHat Enterprise Linux 8 <https://www.redhat.com/en/enterprise-linux-8>`_
 
-* `Ubuntu Linux LTS 18.04/20.04 <https://ubuntu.com/>`_
+* `Ubuntu Linux LTS 20.04 <https://ubuntu.com/>`_
+
+* `Alpine Linux 13.3+ <https://alpinelinux.org>`_
 
 Tested and fully compatible
 ---------------------------
@@ -33,6 +35,8 @@ Tested and fully compatible
 * `Raspbian Linux <https://www.raspberrypi.org/>`_
 
 * `Fedora Linux <https://getfedora.org/>`_
+
+* `CentOS Linux <https://www.centos.org>`_
 
 System Requirements
 ===================
@@ -246,49 +250,70 @@ or
 
     eva feature setup venv
     
-If you want to rebuild venv from scratch, delete *python3* folder completely.
+If you want to rebuild venv from scratch, delete *venv* folder completely.
 
 On some systems (e.g. ARM-based computers) venv installation can be tricky: you
 can expect slow installation time or problems with some heavy modules (e.g.
 *pandas*, *cryptography*).
 
-To solve this:
+To solve this, do the following:
 
-* If you already run the installation and it has failed, delete *./python3*
-  folder.
+.. note::
 
-* Go to *./etc* folder, copy *venv-dist* to *venv* and customize virtual
-  environment options.
+    If you already run the installation and it has failed, delete *./venv*
+    folder.
 
-    * **USE_SYSTEM_PIP=1** allows to use system-installed pip3 (*apt-get install
-      python3-pip*) in case installation script has a problems downloading /
-      installing it.
+* When setup is completed, VENV configuration is stored in
+  *eva3/<hostname>/config/venv* :doc:`key</registry>`. For *easy-setup*, an
+  alternative VENV configuration can be used before it is completed.
 
-    * **PYTHON=python3** here you may specify custom Python executable.
+* Create YAML file with the following fields:
 
-    * **SYSTEM_SITE_PACKAGES=1** virtual environment will use system site
+
+    * **use-system-pip** (bool) allows to use system-installed pip3 (*apt-get
+      install python3-pip*) in case installation script has a problems
+      downloading / installing it.
+
+    * **python** (str) Path to an alternative Python executable
+
+    * **system-site-packages** (bool) virtual environment will use system site
       packages if their versions match with requested.
 
-    * **SKIP** here you can specify the packages (in quotes, space separated),
-      which should be skipped (e.g.  *pandas cryptography* and install it with
-      *apt-get install python3-pandas python3-cryptography* instead). To let
-      venv use system package, *SYSTEM_SITE_PACKAGES=1* should also be present.
+    * **skip** (list of strings) here you can specify the packages (in quotes,
+      space separated), which should be skipped (e.g.  *pandas cryptography*
+      and install it with *apt-get install python3-pandas python3-cryptography*
+      instead). To let venv use system package, *system-site-packages: true*
+      should be also set.
 
-    * **EXTRA** extra modules to install, e.g. required by :ref:`PHIs<phi>`,
-      used by :doc:`logic macros</lm/macros>` or :doc:`macro
+    * **extra** (list of strings) extra modules to install, e.g. required by
+      :ref:`PHIs<phi>`, used by :doc:`logic macros</lm/macros>` or :doc:`macro
       extensions</lm/ext>` etc.
 
-    * **PIP_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
-      verbose installation.
+    * **pip-extra-options** (str) specify extra options for *pip3*, e.g. *-v*
+      for verbose installation.
+
+Example:
+
+.. code:: yaml
+
+    use-system-pip: false
+    python: /opt/python39/bin/python3
+    system-site-packages: true
+    skip:
+        - pandas
+    pip-extra-options: "-v"
+
+To tell *easy-setup* use the specified configuration, run it as:
+
+.. code:: bash
+
+    VENV_CONFIG=/path/to/venv.yml ./easy-setup [options]
 
 .. note::
 
     Customize venv only if you have serious problems installing EVA ICS with
     default options, as the system may became unstable when versions of 3rd
     party libraries are different from tested.
-
-Options, specified in *./etc/venv* are also used by EVA ICS update scripts,
-which check/rebuild venv on every system update.
 
 Installing
 ----------

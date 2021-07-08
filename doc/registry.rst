@@ -56,7 +56,8 @@ Maintenance
 
 When deploying / undeploying lots of :doc:`items</items>`, old registry keys
 are not deleted but moved to the database trash. It is a good idea to clean it
-from time to time wit "eva-registry purge" or "registry_safe_purge" API method.
+from time to time with "eva-registry purge" or "registry_safe_purge" API
+method.
 
 ".trash" folder can also be used to restore keys deleted by accident.
 
@@ -92,9 +93,8 @@ config/<controller>/service          may           startup configuration
 config/<controller>/plugins/<plugin> yes           plugin configuration
 config/uc/datapullers/<datapuller>   may           datapuller configuration
 config/uc/drivers                    not rec.      UC drivers
-config/uc/defaults/unit              yes           defaults for units
-config/uc/defaults/sensor            yes           defaults for sensors
-config/lm/defaults/lvar              yes           defaults for lvars
+config/uc/defaults                   yes           item defaults
+config/lm/defaults                   yes           item defaults
 config/inventory                     not rec.      inventory key (EVA ICS items)
 config/data                          forbidden     system objects
 config/userdata                      yes           any user-defined data
