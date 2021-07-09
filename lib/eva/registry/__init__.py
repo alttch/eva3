@@ -231,8 +231,7 @@ def init_defaults(skip_existing=True):
                 key_set(key, data)
     version = os.popen(f'{EVA_DIR}/sbin/eva-tinyapi -V').read().strip()
     build = int(os.popen(f'{EVA_DIR}/sbin/eva-tinyapi -B').read().strip())
-    key_set_field('data/info', 'version', __version__)
-    key_set_field('data/info', 'build', build)
+    key_set('data/info', {'version': __version__, 'build': build})
 
 
 def import_schema():
