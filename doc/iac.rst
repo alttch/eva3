@@ -559,15 +559,15 @@ There is no problems when the regular bare-metal or virtual machine
 installation is performed, but if EVA ICS is being installed into Docker
 machine or Kubernetes cluster, there is a special environment variable
 *after_install*, which tells `EVA ICS Docker
-image <https://hub.docker.com/r/altertech/eva-ics>`_ to execute deployment
-script after installation process is finished. Here's an example part of
-docker-compose file:
+image <https://hub.docker.com/r/altertech/eva-ics>`_ to apply the deployment
+script after the initial setup process is finished. Here is an example part of
+a docker-compose file:
 
 .. code:: yaml
 
     eva-scada:
         environment:
-            - after_install=/deploy/deploy.sh
+            - DEPLOY=/path/or/url/to/yaml
 
 Devices
 -------
