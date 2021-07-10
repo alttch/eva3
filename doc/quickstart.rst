@@ -162,6 +162,12 @@ Check that SFA has all states from UC:
 
     eva sfa remote
 
+.. note::
+
+    The newly crated UC and LM PLC items are synced with SFA
+    automatically every 30 seconds. To sync them manually, use
+    "eva sfa controller reload" command.
+
 Install `EVA JS Framework <https://github.com/alttch/eva-js-framework>`_:
 
 .. code:: shell
@@ -176,12 +182,6 @@ let us create a new API key and use it directly:
     eva sfa key create op
     eva sfa key set op key 123
     eva sfa key set op groups '#'
-
-.. note::
-
-    The newly crated UC and LM PLC items are synced with SFA
-    automatically every 30 seconds. To sync them manually, use
-    "eva sfa controller reload" command.
 
 Put the following HTML to "/opt/eva/ui/index.html". Any Javascript front-end
 interface library can be used, but in this example we will use pure vanilla JS
