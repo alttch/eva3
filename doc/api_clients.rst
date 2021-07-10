@@ -12,7 +12,7 @@ modern Linux distributions), for example:
 
 .. code-block:: bash
 
-    curl -s 'http://localhost:8812/uc-api/test?k=APIKEY' | jq .version -r
+    curl -s 'http://localhost:8812/jrpc?i=1&m=test&p=%7B%22k%22%3A%22APIKEY%22%7D' |jq -r .result.version
 
 You may call API functions via HTTP GET or HTTP POST - all functions respond
 similarly regardless of the request method. You may use www-form as well as
