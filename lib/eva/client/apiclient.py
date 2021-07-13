@@ -207,7 +207,7 @@ class APIClientLocal(APIClient):
             default_port = 80
         except LookupError:
             try:
-                h = cfg.get('webapi/ssl_listen')
+                h = cfg.get('webapi/ssl-listen')
                 pfx = 'https://'
                 default_port = 443
             except LookupError:
