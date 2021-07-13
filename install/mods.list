@@ -12,7 +12,7 @@ urllib3==1.24.3
 requests==2.21.0
 aiosched==0.0.25
 neotasker==0.0.35
-pyaltt2==0.0.112
+pyaltt2==0.0.113
 argcomplete==1.9.4
 jinja2==2.11.2
 six==1.11.0
