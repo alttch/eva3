@@ -92,6 +92,7 @@ What you get with EVA ICS
     iac
     faq
     highload
+    container
 
 .. toctree::
     :caption:  Components
