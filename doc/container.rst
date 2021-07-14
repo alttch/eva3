@@ -60,4 +60,4 @@ Updating
 Roll out a new container image. The included update script automatically
 updates EVA ICS configuration during the first start. As the image contains all
 EVA ICS and required libraries and modules, Internet connection is not
-required, unless any custom modules are required.
+necessary, unless any custom modules are required.
