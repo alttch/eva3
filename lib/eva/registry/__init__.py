@@ -66,7 +66,7 @@ def config_get(key, **kwargs):
     """
     Get key as configuration object
     """
-    return Config(key_get(key, **kwargs))
+    return Config(key_get(key, **kwargs), read_file=None)
 
 
 def safe_purge():

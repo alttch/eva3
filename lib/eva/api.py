@@ -13,6 +13,7 @@ import rapidjson
 import msgpack
 import eva.tokens as tokens
 import uuid
+import os
 
 import eva.core
 import eva.crypto
@@ -501,15 +502,31 @@ def update_config(cfg):
         config.ssl_cert = cfg.get('webapi/ssl-cert')
         if config.ssl_cert[0] != '/':
             config.ssl_cert = eva.core.dir_etc + '/' + config.ssl_cert
+        if not os.path.exists(config.ssl_cert):
+            logging.error(f'SSL cert file {config.ssl_cert} not found')
+            raise RuntimeError
         config.ssl_key = cfg.get('webapi/ssl-key')
         if config.ssl_key[0] != '/':
             config.ssl_key = eva.core.dir_etc + '/' + config.ssl_key
+        if not os.path.exists(config.ssl_key):
+            logging.error(f'SSL key file {config.ssl_key} not found')
+            raise RuntimeError
         logging.debug('webapi.ssl_listen = %s:%u' %
                       (config.ssl_host, config.ssl_port))
-        config.ssl_chain = cfg.get('webapi/ssl-chain')
-        if config.ssl_chain[0] != '/':
-            config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
-        config.ssl_force_redirect = cfg.get('webapi/ssl-force-redirect')
+        try:
+            config.ssl_chain = cfg.get('webapi/ssl-chain')
+            if not config.ssl_chain.startswith('/'):
+                config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
+            if not os.path.exists(config.ssl_chain):
+                logging.error(f'SSL chain file {config.ssl_chain} not found')
+                raise RuntimeError
+        except LookupError:
+            pass
+        try:
+            config.ssl_force_redirect = cfg.get('webapi/ssl-force-redirect',
+                                                default=False)
+        except LookupError:
+            pass
     except:
         pass
     try:

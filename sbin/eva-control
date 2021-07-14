@@ -25,9 +25,17 @@ fi
 function controller_cmd() {
   c=${1,,}
   CN=${1^^}
+  case $1 in
+    uc|lm|sfa)
+      ;;
+    *)
+      echo "choose from <uc|lm|sfa>"
+      return 1
+      ;;
+  esac
   if [ ! "$(eval "echo \$${CN}_SUPERVISORD_PROGRAM")" ] &&
     [ "$(eval "echo \$${CN}_ENABLED")" != "1" ]; then
-      if [ "x$3" == "xA" ]; then
+      if [ "$3" == "A" ]; then
         [ "$3" = "status" ] && echo disabled || echo "${CN} is disabled"
         return 1
       else
