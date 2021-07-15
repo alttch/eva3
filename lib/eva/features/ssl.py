@@ -22,12 +22,15 @@ def setup(controller=None,
           listen=None,
           module=None,
           chain=None,
-          redirect=None):
+          redirect=None,
+          http=None):
     if controller not in ['uc', 'lm', 'sfa']:
         raise InvalidParameter
     if not is_enabled(controller):
         raise FunctionFailed(f'{controller} is not enebled')
     if listen is None or ':' not in listen:
+        raise InvalidParameter
+    if http and ':' not in http:
         raise InvalidParameter
     if module is None:
         module = 'builtin'
@@ -47,6 +50,8 @@ def setup(controller=None,
     eva.registry.key_set_field(cfg, 'webapi/ssl-listen', listen)
     eva.registry.key_set_field(cfg, 'webapi/ssl-cert', cert)
     eva.registry.key_set_field(cfg, 'webapi/ssl-key', key)
+    if http:
+        eva.registry.key_set_field(cfg, 'webapi/listen', http)
     if module:
         eva.registry.key_set_field(cfg, 'webapi/ssl-module', module)
     if chain:
