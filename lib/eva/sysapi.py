@@ -1581,7 +1581,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                 raise InvalidParameter('Unable to parse config')
         elif c is None:
             c = {}
-        fname = f'{eva.core.dir_eva}/plugins/{i}.py'
+        fname = f'{eva.core.dir_eva}/runtime/plugins/{i}.py'
         if m:
             with open(fname, 'w') as fh:
                 fh.write(m)
