@@ -20,7 +20,7 @@ keys are added rarely, it usually does not cause any errors.
 
 However in production environments it is highly recommended to avoid using
 default SQLite databases and switch controllers to either external one or
-switch to a more robust one (e.g. `PostgreSQL` <https://www.postgresql.org>`_.
+switch to a more robust one (e.g. `PostgreSQL <https://www.postgresql.org>`_).
 
 Item states
 ===========
