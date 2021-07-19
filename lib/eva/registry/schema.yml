@@ -10,6 +10,7 @@ config/uc/apikeys: &apikey
     hosts-allow: &strarr
       type: array
       items: *str
+      additionalItems: false
     hosts-assign: *strarr
     items: *strarr
     items-ro: *strarr
@@ -105,6 +106,7 @@ config/uc/main:
             - on-exit
         db-file: *str
         db: *str
+        state-to-registry: *bool
         userdb-file: *str
         userdb: *str
         user-hook: *str
@@ -219,6 +221,7 @@ config/uc/main:
               - type: integer
                 minimum: 1
           listen: *str
+      additionalItems: false
     datapullers:
       type: object
       patternProperties:
@@ -414,6 +417,7 @@ config/uc/cs: &cscfg
           topic: *str
         required:
           - topic
+      additionalItems: false
 config/lm/cs: *cscfg
 config/sfa/cs: *cscfg
 config/clouds/iote:
@@ -475,6 +479,21 @@ data/sfa/remote_uc:
   <<: *remotecontroller
 data/sfa/remote_lm:
   <<: *remotecontroller
+state:
+  type: object
+  additionalProperties: false
+  properties:
+    oid: *str
+    set-time: *floatzeropositive
+    ieid:
+      type: array
+      items: *intzeropositive
+      additionalItems: false
+      minItems: 2
+      maxItems: 2
+    status:
+      type: integer
+    value: *str
 inventory/unit:
   type: object
   additionalProperties: false

@@ -1,6 +1,14 @@
 EVA ICS CHANGELOG
 *****************
 
+3.4.1 (TBA)
+===========
+
+Common
+------
+
+   * item states can be kept in the crash-free registry
+
 3.4.0 (2021-07-07)
 ==================
 

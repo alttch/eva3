@@ -190,6 +190,9 @@ class Item(object):
     def get_rkn(self):
         return f'inventory/{self.item_type}/{self.full_id}'
 
+    def get_rskn(self):
+        return f'state/{self.item_type}/{self.full_id}'
+
     def load(self, data=None):
         try:
             if data is None:

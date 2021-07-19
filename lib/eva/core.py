@@ -89,6 +89,7 @@ config = SimpleNamespace(pid_file=None,
                          log_file=None,
                          log_stdout=False,
                          auto_save=False,
+                         state_to_registry=False,
                          db_uri=None,
                          userdb_uri=None,
                          keep_api_log=0,
@@ -817,6 +818,11 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
         except:
             userdb_file = None
         finish_save()
+        try:
+            config.state_to_registry = cfg.get('server/state-to-registry')
+        except LookupError:
+            pass
+        logging.debug(f'server.state_to_registry = {config.state_to_registry}')
         try:
             userdb_uri = cfg.get('server/userdb')
         except:

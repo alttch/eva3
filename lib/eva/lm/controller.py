@@ -271,14 +271,19 @@ def append_item(item, start=False):
 
 @eva.core.save
 def save():
-    db = eva.core.db()
-    if eva.core.config.db_update != 1:
-        db = db.connect()
-    dbt = db.begin()
+    if not eva.core.config.state_to_registry:
+        db = eva.core.db()
+        if eva.core.config.db_update != 1:
+            db = db.connect()
+        dbt = db.begin()
     try:
         for i, v in lvars_by_full_id.items():
-            if not save_lvar_state(v, db):
-                return False
+            if eva.core.config.state_to_registry:
+                if not save_lvar_state_to_registry(v, db):
+                    return False
+            else:
+                if not save_lvar_state(v, db):
+                    return False
             if v.config_changed:
                 if not v.save():
                     return False
@@ -286,12 +291,20 @@ def save():
                 configs_to_remove.remove(v.get_rkn())
             except:
                 pass
-        dbt.commit()
+            if eva.core.config.state_to_registry:
+                try:
+                    configs_to_remove.remove(v.get_rskn())
+                except:
+                    pass
+        if not eva.core.config.state_to_registry:
+            dbt.commit()
     except:
-        dbt.rollback()
+        if not eva.core.config.state_to_registry:
+            dbt.rollback()
         raise
     finally:
-        if eva.core.config.db_update != 1:
+        if not eva.core.config.state_to_registry and \
+                eva.core.config.db_update != 1:
             db.close()
     controller_lock.acquire()
     try:
@@ -349,7 +362,25 @@ def save():
 
 
 @with_item_lock
+def save_lvar_state_to_registry(item):
+    try:
+        eva.registry.key_set(
+            item.get_rskn(), {
+                'oid': item.oid,
+                'set-time': item.set_time,
+                'ieid': item.ieid,
+                'status': item.status,
+                'value': item.value
+            })
+    except:
+        logging.critical('registry error')
+        return False
+
+
+@with_item_lock
 def save_lvar_state(item, db=None):
+    if eva.core.config.state_to_registry:
+        return save_lvar_state_to_registry(item)
     dbconn = db if db else eva.core.db()
     dbt = dbconn.begin()
     try:
@@ -551,6 +582,15 @@ def load_lvar_db_state(items, clean=False):
         eva.core.critical()
 
 
+def load_registry_state(items):
+    for k, v in eva.registry.key_get_recursive(f'state/lvar'):
+        if k in items:
+            items[k].status = v['status']
+            items[k].value = v['value']
+            items[k].ieid = v['ieid']
+            items[k].set_time = v['set-time']
+
+
 @with_item_lock
 def load_lvars(start=False):
     _loaded = {}
@@ -561,7 +601,10 @@ def load_lvars(start=False):
             u.load(ucfg)
             if append_item(u, start=False):
                 _loaded[i] = u
-        load_lvar_db_state(_loaded, clean=True)
+        if eva.core.config.state_to_registry:
+            load_registry_state(_loaded)
+        else:
+            load_lvar_db_state(_loaded, clean=True)
         if start:
             for i, v in _loaded.items():
                 v.start_processors()
@@ -1209,14 +1252,24 @@ def destroy_item(item):
         if not items_by_group[i.group]:
             del items_by_group[i.group]
         i.destroy()
-        if eva.core.config.auto_save and i.config_file_exists:
-            try:
-                eva.registry.key_delete(i.get_rkn())
-            except:
-                logging.error('Can not remove %s config' % i.full_id)
-                eva.core.log_traceback()
-        elif i.config_file_exists:
-            configs_to_remove.add(i.get_rkn())
+        if eva.core.config.auto_save:
+            if i.config_file_exists:
+                try:
+                    eva.registry.key_delete(i.get_rkn())
+                except:
+                    logging.error('Can not remove %s config' % i.full_id)
+                    eva.core.log_traceback()
+            if eva.core.config.state_to_registry:
+                try:
+                    eva.registry.key_delete(i.get_rskn())
+                except:
+                    logging.error('Can not remove %s state key' % i.full_id)
+                    eva.core.log_traceback()
+        else:
+            if i.config_file_exists:
+                configs_to_remove.add(i.get_rkn())
+            if eva.core.config.state_to_registry:
+                configs_to_remove.add(i.get_rskn())
         logging.info('%s destroyed' % i.full_id)
         return True
     except ResourceNotFound:
@@ -1313,7 +1366,7 @@ def stop():
     eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
     # if eva.core.config.db_update == 1:
-        # save()
+    # save()
     eva.lm.jobs.scheduler.stop()
     for i, v in cycles_by_id.copy().items():
         v.stop()

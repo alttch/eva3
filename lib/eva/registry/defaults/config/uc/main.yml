@@ -18,6 +18,8 @@ server:
   # db updates - instant, manual or on-exit
   db-update: instant
   db-file: runtime/db/uc.db
+  # use registry to keep states
+  #state-to-registry: true
   # use MySQL instead of SQLite
   #db: mysql+pymysql://user:password@localhost/dbname
   # user db file, default = db-file
