@@ -102,7 +102,7 @@ def create_data_puller(name, cmd, timeout=None, event_timeout=None, save=False):
 def save():
     for d in dp_destroyed:
         eva.registry.key_delete(f'config/uc/datapullers/{d}')
-    for i, dp in datapullers:
+    for i, dp in datapullers.items():
         if not dp.saved:
             eva.registry.key_set(
                 f'config/uc/datapullers/{i}', {
