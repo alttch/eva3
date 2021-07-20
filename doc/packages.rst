@@ -78,8 +78,8 @@ Installing additional Python modules
 ====================================
 
 The function "pip_install" allows installing additional Python modules, calling
-"pip install" command from EVA ICS venv. Note that modules will not be kept if
-EVA ICS venv is rebuilt from scratch later.
+"pip install" command from EVA ICS venv. The modules are also automatically
+added to the node venv configuration.
 
 .. code:: python
 
