@@ -1,5 +1,5 @@
 
-.. py:class:: GenericX()
+.. py:class:: GenericX
    :module: eva.x
 
    
