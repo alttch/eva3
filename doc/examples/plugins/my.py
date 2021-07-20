@@ -10,7 +10,7 @@ config: {}
 ...........................................
 
 Plugins can be one-file, in this case they can be just put into plugins
-(/opt/eva/plugins) directory and named e.g. "my.py".
+(/opt/eva/runtime/plugins) directory and named e.g. "my.py".
 
 If your plugin is more complex or you want to redistribute it e.g. via PyPi -
 create Python module called "evacontrib.<yourpluginname>" and install it either
