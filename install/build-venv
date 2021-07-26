@@ -83,8 +83,8 @@ fi
 
 [ "$XOPTS" ] && PIP_EXTRA_OPTIONS=$XOPTS
 
-MOD_PYTEST_RUNNER=$(grep "pytest-runner==" ${MY_DIR}/mods.list)
-MOD_CFFI=$(grep "cffi==" ${MY_DIR}/mods.list)
+MOD_PYTEST_RUNNER=$(grep "^pytest-runner==" ${MY_DIR}/mods.list)
+MOD_CFFI=$(grep "^cffi==" ${MY_DIR}/mods.list)
 
 ${PIP} install ${PIP_EXTRA_OPTIONS} ${MOD_PYTEST_RUNNER} ${MOD_CFFI}
 E=$?
