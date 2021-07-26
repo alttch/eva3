@@ -87,8 +87,12 @@ MOD_PYTEST_RUNNER=$(grep "pytest-runner==" ${MY_DIR}/mods.list)
 MOD_CFFI=$(grep "cffi==" ${MY_DIR}/mods.list)
 
 ${PIP} install ${PIP_EXTRA_OPTIONS} ${MOD_PYTEST_RUNNER} ${MOD_CFFI}
-${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
+
+if [ $E -eq 0 ]; then
+  ${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
+  E=$?
+fi
 
 [ "$PTS" ] || [ "$ETS" ] && rm -f "${TMPFILE}"
 
