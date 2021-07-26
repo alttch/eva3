@@ -71,13 +71,13 @@ if [ ! -f /.eva_container ]; then
   echo "- Stopping everything"
   ./sbin/eva-control stop
   if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
-    echo "EVA ICS obsolete configuration found. Checking..."
-    [ -f ./venv/bin/python3 ] && PYTHON=./venv/bin/python || PYTHON=./python3/bin/python3
-    $PYTHON ./_update/eva-${VERSION}/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
     if [ -d ./venv ]; then
       echo "Removing new-style venv in case of a failed previous update..."
       rm -rf ./venv
     fi
+    echo "EVA ICS obsolete configuration found. Checking..."
+    [ -f ./venv/bin/python3 ] && PYTHON=./venv/bin/python || PYTHON=./python3/bin/python3
+    $PYTHON ./_update/eva-${VERSION}/cli/convert-legacy-configs.py check --dir $(pwd) || exit 3
   fi
   echo "- Installing missing modules"
   ./_update/eva-${VERSION}/install/build-venv . || exit 2
