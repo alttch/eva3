@@ -71,7 +71,7 @@ if [ ! -f /.eva_container ]; then
   echo "- Stopping everything"
   ./sbin/eva-control stop
   if [ -f ./runtime/uc_cvars.json ] || [ -f ./runtime/lm_cvars.json ] || [ -f ./runtime/sfa_cvars.json ]; then
-    if [ -d ./venv ]; then
+    if [ -d ./venv ] && [ -d ./python3 ]; then
       echo "Removing new-style venv in case of a failed previous update..."
       rm -rf ./venv
     fi
