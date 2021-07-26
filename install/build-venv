@@ -56,8 +56,8 @@ if [ ! -f "${EVA_DIR}/venv/bin/pip3" ]; then
   deactivate
 fi
 
-# install pytest-runner first
-PTS="^pytest-runner="
+# install pytest-runner and cffi first
+PTS="^pytest-runner=|^cffi="
 for s in $SKIP; do
   [ "$PTS" ] && PTS="$PTS|"
   PTS="$PTS^$s="
@@ -83,9 +83,10 @@ fi
 
 [ "$XOPTS" ] && PIP_EXTRA_OPTIONS=$XOPTS
 
-PYTEST_RUNNER=$(grep "pytest-runner==" ${MY_DIR}/mods.list)
+MOD_PYTEST_RUNNER=$(grep "pytest-runner==" ${MY_DIR}/mods.list)
+MOD_CFFI=$(grep "cffi==" ${MY_DIR}/mods.list)
 
-${PIP} install ${PIP_EXTRA_OPTIONS} ${PYTEST_RUNNER}
+${PIP} install ${PIP_EXTRA_OPTIONS} ${MOD_PYTEST_RUNNER} ${MOD_CFFI}
 ${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
 
