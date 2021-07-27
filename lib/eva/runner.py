@@ -127,8 +127,8 @@ class DriverCommand(GenericRunner):
                 try:
                     self.run_future.result(timeout=self.term_kill_interval)
                 except concurrent.futures.TimeoutError:
-                    logging.critical('driver %s %s command timeout' %
-                                     (self.driver.driver_id, cmd))
+                    logging.critical('driver %s %s command timeout (%s)' %
+                                     (self.driver.driver_id, cmd, self.timeout))
                     eva.core.critical(from_driver=True)
                     self.run_future.result()
             except:
