@@ -1436,6 +1436,28 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     @log_w
     @api_need_master
     @notify_plugins
+    def restart_notifier(self, **kwargs):
+        """
+        restart notifier
+
+        Args:
+            k: .master
+            .i: notifier ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            n = eva.notify.get_notifier(i, get_default=False)
+        except:
+            raise ResourceNotFound
+        try:
+            n.restart()
+            return True
+        except Exception as e:
+            raise FunctionFailed(e)
+
+    @log_w
+    @api_need_master
+    @notify_plugins
     def enable_notifier(self, **kwargs):
         """
         enable notifier

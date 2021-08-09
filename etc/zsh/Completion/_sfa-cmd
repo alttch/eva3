@@ -14,7 +14,7 @@ _sfa-cmd_notifier() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" list
+    compadd "$@" list restart
   else
     _files
   fi

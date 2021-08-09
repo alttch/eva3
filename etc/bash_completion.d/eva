@@ -42,7 +42,7 @@ _eva_sfa_notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'list restart' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -219,7 +219,7 @@ _eva_lm_notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'list restart' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -396,7 +396,7 @@ _eva_uc_notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'list restart' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

@@ -63,6 +63,14 @@ class ComplCVAR(ComplGeneric):
             return True
         return data.keys()
 
+class ComplNotifiers(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('notifier list')
+        if code:
+            return True
+        for d in data:
+            yield d['id']
 
 class ComplKey(ComplGeneric):
 
@@ -1927,6 +1935,11 @@ class ControllerCLI(object):
                                                      help='Notifier commands')
             ap_list = sp_notifier.add_parser('list',
                                              help='List loaded notifiers')
+            ap_restart = sp_notifier.add_parser('restart',
+                                                help='Restart notifier')
+            ap_restart.add_argument(
+                'i', help='Notifier ID',
+                metavar='NOTIFIER_ID').completer = ComplNotifiers(self)
 
         ap_controller = self.sp.add_parser(
             'server', help='Controller server management functions')
@@ -2113,7 +2126,8 @@ class ControllerCLI(object):
             'corescript:mqtt-topics': 'list_corescript_mqtt_topics',
             'corescript:mqtt-subscribe': 'subscribe_corescripts_mqtt',
             'corescript:mqtt-unsubscribe': 'unsubscribe_corescripts_mqtt',
-            'notifier:list': 'list_notifiers'
+            'notifier:list': 'list_notifiers',
+            'notifier:restart': 'restart_notifier'
         })
 
     @staticmethod

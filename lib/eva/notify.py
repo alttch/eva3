@@ -305,6 +305,7 @@ class GenericNotifier(object):
         self.lse_lock = threading.RLock()
         self.buf_lock = threading.RLock()
         self.frame_counter = 0
+        self.restart_lock = threading.Lock()
         try:
             for c in self.event_topics:
                 self.buf[c] = []
@@ -326,6 +327,11 @@ class GenericNotifier(object):
                 o=self, name='notifier:' + self.notifier_id + ':queue')
             self._use_buffer = False
         self.state_storage = None
+
+    def restart(self):
+        with self.restart_lock:
+            self.disconnect()
+            self.connect()
 
     def subscribe(self,
                   subject,
@@ -1101,15 +1107,14 @@ class SQLANotifier(GenericNotifier):
                                 d['value'] != '' else None
                         space = self.space if self.space is not None else ''
                         sqls.append((sql('insert into state_history '
-                                        '(space, t, oid, status, '
-                                        'value) values (:space, :t, '
-                                        ':oid, :status, :value)'),
-                                    dict(
-                                    space=space,
-                                    t=d['set_time'],
-                                    oid=d['oid'],
-                                    status=d['status'],
-                                    value=v)))
+                                         '(space, t, oid, status, '
+                                         'value) values (:space, :t, '
+                                         ':oid, :status, :value)'),
+                                     dict(space=space,
+                                          t=d['set_time'],
+                                          oid=d['oid'],
+                                          status=d['status'],
+                                          value=v)))
             self.sql_queue.put(sqls)
             return True
         except Exception as e:

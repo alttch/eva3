@@ -2530,6 +2530,18 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _ucapi_restful_restart_notifier:
+
+restart notifier
+----------------
+
+
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 
 .. _ucapi_restful_cat_files:
 

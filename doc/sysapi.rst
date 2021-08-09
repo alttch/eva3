@@ -1041,6 +1041,22 @@ Parameters:
 
 * **k** API key with *master* permissions
 
+.. _sysapi_restart_notifier:
+
+restart_notifier - restart notifier
+-----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/restart_notifier.req-jrpc
+    :response: http-examples/jrpc/sysapi/restart_notifier.resp-jrpc
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** notifier ID
+
 
 .. _sysapi_cat_files:
 

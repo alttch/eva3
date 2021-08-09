@@ -12,6 +12,7 @@ Common
    * item states can be kept in the crash-free registry
    * controller PIDs in "test" command (requires master key)
    * launch pptop directly from eva-shell
+   * new API method "restart_notifier"
 
 3.4.0 (2021-07-07)
 ==================

@@ -2311,6 +2311,18 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _lmapi_restful_restart_notifier:
+
+restart notifier
+----------------
+
+
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 
 .. _lmapi_restful_cat_files:
 

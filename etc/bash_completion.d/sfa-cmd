@@ -12,7 +12,7 @@ _sfa-cmd_notifier() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'list restart' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
