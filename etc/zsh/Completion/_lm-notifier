@@ -4,7 +4,7 @@ _lm-notifier_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 2 ]]; then
-    compadd "$@" launch restart start status stop
+    compadd "$@" launch profile restart start status stop
   else
     _files
   fi

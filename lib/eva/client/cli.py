@@ -1742,6 +1742,28 @@ class ControllerCLI(object):
                 return True
             return sorted([v['topic'] for v in data])
 
+    def profile_controller(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        opts = params['options']
+        if opts:
+            if opts[0] == '--':
+                opts = opts[1:]
+            else:
+                self.print_err('Please specify profiler options after "--"')
+                return self.local_func_result_failed
+        cmdline = ' '.join(opts)
+        code, data = self.call(args=['test'])
+        if code != apiclient.result_ok:
+            self.print_err('server error')
+            return self.local_func_result_failed
+        pid = data['pid']
+        if os.system(f'pptop {pid} {cmdline}'):
+            return self.local_func_result_failed
+        else:
+            return self.local_func_result_empty
+
     def start_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1918,6 +1940,12 @@ class ControllerCLI(object):
                                            help='Stop controller server')
         ap_restart = sp_controller.add_parser('restart',
                                               help='Restart controller server')
+        ap_profile = sp_controller.add_parser(
+            'profile', help='Inject profiler (requires pptop)')
+        ap_profile.add_argument('options',
+                                help='Profiler options (after "--")',
+                                nargs=argparse.REMAINDER,
+                                metavar='OPTIONS')
         if self.remote_api_enabled:
             ap_reload = sp_controller.add_parser(
                 'reload', help='Reload controller server')
@@ -2073,6 +2101,7 @@ class ControllerCLI(object):
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',
+            'server:profile': self.profile_controller,
             'server:launch': self.launch_controller,
             'edit:server-config': self.edit_server_config,
             'edit:plugin-config': self.edit_plugin_config,

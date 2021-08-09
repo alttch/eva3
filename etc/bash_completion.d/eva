@@ -32,7 +32,7 @@ _eva_sfa_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins profile reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -209,7 +209,7 @@ _eva_lm_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins profile reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -386,7 +386,7 @@ _eva_uc_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins profile reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
