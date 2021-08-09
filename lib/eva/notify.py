@@ -2234,7 +2234,12 @@ class GenericMQTTNotifier(GenericNotifier):
         def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
-            o.test()
+            if o.test():
+                logging.debug(f'.Notifier {o.notifier_id} ping OK')
+            else:
+                logging.error(
+                    f'.Notifier {o.notifier_id} ping failed, restarting')
+                o.restart(from_pinger=True)
 
     def __init__(self,
                  notifier_id,
@@ -2360,8 +2365,6 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announce_topic = self.pfx + 'controller/discovery'
         self.announce_msg = eva.core.product.code + \
                             '/' + eva.core.config.system_name
-        self.test_topic = (f'{self.pfx}controller/{eva.core.product.code}'
-                           f'/{eva.core.config.system_name}/test')
         import eva.api
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.controller_discovery_handler
@@ -2376,19 +2379,26 @@ class GenericMQTTNotifier(GenericNotifier):
                                   o=self,
                                   interval=self.ping_interval)
         self.handler_lock = threading.RLock()
+        self.test_lock = threading.Lock()
+        self.test_topic = None
 
-    def connect(self):
+    def connect(self, from_pinger=False):
         self.connected = True
         self.check_connection()
-        if not self.test_only_mode:
+        if not self.test_only_mode and not from_pinger:
             self.pinger.start()
 
-    def disconnect(self):
+    def disconnect(self, from_pinger=False):
         super().disconnect()
         self.mq.loop_stop()
         self.mq.disconnect()
         self.announcer.stop()
-        self.pinger.stop()
+        if not from_pinger:
+            self.pinger.stop()
+
+    def restart(self, from_pinger=False):
+        self.disconnect(from_pinger=from_pinger)
+        self.connect(from_pinger=from_pinger)
 
     def start_announcer(self):
         eva.core._flags.started.wait(timeout=60)
@@ -2606,6 +2616,9 @@ class GenericMQTTNotifier(GenericNotifier):
             eva.core.log_traceback(notifier=True)
             return
         try:
+            if t == self.test_topic and d == 'passed':
+                self.test_topic = None
+                return
             if t == self.announce_topic and \
                     d != self.announce_msg and \
                     self.discovery_handler and \
@@ -2876,18 +2889,35 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def test(self):
         try:
-            logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
-                    (self.notifier_id,self.host, self.port))
-            if not self.check_connection():
-                return False
-            result = self.mq.publish(self.test_topic,
-                                     1,
-                                     qos=self.qos['system'],
-                                     retain=False)
-            result = eva.core.wait_for(result.is_published, self.get_timeout())
-            if self.test_only_mode:
-                self.disconnect()
-            return result
+            with self.test_lock:
+                test_topic = (
+                    f'{self.pfx}controller/{eva.core.product.code}'
+                    f'/{eva.core.config.system_name}/test-{uuid.uuid4()}')
+                self.test_topic = test_topic
+                logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
+                        (self.notifier_id,self.host, self.port))
+                if not self.check_connection():
+                    return False
+                self.mq.subscribe(test_topic, qos=self.qos['system'])
+                result = self.mq.publish(test_topic,
+                                         'passed',
+                                         qos=self.qos['system'],
+                                         retain=False)
+                timeout = self.get_timeout()
+                t_end = time.perf_counter() + timeout
+                result = eva.core.wait_for(result.is_published, timeout)
+                if result is True:
+                    while True:
+                        if self.test_topic is None:
+                            break
+                        elif time.perf_counter() > t_end:
+                            result = False
+                            break
+                        time.sleep(0.1)
+                self.mq.unsubscribe(test_topic)
+                if self.test_only_mode:
+                    self.disconnect()
+                return result
         except:
             eva.core.log_traceback(notifier=True)
             return False

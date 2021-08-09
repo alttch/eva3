@@ -13,6 +13,7 @@ Common
    * controller PIDs in "test" command (requires master key)
    * launch pptop directly from eva-shell
    * new API method "restart_notifier"
+   * stricter MQTT notifier tests, pingers restart notifiers if failed
 
 3.4.0 (2021-07-07)
 ==================
