@@ -149,7 +149,7 @@ class CoreAPIClient(APIClient):
             if len(rid) > 16:
                 logging.error('request ID is longer than 16 bytes, aborting')
                 return r
-            rid.ljust(16, b'\x00')
+            rid = rid.ljust(16, b'\x00')
         request_id = rid.hex()
         data = rid + pack_msgpack(payload)
         cb = self.MQTTCallback()
