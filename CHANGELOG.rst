@@ -7,6 +7,8 @@ EVA ICS CHANGELOG
 Common
 ------
 
+   * fix: recombined ACLs speed tuning
+
    * item states can be kept in the crash-free registry
    * controller PIDs in "test" command (requires master key)
    * launch pptop directly from eva-shell

@@ -52,6 +52,21 @@ keys_to_delete = set()
 combined_keys_cache = {}
 
 
+def mark_recombined_if_changed(f):
+
+    def wrapped(self, *args, **kwargs):
+        result = f(self, *args, **kwargs)
+        if result is True:
+            with key_lock:
+                for k, v in combined_keys_cache.items():
+                    ckey = keys_by_id[v]
+                    if self.key_id in ckey.combined_from:
+                        ckey.need_recombine = True
+        return result
+
+    return wrapped
+
+
 class APIKey(object):
 
     def __init__(self, k, key_id=''):
@@ -75,11 +90,12 @@ class APIKey(object):
         self.dynamic = False
         self.temporary = False
         self.combined_from = []
+        self.need_recombine = False
         self.set_key(k)
 
     def serialize(self):
         with key_lock:
-            if self.combined_from:
+            if self.combined_from and self.need_recombine:
                 _recombine_acl(self)
             result = {
                 'id': self.key_id,
@@ -108,6 +124,7 @@ class APIKey(object):
         self.private_key512 = hashlib.sha512(str(k).encode()).digest()
         self.ce = Fernet(base64.b64encode(self.private_key))
 
+    @mark_recombined_if_changed
     def set_prop(self, prop, value=None, save=False):
         with key_lock:
             if not self.dynamic or self.master:
@@ -500,7 +517,7 @@ def check(k,
         if not k or not k in keys or (master and not keys[k].master):
             return False
         _k = keys[k]
-        if _k.combined_from:
+        if _k.combined_from and _k.need_recombine:
             _recombine_acl(_k)
         if ip and not netacl_match(ip, _k.hosts_allow):
             return False
@@ -612,7 +629,7 @@ def serialized_acl(k):
         if not k or not k in keys:
             return r if setup_on else None
         _k = keys[k]
-        if _k.combined_from:
+        if _k.combined_from and _k.need_recombine:
             _recombine_acl(_k)
         r['key_id'] = _k.key_id
         r['master'] = _k.master or setup_on
@@ -686,6 +703,7 @@ def _recombine_acl(combined_key):
                     a = getattr(combined_key, prop)
                     if i not in a:
                         a.append(i)
+        combined_key.need_recombine = False
 
 
 def create_combined_key(key_ids=[]):
@@ -705,6 +723,7 @@ def create_combined_key(key_ids=[]):
             combined_key.dynamic = True
             combined_key.temporary = True
             combined_key.combined_from = _key_ids
+            combined_key.need_recombine = True
             # register
             keys_by_id[ckey_id] = combined_key
             keys[ckey_value] = combined_key
