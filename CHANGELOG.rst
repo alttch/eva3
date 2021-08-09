@@ -8,6 +8,7 @@ Common
 ------
 
    * item states can be kept in the crash-free registry
+   * controller PIDs in "test" command (requires master key)
 
 3.4.0 (2021-07-07)
 ==================

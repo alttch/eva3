@@ -984,6 +984,7 @@ class GenericAPI(API):
             if key_check_master(k):
                 result['file_management'] = \
                         eva.sysapi.config.api_file_management_allowed
+                result['pid'] = os.getpid()
         except TokenRestricted:
             pass
         try:
