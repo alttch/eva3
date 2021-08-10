@@ -672,6 +672,10 @@ def add_api_key(key_id=None, save=False):
         result = key.serialize()
         if key_id in keys_to_delete:
             keys_to_delete.remove(key_id)
+        for k, v in combined_keys_cache.items():
+            ckey = keys_by_id[v]
+            if key_id in ckey.combined_from:
+                ckey.need_recombine = True
         return result
 
 
@@ -748,6 +752,10 @@ def delete_api_key(key_id):
                 eva.core.report_userdb_error()
         else:
             keys_to_delete.add(key_id)
+        for k, v in combined_keys_cache.items():
+            ckey = keys_by_id[v]
+            if key_id in ckey.combined_from:
+                ckey.need_recombine = True
         return True
 
 
