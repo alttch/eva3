@@ -1189,6 +1189,11 @@ class UserAPI(object):
             .i: API key ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
+        with eva.apikey.key_lock:
+            for k, v in eva.apikey.combined_keys_cache.items():
+                ckey = eva.apikey.keys_by_id[v]
+                if i in ckey.combined_from:
+                    tokens.remove_token(key_id=ckey.key_id)
         tokens.remove_token(key_id=i)
         return eva.apikey.delete_api_key(i)
 
