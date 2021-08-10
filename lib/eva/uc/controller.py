@@ -765,21 +765,21 @@ def save_mu():
         u.save()
 
 
-def notify_all():
-    notify_all_units()
-    notify_all_sensors()
+def notify_all(skip_db=False):
+    notify_all_units(skip_db=skip_db)
+    notify_all_sensors(skip_db=skip_db)
 
 
 @with_item_lock
-def notify_all_units():
+def notify_all_units(skip_db=False):
     for i, u in units_by_full_id.items():
-        u.notify()
+        u.notify(skip_db=skip_db)
 
 
 @with_item_lock
-def notify_all_sensors():
+def notify_all_sensors(skip_db=False):
     for i, u in sensors_by_full_id.items():
-        u.notify()
+        u.notify(skip_db=skip_db)
 
 
 def serialize():

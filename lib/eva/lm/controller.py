@@ -1286,15 +1286,15 @@ def save_lvars():
         u.save()
 
 
-def notify_all(skip_subscribed_mqtt=False):
-    notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
+def notify_all(skip_subscribed_mqtt=False, skip_db=False):
+    notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt, skip_db=skip_db)
     notify_all_cycles(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
 @with_item_lock
-def notify_all_lvars(skip_subscribed_mqtt=False):
+def notify_all_lvars(skip_subscribed_mqtt=False, skip_db=False):
     for i, u in lvars_by_full_id.items():
-        u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
+        u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt, skip_db=skip_db)
 
 
 @with_item_lock

@@ -84,15 +84,22 @@ class UCItem(eva.item.Item):
             except:
                 eva.core.log_traceback()
 
-    def do_notify(self, skip_subscribed_mqtt=False, for_destroy=False):
+    def do_notify(self,
+                  skip_subscribed_mqtt=False,
+                  for_destroy=False,
+                  skip_db=False):
         super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt,
                        for_destroy=for_destroy)
-        if eva.core.config.db_update == 1:
+        if eva.core.config.db_update == 1 and not skip_db:
             eva.uc.controller.save_item_state(self)
 
-    def notify(self, skip_subscribed_mqtt=False, for_destroy=False):
+    def notify(self,
+               skip_subscribed_mqtt=False,
+               for_destroy=False,
+               skip_db=False):
         self.do_notify(skip_subscribed_mqtt=skip_subscribed_mqtt,
-                       for_destroy=for_destroy)
+                       for_destroy=for_destroy,
+                       skip_db=skip_db)
         eva.uc.controller.handle_event(self)
 
     def set_prop(self, prop, val=None, save=False):

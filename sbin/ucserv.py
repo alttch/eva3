@@ -132,7 +132,7 @@ eva.uc.ucapi.start()
 eva.uc.controller.start()
 
 if eva.core.config.notify_on_start:
-    eva.uc.controller.notify_all()
+    eva.uc.controller.notify_all(skip_db=True)
 
 eva.users.start()
 eva.tokens.start()
