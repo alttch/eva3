@@ -24,16 +24,39 @@ config_file = EVA_DIR / 'etc/eva_config'
 
 if config_file.exists():
     with ShellConfigFile(config_file.as_posix()) as cf:
-        socket_path = cf.get('SOCKET', EVA_DIR / 'var/registry.sock')
-        SYSTEM_NAME = cf.get('SYSTEM_NAME', platform.node())
+        try:
+            socket_path = cf.get('YEDB_SOCKET', EVA_DIR / 'var/registry.sock')
+            SYSTEM_NAME = cf.get('SYSTEM_NAME', platform.node())
+            timeout = float(cf.get("YEDB_TIMEOUT", 5))
+        except Exception as e:
+            from neotermcolor import cprint
+            cprint(f'REGISTRY CONFIGURATION: {e}', color='red', attrs='bold')
+            raise
 else:
     socket_path = EVA_DIR / 'var/registry.sock'
     SYSTEM_NAME = platform.node()
 
 from yedb import YEDB, FieldNotFound, SchemaValidationError
-db = YEDB(socket_path)
+db = YEDB(socket_path, timeout=timeout)
 
 from functools import wraps
+
+
+def raise_critical(e):
+    if 'eva.core' in sys.modules:
+        import eva.core
+        if isinstance(e, SchemaValidationError):
+            logging.error(f'Schema validation error {e}')
+            raise
+        else:
+            logging.critical('REGISTRY SERVER ERROR')
+            eva.core.log_traceback()
+            eva.core.critical()
+            raise
+    else:
+        from neotermcolor import cprint
+        cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
+        raise
 
 
 def safe(func):
@@ -45,19 +68,7 @@ def safe(func):
         except (KeyError, ValueError, FieldNotFound):
             raise
         except Exception as e:
-            if 'eva.core' in sys.modules:
-                import eva.core
-                if isinstance(e, SchemaValidationError):
-                    logging.error(f'Schema validation error {e}')
-                    raise
-                else:
-                    logging.critical('REGISTRY SERVER ERROR')
-                    eva.core.log_traceback()
-                    eva.core.critical()
-            else:
-                from neotermcolor import cprint
-                cprint('REGISTRY SERVER ERROR', color='red', attrs='bold')
-                raise
+            raise_critical(e)
 
     return wrapper
 
@@ -111,8 +122,13 @@ def key_get_recursive(key):
     """
     _key = f'{PFX}/{SYSTEM_NAME}/{key}'
     l = len(_key) + 1
-    for k, v in db.key_get_recursive(key=_key):
-        yield k[l:], v
+    try:
+        for k, v in db.key_get_recursive(key=_key):
+            yield k[l:], v
+    except (KeyError, ValueError, FieldNotFound):
+        raise
+    except Exception as e:
+        raise_critical(e)
 
 
 @safe

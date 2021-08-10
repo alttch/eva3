@@ -81,7 +81,8 @@ _flags = SimpleNamespace(ignore_critical=False,
                          cs_modified=False,
                          setup_mode=0,
                          boot_id=0,
-                         use_reactor=False)
+                         use_reactor=False,
+                         critical_raised=False)
 
 product = SimpleNamespace(name='', code='', build=None, usn='')
 
@@ -224,7 +225,12 @@ def critical(log=True, from_driver=False):
     ] or (not from_driver and config.stop_on_critical == 'core'):
         _flags.ignore_critical = True
         logging.critical('critical exception, shutting down')
+        _flags.critical_raised = True
         sighandler_term(None, None)
+
+
+def is_critical_raised():
+    return _flags.critical_raised
 
 
 def spawn_thread(fn, *args, **kwargs):
