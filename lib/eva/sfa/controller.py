@@ -458,7 +458,7 @@ def stop():
     eva.core.plugins_exec('before_stop')
     # save modified items on exit, for db_update = 2 save() is called by core
     # if eva.core.config.db_update == 1:
-        # save()
+    # save()
     if uc_pool:
         uc_pool.stop()
     if lm_pool:

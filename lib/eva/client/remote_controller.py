@@ -808,6 +808,7 @@ class RemoteLM(RemoteController):
 class RemoteControllerPool(object):
 
     def __init__(self, id=None):
+        self.ctype = ''
         self.controllers = {}
         self.reload_workers = {}
         self.websocket_workers = {}
@@ -824,6 +825,7 @@ class RemoteControllerPool(object):
             delay=eva.core.config.action_cleaner_interval)
         self.pending = []
         self.pending_lock = threading.RLock()
+        self.triggered = {}
 
     def cmd(self,
             controller_id,
@@ -897,6 +899,10 @@ class RemoteControllerPool(object):
             eva.core.critical()
             return False
         try:
+            try:
+                del self.triggered[controller_id]
+            except:
+                pass
             if controller_id in self.controllers:
                 self.stop_controller_reload_worker(controller_id, lock=False)
                 del (self.controllers[controller_id])
@@ -1008,12 +1014,36 @@ class RemoteControllerPool(object):
             worker.trigger_threadsafe(skip=True)
         return self.reload_controller(controller_id)
 
+    def _t_trigger_reload_controller(self, controller_id, with_delay=False):
+        try:
+            if with_delay:
+                time.sleep(2 + random.randint(0, 200) / 100)
+            worker = self.reload_workers.get(controller_id)
+            if worker:
+                worker.trigger_threadsafe()
+        except Exception as e:
+            eva.core.log_traceback()
+
     def trigger_reload_controller(self, controller_id, with_delay=True):
-        if with_delay:
-            time.sleep(random.randint(0, 200) / 100)
-        worker = self.reload_workers.get(controller_id)
-        if worker:
-            worker.trigger_threadsafe()
+        with self.management_lock:
+            if controller_id not in self.controllers:
+                logging.warning(
+                    f'trigger event '
+                    f'for non-existing controller: {self.ctype}/{controller_id}'
+                )
+                return
+            last_triggered = self.triggered.get(controller_id, 0)
+            t = time.perf_counter()
+            if last_triggered + self.controllers[
+                    controller_id].reload_interval > t:
+                logging.warning(
+                    f'{self.ctype}/{controller_id} triggered too frequently. refusing'
+                )
+                return
+            self.triggered[controller_id] = t
+        eva.core.spawn(self._t_trigger_reload_controller,
+                       controller_id,
+                       with_delay=with_delay)
 
     def reload_controller(self, controller_id):
         if controller_id == 'ALL':
@@ -1117,6 +1147,7 @@ class RemoteUCPool(RemoteControllerPool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.ctype = 'uc'
         self.units = {}
         self.units_by_controller = {}
         self.controllers_by_unit = {}
@@ -1560,6 +1591,7 @@ class RemoteLMPool(RemoteControllerPool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.ctype = 'lm'
         self.lvars = {}
         self.lvars_by_controller = {}
         self.controllers_by_lvar = {}
