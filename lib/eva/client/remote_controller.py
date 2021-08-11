@@ -1036,9 +1036,8 @@ class RemoteControllerPool(object):
             t = time.perf_counter()
             if last_triggered + self.controllers[
                     controller_id].reload_interval > t:
-                logging.warning(
-                    f'{self.ctype}/{controller_id} triggered too frequently. refusing'
-                )
+                logging.warning(f'{self.ctype}/{controller_id} triggered '
+                                f'too frequently. refusing')
                 return
             self.triggered[controller_id] = t
         eva.core.spawn(self._t_trigger_reload_controller,
