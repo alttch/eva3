@@ -1341,6 +1341,19 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         m = parse_api_params(kwargs, 'm', 'b')
         return eva.core.create_dump(minimal=m)
 
+    @log_w
+    @api_need_master
+    @notify_plugins
+    def get_exceptions(self, **kwargs):
+        """
+        Get last exceptions (up to 100)
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs)
+        return eva.core.get_exceptions()
+
     @log_d
     @api_need_master
     @notify_plugins
@@ -1438,6 +1451,28 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                 i, get_default=False).serialize(info=True)
         except:
             raise ResourceNotFound
+
+    @log_w
+    @api_need_master
+    @notify_plugins
+    def exec_code(self, **kwargs):
+        """
+        exec server code
+
+        Args:
+            k: .master
+            .c: code to exec
+        """
+        c = parse_api_params(kwargs, 'c', 'S')
+        try:
+            out = eva.core.exec_code(c)
+            error = None
+        except Exception as e:
+            import traceback
+            out = None
+            error = (f'Exception {e.__class__.__name__}: {e}'
+                     f'\n{traceback.format_exc()}')
+        return {'out': out, 'error': error}
 
     @log_w
     @api_need_master

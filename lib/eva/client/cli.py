@@ -202,6 +202,9 @@ class GenericCLI(GCLI):
                 ],
                 'list_notifiers': [
                     'id', 'type', 'enabled', 'connected', 'frame_counter'
+                ],
+                'get_exceptions': [
+                    'time', 'level', 'class', 'message', 'trace'
                 ]
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
@@ -476,6 +479,16 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
+        elif api_func == 'get_exceptions':
+            for d in data:
+                e = d['e']
+                d['class'] = e.pop('class')
+                d['message'] = e.pop('msg')
+                d['trace'] = e.pop('trace')
+                d['time'] = d.pop('t')
+                d['level'] = d.pop('l')
+                del d['e']
+            return data
         elif api_func == 'list_corescript_mqtt_topics':
             return sorted(data, key=lambda k: k['topic'])
         elif api_func == 'list_corescripts':
@@ -504,6 +517,9 @@ class GenericCLI(GCLI):
             return data
 
     def prepare_result_dict(self, data, api_func, itype):
+        if api_func == 'exec_code':
+            if 'error' in data and data['error'] is None:
+                del data['error']
         return data
 
     def fancy_print_result(self,
@@ -589,29 +605,47 @@ class GenericCLI(GCLI):
             if not rprinted and not indent and print_ok:
                 print('OK')
         elif result and isinstance(result, list):
+            multiline = api_func in ['get_exceptions']
             table = []
             func = api_func + self.cur_api_func_is_full
             for r in self.prepare_result_data(result, api_func, itype):
                 t = OrderedDict()
                 if func in self.pd_cols:
                     for c in self.pd_cols[func]:
-                        t[c] = self.list_to_str(r.get(c)).replace('\n', ' ')
+                        t[c] = self.list_to_str(r.get(c))
+                        if not multiline:
+                            t[c] = t[c].replace('\n', ' ')
                 else:
                     for i, c in r.items():
-                        t[i] = self.list_to_str(c).replace('\n', ' ')
+                        t[i] = self.list_to_str(c)
+                        if not multiline:
+                            t['i'] = t['i'].replace('\n', ' ')
                 table.append(t)
             if table:
-                header, rows = rapidtables.format_table(
-                    table,
-                    rapidtables.FORMAT_GENERATOR,
-                    max_column_width=120 if api_func == 'log_get' and
-                    (not a or a._full_display is False) else None)
-                print(self.colored(header, color='blue', attrs=[]))
-                print(self.colored('-' * len(header), color='grey', attrs=[]))
-                for r, res in zip(rows, table):
-                    r = self.format_log_str(r,
-                                            res) if api_func == 'log_get' else r
-                    print(r)
+                if multiline:
+                    header, rows = rapidtables.format_table(
+                        table,
+                        rapidtables.FORMAT_GENERATOR,
+                        multiline = rapidtables.MULTILINE_EXTENDED_INFO
+                        )
+                    print(self.colored(header, color='blue', attrs=[]))
+                    print(
+                        self.colored('-' * len(header), color='grey', attrs=[]))
+                    for r in rows:
+                        print(r[1])
+                else:
+                    header, rows = rapidtables.format_table(
+                        table,
+                        rapidtables.FORMAT_GENERATOR,
+                        max_column_width=120 if api_func == 'log_get' and
+                        (not a or a._full_display is False) else None)
+                    print(self.colored(header, color='blue', attrs=[]))
+                    print(
+                        self.colored('-' * len(header), color='grey', attrs=[]))
+                    for r, res in zip(rows, table):
+                        r = self.format_log_str(
+                            r, res) if api_func == 'log_get' else r
+                        print(r)
             else:
                 print('no data')
         elif result:
@@ -964,6 +998,12 @@ class GenericCLI(GCLI):
             params['l'] = self.get_log_level_code(params['l'])
             if params.get('n') is None:
                 params['n'] = 50
+        elif api_func == 'exec_code':
+            c = ' '.join(params['c']).strip()
+            for x in ['"', '\'']:
+                if c.startswith(x) and c.endswith(x):
+                    c = c[1:-1]
+            params['c'] = c
         return 0
 
     def run(self):
@@ -1972,6 +2012,15 @@ class ControllerCLI(object):
         if self.remote_api_enabled:
             ap_reload = sp_controller.add_parser(
                 'reload', help='Reload controller server')
+            ap_profile = sp_controller.add_parser(
+                'exec-code', help='Exec a code inside the server core')
+            ap_profile.add_argument(
+                'c',
+                help='Code to exec (out var is the return value)',
+                nargs=argparse.REMAINDER,
+                metavar='CODE')
+            ap_profile = sp_controller.add_parser('exceptions',
+                                                  help='Get server exceptions')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
         ap_launch = sp_controller.add_parser(
@@ -2123,6 +2172,8 @@ class ControllerCLI(object):
             'server:cleanup': self.cleanup_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
+            'server:exec-code': 'exec_code',
+            'server:exceptions': 'get_exceptions',
             'server:reload': 'shutdown_core',
             'server:profile': self.profile_controller,
             'server:launch': self.launch_controller,
