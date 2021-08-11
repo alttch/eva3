@@ -1008,12 +1008,20 @@ class RemoteControllerPool(object):
             worker.trigger_threadsafe(skip=True)
         return self.reload_controller(controller_id)
 
+    def _t_trigger_reload_controller(self, controller_id, with_delay=False):
+        try:
+            if with_delay:
+                time.sleep(2 + random.randint(0, 200) / 100)
+            worker = self.reload_workers.get(controller_id)
+            if worker:
+                worker.trigger_threadsafe()
+        except Exception as e:
+            eva.core.log_traceback()
+
     def trigger_reload_controller(self, controller_id, with_delay=True):
-        if with_delay:
-            time.sleep(random.randint(0, 200) / 100)
-        worker = self.reload_workers.get(controller_id)
-        if worker:
-            worker.trigger_threadsafe()
+        eva.core.spawn(self._t_trigger_reload_controller,
+                       controller_id,
+                       with_delay=with_delay)
 
     def reload_controller(self, controller_id):
         if controller_id == 'ALL':
