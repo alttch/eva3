@@ -34,6 +34,7 @@ if config_file.exists():
             raise
 else:
     socket_path = EVA_DIR / 'var/registry.sock'
+    timeout = 5
     SYSTEM_NAME = platform.node()
 
 from yedb import YEDB, FieldNotFound, SchemaValidationError
