@@ -15,6 +15,8 @@ Common
    * new API method "restart_notifier"
    * stricter MQTT notifier tests, pingers restart notifiers if failed
    * dump "-m" option to create minimal dumps on large systems
+   * new API method "get_exceptions", allows to get last 100 server exceptions
+     even if they are disable in logs
 
 3.4.0 (2021-07-07)
 ==================

@@ -1479,6 +1479,16 @@ def register_controller(controller):
     controllers.append(controller)
 
 
+def exec_code(code):
+    d = {}
+    exec(code, d)
+    return d.get('out')
+
+
+def get_exceptions():
+    return pyaltt2.logs.serialize_exceptions()
+
+
 @background_worker(interval=60, on_error=log_traceback)
 async def cs_intervaller(**kwargs):
     exec_corescripts(event=SimpleNamespace(
