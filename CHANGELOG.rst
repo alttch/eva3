@@ -14,6 +14,7 @@ Common
    * launch pptop directly from eva-shell
    * new API method "restart_notifier"
    * stricter MQTT notifier tests, pingers restart notifiers if failed
+   * dump "-m" option to create minimal dumps on large systems
 
 3.4.0 (2021-07-07)
 ==================

@@ -86,6 +86,7 @@ def serialize(bus_id=None, config=False):
 
 
 @eva.core.dump
+@eva.core.minidump
 def dump():
     return serialize()
 

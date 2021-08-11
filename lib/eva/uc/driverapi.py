@@ -782,6 +782,8 @@ def unload_driver(driver_id):
 
 
 @with_drivers_lock
+@eva.core.dump
+@eva.core.minidump
 def serialize(full=False, config=False):
     return {
         'phi': serialize_phi(full=full, config=config),

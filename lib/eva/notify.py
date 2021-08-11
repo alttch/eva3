@@ -4140,6 +4140,7 @@ def unsubscribe_group(group, subject='#', notifier_id=None):
 
 
 @eva.core.dump
+@eva.core.minidump
 def dump(notifier_id=None):
     if notifier_id:
         return notifiers[notifier_id].serialize()

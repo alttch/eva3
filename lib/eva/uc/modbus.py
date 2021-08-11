@@ -285,6 +285,7 @@ def serialize(port_id=None, config=False):
 
 
 @eva.core.dump
+@eva.core.minidump
 def dump():
     result = {'ports': serialize(), 'slave': config.slave}
     return result

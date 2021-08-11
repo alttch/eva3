@@ -332,6 +332,7 @@ def action(fn, *args, _wait=None, _name=None, _call_for=None, **kwargs):
 
 
 dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
+minidump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollection(on_error=log_traceback)
 shutdown = FunctionCollection(on_error=log_traceback)
 stop = FunctionCollection(on_error=log_traceback)
@@ -544,11 +545,15 @@ def serialize_plugins():
     return [serialize_plugin(p, v) for p, v in plugin_modules.items()]
 
 
-def create_dump(e='request', msg=''):
+def create_dump(e='request', msg='', minimal=False):
     try:
-        result = dump.run()
+        if minimal:
+            result = minidump.run()
+        else:
+            result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
-        result['log'] = pyaltt2.logs.get(n=DUMP_LOG_RECORDS)
+        if not minimal:
+            result['log'] = pyaltt2.logs.get(n=DUMP_LOG_RECORDS)
         result['plugin_modules'] = serialize_plugins()
         result['plugins'] = {
             p: exec_plugin_func(p, v, 'dump')
@@ -574,7 +579,13 @@ def create_dump(e='request', msg=''):
 
 @cvars_lock
 @dump
-def serialize():
+def dump_all():
+    return serialize(full=True)
+
+
+@cvars_lock
+@minidump
+def serialize(full=False):
     d = {}
     proc = psutil.Process()
     d['version'] = version
@@ -604,16 +615,19 @@ def serialize():
     d['userdb_uri'] = config.userdb_uri
     d['pid_file'] = config.pid_file
     d['log_file'] = config.log_file
-    d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
     d['time'] = time.time()
-    d['fd'] = proc.open_files()
-    for t in threading.enumerate().copy():
-        d['threads'][t.name] = {}
-        d['threads'][t.name]['daemon'] = t.daemon
-        d['threads'][t.name]['alive'] = t.is_alive()
+    fd = proc.open_files()
+    d['fd_count'] = len(fd)
     d.update(pyaltt2.logs.serialize())
-    d['neotasker'] = {'supervisor': task_supervisor.get_info()}
+    if full:
+        d['fd'] = fd
+        d['threads'] = {}
+        for t in threading.enumerate().copy():
+            d['threads'][t.name] = {}
+            d['threads'][t.name]['daemon'] = t.daemon
+            d['threads'][t.name]['alive'] = t.is_alive()
+        d['neotasker'] = {'supervisor': task_supervisor.get_info()}
     return d
 
 

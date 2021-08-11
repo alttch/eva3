@@ -63,6 +63,7 @@ class ComplCVAR(ComplGeneric):
             return True
         return data.keys()
 
+
 class ComplNotifiers(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
@@ -71,6 +72,7 @@ class ComplNotifiers(ComplGeneric):
             return True
         for d in data:
             yield d['id']
+
 
 class ComplKey(ComplGeneric):
 
@@ -678,6 +680,12 @@ class GenericCLI(GCLI):
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
         sp_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
+        sp_dump.add_argument(
+            '-m',
+            '--minimal',
+            help='Minimal dump (recommended for large systems)',
+            action='store_true',
+            dest='m')
         sp_dump.add_argument('-s',
                              '--support-request',
                              help='Prepare support request',
@@ -985,6 +993,7 @@ class GenericCLI(GCLI):
             try:
                 return self.execute_function()
             except Exception as e:
+                # raise
                 self.print_err(e)
         else:
             # interactive mode
@@ -1488,7 +1497,8 @@ class GenericCLI(GCLI):
                         f'cd {dir_eva}/var && {dir_eva}/bin/prepare-sr {f} {ss}'
                     )
                     if code != 0:
-                        return self.local_func_result_failed
+                        self.print_err('Unable to create the support request')
+                        return self.local_func_result_failed[0]
                     else:
                         result['file'] = f + '.sr'
                 finally:

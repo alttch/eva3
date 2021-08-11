@@ -1336,9 +1336,10 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
         Args:
             k: .master
+            m: minimal dump
         """
-        parse_api_params(kwargs)
-        return eva.core.create_dump()
+        m = parse_api_params(kwargs, 'm', 'b')
+        return eva.core.create_dump(minimal=m)
 
     @log_d
     @api_need_master

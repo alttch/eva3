@@ -289,6 +289,7 @@ def set_ext_prop(ext_id, p, v):
 
 
 @eva.core.dump
+@eva.core.minidump
 def dump():
     return serialize(full=True, config=True)
 
