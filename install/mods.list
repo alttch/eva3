@@ -28,7 +28,7 @@ pygal==2.4.0
 pyjwt==1.7.1
 pycrypto==2.6.1
 rapidtables==0.1.10
-sqlalchemy==1.2.18
+sqlalchemy==1.4.22
 service_identity==18.1.0
 schedule==0.6.0
 pymodbus==2.2.0
