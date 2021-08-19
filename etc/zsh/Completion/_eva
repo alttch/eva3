@@ -1,15 +1,5 @@
 #compdef eva
 
-_eva_system() {
-  local cword
-  let cword=CURRENT-1
-  if [[ $cword -eq 2 ]]; then
-    compadd "$@" poweroff reboot
-  else
-    _files
-  fi
-}
-
 _eva_iote() {
   local cword
   let cword=CURRENT-1
@@ -34,7 +24,7 @@ _eva_sfa_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch pkg-install plugins profile reload restart start status stop
+    compadd "$@" cleanup exceptions exec-code launch pkg-install plugins profile reload restart start status stop
   else
     _files
   fi
@@ -211,7 +201,7 @@ _eva_lm_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch pkg-install plugins profile reload restart start status stop
+    compadd "$@" cleanup exceptions exec-code launch pkg-install plugins profile reload restart start status stop
   else
     _files
   fi
@@ -388,7 +378,7 @@ _eva_uc_server() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 3 ]]; then
-    compadd "$@" cleanup launch pkg-install plugins profile reload restart start status stop
+    compadd "$@" cleanup exceptions exec-code launch pkg-install plugins profile reload restart start status stop
   else
     _files
   fi
@@ -675,10 +665,10 @@ _eva() {
   local cword
   let cword=CURRENT-1
   if [[ $cword -eq 1 ]]; then
-    compadd "$@" backup edit feature iote lm masterkey mirror ns registry save server sfa system uc update version
+    compadd "$@" backup edit feature iote lm masterkey mirror ns registry save server sfa uc update version
   else
     case "${words[2]}" in
-      backup|edit|feature|iote|lm|masterkey|mirror|registry|server|sfa|system|uc)
+      backup|edit|feature|iote|lm|masterkey|mirror|registry|server|sfa|uc)
         _eva_${words[2]}
         ;;
       *)

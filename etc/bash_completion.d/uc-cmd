@@ -2,7 +2,7 @@ _uc-cmd_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'cleanup launch pkg-install plugins profile reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'cleanup exceptions exec-code launch pkg-install plugins profile reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
