@@ -3,7 +3,7 @@ from __future__ import print_function
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2021 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.4.0"
+__version__ = "3.4.1"
 
 import argparse
 # to be compatible with argcomplete
