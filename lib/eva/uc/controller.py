@@ -455,8 +455,8 @@ def load_registry_state(items, item_type):
             items[k].status = v['status']
             items[k].value = v['value']
             if item_type == 'unit':
-                items[k].nstatus = item[k].status
-                items[k].nvalue = item[k].value
+                items[k].nstatus = v['status']
+                items[k].nvalue = v['value']
             items[k].ieid = v['ieid']
             items[k].set_time = v['set-time']
 
