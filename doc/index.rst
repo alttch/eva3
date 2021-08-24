@@ -1,7 +1,7 @@
 EVA ICS documentation
 *********************
 
-`EVA ICS <https://www.eva-ics.com/>`_ is a platform for automated control and
+`EVA ICS® <https://www.eva-ics.com/>`_ is a platform for automated control and
 monitoring systems development, for any needs, from home/office to industrial
 setups. It is completely free for non-commercial use as well as for commercial,
 on condition that enterprise integrates it on its own. The product is
@@ -195,3 +195,10 @@ What you get with EVA ICS
     :maxdepth: 1
 
     framework-development
+
+.. toctree::
+    :caption:  Legal
+    :maxdepth: 1
+
+    Liceense <https://github.com/alttch/eva3/blob/master/LICENSE>
+    trademark
