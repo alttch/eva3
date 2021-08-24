@@ -201,5 +201,5 @@ What you get with EVA ICS
     :caption:  Legal
     :maxdepth: 1
 
-    Liceense <https://github.com/alttch/eva3/blob/master/LICENSE>
+    License <https://github.com/alttch/eva3/blob/master/LICENSE>
     trademark
