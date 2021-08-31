@@ -82,4 +82,4 @@ Limitations
 * The WASM extension does not support calling the *unwatch* method for the
   particular handler function. Watch can be cleared by *oid* or globally only.
 
-* OID masks do not support inside wildcards (e.g. "sensor:*/test")
+* OID masks do not support internal wildcards (e.g. "sensor:*/test")
