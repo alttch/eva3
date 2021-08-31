@@ -17,6 +17,8 @@ Installation
 * Obtain WASM extension from a `EVA ICS representative
   <https://www.eva-ics.com/contacts>`_.
 
+* The extension requires EVA JS Framework version 0.3.25 or above.
+
 * Unpack *evajw-XXXX.tgz* archive into the directory where EVA JS Framework is
   installed. E.g. if the framework is installed in */opt/eva/ui*, the module
   should be placed in */opt/eva/ui/evajw*.
