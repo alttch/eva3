@@ -75,3 +75,11 @@ Licensing
                                     // expiration timestamp
 
 * The list of domains/IP addresses is encrypted and can not be read.
+
+Limitations
+-----------
+
+* The WASM extension does not support calling the *unwatch* method for the
+  particular handler function. Watch can be cleared by *oid* or globally only.
+
+* OID masks do not support inside wildcards (e.g. "sensor:*/test")
