@@ -17,6 +17,8 @@ Common
    * dump "-m" option to create minimal dumps on large systems
    * new API method "get_exceptions", allows to get last 100 server exceptions
      even if they are disable in logs
+   * IEID phantom state - when a remote controller is disconnected, its items
+     have IEIDs [0,0]
 
 3.4.0 (2021-07-07)
 ==================

@@ -358,6 +358,9 @@ the existing one, is:
     permanent for the current states and stored in local state databases,
     unless the node works on read-only mode storage device.
 
+If a controller becomes disconnected, its items have "phantom" IEID states, as
+*[0,0]*.
+
 Actions
 =======
 

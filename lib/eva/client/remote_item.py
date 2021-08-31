@@ -63,8 +63,11 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
                               props=props,
                               notify=notify)
         d['controller_id'] = self.controller.full_id
-        d['connected'] = self.controller.connected if \
+        connected = self.controller.connected if \
                 self.controller.enabled else False
+        d['connected'] = connected
+        if not connected:
+            d['ieid'] = [0, 0]
         try:
             del d['config_changed']
         except:
