@@ -94,6 +94,7 @@ What you get with EVA ICS
     highload
     crashfree
     container
+    enterprise
 
 .. toctree::
     :caption:  Components
