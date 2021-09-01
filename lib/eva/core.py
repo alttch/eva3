@@ -656,11 +656,8 @@ def db():
     """
     with _db_lock:
         if not g.has('db'):
-            if config.db_update == 1:
-                g.db = db_engine.primary.connect()
-            else:
-                g.db = db_engine.primary
-        elif config.db_update == 1:
+            g.db = db_engine.primary.connect()
+        else:
             try:
                 g.db.execute('select 1')
             except:
@@ -678,11 +675,8 @@ def userdb():
     """
     with _userdb_lock:
         if not g.has('userdb'):
-            if config.db_update == 1:
-                g.userdb = db_engine.user.connect()
-            else:
-                g.userdb = db_engine.user
-        elif config.db_update == 1:
+            g.userdb = db_engine.user.connect()
+        else:
             try:
                 g.userdb.execute('select 1')
             except:
