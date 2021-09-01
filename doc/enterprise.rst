@@ -67,14 +67,14 @@ Licensing
 * The license is built-in into the copy of the WASM extension, owned by the
   customer.
 
-* The license may have expiration time or be unlimited.
+* The license may have expiration time or be perpetual.
 
 * To check the license expiration time manually, the following function can be
   used:
 
 .. code:: javascript
 
-    evajw.get_license_expiration(); // returns either null or the licnese
+    evajw.get_license_expiration(); // returns either null or the license
                                     // expiration timestamp
 
 * The list of domains/IP addresses is encrypted and can not be read.
