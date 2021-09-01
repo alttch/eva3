@@ -37,11 +37,8 @@ Installation
   stopped.
 
 * If the module license is not valid for the current domain or expired, the
-  error message will be displayed in JavaScript development console and the
-  framework will automatically switch itself to the regular mode.
-
-* If the license expires within a month or already expired, the module displays
-  an alert.
+  error message is displayed in JavaScript development console plus an alert
+  and the framework automatically switches itself to the regular mode.
 
 * To make sure the WASM module works fine, enable debug mode in EVA JS
   Framework:
@@ -53,6 +50,12 @@ Installation
 * When debug mode is enabled, events processed by the WASM extension are
   prefixed with "W" (e.g. *EVA::Wws state* instead of a regular *EVA::ws
   state*).
+
+* Also, the method *get_mode* returns current framework mode:
+
+.. code:: javascript
+
+    $eva.get_mode(); // "js" for regular, "wasm" for WASM extension
 
 Licensing
 ---------
