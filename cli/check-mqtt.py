@@ -17,6 +17,8 @@ import eva.tools
 import eva.notify
 import eva.api
 
+eva.core.set_product('test', -1)
+
 _me = 'EVA ICS MQTT test version %s' % __version__
 
 ap = argparse.ArgumentParser(description=_me)
