@@ -619,7 +619,10 @@ class GenericCLI(GCLI):
                     for i, c in r.items():
                         t[i] = self.list_to_str(c)
                         if not multiline:
-                            t['i'] = t['i'].replace('\n', ' ')
+                            try:
+                                t['i'] = t['i'].replace('\n', ' ')
+                            except KeyError:
+                                pass
                 table.append(t)
             if table:
                 if multiline:
