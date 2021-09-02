@@ -203,4 +203,4 @@ What you get with EVA ICS
     :maxdepth: 1
 
     License <https://github.com/alttch/eva3/blob/master/LICENSE>
-    trademark
+    trademarks
