@@ -16,30 +16,32 @@ To use EVA ICS in high-load environments, remember the following:
 
 * Unsubscribe notifiers from INFO log messages and actions
 
-* Replace *db_updates = instant* in :doc:`/uc/uc` configurations with *on_exit*
+* Replace *db-updates: instant* in :doc:`/uc/uc` configurations with *on_exit*
   or *manual*.
 
 * If instant state database updates are strongly required, switch to MySQL or
-  PostgreSQL (use option *db* instead of *db_file* in controller config).
+  PostgreSQL (use option *db* instead of *db-file* in controller config).
 
-* If you don't need action history, set *keep_action_history* in controllers'
+* If you don't need action history, set *keep-action-history* in controllers'
   configuration to zero to disable it.
 
-* Turn off logging (comment *log_file* property in configuration file) and
-  reduce *keep_logmem* value.
+* Turn off logging (comment *log-file* property in configuration file) and
+  reduce *keep-logmem* value.
 
-* Increase logging level to *warning* or *error* using *logging_level* config
+* Increase logging level to *warning* or *error* using *logging-level* config
   option in [server] section.
 
 * If you use passive updates, set *polldelay* to the minimal value
   (*0.001* - *0.005* for 1-5ms)
 
-* If HTTP API respond too slow, try increasing value of *thread_pool* option in
+* Set *retain_enabled* to *false* for MQTT notifiers
+
+* If HTTP API respond too slow, try increasing value of *thread-pool* option in
   [webapi] config section.
 
 * Modbus slave and some utility workers use twisted reactor thread pool. In
   case the software reacts or performs regular tasks slowly, but system load is
-  still low, try increasing value of *reactor_thread_pool* option in [server]
+  still low, try increasing value of *reactor-thread-pool* option in [server]
   section.
 
 * If item states should be collected from the equipment which doesn't send
