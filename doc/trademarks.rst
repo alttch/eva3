@@ -14,9 +14,8 @@ partners for the following categories of goods and services:
 <https://www.altertech.com>`__ companies and their partners for the following
 categories of goods and services:
 
--  Industrial automation software
--  Industrial process control software
--  Home automation software
+-  Industrial Cloud computing
+-  Automation Software-As-A-Service
 
 The Trademark Supervisors
 -------------------------
