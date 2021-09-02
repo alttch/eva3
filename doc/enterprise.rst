@@ -26,6 +26,16 @@ Installation
   installed. E.g. if the framework is installed in */opt/eva/ui*, the module
   should be placed in */opt/eva/ui/evajw*.
 
+* (Recommended). Make sure the system has *wasm* MIME type configured properly
+  in */etc/mime.types*. If corrections were made, restart :doc:`/sfa/sfa` with
+  *eva sfa server restart* command. If using front-end web server, e.g. `NGINX
+  <https://www.nginx.com>`_, make sure its MIME is also configured
+  (*/etc/nginx/mime.types*):
+
+.. code::
+    
+    application/wasm wasm
+
 * Put the following code in your HMI, before starting the web-HMI application
   or EVA JS Framework:
 
