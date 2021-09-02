@@ -10,17 +10,25 @@ partners for the following categories of goods and services:
 -  Industrial process control software
 -  Home automation software
 
+**IOTE Cloud™** is the trademark used by the `Altertech Group
+<https://www.altertech.com>`__ companies and their partners for the following
+categories of goods and services:
+
+-  Industrial automation software
+-  Industrial process control software
+-  Home automation software
+
 The Trademark Supervisors
 -------------------------
 
 `Bohemia Automation Limited <https://find-and-update.company-information.service.gov.uk/company/13540412>`__
-(United Kingdom) is the primary trademark supervisor in the United Kingdom and
+(United Kingdom) is the primary trademarks supervisor in the United Kingdom and
 worldwide, except the following:
 
 - `Altertech s.r.o.
   <http://www.rzp.cz/cgi-bin/aps_cacheWEB.sh?VSS_SERV=ZVWSBJFND&PODLE=subjekt&Action=Search&ICO=27149099&VYPIS=2>`__
-  (Czech Republic) is the primary trademark supervisor in the European Union.
--  TOV Altertech (Ukraine) is the primary trademark supervisor in
+  (Czech Republic) is the primary trademarks supervisor in the European Union.
+-  TOV Altertech (Ukraine) is the primary trademarks supervisor in
    Ukraine.
 
 
@@ -30,6 +38,8 @@ Usage Conditions
 For any form of redistribution, except computer operating system
 packages, the words "EVA ICS" should be always ended with the registered
 trademark symbol (®), unless there is no technical ability to meet.
+
+The trademark IOTE Cloud can be used without any additional symbols.
 
 Common conditions
 ~~~~~~~~~~~~~~~~~
