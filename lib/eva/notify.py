@@ -2604,8 +2604,6 @@ class GenericMQTTNotifier(GenericNotifier):
             eva.core.log_traceback(notifier=True)
 
     def on_message(self, client, userdata, msg):
-        if not self.enabled:
-            return
         t = msg.topic
         try:
             d = msg.payload if msg.payload.startswith(
@@ -2618,6 +2616,8 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if t == self.test_topic and d == 'passed':
                 self.test_topic = None
+                return
+            if not self.enabled:
                 return
             if t == self.announce_topic and \
                     d != self.announce_msg and \
