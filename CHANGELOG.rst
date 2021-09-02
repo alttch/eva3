@@ -9,6 +9,7 @@ Common
 
    * fix: recombined ACLs speed tuning
    * fix: db updates on-exit correct transactions commit/rollback
+   * fix: MQTT auth in setup
 
    * item states can be kept in the crash-free registry
    * controller PIDs in "test" command (requires master key)

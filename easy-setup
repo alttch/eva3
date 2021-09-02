@@ -377,7 +377,7 @@ do
             ;;
         --mqtt)
             M=$2
-            if ! (echo "$M"|grep '@' > /dev/null); then
+            if (echo "$M"|grep '@' > /dev/null); then
                 MQTT_AUTH=$(echo "$M"|cut -d@ -f1)
                 MQTT_USER=$(echo "$MQTT_AUTH"|cut -d: -f1)
                 ( echo "$MQTT_AUTH" |grep ':' ) > /dev/null && \
