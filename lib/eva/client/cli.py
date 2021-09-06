@@ -150,7 +150,7 @@ class GenericCLI(GCLI):
         self.nodename = None
         self.default_timeout = 20
         self.timeout = self.default_timeout
-        self.ssl_verify = False
+        self.ssl_verify = True
         self.say_bye = say_bye
         self.readline_processing = readline_processing
         self._argcompleted = False
@@ -312,6 +312,8 @@ class GenericCLI(GCLI):
             print('w: display uptime and who is online')
             print('date: display system date and time')
             print()
+            print('To disable SSL verify, set uri as !https://..')
+            print()
 
     def parse_primary_args(self):
         super().parse_primary_args()
@@ -323,7 +325,13 @@ class GenericCLI(GCLI):
                 ])
                 for i, v in o:
                     if i == '-U' or i == '--api-url':
-                        self.apiuri = v
+                        uri = v
+                        if uri.startswith('https://'):
+                            self.ssl_verify = True
+                        elif uri.startswith('!https://'):
+                            self.ssl_verify = False
+                            uri = uri[1:]
+                        self.apiuri = uri
                     elif i == '-K' or i == '--api-key':
                         self.apikey = v
                     elif i == '-J' or i == '--json':
@@ -418,11 +426,12 @@ class GenericCLI(GCLI):
                 help='API key, if no key specified, local master key is used',
                 dest='_api_key',
                 metavar='KEY')
-            self.ap.add_argument('-U',
-                                 '--api-url',
-                                 help='API URL',
-                                 dest='_api_uri',
-                                 metavar='URL')
+            self.ap.add_argument(
+                '-U',
+                '--api-url',
+                help='API URL (!https://... to disable SSL verify)',
+                dest='_api_uri',
+                metavar='URL')
             self.ap.add_argument('-T',
                                  '--api-timeout',
                                  help='API request timeout (in seconds)',
@@ -629,8 +638,7 @@ class GenericCLI(GCLI):
                     header, rows = rapidtables.format_table(
                         table,
                         rapidtables.FORMAT_GENERATOR,
-                        multiline = rapidtables.MULTILINE_EXTENDED_INFO
-                        )
+                        multiline=rapidtables.MULTILINE_EXTENDED_INFO)
                     print(self.colored(header, color='blue', attrs=[]))
                     print(
                         self.colored('-' * len(header), color='grey', attrs=[]))
@@ -1118,7 +1126,13 @@ class GenericCLI(GCLI):
                               apikey is not None else '<default>')
                     if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
-                            self.apiuri = d[1]
+                            uri = d[1]
+                            if uri.startswith('https://'):
+                                self.ssl_verify = True
+                            elif uri.startswith('!https://'):
+                                self.ssl_verify = False
+                                uri = uri[1:]
+                            self.apiuri = uri
                         except:
                             pass
                         print('API uri: %s' % self.apiuri if self.
@@ -1461,6 +1475,7 @@ class GenericCLI(GCLI):
             apikey = None
         if getattr(a, '_api_key', None):
             apikey = a._api_key
+        ssl_override = False
         if self.remote_api_enabled:
             if not apiuri:
                 try:
@@ -1472,11 +1487,19 @@ class GenericCLI(GCLI):
                     return 98
             else:
                 api = apiclient.APIClient()
+                if apiuri.startswith('https://'):
+                    api.ssl_verify(True)
+                    ssl_override = True
+                elif apiuri.startswith('!https://'):
+                    api.ssl_verify(False)
+                    ssl_override = True
+                    apiuri = apiuri[1:]
                 api.set_uri(apiuri)
                 api.set_product(self.product)
             if apikey is not None:
                 api.set_key(apikey)
-            api.ssl_verify(self.ssl_verify)
+            if not ssl_override:
+                api.ssl_verify(self.ssl_verify)
         else:
             api = None
         self.cur_api_func_is_full = ''

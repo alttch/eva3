@@ -1,6 +1,15 @@
 EVA ICS CHANGELOG
 *****************
 
+3.4.2 (TBA)
+===========
+
+Common
+------
+
+    * CLI client SSL verify is now on by default. To suppress SSL certificate
+      verification, manually set URL as "!https://..."
+
 3.4.1 (2021-09-06)
 ==================
 
