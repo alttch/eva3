@@ -4,10 +4,13 @@ __license__ = "Apache License 2.0"
 __version__ = "3.4.1"
 
 import requests
+import urllib3
 import uuid
 from pathlib import Path
 
 from functools import partial
+
+urllib3.disable_warnings()
 
 
 def pack_msgpack(data):
