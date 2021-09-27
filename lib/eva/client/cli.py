@@ -1334,6 +1334,7 @@ class GenericCLI(GCLI):
                 while True:
                     try:
                         ws.send(ping_msg, opcode=0x02)
+                        ws.send('')
                         time.sleep(timeout if timeout < 5 else 5)
                     except:
                         break
@@ -1346,6 +1347,7 @@ class GenericCLI(GCLI):
                     'l': log_level_id
                 }),
                         opcode=0x02)
+                ws.send('')
                 code, data = api.call('log_get', {
                     'l': log_level_id,
                     'n': n,
