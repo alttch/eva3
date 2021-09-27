@@ -43,7 +43,9 @@ class WebSocketPingerWorker(BackgroundIntervalWorker):
         controller = kwargs.get('controller')
         try:
             logging.debug('WS {}: PING'.format(controller.oid))
-            kwargs.get('o').send(ws_ping_message, opcode=0x2)
+            ws = kwargs['o']
+            ws.send(ws_ping_message, opcode=0x2)
+            ws.send('')
         except:
             eva.core.log_traceback()
 
@@ -132,6 +134,7 @@ class WebSocketWorker(BackgroundWorker):
                 try:
                     ws.send(eva.client.apiclient.pack_msgpack({'s': 'state'}),
                             opcode=0x2)
+                    ws.send('')
                 except:
                     try:
                         ws.close()
