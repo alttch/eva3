@@ -10,9 +10,11 @@ EVA_DIR=$(pwd)
 
 [ -f ./etc/eva_config ] && source ./etc/eva_config
 
+[ -z "${SYSTEM_NAME}" ] && SYSTEM_NAME=$(hostname)
 [ -z "${YEDB_REGISTRY_DIR}" ] && YEDB_REGISTRY_DIR=${EVA_DIR}/runtime/registry
 [ -z "${YEDB_SOCKET}" ] && YEDB_SOCKET=${EVA_DIR}/var/registry.sock
 [ -z "${YEDB_AUTO_BAK}" ] && YEDB_AUTO_BAK=10
+[ -z "${YEDB_SKIP_BAK}" ] && YEDB_SKIP_BAK="eva3/${SYSTEM_NAME}/state"
 [ -z "${YEDB_WORKERS}" ] && YEDB_WORKERS=2
 [ -z "${YEDB_CACHE_SIZE}" ] && YEDB_CACHE_SIZE=1000
 [ "${YEDB_STRICT_SCHEMA}" != "0" ] && YEDB_STRICT="--strict-schema"
@@ -20,7 +22,7 @@ EVA_DIR=$(pwd)
 REGISTRY=${EVA_DIR}/yedb/yedb-server
 PIDFILE=${EVA_DIR}/var/registry.pid
 LOCKFILE=${EVA_DIR}/var/registry.lock
-REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE} ${YEDB_STRICT}"
+REGISTRY_ARGS="${YEDB_REGISTRY_DIR} --bind ${YEDB_SOCKET} --pid-file ${PIDFILE} --auto-bak ${YEDB_AUTO_BAK} --skip-bak ${YEDB_SKIP_BAK} --workers ${YEDB_WORKERS} --default-fmt json --cache-size ${YEDB_CACHE_SIZE} --lock-path ${LOCKFILE} ${YEDB_STRICT}"
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/registry_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 TEST="${EVA_DIR}/yedb/yedb-cli -C ${YEDB_SOCKET} test"

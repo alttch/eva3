@@ -4,6 +4,8 @@
 #YEDB_SERVER_ENABLED=1
 #YEDB_TIMEOUT=5
 #YEDB_AUTO_BAK=10
+# Extend this if required (replace hostname with the node name)
+#YEDB_SKIP_BAK=eva3/hostname/state
 #YEDB_WORKERS=2
 #YEDB_CACHE_SIZE=10000
 #YEDB_STRICT_SCHEMA=1
