@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 trap '' HUP
+trap '' INT
 
 if [ -z "$1" ]; then
   echo "No params given"
