@@ -3695,6 +3695,8 @@ class NWebSocket(WebSocket):
         return super().opened()
 
     def received_message(self, message):
+        if not message:
+            return
         s_all = ['#']
         try:
             if self.notifier.ct == CT_MSGPACK:
