@@ -1175,7 +1175,7 @@ class UserAPI(object):
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
         save = save or eva.core.config.auto_save
         tokens.remove_token(key_id=i)
-        return eva.apikey.regenerate_key(i, None, save)
+        return eva.apikey.regenerate_key(i, save=save)
 
     @log_w
     @api_need_master
