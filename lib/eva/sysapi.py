@@ -1067,6 +1067,32 @@ class UserAPI(object):
         u = parse_api_params(kwargs, 'u', 'S')
         return eva.users.get_user(u)
 
+    @log_d
+    @notify_plugins
+    def check_item_access(self, **kwargs):
+        """
+        check access to the particular item
+
+        Does not check is supervisor lock set, also does not check the item
+        really exist
+
+        Args:
+            k:
+            i: item id
+            p: item access ("r" for read, "w" for write)
+
+        Returns:
+            ok: true / false
+        """
+        k, i, p = parse_function_params(kwargs, 'kip', '.SS')
+        if p in ['r', 'read']:
+            ro_op = True
+        elif p in ['w', 'write']:
+            ro_op = False
+        else:
+            raise InvalidParameter('access type ("p") is not specified')
+        return {'ok': eva.apikey.check(k, oid=i, ro_op=ro_op)}
+
     @log_w
     @api_need_master
     @notify_plugins
