@@ -47,7 +47,7 @@ for production use lm-control only to start/stop LM PLC
 """)
 
 
-product_build = 2021090501
+product_build = 2021092702
 
 product_code = 'lm'
 
