@@ -724,12 +724,11 @@ Does not check is supervisor lock set, also does not check the item really exist
 Parameters:
 
 * **k** valid API key
-* **i** item id
-* **p** item access ("r" for read, "w" for write)
+* **i** item id or list of ids
 
 Returns:
 
-ok: true / false
+oid list with subobjects "r", "w" (true/false)
 
 .. _sysapi_create_key:
 

@@ -1078,20 +1078,24 @@ class UserAPI(object):
 
         Args:
             k:
-            i: item id
-            p: item access ("r" for read, "w" for write)
+            i: item id or list of ids
 
         Returns:
-            ok: true / false
+            oid list with subobjects "r", "w" (true/false)
         """
-        k, i, p = parse_function_params(kwargs, 'kip', '.SS')
-        if p in ['r', 'read']:
-            ro_op = True
-        elif p in ['w', 'write']:
-            ro_op = False
+        k, i = parse_function_params(kwargs, 'ki', '..')
+        if isinstance(i, list):
+            oids = i
+        elif isinstance(i, str):
+            oids = i.split(',')
         else:
-            raise InvalidParameter('access type ("p") is not specified')
-        return {'ok': eva.apikey.check(k, oid=i, ro_op=ro_op)}
+            raise InvalidParameter('item oid(s) not specified')
+        result = {}
+        for oid in oids:
+            result[oid] = {}
+            result[oid]['r'] = eva.apikey.check(k, oid=oid, ro_op=True)
+            result[oid]['w'] = eva.apikey.check(k, oid=oid, ro_op=False)
+        return result
 
     @log_w
     @api_need_master
