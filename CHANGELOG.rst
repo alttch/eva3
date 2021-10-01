@@ -10,6 +10,7 @@ Common
     * CLI client SSL verify is now on by default. To suppress SSL certificate
       verification, manually set URL as "!https://..."
     * State registry keys are not auto backed up any longer
+    * New API method "check_item_access"
 
 3.4.1 (2021-09-06)
 ==================

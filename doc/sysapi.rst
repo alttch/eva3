@@ -710,6 +710,27 @@ API keys
 
 
 
+.. _sysapi_check_item_access:
+
+check_item_access - check access to the particular item
+-------------------------------------------------------
+
+Does not check is supervisor lock set, also does not check the item really exist
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/jrpc/sysapi/check_item_access.req-jrpc
+    :response: http-examples/jrpc/sysapi/check_item_access.resp-jrpc
+
+Parameters:
+
+* **k** valid API key
+* **i** item id
+* **p** item access ("r" for read, "w" for write)
+
+Returns:
+
+ok: true / false
+
 .. _sysapi_create_key:
 
 create_key - create API key

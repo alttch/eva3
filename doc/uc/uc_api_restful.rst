@@ -2202,6 +2202,24 @@ API keys
 
 
 
+.. _ucapi_restful_check_item_access:
+
+check access to the particular item
+-----------------------------------
+
+Does not check is supervisor lock set, also does not check the item really exist
+
+Parameters:
+
+* **API Key** valid API key
+* **i** item id
+* **p** item access ("r" for read, "w" for write)
+
+Returns:
+
+ok: true / false
+
+
 .. _ucapi_restful_create_key:
 
 create API key
