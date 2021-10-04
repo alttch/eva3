@@ -75,6 +75,7 @@ spawn = task_supervisor.spawn
 
 _flags = SimpleNamespace(ignore_critical=False,
                          sigterm_sent=False,
+                         critical_dump_handler=None,
                          started=threading.Event(),
                          shutdown_requested=False,
                          cvars_modified=set(),
@@ -205,6 +206,11 @@ GROUP_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\./\(\)\[\]-]*$'
 ID_ALLOWED_SYMBOLS = '^[A-Za-z0-9_\.\(\)\[\]-]*$'
 
 
+def critical_dump(caller_info):
+    logging.critical('critical exception. dump file: %s' %
+                     create_dump('critical', caller_info))
+
+
 def critical(log=True, from_driver=False):
     if _flags.ignore_critical:
         return
@@ -217,10 +223,9 @@ def critical(log=True, from_driver=False):
     if log:
         log_traceback(force=True, critical=True)
     if config.dump_on_critical:
-        _flags.ignore_critical = True
-        logging.critical('critical exception. dump file: %s' %
-                         create_dump('critical', caller_info))
-        _flags.ignore_critical = False
+        _flags.critical_dump_handler = threading.Thread(target=critical_dump,
+                                                        args=(caller_info,))
+        _flags.critical_dump_handler.start()
     if config.stop_on_critical in [
             'always', 'yes'
     ] or (not from_driver and config.stop_on_critical == 'core'):
@@ -410,6 +415,11 @@ def sighandler_term(signum=None, frame=None):
     _flags.sigterm_sent = True
     threading.Thread(target=suicide, daemon=True).start()
     logging.info('got TERM signal, exiting')
+    if _flags.critical_dump_handler:
+        try:
+            _flags.critical_dump_handler.join()
+        except:
+            pass
     if config.db_update == 2:
         try:
             do_save()
