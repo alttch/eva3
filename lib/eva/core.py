@@ -56,8 +56,6 @@ import eva.registry
 
 version = __version__
 
-max_shutdown_time = 30
-
 default_action_cleaner_interval = 60
 
 dir_eva_default = '/opt/eva'
@@ -95,6 +93,7 @@ config = SimpleNamespace(pid_file=None,
                          db_uri=None,
                          userdb_uri=None,
                          keep_api_log=0,
+                         suicide_timeout=30,
                          debug=False,
                          system_name=platform.node(),
                          controller_name=None,
@@ -392,7 +391,7 @@ def sighandler_hup(signum, frame):
 
 
 def suicide(**kwargs):
-    time.sleep(max_shutdown_time)
+    time.sleep(config.suicide_timeout)
     try:
         logging.critical('SUICIDE')
         if config.show_traceback:
@@ -802,6 +801,11 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
         logging.info('Loading server config')
         logging.debug(f'server.pid_file = {config.pid_file}')
         logging.debug(f'server.logging_level = {config.default_log_level_name}')
+        try:
+            config.suicide_timeout = cfg.get('server/suicide-timeout')
+        except LookupError:
+            pass
+        logging.debug(f'server.suicide_timeout = {config.suicide_timeout}')
         try:
             config.notify_on_start = cfg.get('server/notify-on-start')
         except LookupError:

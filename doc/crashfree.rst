@@ -48,3 +48,24 @@ Logs
 All logs are not considered as the important data and there is no built-in
 mechanism to protect them. API call logs can be stored in an external database,
 controller logs - on network partitions.
+
+Suicide timeouts
+================
+
+EVA ICS controllers are designed to automatically restart themselves on
+critical events. However, sometimes a process may freeze during shutdown.
+"Suicide timeout" variable is shutdown timeout value, after the process is
+automatically killed with "KILL" signal.
+
+.. warning::
+
+    It is not recommended to misuse process suicide features, as it may lead to
+    data corruption, e.g. for state databases.
+
+.. code:: yaml
+
+    server:
+        # ............
+        suicide-timeout: 30
+
+The default value is 30 seconds.

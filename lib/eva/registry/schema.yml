@@ -138,6 +138,7 @@ config/uc/main:
                 - no
             - type: boolean
         timeout: *floatpositive
+        suicide-timeout: *floatpositive
         pool-min-size: *intzeropositive
         pool-max-size: *intpositive
         reactor-thread-pool: *intpositive

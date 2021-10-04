@@ -58,6 +58,8 @@ server:
   stop-on-critical: always
   # default timeout
   timeout: 5
+  # default suicide timeout (kill -KILL process on shutdown)
+  #suicide-timeout: 30
   # primary thread pool, min workers. comment to pre-spawn all workers
   #pool-min-size: 0
   # primary thread pool, max workers. comment to use automatic value (nCPUs * 5)
