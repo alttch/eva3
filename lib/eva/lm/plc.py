@@ -255,6 +255,7 @@ class PLC(eva.item.ActiveItem):
 
     def __init__(self):
         super().__init__(eva.core.config.system_name, 'plc')
+        self.action_processor._suppress_sleep = True
         self.update_config({
             'group': 'lm',
             'action_enabled': True,
