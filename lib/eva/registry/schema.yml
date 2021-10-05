@@ -88,7 +88,7 @@ config/uc/main:
       properties:
         polldelay: &floatpositive
           type: number
-          minimum: 0.001
+          minimum: 0.000001
         pid-file: *str
         log-file: *str
         log-stdout: *bool
@@ -704,6 +704,7 @@ inventory/dmatrix_rule:
   additionalProperties: false
   properties:
     break_after_exec: *bool
+    block_on_exec: *bool
     chillout_time: *floatzeropositive
     description: *str
     enabled: *bool
