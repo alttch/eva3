@@ -875,6 +875,7 @@ class ActiveItem(Item):
         self.queue_lock = threading.RLock()
         self.action_processor = BackgroundQueueWorker(
             fn=self._run_action_processor, on_error=eva.core.log_traceback)
+        self.action_processor._suppress_sleep = True
         self.action_processor.before_queue_get = self.action_before_get_task
         self.action_processor.after_queue_get = self.action_after_get_task
         self.current_action = None
