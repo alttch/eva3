@@ -1,12 +1,11 @@
-EVA ICS 3.4.1
+EVA ICS 3.4.2
 *************
 
 What's new
 ==========
 
-- stability and performance improvements
-
-Complete change log: https://get.eva-ics.com/3.4.1/stable/CHANGELOG.html
+- LM PLC stability and performance improvements
+- Bug fixes and general improvements
 
 Update instructions
 ===================
