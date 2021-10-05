@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2021 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.4.1"
+__version__ = "3.4.2"
 
 from pyaltt2.console import redirect
 redirect()
@@ -48,7 +48,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2021092702
+product_build = 2021100501
 
 product_code = 'sfa'
 
