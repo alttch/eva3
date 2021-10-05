@@ -895,10 +895,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro_result.add_argument(
             '-s',
             '--state',
-            help='Action state (Q, R, F: queued, running, finished)',
+            help='Action state (Q, R, F, D: queued, running, finished, dead)',
             metavar='STATE',
             dest='s',
-            choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+            choices=[
+                'queued', 'running', 'finished', 'dead', 'Q', 'R', 'F', 'D'
+            ])
 
         ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
         ap_destroy.add_argument('i', help='Macro ID',

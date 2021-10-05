@@ -911,6 +911,9 @@ class GenericAPI(API):
                 if (s == 'Q' or s =='queued') and \
                         not a.is_status_queued():
                     continue
+                if (s == 'D' or s =='dead') and \
+                        not a.is_status_dead():
+                    continue
                 elif (s == 'R' or s == 'running') and \
                         not a.is_status_running():
                     continue

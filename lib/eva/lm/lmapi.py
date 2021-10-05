@@ -360,7 +360,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: macro id
             g: filter by unit group
             s: filter by action status: Q for queued, R for running, F for
-               finished
+               finished, D for dead
 
         Returns:
             list or single serialized action object

@@ -531,7 +531,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             .i: unit/macro oid (either uuid or oid must be specified)
             g: filter by unit group
             s: filter by action status: Q for queued, R for running, F for
-               finished
+               finished, D for dead
 
         Returns:
             list or single serialized action object

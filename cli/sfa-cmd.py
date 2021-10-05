@@ -605,10 +605,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_action_result.add_argument(
             '-s',
             '--state',
-            help='Action state (Q, R, F: queued, running, finished)',
+            help='Action state (Q, R, F, D: queued, running, finished, dead)',
             metavar='STATE',
             dest='s',
-            choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+            choices=[
+                'queued', 'running', 'finished', 'dead', 'Q', 'R', 'F', 'D'
+            ])
 
     def add_sfa_macro_functions(self):
         ap_macro = self.sp.add_parser('macro', help='Macro functions')
