@@ -12,6 +12,13 @@ Common
     * State registry keys are not auto backed up any longer
     * New API method "check_item_access"
     * Custom suicide timeouts
+    * Poll delay allowed to be set to 1 microsecond
+
+LM PLC
+------
+
+    * new rules option: "block on exec" (blocks decision matrix until a macro
+      is completed).
 
 3.4.1 (2021-09-06)
 ==================
