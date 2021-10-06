@@ -3218,6 +3218,9 @@ class UDPNotifier(GenericNotifier):
             frame = frame.encode()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         if len(frame) > MAX_UDP_FRAME_LEN:
+            logging.warning(
+                f'Notifier {self.notifier_id}: UDP frame exceeds '
+                f'{MAX_UDP_FRAME_LEN} bytes. Consider decreasing buf_ttl')
             chunks = [
                 frame[i:i + MAX_UDP_FRAME_LEN]
                 for i in range(0, len(frame), MAX_UDP_FRAME_LEN)
