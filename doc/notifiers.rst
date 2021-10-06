@@ -464,6 +464,12 @@ methods. To stop sending events via MQTT, unsubscribe MQTT notifiers from
 selected topics. To stop sending events via web sockets, set controller prop
 option (on the receiver) *ws_state_events* to *false*.
 
+.. note::
+
+    If UDP frame exceeds 65000 bytes, it is automatically splitted into
+    multiple, which may decrease data replication performance. If faced,
+    consider lowering or disabling *buf_ttl* notifier property.
+
 To quickly turn on LURP for inter-connection on a local machine, the following
 command can be used:
 
