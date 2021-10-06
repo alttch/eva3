@@ -34,7 +34,7 @@ try:
 except:
     pass
 
-MAX_UDP_FRAME_LEN = 65500
+MAX_UDP_FRAME_LEN = 65000
 
 from neotasker import BackgroundIntervalWorker
 from neotasker import BackgroundQueueWorker
