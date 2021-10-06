@@ -34,7 +34,7 @@ try:
 except:
     pass
 
-MAX_UDP_FRAME = 65500
+MAX_UDP_FRAME_LEN = 65500
 
 from neotasker import BackgroundIntervalWorker
 from neotasker import BackgroundQueueWorker
@@ -3217,10 +3217,10 @@ class UDPNotifier(GenericNotifier):
         if isinstance(frame, str):
             frame = frame.encode()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if len(frame) > MAX_UDP_FRAME:
+        if len(frame) > MAX_UDP_FRAME_LEN:
             chunks = [
-                frame[i:i + MAX_UDP_FRAME]
-                for i in range(0, len(frame), MAX_UDP_FRAME)
+                frame[i:i + MAX_UDP_FRAME_LEN]
+                for i in range(0, len(frame), MAX_UDP_FRAME_LEN)
             ]
             # send first frame
             sock.sendto(self._header + b'\x01' + chunks[0],
