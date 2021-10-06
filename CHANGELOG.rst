@@ -13,6 +13,7 @@ Common
     * New API method "check_item_access"
     * Custom suicide timeouts
     * Poll delay allowed to be set to 1 microsecond
+    * Fix for UDP notifier data frames longer than 65K
 
 LM PLC
 ------

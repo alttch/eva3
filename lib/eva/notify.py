@@ -34,6 +34,8 @@ try:
 except:
     pass
 
+MAX_UDP_FRAME = 65500
+
 from neotasker import BackgroundIntervalWorker
 from neotasker import BackgroundQueueWorker
 from neotasker import background_worker
@@ -3202,7 +3204,7 @@ class UDPNotifier(GenericNotifier):
             self._serializer_id = b'\x01'
         self.host = host
         self.port = port
-        self._header = b'\x01' + self._serializer_id
+        self._header = b'\x02' + self._serializer_id
 
     def connect(self):
         self.connected = True
@@ -3215,7 +3217,23 @@ class UDPNotifier(GenericNotifier):
         if isinstance(frame, str):
             frame = frame.encode()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.sendto(self._header + frame, (self.host, self.port))
+        if len(frame) > MAX_UDP_FRAME:
+            chunks = [
+                frame[i:i + MAX_UDP_FRAME]
+                for i in range(0, len(frame), MAX_UDP_FRAME)
+            ]
+            # send first frame
+            sock.sendto(self._header + b'\x01' + chunks[0],
+                        (self.host, self.port))
+            # send other frames
+            for i in range(1, len(chunks) - 1):
+                sock.sendto(self._header + b'\x02' + chunks[i],
+                            (self.host, self.port))
+            # send last frame
+            sock.sendto(self._header + b'\xff' + chunks[-1],
+                        (self.host, self.port))
+        else:
+            sock.sendto(self._header + b'\x00' + frame, (self.host, self.port))
 
     def test(self):
         try:

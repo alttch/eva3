@@ -474,6 +474,34 @@ command can be used:
 The command automatically creates required notifier and reconfigures receivers,
 it also turns off web socket state events for local controllers.
 
+UDP frame format
+----------------
+
+Frame bytes:
+
+========  =========================================
+ byte      value
+========  =========================================
+  0        0x02 (v2)
+  1        encoding (0x01 = json, 0x02 = msgpack)
+  2        frame type
+  3..N     serialized data
+========  =========================================
+
+Frame types (byte 2):
+
+========  =========================================
+ value     description
+========  =========================================
+ 0x00      single frame, decode data as-is
+ 0x01      multi-frame data, first frame
+ 0x02      multi-frame data, next frame
+ 0xff      multi-frame data, end frame
+========  =========================================
+
+If multi-frame data is received, all frame data blocks (byte 3..N) MUST be
+combined before deserializing.
+
 DB Notifiers
 ============
 
