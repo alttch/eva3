@@ -466,29 +466,32 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                 return False
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('Unit::update_set_state locking broken')
-            if self.current_action and self.current_action.is_status_running():
-                nstatus = None
-                nvalue = None
-            else:
-                nstatus = _status
-                nvalue = value
-            if not self.is_value_valid(value):
-                logging.error('Unit {} got invalid value {}'.format(
-                    self.oid, value))
-                _status = -1
-                nstatus = -1
-                value = None
-                nvalue = None
-            else:
-                self.update_expiration()
-            self.set_state(status=_status,
-                           value=value,
-                           nstatus=nstatus,
-                           nvalue=nvalue,
-                           from_mqtt=from_mqtt,
-                           timestamp=timestamp,
-                           ieid=ieid)
-            self.queue_lock.release()
+            try:
+                if self.current_action and self.current_action.is_status_running(
+                ):
+                    nstatus = None
+                    nvalue = None
+                else:
+                    nstatus = _status
+                    nvalue = value
+                if not self.is_value_valid(value):
+                    logging.error('Unit {} got invalid value {}'.format(
+                        self.oid, value))
+                    _status = -1
+                    nstatus = -1
+                    value = None
+                    nvalue = None
+                else:
+                    self.update_expiration()
+                self.set_state(status=_status,
+                               value=value,
+                               nstatus=nstatus,
+                               nvalue=nvalue,
+                               from_mqtt=from_mqtt,
+                               timestamp=timestamp,
+                               ieid=ieid)
+            finally:
+                self.queue_lock.release()
             return True
 
     def set_state(self,
