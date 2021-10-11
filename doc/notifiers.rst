@@ -181,7 +181,7 @@ When subscribing notifier to logs, you may use optional *-l LEVEL* param (10 -
 DEBUG, 20 - INFO, default, 30 - WARNING, 40 - ERROR, 50 - CRITICAL).
 
 When subscribing notifier to state changes, you may also always specify item
-types (comma separated) or use '#' for all types with *-v TYPE* param, groups
+types (comma separated) or use '#' for all types with *-p TYPE* param, groups
 with *-g GROUPS*. Optionally you may specify the particular items to subscribe
 notifier to with *-I ITEMS*.
 
@@ -192,7 +192,7 @@ notifier to with *-I ITEMS*.
 
 Example:
 
-    eva ns uc subscribe state test1 -v '#' -g 'hall/#'
+    eva ns uc subscribe state test1 -p '#' -g 'hall/#'
 
 subscribes the notifier *test1* to the events of the status change of all the
 items in the *hall* group subgroups.
@@ -207,7 +207,7 @@ all failed actions:
 
 .. code-block:: bash
 
-    eva ns uc subscribe action test2 -v '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
+    eva ns uc subscribe action test2 -p '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
 
 Once created, the subscription can't be changed, but new subscription to the
 same subject replaces the configuration of the previous one.
