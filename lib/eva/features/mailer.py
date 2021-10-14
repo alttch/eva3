@@ -19,12 +19,10 @@ def setup(smtp=None,
     if not default_from:
         default_from = f'eva@{platform.node()}'
     config = {'smtp': smtp, 'from': default_from}
-    config['ssl'] = val_to_boolean(ssl)
-    config['tls'] = val_to_boolean(tls)
-    if login:
-        config['login'] = login
-    if password:
-        config['password'] = password
+    config['ssl'] = val_to_boolean(ssl) or False
+    config['tls'] = val_to_boolean(tls) or False
+    config['login'] = str(login) if login else None
+    config['password'] = str(password) if password else None
     eva.registry.key_set('config/common/mailer', config)
     for c in ['uc', 'lm', 'sfa']:
         if is_enabled(c):
