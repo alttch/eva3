@@ -510,6 +510,7 @@ def check(k,
           ip=None,
           master=False,
           sysfunc=False,
+          any_item=False,
           ro_op=False):
     if eva.core.is_setup_mode():
         return True
@@ -525,6 +526,12 @@ def check(k,
             return True
         if sysfunc and not _k.sysfunc:
             return False
+        if any_item:
+            if _k.groups_deny or _k.item_ids_deny:
+                return False
+            else:
+                return '#' in _k.item_ids or '#' in _k.groups or (
+                    ro_op and ('#' in _k.item_ids_ro or '#' in _k.groups_ro))
         if item:
             # check access to PHI
             try:
