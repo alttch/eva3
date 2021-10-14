@@ -138,8 +138,9 @@ class LM_API(GenericAPI, GenericCloudAPI):
         else:
             gi = eva.lm.controller.lvars_by_full_id
             result = []
+            can_any_item = apikey.check(k, any_item=True, ro_op=True)
             for i, v in gi.copy().items():
-                if key_check(k, v, ro_op=True) and \
+                if (can_any_item or key_check(k, v, ro_op=True)) and \
                         (not group or \
                             eva.item.item_match(v, [], [group])):
                     r = v.serialize(full=full)
