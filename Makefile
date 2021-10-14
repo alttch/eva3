@@ -16,7 +16,7 @@ pub:
 test-build:
 	make build
 	git commit -a -m 'test build'
-	git push origin ${VERSION}
+	git push
 	make dmaster
 	make test-release
 	jks build get.eva-ics.com
