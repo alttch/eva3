@@ -24,6 +24,7 @@ class DecisionMatrix:
     def __init__(self):
         self.rules = []
         self.rules_locker = threading.Lock()
+        self.masks_enabled = True
 
     def process(self, item, ns=False):
         if not ns and item.prv_status == item.status and \
@@ -53,28 +54,44 @@ class DecisionMatrix:
             for rule in self.rules:
                 if not rule.enabled:
                     continue
-                with rule.processing_lock:
-                    if rule.for_item_type and rule.for_item_type != '#' and \
-                            rule.for_item_type != item.item_type:
+                need_lock = rule.chillout_time > 0
+                if need_lock and not rule.processing_lock.acquire(
+                        timeout=eva.core.config.timeout):
+                    logging.critical(f'DecisionMatrix::rule processing '
+                                     f'lock broken for {rule.item_id}')
+                    eva.core.critical()
+                    return False
+                try:
+                    if rule.for_item_type != item.item_type and \
+                            rule.for_item_type != '#' and \
+                            rule.for_item_type:
                         continue
-                    if rule.for_item_id and rule.for_item_id != '#' and \
-                        rule.for_item_id != item.item_id and \
-                        not (rule.for_item_id[0] == '*' and \
-                            rule.for_item_id[1:] == \
-                                item.item_id[-len(rule.for_item_id)+1:]) and \
-                        not (rule.for_item_id[-1] == '*' and \
-                            rule.for_item_id[:-1] == \
-                                item.item_id[:len(rule.for_item_id)-1]) and \
-                        not (rule.for_item_id[0] == '*' and \
-                            rule.for_item_id[-1] == '*' and \
-                            item.item_id.find(rule.for_item_id[1:-1]) > -1
-                            ):
+                    if self.masks_enabled:
+                        if rule.for_item_id and rule.for_item_id != '#' and \
+                            rule.for_item_id != item.item_id and \
+                            not (rule.for_item_id[0] == '*' and \
+                                rule.for_item_id[1:] == \
+                                    item.item_id[-len(rule.for_item_id)+1:]) \
+                                    and \
+                            not (rule.for_item_id[-1] == '*' and \
+                                rule.for_item_id[:-1] == \
+                                    item.item_id[:len(rule.for_item_id)-1]) \
+                                    and \
+                            not (rule.for_item_id[0] == '*' and \
+                                rule.for_item_id[-1] == '*' and \
+                                item.item_id.find(rule.for_item_id[1:-1]) > -1
+                                ):
+                            continue
+                    elif rule.for_item_id != item.item_id and \
+                            rule.for_item_id != '#' and \
+                            rule.for_item_id:
                         continue
                     if rule.for_item_group is not \
-                            None and not \
-                            eva.item.item_match(item, [],
-                                    [ rule.for_item_group ]):
-                        continue
+                            None and rule.for_item_group != item.group and \
+                            rule.for_item_group != '#':
+                        if self.masks_enabled and not eva.item.item_match(
+                                item, [], [rule.for_item_group]):
+                            continue
                     pv = None
                     v = None
                     if rule.for_prop == 'status' and not ns:
@@ -211,6 +228,9 @@ class DecisionMatrix:
                                 '%s is an event %s breaker, stopping event' % \
                                 (rule_id, event_code))
                         break
+                finally:
+                    if need_lock:
+                        rule.processing_lock.release()
         finally:
             self.rules_locker.release()
         return True
@@ -254,13 +274,20 @@ class DecisionMatrix:
                     ' %s for event %s' % (rule.macro, event_code))
 
     def append_rule(self, d_rule, do_sort=True):
-        if d_rule in self.rules:
+        if not self.rules_locker.acquire(timeout=eva.core.config.timeout):
+            logging.critical('DecisionMatrix::process locking broken')
+            eva.core.critical()
             return False
-        r = self.rules.copy()
-        r.append(d_rule)
-        if do_sort:
-            r = self.sort_rule_array(r)
-        self.rules = r
+        try:
+            if d_rule in self.rules:
+                return False
+            r = self.rules.copy()
+            r.append(d_rule)
+            if do_sort:
+                r = self.sort_rule_array(r)
+            self.rules = r
+        finally:
+            self.rules_locker.release()
         return True
 
     def sort(self):
@@ -273,9 +300,16 @@ class DecisionMatrix:
         return r
 
     def remove_rule(self, d_rule):
-        if not d_rule in self.rules:
+        if not self.rules_locker.acquire(timeout=eva.core.config.timeout):
+            logging.critical('DecisionMatrix::process locking broken')
+            eva.core.critical()
             return False
-        self.rules.remove(d_rule)
+        try:
+            if not d_rule in self.rules:
+                return False
+            self.rules.remove(d_rule)
+        finally:
+            self.rules_locker.release()
 
 
 class DecisionRule(eva.item.Item):

@@ -20,6 +20,9 @@ LM PLC
 
     * new rules option: "block on exec" (blocks decision matrix until a macro
       is completed).
+    * plc/rule-masks-enabled option allows to turn off rule masks (except
+      simple '#' masks for all groups/types/ids), which speeds up rule
+      processing
 
 3.4.1 (2021-09-06)
 ==================

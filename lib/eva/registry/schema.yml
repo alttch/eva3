@@ -265,6 +265,7 @@ config/lm/main:
       additionalProperties: false
       properties:
         use-core-pool: *bool
+        rule-masks-enabled: *bool
         cache-remote-state: &floatzeropositive
           type: number
           minimum: 0
