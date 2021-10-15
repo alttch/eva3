@@ -1259,7 +1259,7 @@ class GenericCLI(GCLI):
                 try:
                     while True:
                         import time
-                        start_time = time.time()
+                        start_time = time.perf_counter()
                         if clear_screen:
                             os.system('clear')
                             if repeat_delay:
@@ -1278,7 +1278,7 @@ class GenericCLI(GCLI):
                         if not repeat_delay:
                             break
                         time_to_sleep = repeat_delay - \
-                                time.time() + start_time
+                                time.perf_counter() + start_time
                         if time_to_sleep > repeat_delay:
                             time_to_sleep = repeat_delay
                         if time_to_sleep > 0:

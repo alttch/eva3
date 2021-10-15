@@ -978,7 +978,7 @@ class GenericAPI(API):
             'product_name': eva.core.product.name,
             'product_code': eva.core.product.code,
             'product_build': eva.core.product.build,
-            'uptime': int(time.time() - eva.core.start_time)
+            'uptime': int(time.perf_counter() - eva.core.start_time)
         }
         if eva.core.config.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \

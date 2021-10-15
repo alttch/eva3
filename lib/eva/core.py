@@ -161,7 +161,7 @@ if path:
     path = ':' + path
 os.environ['PATH'] = dir_venv + '/bin' + path
 
-start_time = time.time()
+start_time = time.perf_counter()
 
 cs_data = SimpleNamespace(corescripts=[], topics=[], periodic_iteration=0)
 
@@ -505,6 +505,7 @@ def do_save():
 
 def block():
     _flags.started.set()
+    logging.info(f'started in {time.perf_counter()-start_time:.3f} sec')
     exec_corescripts(
         event=SimpleNamespace(type=CS_EVENT_SYSTEM, topic='startup'))
     cs_intervaller.start()
@@ -624,7 +625,7 @@ def serialize(full=False):
     d['userdb_uri'] = config.userdb_uri
     d['pid_file'] = config.pid_file
     d['log_file'] = config.log_file
-    d['uptime'] = int(time.time() - start_time)
+    d['uptime'] = int(time.perf_counter() - start_time)
     d['time'] = time.time()
     fd = proc.open_files()
     d['fd_count'] = len(fd)
