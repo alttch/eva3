@@ -48,6 +48,11 @@ To use EVA ICS in high-load environments, remember the following:
   events (e.g. Ethernet/IP, Modbus slaves, SNMP without traps), it's
   recommended to use :doc:`data pullers<datapullers>`.
 
+* :doc:`/lm/lm` option *plc/rule-indexes-enabled* enables
+  :doc:`/lm/decision_matrix` rules indexes, which allows to speed up rule
+  processing in 5-10 times. Warning: enabling this option disables rule
+  priorities.
+
 * To speed up event synchronization between controllers, switch to :ref:`lurp`.
 
 * The good idea is also to reduce event real-timing and use :ref:`bulk_notify`.

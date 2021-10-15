@@ -483,6 +483,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             raise InvalidParameter('property not specified')
         if not item:
             raise ResourceNotFound
+        for_item_oid = item.get_item_oid()
         if p:
             if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
                 if not key_check(k, item):
@@ -496,6 +497,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
                 (isinstance(v, dict) and \
                     ('property' in v or 'description' in v)):
             eva.lm.controller.DM.sort()
+        else:
+            eva.lm.controller.DM.reindex_rule(item, for_item_oid)
         return True
 
     @log_i

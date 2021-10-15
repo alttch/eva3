@@ -84,8 +84,8 @@ plc:
   use-core-pool: true
 # cache state of remote items into local db (seconds ttl), off by default
   cache-remote-state: 0
-# enable / disable rule masks (default - enabled)
-  rule-masks-enabled: true
+# enable / disable rule indexes (WARNING: using indexes disables rule priorities)
+  rule-indexes-enabled: false
 #lurp:
 # LURP replication
 #  listen: 127.0.0.1:8911
