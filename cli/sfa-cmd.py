@@ -1614,7 +1614,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                         })[1].get('code')
                     if code != apiclient.result_ok:
                         self.print_warn(
-                            'Unable to save: {self._api_error(code)}')
+                            f'Unable to save: {self._api_error(code)}')
             if ucs_to_reload:
                 print('Reloading LM PLCs')
                 for c in controllers:
