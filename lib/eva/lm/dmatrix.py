@@ -25,7 +25,7 @@ class DecisionMatrix:
         self.rules = []
         self.rules_by_mask = []
         self.rules_for_items = {}
-        self.rules_locker = threading.Lock()
+        self.rules_locker = threading.RLock()
 
     def process(self, item, ns=False):
         if not ns and item.prv_status == item.status and \
@@ -297,7 +297,14 @@ class DecisionMatrix:
         return True
 
     def sort(self):
-        self.rules = self.sort_rule_array(self.rules.copy())
+        if not self.rules_locker.acquire(timeout=eva.core.config.timeout):
+            logging.critical('DecisionMatrix::process locking broken')
+            eva.core.critical()
+            return False
+        try:
+            self.rules = self.sort_rule_array(self.rules.copy())
+        finally:
+            self.rules_locker.release()
 
     def sort_rule_array(self, rule_array):
         r = sorted(rule_array, key=lambda v: v.item_id)
@@ -325,18 +332,25 @@ class DecisionMatrix:
             self.rules_locker.release()
 
     def reindex_rule(self, d_rule, old_o):
-        new_o = d_rule.get_item_oid()
-        if new_o != old_o:
-            if old_o is None:
-                self.rules_by_mask.remove(d_rule)
-            else:
-                self.rules_for_items[old_o].remove(d_rule)
-                if not self.rules_for_items[old_o]:
-                    del self.rules_for_items[old_o]
-            if new_o is None:
-                self.rules_by_mask.append(d_rule)
-            else:
-                self.rules_for_items.setdefault(new_o, []).append(d_rule)
+        if not self.rules_locker.acquire(timeout=eva.core.config.timeout):
+            logging.critical('DecisionMatrix::process locking broken')
+            eva.core.critical()
+            return False
+        try:
+            new_o = d_rule.get_item_oid()
+            if new_o != old_o:
+                if old_o is None:
+                    self.rules_by_mask.remove(d_rule)
+                else:
+                    self.rules_for_items[old_o].remove(d_rule)
+                    if not self.rules_for_items[old_o]:
+                        del self.rules_for_items[old_o]
+                if new_o is None:
+                    self.rules_by_mask.append(d_rule)
+                else:
+                    self.rules_for_items.setdefault(new_o, []).append(d_rule)
+        finally:
+            self.rules_locker.release()
 
 
 class DecisionRule(eva.item.Item):
