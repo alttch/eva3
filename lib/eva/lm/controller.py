@@ -1003,7 +1003,7 @@ def destroy_dm_rule(r_id):
         return True
     except Exception as e:
         eva.core.log_traceback()
-        return FunctionFailed(e)
+        raise FunctionFailed(e)
 
 
 @with_item_lock
@@ -1042,7 +1042,7 @@ def destroy_job(r_id):
         return True
     except Exception as e:
         eva.core.log_traceback()
-        return FunctionFailed(e)
+        raise FunctionFailed(e)
 
 
 def handle_discovered_controller(notifier_id, controller_id, location,
