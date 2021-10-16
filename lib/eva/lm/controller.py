@@ -97,13 +97,6 @@ def update_config(cfg):
     if not use_core_pool:
         eva.lm.plc.spawn = eva.core.spawn_thread
     try:
-        rule_indexes_enabled = cfg.get('plc/rule-indexes-enabled',
-                                       default=False)
-    except:
-        rule_indexes_enabled = False
-    logging.debug(f'plc.rule_indexes_enabled = {rule_indexes_enabled}')
-    DM.use_indexes = rule_indexes_enabled
-    try:
         cache_remote_state = float(cfg.get('plc/cache-remote-state'))
     except:
         cache_remote_state = 0.0

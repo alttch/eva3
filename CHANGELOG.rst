@@ -20,8 +20,7 @@ LM PLC
 
     * new rules option: "block on exec" (blocks decision matrix until a macro
       is completed).
-    * plc/rule-indexes-enabled option allows to turn on rule indexes (speeds up
-      rule processing but disables rule priorities)
+    * decision matrix rule indexes (speeds up rule processing, auto-activated)
 
 
 3.4.1 (2021-09-06)
