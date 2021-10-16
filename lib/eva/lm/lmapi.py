@@ -393,6 +393,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         u, v, e, save = parse_api_params(kwargs, 'uveS', 's.bb')
         save = save or eva.core.config.auto_save
         rule = eva.lm.controller.create_dm_rule(save=False, rule_uuid=u)
+        for_item_oid = rule.get_item_oid()
         if e:
             rule.set_prop('enabled', True)
         if save:
@@ -407,6 +408,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             eva.core.log_traceback()
             eva.lm.controller.destroy_dm_rule(rule.item_id)
             raise
+        eva.lm.controller.DM.reindex_rule(rule, for_item_oid)
         return rule.serialize(info=True)
 
     @log_w
@@ -497,8 +499,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                 (isinstance(v, dict) and \
                     ('property' in v or 'description' in v)):
             eva.lm.controller.DM.sort()
-        else:
-            eva.lm.controller.DM.reindex_rule(item, for_item_oid)
+        eva.lm.controller.DM.reindex_rule(item, for_item_oid)
         return True
 
     @log_i
