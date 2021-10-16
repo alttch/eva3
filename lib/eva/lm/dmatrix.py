@@ -233,7 +233,7 @@ class DecisionMatrix:
                             logging.debug('Decision matrix rule ' + \
                                     '%s is an event %s breaker, stopping event' % \
                                     (rule_id, event_code))
-                            break
+                            return True
                     finally:
                         if need_lock:
                             rule.processing_lock.release()
