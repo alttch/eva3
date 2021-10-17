@@ -209,17 +209,13 @@ class DecisionMatrix:
                             else:
                                 if v >= rule.in_range_max:
                                     continue
-                    if eva.core.config.development:
-                        rule_id = rule.item_id
-                    else:
-                        rule_id = rule.item_id[:14] + '...'
                     logging.debug('Decision matrix rule %s match event %s' % \
-                            (rule_id, event_code))
+                            (rule.item_id, event_code))
                     if rule.chillout_active:
                         logging.debug(
                             'Decision matrix rule ' + \
                                     '%s event %s skipped due to chillout time' % \
-                                    (rule_id, event_code) + \
+                                    (rule.item_id, event_code) + \
                                     ', chillot ending in %f sec' % \
                                     (rule.chillout_time + rule.last_matched - \
                                         time.time()))
@@ -229,7 +225,7 @@ class DecisionMatrix:
                     if rule.break_after_exec:
                         logging.debug('Decision matrix rule ' + \
                                 '%s is an event %s breaker, stopping event' % \
-                                (rule_id, event_code))
+                                (rule.item_id, event_code))
                         break
                 finally:
                     if need_lock:
@@ -247,13 +243,9 @@ class DecisionMatrix:
         with rule.processing_lock:
             rule.chillout_active = False
             if rule.chillout_event:
-                if eva.core.config.development:
-                    rule_id = rule.item_id
-                else:
-                    rule_id = rule.item_id[:14] + '...'
                 logging.debug(
                     'Decision matrix rule {} matched event {} during chillout'.
-                    format(rule_id, rule.chillout_event))
+                    format(rule.item_id, rule.chillout_event))
                 self.exec_rule_action(rule.chillout_event, rule, item)
                 rule.chillout_event = None
 
