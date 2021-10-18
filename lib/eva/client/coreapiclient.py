@@ -33,7 +33,7 @@ class CoreAPIClient(APIClient):
         def data_handler(self, data):
             self.completed.set()
             try:
-                if data[0] != 0:
+                if data[0] != 0 and data[0] != 1:
                     raise ValueError
                 self.code = data[1]
                 self.body = data[2:]
@@ -52,6 +52,7 @@ class CoreAPIClient(APIClient):
         self._key_id = ''
         # 0 - http
         # 1 - mqtt
+        # 2 - mqtt compressed
         self.protocol_mode = 0
 
     def set_uri(self, uri):
@@ -84,7 +85,7 @@ class CoreAPIClient(APIClient):
     def set_protocol_mode(self, protocol_mode):
         if not protocol_mode:
             self.do_call = self.do_call_http
-        elif protocol_mode == 1:
+        elif protocol_mode == 1 or protocol_mode == 2:
             self.do_call = self.do_call_mqtt
         else:
             raise Exception('protocol_mode unknown')
@@ -153,17 +154,24 @@ class CoreAPIClient(APIClient):
         request_id = rid.hex()
         data = rid + pack_msgpack(payload)
         cb = self.MQTTCallback()
+        if self.protocol_mode == 2:
+            bh = b'\x01'
+            import zlib
+        else:
+            bh = b'\x00'
+        epl = eva.crypto.encrypt(data, self._private_key, key_is_hash=True)
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri,
-            b'\x00\x02' + self._key_id.encode() + b'\x00' +
-            eva.crypto.encrypt(data, self._private_key, key_is_hash=True),
+            bh + b'\x02' + self._key_id.encode() + b'\x00' +
+            (zlib.compress(epl) if self.protocol_mode == 2 else epl),
             cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
             try:
-                r.content = eva.crypto.decrypt(cb.body,
+                r.content = eva.crypto.decrypt(zlib.decompress(
+                    cb.body) if self.protocol_mode == 2 else cb.body,
                                                self._private_key,
                                                key_is_hash=True)
                 if cb.code == 200:
