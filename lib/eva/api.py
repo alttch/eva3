@@ -1984,8 +1984,16 @@ def mqtt_api_handler(notifier_id, data, callback):
                 eva.core.log_traceback()
                 raise FunctionFailed('Invalid JSON data')
         else:
-            if not data or data[0] != 0:
+            if not data or (data[0] != 0 and data[0] != 1):
                 raise FunctionFailed('invalid binary packet data')
+            # encodings
+            # 2 - msgpack (default)
+            # 3 - msgpack zipped
+            if data[1] == 3:
+                import zlib
+                use_compression = True
+            else:
+                use_compression = False
             pfx, api_key_id, d = data.split(b'\x00', 2)
             api_key_id = api_key_id[1:].decode()
             ct = CT_MSGPACK
@@ -1996,7 +2004,8 @@ def mqtt_api_handler(notifier_id, data, callback):
             rid = d[:16]
             call_id = rid.hex()
             try:
-                payload = msgpack_loads(d[16:])
+                payload = msgpack_loads(
+                    zlib.decompress(d[16:]) if use_compression else d[16:])
             except:
                 logging.warning('MQTT API: invalid JSON data or API key from ' +
                                 notifier_id)
@@ -2013,7 +2022,9 @@ def mqtt_api_handler(notifier_id, data, callback):
             response = eva.crypto.encrypt(packer.pack(response),
                                           private_key,
                                           key_is_hash=True)
-            callback(call_id, b'\x00\xC8' + response)
+            callback(
+                call_id, b'\x00' + b'\xC8' +
+                (zlib.compress(response) if use_compression else response))
         else:
             response = ce.encrypt(rapidjson.dumps(response).encode())
             callback(call_id, '200|' + response.decode())

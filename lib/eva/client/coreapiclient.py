@@ -29,6 +29,7 @@ class CoreAPIClient(APIClient):
             self.completed = threading.Event()
             self.body = ''
             self.code = None
+            self.proto = None
 
         def data_handler(self, data):
             self.completed.set()
@@ -52,8 +53,9 @@ class CoreAPIClient(APIClient):
         self._key_id = ''
         # 0 - http
         # 1 - mqtt
-        # 2 - mqtt compressed
         self.protocol_mode = 0
+        # for mqtt only
+        self.use_compression = False
 
     def set_uri(self, uri):
         # mqtt uri format: mqtt://notifier_id:type/controller
@@ -85,7 +87,7 @@ class CoreAPIClient(APIClient):
     def set_protocol_mode(self, protocol_mode):
         if not protocol_mode:
             self.do_call = self.do_call_http
-        elif protocol_mode == 1 or protocol_mode == 2:
+        elif protocol_mode == 1:
             self.do_call = self.do_call_mqtt
         else:
             raise Exception('protocol_mode unknown')
@@ -142,6 +144,7 @@ class CoreAPIClient(APIClient):
         """
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
+        use_compression = self.use_compression
         if not n:
             return r
         if rid is None:
@@ -152,18 +155,18 @@ class CoreAPIClient(APIClient):
                 return r
             rid = rid.ljust(16, b'\x00')
         request_id = rid.hex()
-        data = rid + pack_msgpack(payload)
-        cb = self.MQTTCallback()
-        if self.protocol_mode == 2:
-            bh = b'\x01'
+        if use_compression:
+            header = b'\x00\x03'
             import zlib
         else:
-            bh = b'\x00'
-        epl = eva.crypto.encrypt(data, self._private_key, key_is_hash=True)
+            header = b'\x00\x02'
+        data = rid + (zlib.compress(pack_msgpack(payload))
+                      if use_compression else pack_msgpack(payload))
+        cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri,
-            bh + b'\x02' + self._key_id.encode() + b'\x00' +
-            (zlib.compress(epl) if self.protocol_mode == 2 else epl),
+            header + self._key_id.encode() + b'\x00' +
+            eva.crypto.encrypt(data, self._private_key, key_is_hash=True),
             cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
@@ -171,7 +174,7 @@ class CoreAPIClient(APIClient):
         if cb.code:
             try:
                 r.content = eva.crypto.decrypt(zlib.decompress(
-                    cb.body) if self.protocol_mode == 2 else cb.body,
+                    cb.body) if use_compression else cb.body,
                                                self._private_key,
                                                key_is_hash=True)
                 if cb.code == 200:

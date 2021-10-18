@@ -7,6 +7,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * MQTT compression for slow connections
     * CLI client SSL verify is now on by default. To suppress SSL certificate
       verification, manually set URL as "!https://..."
     * State registry keys are not auto backed up any longer

@@ -36,6 +36,9 @@ To use EVA ICS in high-load environments, remember the following:
 
 * Set *retain_enabled* to *false* for MQTT notifiers
 
+* For slow channels, set *compress* to *true* for controllers, connected via
+  MQTT (unless CPU load is critical on clients)
+
 * If HTTP API respond too slow, try increasing value of *thread-pool* option in
   [webapi] config section.
 

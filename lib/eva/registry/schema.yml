@@ -450,6 +450,7 @@ data/lm/remote_uc: &remotecontroller
   additionalProperties: false
   properties:
     enabled: *bool
+    compress: *bool
     full_id: *str
     description: *str
     group: *str

@@ -473,6 +473,8 @@ class RemoteController(eva.item.Item):
             self.ws_state_events = data['ws_state_events']
         if 'ws_buf_ttl' in data:
             self.ws_buf_ttl = data['ws_buf_ttl']
+        if 'compress' in data:
+            self.api.use_compression = data['compress']
         super().update_config(data)
 
     def set_modified(self, save):
@@ -493,6 +495,21 @@ class RemoteController(eva.item.Item):
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
+        elif prop == 'compress':
+            try:
+                v = eva.tools.val_to_boolean(val)
+                if v is None:
+                    v = False
+                if v and self.api.protocol_mode != 1:
+                    logging.warning(
+                        'API compression is supported with MQTT only')
+                if self.api.use_compression != v:
+                    self.api.use_compression = v
+                    self.log_set(prop, v)
+                    self.set_modified(save)
+                return True
+            except:
+                return False
         elif prop == 'key':
             if self._key != val:
                 self._key = val
@@ -658,6 +675,7 @@ class RemoteController(eva.item.Item):
         d = {}
         d['static'] = self.static
         d['enabled'] = self.enabled
+        d['compress'] = self.api.use_compression
         if config or props:
             d['retries'] = self.retries
             d['uri'] = ''
