@@ -23,7 +23,7 @@ netifaces==0.10.9
 paho-mqtt==1.4.0
 pandas==1.1.5
 pillow==8.1.0
-psutil==5.4.6
+psutil==5.8.0
 pygal==2.4.0
 pyjwt==1.7.1
 pycrypto==2.6.1
