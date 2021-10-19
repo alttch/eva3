@@ -2387,14 +2387,29 @@ class GenericMQTTNotifier(GenericNotifier):
         self.handler_lock = threading.RLock()
         self.test_lock = threading.Lock()
         self.test_topic = None
-        self.sub_lock = threading.RLock()
         self.sub_events = {}
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        with self.sub_lock:
-            event = self.sub_events.get(mid)
-            if event is not None:
-                event.set()
+        event = self.sub_events.get(mid)
+        if event is not None:
+            event.set()
+
+    def subscribe_assured(self, topic, qos, timeout):
+        with self.mq._callback_mutex:
+            event = threading.Event()
+            res, message_id = self.mq.subscribe(topic, qos)
+            if res != mqtt.MQTT_ERR_SUCCESS:
+                msg = f'{self.notifier_id} subscribe error for {topic}: {res}'
+                logging.error(f'.{msg}')
+                raise RuntimeError(msg)
+            self.sub_events[message_id] = event
+        result = event.wait(timeout)
+        with self.mq._callback_mutex:
+            del self.sub_events[message_id]
+        if result is False:
+            msg = f'{self.notifier_id} subscribe timeout for {topic}'
+            logging.error(f'.{msg}')
+            raise TimeoutError(msg)
 
     def connect(self, from_pinger=False):
         self.connected = True
@@ -2616,20 +2631,6 @@ class GenericMQTTNotifier(GenericNotifier):
             logging.error('.Unable to process topic ' + \
                             '%s with custom handler %s' % (t, func))
             eva.core.log_traceback(notifier=True)
-
-    def subscribe_assured(self, topic, qos, timeout):
-        with self.sub_lock:
-            message_id = self.mq.subscribe(topic, qos)[1]
-            event = threading.Event()
-            self.sub_events[message_id] = event
-        result = event.wait(timeout)
-        with self.sub_lock:
-            del self.sub_events[message_id]
-        if result:
-            return True
-        else:
-            raise TimeoutError(
-                f'{self.notifier_id} subscribe timeout for {topic}')
 
     def on_message(self, client, userdata, msg):
         t = msg.topic
