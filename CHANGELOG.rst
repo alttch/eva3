@@ -7,7 +7,9 @@ EVA ICS CHANGELOG
 Common
 ------
 
-    * MQTT compression for slow connections
+    * MQTT compression for slow connections (notifier option "bulk_compress" to
+      compress bulk MQTT state payloads and controller option "compress" to
+      compress API calls)
     * CLI client SSL verify is now on by default. To suppress SSL certificate
       verification, manually set URL as "!https://..."
     * State registry keys are not auto backed up any longer
