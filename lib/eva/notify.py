@@ -2938,13 +2938,13 @@ class GenericMQTTNotifier(GenericNotifier):
                 if not self.check_connection():
                     return False
                 self.mq.subscribe(test_topic, qos=self.qos['system'])
-                self.mq.publish(test_topic,
-                                'passed',
-                                qos=self.qos['system'],
-                                retain=False)
+                mqtt_result = self.mq.publish(test_topic,
+                                              'passed',
+                                              qos=self.qos['system'],
+                                              retain=False)
                 timeout = self.get_timeout()
                 t_end = time.perf_counter() + timeout
-                result = eva.core.wait_for(result.is_published, timeout)
+                result = eva.core.wait_for(mqtt_result.is_published, timeout)
                 if result is True:
                     while True:
                         if self.test_topic is None:
