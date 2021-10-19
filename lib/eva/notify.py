@@ -2387,15 +2387,14 @@ class GenericMQTTNotifier(GenericNotifier):
         self.handler_lock = threading.RLock()
         self.test_lock = threading.Lock()
         self.test_topic = None
-        self.test_topic_sub_id = None
-        self.test_topic_subscribed = False
-        self.test_sub_id_lock = threading.RLock()
+        self.sub_lock = threading.RLock()
+        self.sub_events = {}
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        if self.test_topic is not None:
-            with self.test_sub_id_lock:
-                if mid == self.test_topic_sub_id:
-                    self.test_topic_subscribed = True
+        with self.sub_lock:
+            event = self.sub_events.get(mid)
+            if event is not None:
+                event.set()
 
     def connect(self, from_pinger=False):
         self.connected = True
@@ -2617,6 +2616,20 @@ class GenericMQTTNotifier(GenericNotifier):
             logging.error('.Unable to process topic ' + \
                             '%s with custom handler %s' % (t, func))
             eva.core.log_traceback(notifier=True)
+
+    def subscribe_assured(self, topic, qos, timeout):
+        with self.sub_lock:
+            message_id = self.mq.subscribe(topic, qos)[1]
+            event = threading.Event()
+            self.sub_events[message_id] = event
+        result = event.wait(timeout)
+        with self.sub_lock:
+            del self.sub_events[message_id]
+        if result:
+            return True
+        else:
+            raise TimeoutError(
+                f'{self.notifier_id} subscribe timeout for {topic}')
 
     def on_message(self, client, userdata, msg):
         t = msg.topic
@@ -2915,7 +2928,7 @@ class GenericMQTTNotifier(GenericNotifier):
             self.api_callback[request_id] = (t, callback)
         finally:
             self.api_callback_lock.release()
-        self.mq.subscribe(t, qos=self.qos['system'])
+        self.subscribe_assured(t, self.qos['system'], self.get_timeout())
         return self.send_message('controller/' + controller_id + '/api/request',
                                  data,
                                  qos=self.qos['system'])
@@ -2936,13 +2949,9 @@ class GenericMQTTNotifier(GenericNotifier):
         finally:
             self.api_callback_lock.release()
 
-    def is_test_topic_subscribed(self):
-        return self.test_topic_subscribed
-
     def test(self):
         try:
             with self.test_lock:
-                self.test_topic_subscribed = False
                 test_topic = (
                     f'{self.pfx}controller/{eva.core.product.code}'
                     f'/{eva.core.config.system_name}/test-{uuid.uuid4()}')
@@ -2951,21 +2960,14 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id,self.host, self.port))
                 if not self.check_connection():
                     return False
-                with self.test_sub_id_lock:
-                    self.test_topic_sub_id = self.mq.subscribe(
-                        test_topic, qos=self.qos['system'])[1]
                 t_start = time.perf_counter()
                 timeout = self.get_timeout()
-                result = eva.core.wait_for(self.is_test_topic_subscribed,
-                                           timeout)
-                if result is not True:
-                    raise TimeoutError("Subscription timeout")
-                timeout = timeout - time.perf_counter() + t_start
+                self.subscribe_assured(test_topic, self.qos['system'], timeout)
                 mqtt_result = self.mq.publish(test_topic,
                                               'passed',
                                               qos=self.qos['system'],
                                               retain=False)
-                timeout = self.get_timeout()
+                timeout = timeout - time.perf_counter() + t_start
                 t_end = time.perf_counter() + timeout
                 result = eva.core.wait_for(mqtt_result.is_published, timeout)
                 if result is True:
