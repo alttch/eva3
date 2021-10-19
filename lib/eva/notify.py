@@ -2294,6 +2294,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.on_publish = self.on_publish_msg
         self.mq.on_connect = self.on_connect
         self.mq.on_message = self.on_message
+        self.mq.on_subscribe = self.on_subscribe
         self.username = username
         self.password = password
         self.ping_interval = ping_interval if ping_interval else 30
@@ -2386,6 +2387,15 @@ class GenericMQTTNotifier(GenericNotifier):
         self.handler_lock = threading.RLock()
         self.test_lock = threading.Lock()
         self.test_topic = None
+        self.test_topic_sub_id = None
+        self.test_topic_subscribed = False
+        self.test_sub_id_lock = threading.RLock()
+
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        if self.test_topic is not None:
+            with self.test_sub_id_lock:
+                if mid == self.test_topic_sub_id:
+                    self.test_topic_subscribed = True
 
     def connect(self, from_pinger=False):
         self.connected = True
@@ -2926,9 +2936,13 @@ class GenericMQTTNotifier(GenericNotifier):
         finally:
             self.api_callback_lock.release()
 
+    def is_test_topic_subscribed(self):
+        return self.test_topic_subscribed
+
     def test(self):
         try:
             with self.test_lock:
+                self.test_topic_subscribed = False
                 test_topic = (
                     f'{self.pfx}controller/{eva.core.product.code}'
                     f'/{eva.core.config.system_name}/test-{uuid.uuid4()}')
@@ -2937,7 +2951,16 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id,self.host, self.port))
                 if not self.check_connection():
                     return False
-                self.mq.subscribe(test_topic, qos=self.qos['system'])
+                with self.test_sub_id_lock:
+                    self.test_topic_sub_id = self.mq.subscribe(
+                        test_topic, qos=self.qos['system'])[1]
+                t_start = time.perf_counter()
+                timeout = self.get_timeout()
+                result = eva.core.wait_for(self.is_test_topic_subscribed,
+                                           timeout)
+                if result is not True:
+                    raise TimeoutError("Subscription timeout")
+                timeout = timeout - time.perf_counter() + t_start
                 mqtt_result = self.mq.publish(test_topic,
                                               'passed',
                                               qos=self.qos['system'],
