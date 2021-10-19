@@ -413,6 +413,10 @@ To send events in :ref:`bulk<bulk_notify>`:
 * on primary controllers (receivers) set *bulk_subscribe* notifier option to
   the same value (the option can have multiple values, set as comma separated)
 
+* for slow connections, set *bulk_compress* option to *true*. The option
+  switches bulk state messages from JSON to zipped MessagePack, which provides
+  faster data exchange speed.
+
 .. _mqtt_cloud:
 
 IoT Cloud setup

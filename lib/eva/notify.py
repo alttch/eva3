@@ -2265,6 +2265,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  buf_ttl=0,
                  bulk_topic=None,
                  bulk_subscribe=None,
+                 bulk_compress=False,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -2355,6 +2356,7 @@ class GenericMQTTNotifier(GenericNotifier):
         else:
             self.bulk_topic_action = None
             self.bulk_topic_state = None
+        self.bulk_compress = bulk_compress
         self.api_enabled = api_enabled
         self.discovery_enabled = discovery_enabled
         self.announce_interval = announce_interval
@@ -2676,7 +2678,15 @@ class GenericMQTTNotifier(GenericNotifier):
                 i = self.items_to_control_by_topic[t]
                 i.mqtt_action(msg=d)
             elif t.startswith(self.bulk_collect_state_topic):
-                data = rapidjson.loads(d)
+                if isinstance(d, str):
+                    data = rapidjson.loads(d)
+                else:
+                    if d[0] != 0:
+                        raise Exception('Unsupported protocol')
+                    if d[1] != 3:
+                        raise Exception('Unsupported data encoding')
+                    import zlib
+                    data = msgpack.loads(zlib.decompress(d[2:]), raw=False)
                 t = data.get('t')
                 c = data.get('c')
                 for frame in data['d']:
@@ -2731,13 +2741,17 @@ class GenericMQTTNotifier(GenericNotifier):
                     'c': eva.core.config.controller_name,
                     'd': data
                 }
-                self.mq.publish(self.bulk_topic_state,
-                                format_json(
-                                    dts,
-                                    minimal=not eva.core.config.development,
-                                    unpicklable=unpicklable),
-                                qos,
-                                retain=False)
+                if self.bulk_compress:
+                    import zlib
+                self.mq.publish(
+                    self.bulk_topic_state,
+                    b'\x00\x03' +
+                    zlib.compress(pack_msgpack(dts)) if self.bulk_compress else
+                    format_json(dts,
+                                minimal=not eva.core.config.development,
+                                unpicklable=unpicklable),
+                    qos,
+                    retain=False)
             else:
                 for i in data:
                     if i.get('destroyed'):
@@ -2987,6 +3001,7 @@ class GenericMQTTNotifier(GenericNotifier):
         d['subscribe_all'] = self.subscribe_all
         d['timestamp_enabled'] = self.timestamp_enabled
         d['bulk_topic'] = self.bulk_topic
+        d['bulk_compress'] = self.bulk_compress
         d['bulk_subscribe'] = self.bulk_subscribe
         d.update(super().serialize(props=props))
         return d
@@ -2995,6 +3010,10 @@ class GenericMQTTNotifier(GenericNotifier):
         if prop == 'collect_logs':
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
+            return True
+        if prop == 'bulk_compress':
+            v = eva.tools.val_to_boolean(value)
+            self.bulk_compress = v
             return True
         elif prop == 'bulk_topic':
             self.bulk_topic = str(value) if value is not None else None
@@ -3158,6 +3177,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  buf_ttl=0,
                  bulk_topic=None,
                  bulk_subscribe=None,
+                 bulk_compress=False,
                  username=None,
                  password=None,
                  qos=None,
@@ -3182,6 +3202,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          buf_ttl=buf_ttl,
                          bulk_topic=bulk_topic,
                          bulk_subscribe=bulk_subscribe,
+                         bulk_compress=bulk_compress,
                          username=username,
                          password=password,
                          qos=qos,
@@ -3853,6 +3874,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         timestamp_enabled = ncfg.get('timestamp_enabled', True)
         bulk_topic = ncfg.get('bulk_topic')
         bulk_subscribe = ncfg.get('bulk_subscribe')
+        bulk_compress = ncfg.get('bulk_compress', False)
         n = MQTTNotifier(notifier_id,
                          host=host,
                          port=port,
@@ -3874,6 +3896,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          timestamp_enabled=timestamp_enabled,
                          bulk_topic=bulk_topic,
                          bulk_subscribe=bulk_subscribe,
+                         bulk_compress=bulk_compress,
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile)
