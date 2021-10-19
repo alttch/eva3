@@ -2937,7 +2937,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 if not self.check_connection():
                     return False
                 self.mq.subscribe(test_topic, qos=self.qos['system'])
-                result = self.mq.publish(test_topic,
+                self.mq.publish(test_topic,
                                          'passed',
                                          qos=self.qos['system'],
                                          retain=False)
