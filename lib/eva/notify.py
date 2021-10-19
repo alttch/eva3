@@ -2379,9 +2379,10 @@ class GenericMQTTNotifier(GenericNotifier):
                                         self.notifier_id,
                                         o=self,
                                         interval=self.announce_interval)
-        self.pinger = self.Pinger(name='mqtt_pinger:' + self.notifier_id,
-                                  o=self,
-                                  interval=self.ping_interval)
+        self.pinger = self.Pinger(
+            name='mqtt_pinger:' + self.notifier_id,
+            o=self,
+            interval=self.ping_interval) if self.ping_interval > 0 else None
         self.handler_lock = threading.RLock()
         self.test_lock = threading.Lock()
         self.test_topic = None
@@ -2389,7 +2390,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def connect(self, from_pinger=False):
         self.connected = True
         self.check_connection()
-        if not self.test_only_mode and not from_pinger:
+        if not self.test_only_mode and not from_pinger and self.pinger:
             self.pinger.start()
 
     def disconnect(self, from_pinger=False):
@@ -2397,7 +2398,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.loop_stop()
         self.mq.disconnect()
         self.announcer.stop()
-        if not from_pinger:
+        if not from_pinger and self.pinger:
             self.pinger.stop()
 
     def restart(self, from_pinger=False):
@@ -2938,9 +2939,9 @@ class GenericMQTTNotifier(GenericNotifier):
                     return False
                 self.mq.subscribe(test_topic, qos=self.qos['system'])
                 self.mq.publish(test_topic,
-                                         'passed',
-                                         qos=self.qos['system'],
-                                         retain=False)
+                                'passed',
+                                qos=self.qos['system'],
+                                retain=False)
                 timeout = self.get_timeout()
                 t_end = time.perf_counter() + timeout
                 result = eva.core.wait_for(result.is_published, timeout)
