@@ -2732,7 +2732,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     'd': data
                 }
                 self.mq.publish(self.bulk_topic_state,
-                                format_json(dts, unpicklable=unpicklable),
+                                format_json(
+                                    dts,
+                                    minimal=not eva.core.config.development,
+                                    unpicklable=unpicklable),
                                 qos,
                                 retain=False)
             else:
@@ -2751,7 +2754,8 @@ class GenericMQTTNotifier(GenericNotifier):
                                     'id', 'group', 'type', 'full_id', 'oid'
                             ]:
                                 dts[k] = i[k]
-                        dts = format_json(dts)
+                        dts = format_json(
+                            dts, minimal=not eva.core.config.development)
                     self.mq.publish(self.pfx + i['type'] + '/' + i['group'] +
                                     '/' + i['id'],
                                     dts,
@@ -2769,17 +2773,24 @@ class GenericMQTTNotifier(GenericNotifier):
                     'd': data
                 }
                 self.mq.publish(self.bulk_topic_action,
-                                format_json(dts, unpicklable=unpicklable),
+                                format_json(
+                                    dts,
+                                    minimal=not eva.core.config.development,
+                                    unpicklable=unpicklable),
                                 qos,
                                 retain=False)
             else:
                 for i in data:
                     i['t'] = time.time() if self.timestamp_enabled else None
                     i['c'] = eva.core.config.controller_name
-                    self.mq.publish(self.pfx + i['item_type'] + '/' + \
-                            i['item_group'] + '/' + i['item_id'] + '/action',
-                        format_json(i, unpicklable=unpicklable),
-                        qos, retain = _retain)
+                    self.mq.publish(
+                        self.pfx + i['item_type'] + '/' + i['item_group'] +
+                        '/' + i['item_id'] + '/action',
+                        format_json(i,
+                                    minimal=not eva.core.config.development,
+                                    unpicklable=unpicklable),
+                        qos,
+                        retain=_retain)
         elif subject == 'log':
             if retain is not None and self.retain_enabled:
                 _retain = retain
@@ -2792,7 +2803,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     'd': data
                 }
                 self.mq.publish(self.log_topic,
-                                format_json(dts, unpicklable=False),
+                                format_json(
+                                    dts,
+                                    minimal=not eva.core.config.development,
+                                    unpicklable=False),
                                 qos,
                                 retain=_retain)
             else:
@@ -2800,7 +2814,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     i['t'] = time.time() if self.timestamp_enabled else None
                     i['c'] = eva.core.config.controller_name
                     self.mq.publish(self.log_topic,
-                                    format_json(i, unpicklable=False),
+                                    format_json(
+                                        i,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=False),
                                     qos,
                                     retain=_retain)
         elif subject == 'server':
@@ -2814,7 +2831,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 i['t'] = time.time() if self.timestamp_enabled else None
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.server_events_topic,
-                                format_json(i, unpicklable=False),
+                                format_json(
+                                    i,
+                                    minimal=not eva.core.config.development,
+                                    unpicklable=False),
                                 qos,
                                 retain=_retain)
 
@@ -2830,7 +2850,9 @@ class GenericMQTTNotifier(GenericNotifier):
             _retain = False
         for d in _data:
             if isinstance(d, dict):
-                _d = format_json(data, unpicklable=False)
+                _d = format_json(data,
+                                 minimal=not eva.core.config.development,
+                                 unpicklable=False)
             else:
                 _d = d
             if use_space and self.space is not None:
@@ -3536,8 +3558,11 @@ class GCP_IoT(GenericNotifier):
                         if not self.mq:
                             self.log_error(message='not connected')
                         else:
-                            self.mq.publish('/devices/{}/events'.format(dev),
-                                            format_json(payload))
+                            self.mq.publish(
+                                '/devices/{}/events'.format(dev),
+                                format_json(
+                                    payload,
+                                    minimal=not eva.core.config.development))
                     finally:
                         self.lock.release()
 
@@ -3670,7 +3695,9 @@ class WSNotifier_Client(GenericNotifier_Client):
                 msg = {'s': subject, 'd': data}
                 logging.debug('.notifying WS %s' % self.notifier_id)
                 if self.ct == CT_JSON:
-                    data = format_json(msg, unpicklable=unpicklable)
+                    data = format_json(msg,
+                                       minimal=not eva.core.config.development,
+                                       unpicklable=unpicklable)
                 else:
                     data = pack_msgpack(msg)
                 self.ws.send(data, binary=self.ct == CT_MSGPACK)
