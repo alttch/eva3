@@ -2617,7 +2617,7 @@ class GenericMQTTNotifier(GenericNotifier):
             if t == self.test_topic and d == 'passed':
                 self.test_topic = None
                 return
-            if not self.enabled:
+            if not self.enabled or self.test_only_mode:
                 return
             if t == self.announce_topic and \
                     d != self.announce_msg and \
