@@ -387,7 +387,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 method = getattr(i, 'method', None)
                 n['params'] = 'uri: {}{} '.format(
                     i.uri, ('#{}'.format(method) if method else ''))
-            elif isinstance(i, eva.notify.SQLANotifier) or isinstance(i, eva.notify.TimescaleNotifier):
+            elif isinstance(i, eva.notify.SQLANotifier) or isinstance(
+                    i, eva.notify.TimescaleNotifier):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
                 n['params'] = 'uri: {}, db: {}, api: v{}'.format(
