@@ -2386,7 +2386,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.test_lock = threading.Lock()
         self.test_topic = None
         self.sub_events = {}
-        self.connect_event = threading.Event()
+        self.mq_connected = threading.Event()
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
         event = self.sub_events.get(mid)
@@ -2417,7 +2417,7 @@ class GenericMQTTNotifier(GenericNotifier):
             self.pinger.start()
 
     def disconnect(self, from_pinger=False):
-        self.connect_event.clear()
+        self.mq_connected.clear()
         super().disconnect()
         self.mq.loop_stop()
         self.mq.disconnect()
@@ -2439,7 +2439,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if eva.core.is_shutdown_requested():
             return
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
-        self.connect_event.set()
+        self.mq_connected.set()
         if self.announce_interval and not self.test_only_mode:
             eva.core.spawn_daemon(self.start_announcer)
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
@@ -2742,7 +2742,7 @@ class GenericMQTTNotifier(GenericNotifier):
                                 port=self.port,
                                 keepalive=self.keepalive)
                 self.mq.loop_start()
-            if self.connect_event.wait(self.timeout) is False:
+            if self.mq_connected.wait(self.timeout) is False:
                 raise TimeoutError('connection timed out')
             else:
                 return True
