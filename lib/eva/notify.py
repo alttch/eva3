@@ -2291,6 +2291,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.on_publish = self.on_publish_msg
         self.mq.on_connect = self.on_connect
         self.mq.on_message = self.on_message
+        self.mq.on_subscribe = self.on_subscribe
         self.username = username
         self.password = password
         self.ping_interval = ping_interval if ping_interval else 30
@@ -2381,6 +2382,29 @@ class GenericMQTTNotifier(GenericNotifier):
         self.handler_lock = threading.RLock()
         self.test_lock = threading.Lock()
         self.test_topic = None
+        self.sub_events = {}
+
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        event = self.sub_events.get(mid)
+        if event is not None:
+            event.set()
+
+    def subscribe_assured(self, topic, qos, timeout):
+        with self.mq._callback_mutex:
+            event = threading.Event()
+            res, message_id = self.mq.subscribe(topic, qos)
+            if res != mqtt.MQTT_ERR_SUCCESS:
+                msg = f'{self.notifier_id} subscribe error for {topic}: {res}'
+                logging.error(f'.{msg}')
+                raise RuntimeError(msg)
+            self.sub_events[message_id] = event
+        result = event.wait(timeout)
+        with self.mq._callback_mutex:
+            del self.sub_events[message_id]
+        if result is False:
+            msg = f'{self.notifier_id} subscribe timeout for {topic}'
+            logging.error(f'.{msg}')
+            raise TimeoutError(msg)
 
     def connect(self, from_pinger=False):
         self.connected = True
@@ -2886,7 +2910,7 @@ class GenericMQTTNotifier(GenericNotifier):
             self.api_callback[request_id] = (t, callback)
         finally:
             self.api_callback_lock.release()
-        self.mq.subscribe(t, qos=self.qos['system'])
+        self.subscribe_assured(t, self.qos['system'], self.get_timeout())
         return self.send_message('controller/' + controller_id + '/api/request',
                                  data,
                                  qos=self.qos['system'])
@@ -2918,12 +2942,12 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id,self.host, self.port))
                 if not self.check_connection():
                     return False
-                self.mq.subscribe(test_topic, qos=self.qos['system'])
+                timeout = self.get_timeout()
+                self.subscribe_assured(test_topic, self.qos['system'], timeout)
                 result = self.mq.publish(test_topic,
                                          'passed',
                                          qos=self.qos['system'],
                                          retain=False)
-                timeout = self.get_timeout()
                 t_end = time.perf_counter() + timeout
                 result = eva.core.wait_for(result.is_published, timeout)
                 if result is True:
