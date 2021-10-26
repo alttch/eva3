@@ -13,6 +13,9 @@ def setup(buffer=None):
                      f'create {nid} udp:127.0.0.1:8911',
                      return_result=True)
             cli_call(f'ns uc',
+                     f'set {nid} max_frame_size 65000',
+                     return_result=True)
+            cli_call(f'ns uc',
                      f'subscribe state {nid} -p "#" -g "#"',
                      return_result=True)
             cli_call(f'ns uc',
@@ -22,6 +25,9 @@ def setup(buffer=None):
             nid = 'lurp_local_sfa'
             cli_call(f'ns uc',
                      f'create {nid} udp:127.0.0.1:8921',
+                     return_result=True)
+            cli_call(f'ns uc',
+                     f'set {nid} max_frame_size 65000',
                      return_result=True)
             cli_call(f'ns uc',
                      f'subscribe state {nid} -p "#" -g "#"',
@@ -45,6 +51,9 @@ def setup(buffer=None):
             nid = 'lurp_local_sfa'
             cli_call(f'ns lm',
                      f'create {nid} udp:127.0.0.1:8921',
+                     return_result=True)
+            cli_call(f'ns lm',
+                     f'set {nid} max_frame_size 65000',
                      return_result=True)
             cli_call(f'ns lm',
                      f'subscribe state {nid} -p "#" -g "#"',

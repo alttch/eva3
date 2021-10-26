@@ -34,8 +34,6 @@ try:
 except:
     pass
 
-MAX_UDP_FRAME_LEN = 65000
-
 from neotasker import BackgroundIntervalWorker
 from neotasker import BackgroundQueueWorker
 from neotasker import background_worker
@@ -3261,6 +3259,7 @@ class UDPNotifier(GenericNotifier):
                  interval=None,
                  buf_ttl=0,
                  fmt='msgpack',
+                 max_frame_size=1500,
                  host=None,
                  port=None):
 
@@ -3280,6 +3279,7 @@ class UDPNotifier(GenericNotifier):
             self._serializer_id = b'\x01'
         self.host = host
         self.port = port
+        self.max_frame_size = max_frame_size
         self._header = b'\x02' + self._serializer_id
 
     def connect(self):
@@ -3293,13 +3293,14 @@ class UDPNotifier(GenericNotifier):
         if isinstance(frame, str):
             frame = frame.encode()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if len(frame) > MAX_UDP_FRAME_LEN:
+        max_udp_frame_len = self.max_frame_size - 3
+        if len(frame) > max_udp_frame_len:
             logging.warning(
                 f'Notifier {self.notifier_id}: UDP frame exceeds '
-                f'{MAX_UDP_FRAME_LEN} bytes. Consider decreasing buf_ttl')
+                f'{max_udp_frame_len} bytes. Consider decreasing buf_ttl')
             chunks = [
-                frame[i:i + MAX_UDP_FRAME_LEN]
-                for i in range(0, len(frame), MAX_UDP_FRAME_LEN)
+                frame[i:i + max_udp_frame_len]
+                for i in range(0, len(frame), max_udp_frame_len)
             ]
             # send first frame
             sock.sendto(self._header + b'\x01' + chunks[0],
@@ -3329,6 +3330,7 @@ class UDPNotifier(GenericNotifier):
         d['host'] = self.host
         d['port'] = self.port
         d['fmt'] = self.fmt
+        d['max_frame_size'] = self.max_frame_size
         if 'space' in d:
             del d['space']
         if 'timeout' in d:
@@ -3345,6 +3347,16 @@ class UDPNotifier(GenericNotifier):
             try:
                 self.port = int(value)
                 return True
+            except:
+                return False
+        elif prop == 'max_frame_size':
+            try:
+                l = int(value)
+                if l > 65000 or l < 300:
+                    return False
+                else:
+                    self.max_frame_size = l
+                    return True
             except:
                 return False
         elif prop == 'fmt':
@@ -3939,10 +3951,12 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
         port = ncfg.get('port')
+        max_frame_size = ncfg.get('max_frame_size')
         n = UDPNotifier(notifier_id,
                         interval=interval,
                         buf_ttl=buf_ttl,
                         fmt=fmt,
+                        max_frame_size=max_frame_size,
                         host=host,
                         port=port)
     elif ncfg['type'] == 'gcpiot':
