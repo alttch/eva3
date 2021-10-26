@@ -2744,7 +2744,10 @@ class GenericMQTTNotifier(GenericNotifier):
                                 port=self.port,
                                 keepalive=self.keepalive)
                 self.mq.loop_start()
-            return self.connect_event.wait(self.timeout)
+            if self.connect_event.wait(self.timeout) is False:
+                raise TimeoutError('connection timed out')
+            else:
+                return True
         except Exception as e:
             self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
