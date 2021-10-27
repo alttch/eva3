@@ -102,6 +102,20 @@ If user with the same login exists in EVA ICS controller, local user has higher
 priority. If the provided password doesn't match local, the local record is
 ignored and attempt to authenticate via Active Directory is performed.
 
+Users can authenticate either with "login" or with "login\@domain".
+
+If "domain" parameter is specified in the configuration, users can omit domains
+in their logins and the default domain is used for authentication.
+
+.. note::
+
+    For cached credentials and 3rd party plugins, "user" and "user\@domain" are
+    two different users. If such behavior leads to a logical confusion for 3rd
+    party software or UI apps, disable "domain" parameter in the configuration.
+
+If "domain" parameter is not specified, users MUST always specify a domain in
+their logins.
+
 Key prefixes
 ------------
 

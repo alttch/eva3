@@ -12,7 +12,7 @@ python_libs = ['easyad==1.0.9']
 def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
     if not is_enabled('sfa'):
         raise FunctionFailed('SFA is not enabled')
-    if not host or not domain:
+    if not host:
         raise InvalidParameter
     if cache_time:
         try:
@@ -28,7 +28,9 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
     else:
         raise UnsupportedOS
     append_python_libraries(python_libs)
-    config = {'host': host, 'domain': domain}
+    config = {'host': host}
+    if domain:
+        config['domain'] = domain
     if key_prefix:
         config['key-prefix'] = key_prefix
     if ca:

@@ -31,7 +31,9 @@ from eva.tools import SimpleNamespace
 
 from eva.tools import fmt_time
 
-_d = SimpleNamespace(msad=None,
+_d = SimpleNamespace(msad_host=None,
+                     msad_default_domain=None,
+                     msad_ca=None,
                      msad_ou='EVA',
                      msad_key_prefix='',
                      msad_cache_time=86400)
@@ -68,7 +70,9 @@ def msad_init(host,
         eva.core.log_traceback()
         logging.critical('unable to create msad_cache table in db')
     ad_config = dict(AD_SERVER=host, AD_DOMAIN=domain, CA_CERT_FILE=ca)
-    _d.msad = EasyAD(ad_config)
+    _d.msad_host = host
+    _d.msad_default_domain = domain
+    _d.msad_ca = ca
     _d.msad_key_prefix = key_prefix if key_prefix else ''
     _d.msad_cache_time = cache_time
     if ou is not None:
@@ -118,11 +122,21 @@ def msad_get_cached_credentials(username, password):
 
 def msad_authenticate(username, password):
     try:
-        if not _d.msad:
+        from easyad import EasyAD
+        if not _d.msad_host:
             return None
-
+        if '@' in username:
+            domain = username.rsplit('@', 1)[-1]
+        elif not _d.msad_default_domain:
+            return None
+        else:
+            domain = _d.msad_default_domain
+        ad_config = dict(AD_SERVER=_d.msad_host,
+                         AD_DOMAIN=domain,
+                         CA_CERT_FILE=_d.msad_ca)
         try:
-            user = _d.msad.authenticate_user(username, password, json_safe=True)
+            msad = EasyAD(ad_config)
+            user = msad.authenticate_user(username, password, json_safe=True)
         except Exception as e:
             logging.warning(f'Unable to access active directory: {e}')
             eva.core.log_traceback()
@@ -141,10 +155,10 @@ def msad_authenticate(username, password):
 
         result = []
 
-        for grp in _d.msad.get_all_user_groups(user=user,
-                                               credentials=dict(
-                                                   username=username,
-                                                   password=password)):
+        for grp in msad.get_all_user_groups(user=user,
+                                            credentials=dict(
+                                                username=username,
+                                                password=password)):
             cn = None
             ou = None
             for el in grp.split(','):
@@ -556,7 +570,7 @@ def run_hook(cmd, u, password=None):
 def start():
     if eva.core.config.keep_api_log:
         api_log_cleaner.start()
-    if _d.msad and _d.msad_cache_time > 0:
+    if _d.msad_host and _d.msad_cache_time > 0:
         msad_cache_cleaner.start()
 
 

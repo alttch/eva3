@@ -17,6 +17,7 @@ Common
     * Custom suicide timeouts
     * Poll delay allowed to be set to 1 microsecond
     * Fix for UDP notifier data frames longer than 65K
+    * MSAD authentication with any domain
 
 LM PLC
 ------

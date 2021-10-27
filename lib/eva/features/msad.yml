@@ -9,8 +9,8 @@ doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/msad.html
 setup:
   mandatory-args:
     host: Domain Controller host name or IP address
-    domain: Active Directory domain name
   optional-args:
+    domain: Active Directory default domain name
     key_prefix: Prefix mapping of local API keys for mapping to AD groups
     ca: Path to CA certificate file
     cache_time: Authentication cache (seconds), if DC is not available
