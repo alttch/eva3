@@ -9,6 +9,10 @@ import rapidjson
 import msgpack
 import requests
 import paho.mqtt.client as mqtt
+try:
+    import psrt
+except:
+    pass
 import time
 from queue import Queue
 import glob
@@ -2266,7 +2270,8 @@ class GenericMQTTNotifier(GenericNotifier):
                  bulk_compress=False,
                  ca_certs=None,
                  certfile=None,
-                 keyfile=None):
+                 keyfile=None,
+                 proto='mqtt'):
         notifier_type = 'mqtt'
         self.buf = {}
         super().__init__(notifier_id=notifier_id,
@@ -2275,6 +2280,7 @@ class GenericMQTTNotifier(GenericNotifier):
                          interval=interval,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
+        self.proto = proto
         self.host = host
         self.bulk_topic = bulk_topic
         self.bulk_subscribe = bulk_subscribe
@@ -2288,7 +2294,13 @@ class GenericMQTTNotifier(GenericNotifier):
         except:
             self.keepalive = 60
         self._keepalive = keepalive
-        self.mq = mqtt.Client()
+        if self.proto == 'mqtt':
+            self.mq = mqtt.Client()
+        elif self.proto == 'psrt':
+            self.mq = psrt.Client()
+            self.mq.timeout = self.get_timeout()
+        else:
+            raise RuntimeError(f'Invalid protocol: {self.proto}')
         self.mq.on_publish = self.on_publish_msg
         self.mq.on_connect = self.on_connect
         self.mq.on_message = self.on_message
@@ -2394,21 +2406,28 @@ class GenericMQTTNotifier(GenericNotifier):
             event.set()
 
     def subscribe_assured(self, topic, qos, timeout):
-        with self.mq._callback_mutex:
-            event = threading.Event()
-            res, message_id = self.mq.subscribe(topic, qos)
-            if res != mqtt.MQTT_ERR_SUCCESS:
-                msg = f'{self.notifier_id} subscribe error for {topic}: {res}'
-                logging.error(f'.{msg}')
-                raise RuntimeError(msg)
-            self.sub_events[message_id] = event
-        result = event.wait(timeout)
-        with self.mq._callback_mutex:
-            del self.sub_events[message_id]
-        if result is False:
-            msg = f'{self.notifier_id} subscribe timeout for {topic}'
-            logging.error(f'.{msg}')
-            raise TimeoutError(msg)
+        try:
+            if self.proto == 'psrt':
+                self.mq.subscribe(topic)
+            else:
+                with self.mq._callback_mutex:
+                    event = threading.Event()
+                    res, message_id = self.mq.subscribe(topic, qos)
+                    if res != mqtt.MQTT_ERR_SUCCESS:
+                        msg = f'{self.notifier_id} subscribe error for {topic}: {res}'
+                        logging.error(f'.{msg}')
+                        raise RuntimeError(msg)
+                    self.sub_events[message_id] = event
+                result = event.wait(timeout)
+                with self.mq._callback_mutex:
+                    del self.sub_events[message_id]
+                if result is False:
+                    msg = f'{self.notifier_id} subscribe timeout for {topic}'
+                    logging.error(f'.{msg}')
+                    raise TimeoutError(msg)
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def connect(self, from_pinger=False):
         self.connected = True
@@ -2501,123 +2520,150 @@ class GenericMQTTNotifier(GenericNotifier):
                 client.subscribe(self.announce_topic, qos=self.qos['system'])
                 logging.debug('.%s resubscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
-        except:
+        except Exception as e:
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
         finally:
             self.api_callback_lock.release()
 
     def handler_append(self, topic, func, qos=None):
-        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical(
-                '.GenericMQTTNotifier::handler_append locking broken')
-            eva.core.critical()
-            return False
         try:
-            if qos is None:
-                qos = 1
-            _topic = self.space + '/' + topic if \
-                    self.space is not None else topic
-            if not self.custom_handlers.get(_topic):
-                self.custom_handlers[_topic] = set()
-                self.custom_handlers_qos[_topic] = qos
-                self.mq.subscribe(_topic, qos=qos)
-                logging.debug('.%s subscribed to %s for handler' %
-                              (self.notifier_id, _topic))
-            self.custom_handlers[_topic].add(func)
-            logging.debug('.%s new handler for topic %s: %s' %
-                          (self.notifier_id, _topic, func))
-        finally:
-            self.handler_lock.release()
+            if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::handler_append locking broken')
+                eva.core.critical()
+                return False
+            try:
+                if qos is None:
+                    qos = 1
+                _topic = self.space + '/' + topic if \
+                        self.space is not None else topic
+                if not self.custom_handlers.get(_topic):
+                    self.custom_handlers[_topic] = set()
+                    self.custom_handlers_qos[_topic] = qos
+                    self.mq.subscribe(_topic, qos=qos)
+                    logging.debug('.%s subscribed to %s for handler' %
+                                  (self.notifier_id, _topic))
+                self.custom_handlers[_topic].add(func)
+                logging.debug('.%s new handler for topic %s: %s' %
+                              (self.notifier_id, _topic, func))
+            finally:
+                self.handler_lock.release()
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def handler_remove(self, topic, func):
-        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical(
-                '.GenericMQTTNotifier::handler_remove locking broken')
-            eva.core.critical()
-            return False
         try:
-            _topic = self.space + '/' + topic if \
-                    self.space is not None else topic
-            if _topic in self.custom_handlers:
-                self.custom_handlers[_topic].remove(func)
-                logging.debug('.%s removed handler for topic %s: %s' %
-                              (self.notifier_id, _topic, func))
-            if not self.custom_handlers.get(_topic):
-                self.mq.unsubscribe(_topic)
-                try:
-                    del self.custom_handlers[_topic]
-                except:
-                    pass
-                try:
-                    del self.custom_handlers_qos[_topic]
-                except:
-                    pass
-                logging.debug('.%s unsubscribed from %s, last handler left' %
-                              (self.notifier_id, _topic))
-        finally:
-            self.handler_lock.release()
+            if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::handler_remove locking broken')
+                eva.core.critical()
+                return False
+            try:
+                _topic = self.space + '/' + topic if \
+                        self.space is not None else topic
+                if _topic in self.custom_handlers:
+                    self.custom_handlers[_topic].remove(func)
+                    logging.debug('.%s removed handler for topic %s: %s' %
+                                  (self.notifier_id, _topic, func))
+                if not self.custom_handlers.get(_topic):
+                    self.mq.unsubscribe(_topic)
+                    try:
+                        del self.custom_handlers[_topic]
+                    except:
+                        pass
+                    try:
+                        del self.custom_handlers_qos[_topic]
+                    except:
+                        pass
+                    logging.debug(
+                        '.%s unsubscribed from %s, last handler left' %
+                        (self.notifier_id, _topic))
+            finally:
+                self.handler_lock.release()
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def update_item_append(self, item):
-        logging.debug('.%s subscribing to %s updates' % \
-                (self.notifier_id, item.oid))
-        self.items_to_update.add(item)
-        for t in item.mqtt_update_topics:
-            topic = self.pfx + item.item_type + '/' + \
-                    item.full_id + (('/' + t) if t else '')
-            self.items_to_update_by_topic[topic] = item
-            if not self.subscribe_all:
-                self.mq.subscribe(topic, qos=item.mqtt_update_qos)
-                logging.debug('.%s subscribed to %s q%u topic' %
-                              (self.notifier_id, topic, item.mqtt_update_qos))
-        return True
-
-    def control_item_append(self, item):
-        logging.debug('.%s subscribing to %s control' % \
-                (self.notifier_id, item.oid))
-        topic_control = self.pfx + item.item_type + '/' +\
-                item.full_id + '/control'
-        self.items_to_control.add(item)
-        self.items_to_control_by_topic[topic_control] = item
-        if not self.subscribe_all:
-            self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-            logging.debug(
-                '.%s subscribed to %s q%u topic' %
-                (self.notifier_id, topic_control, item.mqtt_control_qos))
-        return True
-
-    def update_item_remove(self, item):
-        logging.debug('.%s unsubscribing from %s updates' % \
-                (self.notifier_id, item.oid))
-        if item not in self.items_to_update:
-            return False
         try:
+            logging.debug('.%s subscribing to %s updates' % \
+                    (self.notifier_id, item.oid))
+            self.items_to_update.add(item)
             for t in item.mqtt_update_topics:
                 topic = self.pfx + item.item_type + '/' + \
                         item.full_id + (('/' + t) if t else '')
-                self.mq.unsubscribe(topic)
-                logging.debug('.%s unsubscribed from %s updates' %
-                              (self.notifier_id, topic))
-                del self.items_to_update_by_topic[topic]
-            self.items_to_update.remove(item)
-        except:
+                self.items_to_update_by_topic[topic] = item
+                if not self.subscribe_all:
+                    self.mq.subscribe(topic, qos=item.mqtt_update_qos)
+                    logging.debug(
+                        '.%s subscribed to %s q%u topic' %
+                        (self.notifier_id, topic, item.mqtt_update_qos))
+            return True
+        except Exception as e:
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
-        return True
+
+    def control_item_append(self, item):
+        try:
+            logging.debug('.%s subscribing to %s control' % \
+                    (self.notifier_id, item.oid))
+            topic_control = self.pfx + item.item_type + '/' +\
+                    item.full_id + '/control'
+            self.items_to_control.add(item)
+            self.items_to_control_by_topic[topic_control] = item
+            if not self.subscribe_all:
+                self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
+                logging.debug(
+                    '.%s subscribed to %s q%u topic' %
+                    (self.notifier_id, topic_control, item.mqtt_control_qos))
+            return True
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
+
+    def update_item_remove(self, item):
+        try:
+            logging.debug('.%s unsubscribing from %s updates' % \
+                    (self.notifier_id, item.oid))
+            if item not in self.items_to_update:
+                return False
+            try:
+                for t in item.mqtt_update_topics:
+                    topic = self.pfx + item.item_type + '/' + \
+                            item.full_id + (('/' + t) if t else '')
+                    self.mq.unsubscribe(topic)
+                    logging.debug('.%s unsubscribed from %s updates' %
+                                  (self.notifier_id, topic))
+                    del self.items_to_update_by_topic[topic]
+                self.items_to_update.remove(item)
+            except:
+                eva.core.log_traceback(notifier=True)
+            return True
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def control_item_remove(self, item):
-        logging.debug('.%s unsubscribing from %s control' % \
-                (self.notifier_id, item.oid))
-        if item not in self.items_to_control:
-            return False
-        topic_control = self.pfx + item.item_type + '/' +\
-                item.full_id + '/control'
-        self.mq.unsubscribe(topic_control)
         try:
-            self.items_to_control.remove(item)
-            del self.items_to_control_by_topic[topic_control]
-        except:
+            logging.debug('.%s unsubscribing from %s control' % \
+                    (self.notifier_id, item.oid))
+            if item not in self.items_to_control:
+                return False
+            topic_control = self.pfx + item.item_type + '/' +\
+                    item.full_id + '/control'
+            self.mq.unsubscribe(topic_control)
+            try:
+                self.items_to_control.remove(item)
+                del self.items_to_control_by_topic[topic_control]
+            except:
+                eva.core.log_traceback(notifier=True)
+                return False
+            return True
+        except Exception as e:
+            self.log_error(message=e)
             eva.core.log_traceback(notifier=True)
-            return False
-        return True
 
     def update_item_exists(self, item):
         return item in self.items_to_update
@@ -2754,207 +2800,232 @@ class GenericMQTTNotifier(GenericNotifier):
             return False
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
-        self.check_connection()
-        if self.qos and subject == 'server' and 'system' in self.qos:
-            qos = self.qos['system']
-        elif self.qos and subject in self.qos:
-            qos = self.qos[subject]
-        else:
-            qos = 1
-        if subject == 'state':
-            if retain is not None and self.retain_enabled:
-                _retain = retain
+        try:
+            self.check_connection()
+            if self.qos and subject == 'server' and 'system' in self.qos:
+                qos = self.qos['system']
+            elif self.qos and subject in self.qos:
+                qos = self.qos[subject]
             else:
-                _retain = True if self.retain_enabled else False
-            if self.bulk_topic_state:
-                dts = {
-                    't': time.time() if self.timestamp_enabled else None,
-                    'c': eva.core.config.controller_name,
-                    'd': data
-                }
-                if self.bulk_compress:
-                    import zlib
-                self.mq.publish(
-                    self.bulk_topic_state,
-                    b'\x00\x03' +
-                    zlib.compress(pack_msgpack(dts)) if self.bulk_compress else
-                    format_json(dts,
-                                minimal=not eva.core.config.development,
-                                unpicklable=unpicklable),
-                    qos,
-                    retain=False)
-            else:
-                for i in data:
-                    if i.get('destroyed'):
-                        dts = ''
-                    else:
-                        dts = {
-                            't':
-                                time.time() if self.timestamp_enabled else None,
-                            'c':
-                                eva.core.config.controller_name
-                        }
-                        for k in i:
-                            if not k in [
-                                    'id', 'group', 'type', 'full_id', 'oid'
-                            ]:
-                                dts[k] = i[k]
-                        dts = format_json(
-                            dts, minimal=not eva.core.config.development)
-                    self.mq.publish(self.pfx + i['type'] + '/' + i['group'] +
-                                    '/' + i['id'],
-                                    dts,
+                qos = 1
+            if subject == 'state':
+                if retain is not None and self.retain_enabled:
+                    _retain = retain
+                else:
+                    _retain = True if self.retain_enabled else False
+                if self.bulk_topic_state:
+                    dts = {
+                        't': time.time() if self.timestamp_enabled else None,
+                        'c': eva.core.config.controller_name,
+                        'd': data
+                    }
+                    if self.bulk_compress:
+                        import zlib
+                    self.mq.publish(self.bulk_topic_state,
+                                    b'\x00\x03' +
+                                    zlib.compress(pack_msgpack(dts))
+                                    if self.bulk_compress else format_json(
+                                        dts,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=unpicklable),
+                                    qos,
+                                    retain=False)
+                else:
+                    for i in data:
+                        if i.get('destroyed'):
+                            dts = ''
+                        else:
+                            dts = {
+                                't':
+                                    time.time()
+                                    if self.timestamp_enabled else None,
+                                'c':
+                                    eva.core.config.controller_name
+                            }
+                            for k in i:
+                                if not k in [
+                                        'id', 'group', 'type', 'full_id', 'oid'
+                                ]:
+                                    dts[k] = i[k]
+                            dts = format_json(
+                                dts, minimal=not eva.core.config.development)
+                        self.mq.publish(self.pfx + i['type'] + '/' +
+                                        i['group'] + '/' + i['id'],
+                                        dts,
+                                        qos,
+                                        retain=_retain)
+            elif subject == 'action':
+                if retain is not None and self.retain_enabled:
+                    _retain = retain
+                else:
+                    _retain = False
+                if self.bulk_topic_action:
+                    dts = {
+                        't': time.time() if self.timestamp_enabled else None,
+                        'c': eva.core.config.controller_name,
+                        'd': data
+                    }
+                    self.mq.publish(self.bulk_topic_action,
+                                    format_json(
+                                        dts,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=unpicklable),
+                                    qos,
+                                    retain=False)
+                else:
+                    for i in data:
+                        i['t'] = time.time() if self.timestamp_enabled else None
+                        i['c'] = eva.core.config.controller_name
+                        self.mq.publish(
+                            self.pfx + i['item_type'] + '/' + i['item_group'] +
+                            '/' + i['item_id'] + '/action',
+                            format_json(i,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=unpicklable),
+                            qos,
+                            retain=_retain)
+            elif subject == 'log':
+                if retain is not None and self.retain_enabled:
+                    _retain = retain
+                else:
+                    _retain = False
+                if self._use_buffer:
+                    dts = {
+                        't': time.time() if self.timestamp_enabled else None,
+                        'c': eva.core.config.controller_name,
+                        'd': data
+                    }
+                    self.mq.publish(self.log_topic,
+                                    format_json(
+                                        dts,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=False),
                                     qos,
                                     retain=_retain)
-        elif subject == 'action':
-            if retain is not None and self.retain_enabled:
-                _retain = retain
-            else:
-                _retain = False
-            if self.bulk_topic_action:
-                dts = {
-                    't': time.time() if self.timestamp_enabled else None,
-                    'c': eva.core.config.controller_name,
-                    'd': data
-                }
-                self.mq.publish(self.bulk_topic_action,
-                                format_json(
-                                    dts,
-                                    minimal=not eva.core.config.development,
-                                    unpicklable=unpicklable),
-                                qos,
-                                retain=False)
-            else:
+                else:
+                    for i in data:
+                        i['t'] = time.time() if self.timestamp_enabled else None
+                        i['c'] = eva.core.config.controller_name
+                        self.mq.publish(
+                            self.log_topic,
+                            format_json(i,
+                                        minimal=not eva.core.config.development,
+                                        unpicklable=False),
+                            qos,
+                            retain=_retain)
+            elif subject == 'server':
+                if retain is not None and self.retain_enabled:
+                    _retain = retain
+                else:
+                    _retain = False
                 for i in data:
+                    if not isinstance(i, dict):
+                        i = {'e': i}
                     i['t'] = time.time() if self.timestamp_enabled else None
                     i['c'] = eva.core.config.controller_name
-                    self.mq.publish(
-                        self.pfx + i['item_type'] + '/' + i['item_group'] +
-                        '/' + i['item_id'] + '/action',
-                        format_json(i,
-                                    minimal=not eva.core.config.development,
-                                    unpicklable=unpicklable),
-                        qos,
-                        retain=_retain)
-        elif subject == 'log':
-            if retain is not None and self.retain_enabled:
-                _retain = retain
-            else:
-                _retain = False
-            if self._use_buffer:
-                dts = {
-                    't': time.time() if self.timestamp_enabled else None,
-                    'c': eva.core.config.controller_name,
-                    'd': data
-                }
-                self.mq.publish(self.log_topic,
-                                format_json(
-                                    dts,
-                                    minimal=not eva.core.config.development,
-                                    unpicklable=False),
-                                qos,
-                                retain=_retain)
-            else:
-                for i in data:
-                    i['t'] = time.time() if self.timestamp_enabled else None
-                    i['c'] = eva.core.config.controller_name
-                    self.mq.publish(self.log_topic,
+                    self.mq.publish(self.server_events_topic,
                                     format_json(
                                         i,
                                         minimal=not eva.core.config.development,
                                         unpicklable=False),
                                     qos,
                                     retain=_retain)
-        elif subject == 'server':
-            if retain is not None and self.retain_enabled:
+        except Exception as e:
+            self.log_error(message=e)
+            raise
+
+    def send_message(self, topic, data, retain=None, qos=1, use_space=True):
+        try:
+            self.check_connection()
+            if isinstance(data, list):
+                _data = data
+            else:
+                _data = [data]
+            if retain is not None:
                 _retain = retain
             else:
                 _retain = False
-            for i in data:
-                if not isinstance(i, dict):
-                    i = {'e': i}
-                i['t'] = time.time() if self.timestamp_enabled else None
-                i['c'] = eva.core.config.controller_name
-                self.mq.publish(self.server_events_topic,
-                                format_json(
-                                    i,
-                                    minimal=not eva.core.config.development,
-                                    unpicklable=False),
-                                qos,
-                                retain=_retain)
-
-    def send_message(self, topic, data, retain=None, qos=1, use_space=True):
-        self.check_connection()
-        if isinstance(data, list):
-            _data = data
-        else:
-            _data = [data]
-        if retain is not None:
-            _retain = retain
-        else:
-            _retain = False
-        for d in _data:
-            if isinstance(d, dict):
-                _d = format_json(data,
-                                 minimal=not eva.core.config.development,
-                                 unpicklable=False)
-            else:
-                _d = d
-            if use_space and self.space is not None:
-                _topic = self.space + '/' + topic
-            else:
-                _topic = topic
-            try:
-                self.mq.publish(_topic, _d, qos, retain=_retain)
-                return True
-            except:
-                eva.core.log_traceback(notifier=True)
-                return False
+            for d in _data:
+                if isinstance(d, dict):
+                    _d = format_json(data,
+                                     minimal=not eva.core.config.development,
+                                     unpicklable=False)
+                else:
+                    _d = d
+                if use_space and self.space is not None:
+                    _topic = self.space + '/' + topic
+                else:
+                    _topic = topic
+                try:
+                    self.mq.publish(_topic, _d, qos, retain=_retain)
+                    return True
+                except:
+                    eva.core.log_traceback(notifier=True)
+                    return False
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def send_api_response(self, call_id, data):
-        if not self.api_enabled:
-            return False
-        self.mq.publish(self.api_response_topic + '/' + call_id,
-                        data,
-                        self.qos['system'],
-                        retain=False)
-        return True
+        try:
+            if not self.api_enabled:
+                return False
+            self.mq.publish(self.api_response_topic + '/' + call_id,
+                            data,
+                            self.qos['system'],
+                            retain=False)
+            return True
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def send_api_request(self, request_id, controller_id, data, callback):
-        if request_id in self.api_callback:
-            logging.error('.GenericMQTTNotifier: duplicate API request ID')
-            return False
-        if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical(
-                '.GenericMQTTNotifier::api_callback locking broken')
-            eva.core.critical()
-            return False
         try:
-            t = '{}controller/{}/api/response/{}'.format(
-                self.pfx, controller_id, request_id)
-            self.api_callback[request_id] = (t, callback)
-        finally:
-            self.api_callback_lock.release()
-        self.subscribe_assured(t, self.qos['system'], self.get_timeout())
-        return self.send_message('controller/' + controller_id + '/api/request',
-                                 data,
-                                 qos=self.qos['system'])
+            if request_id in self.api_callback:
+                logging.error('.GenericMQTTNotifier: duplicate API request ID')
+                return False
+            if not self.api_callback_lock.acquire(
+                    timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::api_callback locking broken')
+                eva.core.critical()
+                return False
+            try:
+                t = '{}controller/{}/api/response/{}'.format(
+                    self.pfx, controller_id, request_id)
+                self.api_callback[request_id] = (t, callback)
+            finally:
+                self.api_callback_lock.release()
+            self.subscribe_assured(t, self.qos['system'], self.get_timeout())
+            return self.send_message('controller/' + controller_id +
+                                     '/api/request',
+                                     data,
+                                     qos=self.qos['system'])
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def finish_api_request(self, request_id):
-        if request_id not in self.api_callback:
-            logging.warning('.GenericMQTTNotifier: API request ID not found')
-            return False
-        if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical(
-                '.GenericMQTTNotifier::api_callback locking broken')
-            eva.core.critical()
-            return False
         try:
-            t = self.api_callback[request_id][0]
-            del self.api_callback[request_id]
-            self.mq.unsubscribe(t)
-        finally:
-            self.api_callback_lock.release()
+            if request_id not in self.api_callback:
+                logging.warning(
+                    '.GenericMQTTNotifier: API request ID not found')
+                return False
+            if not self.api_callback_lock.acquire(
+                    timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::api_callback locking broken')
+                eva.core.critical()
+                return False
+            try:
+                t = self.api_callback[request_id][0]
+                del self.api_callback[request_id]
+                self.mq.unsubscribe(t)
+            finally:
+                self.api_callback_lock.release()
+        except Exception as e:
+            self.log_error(message=e)
+            eva.core.log_traceback(notifier=True)
 
     def test(self):
         try:
@@ -2976,15 +3047,19 @@ class GenericMQTTNotifier(GenericNotifier):
                                               retain=False)
                 timeout = timeout - time.perf_counter() + t_start
                 t_end = time.perf_counter() + timeout
-                result = eva.core.wait_for(mqtt_result.is_published, timeout)
-                if result is True:
-                    while True:
-                        if self.test_topic is None:
-                            break
-                        elif time.perf_counter() > t_end:
-                            result = False
-                            break
-                        time.sleep(0.1)
+                if self.proto == 'mqtt':
+                    result = eva.core.wait_for(mqtt_result.is_published,
+                                               timeout)
+                    if result is True:
+                        while True:
+                            if self.test_topic is None:
+                                break
+                            elif time.perf_counter() > t_end:
+                                result = False
+                                break
+                            time.sleep(0.1)
+                else:
+                    result = True
                 self.mq.unsubscribe(test_topic)
                 if self.test_only_mode:
                     self.disconnect()
@@ -3036,6 +3111,7 @@ class GenericMQTTNotifier(GenericNotifier):
         d['bulk_topic'] = self.bulk_topic
         d['bulk_compress'] = self.bulk_compress
         d['bulk_subscribe'] = self.bulk_subscribe
+        d['proto'] = self.proto
         d.update(super().serialize(props=props))
         return d
 
@@ -3044,7 +3120,13 @@ class GenericMQTTNotifier(GenericNotifier):
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
             return True
-        if prop == 'bulk_compress':
+        elif prop == 'proto':
+            if value not in ['mqtt', 'psrt']:
+                return False
+            else:
+                self.proto = value
+                return True
+        elif prop == 'bulk_compress':
             v = eva.tools.val_to_boolean(value)
             self.bulk_compress = v
             return True
@@ -3226,7 +3308,8 @@ class MQTTNotifier(GenericMQTTNotifier):
                  timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
-                 keyfile=None):
+                 keyfile=None,
+                 proto='mqtt'):
         super().__init__(notifier_id=notifier_id,
                          host=host,
                          port=port,
@@ -3251,7 +3334,8 @@ class MQTTNotifier(GenericMQTTNotifier):
                          timestamp_enabled=timestamp_enabled,
                          ca_certs=ca_certs,
                          certfile=certfile,
-                         keyfile=keyfile)
+                         keyfile=keyfile,
+                         proto=proto)
 
 
 class UDPNotifier(GenericNotifier):
@@ -3922,6 +4006,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         bulk_topic = ncfg.get('bulk_topic')
         bulk_subscribe = ncfg.get('bulk_subscribe')
         bulk_compress = ncfg.get('bulk_compress', False)
+        proto = ncfg.get('proto', 'mqtt')
         n = MQTTNotifier(notifier_id,
                          host=host,
                          port=port,
@@ -3946,7 +4031,8 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          bulk_compress=bulk_compress,
                          ca_certs=ca_certs,
                          certfile=certfile,
-                         keyfile=keyfile)
+                         keyfile=keyfile,
+                         proto=proto)
     elif ncfg['type'] == 'udp':
         interval = ncfg.get('interval')
         buf_ttl = ncfg.get('buf_ttl', 0)
