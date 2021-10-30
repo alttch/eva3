@@ -311,8 +311,10 @@ class RemoteController(eva.item.Item):
                 params = self.mqtt_update.split(':')
                 n = params[0]
                 notifier = eva.notify.get_notifier(n)
-                if not notifier or notifier.notifier_type != 'mqtt':
-                    logging.error('%s: invalid mqtt notifier %s' % \
+                if not notifier or notifier.notifier_type not in [
+                        'mqtt', 'psrt'
+                ]:
+                    logging.error('%s: invalid mqtt/psrt notifier %s' % \
                             (self.oid, n))
                 else:
                     self.mqtt_notifier = notifier

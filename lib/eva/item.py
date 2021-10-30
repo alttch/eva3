@@ -373,7 +373,7 @@ class UpdatableItem(Item):
             params = data['mqtt_update'].split(':')
             n = params[0]
             notifier = eva.notify.get_notifier(n)
-            if not notifier or notifier.notifier_type != 'mqtt':
+            if not notifier or notifier.notifier_type not in ['mqtt', 'psrt']:
                 logging.error('%s: invalid mqtt notifier %s' % \
                         (self.oid, n))
             else:
@@ -481,7 +481,9 @@ class UpdatableItem(Item):
                 n = params[0]
                 import eva.notify
                 notifier = eva.notify.get_notifier(n)
-                if not notifier or notifier.notifier_type != 'mqtt':
+                if not notifier or notifier.notifier_type not in [
+                        'mqtt', 'psrt'
+                ]:
                     return False
                 if len(params) > 1:
                     try:
@@ -523,7 +525,7 @@ class UpdatableItem(Item):
                 not self._mqtt_updates_allowed:
             return False
         notifier = eva.notify.get_notifier(self.mqtt_update_notifier)
-        if not notifier or notifier.notifier_type[:4] != 'mqtt':
+        if not notifier or notifier.notifier_type[:4] not in ['mqtt', 'psrt']:
             return False
         try:
             notifier.update_item_append(self)
@@ -538,7 +540,7 @@ class UpdatableItem(Item):
                 not self._mqtt_updates_allowed:
             return False
         notifier = eva.notify.get_notifier(self.mqtt_update_notifier)
-        if not notifier or notifier.notifier_type[:4] != 'mqtt':
+        if not notifier or notifier.notifier_type[:4] not in ['mqtt', 'psrt']:
             return False
         try:
             notifier.update_item_remove(self)
@@ -990,7 +992,7 @@ class ActiveItem(Item):
         if not self.mqtt_control:
             return False
         notifier = eva.notify.get_notifier(self.mqtt_control_notifier)
-        if not notifier or notifier.notifier_type[:4] != 'mqtt':
+        if not notifier or notifier.notifier_type[:4] not in ['mqtt', 'psrt']:
             return False
         try:
             notifier.control_item_append(self)
@@ -1003,7 +1005,7 @@ class ActiveItem(Item):
         if not self.mqtt_control:
             return False
         notifier = eva.notify.get_notifier(self.mqtt_control_notifier)
-        if not notifier or notifier.notifier_type[:4] != 'mqtt':
+        if not notifier or notifier.notifier_type[:4] not in ['mqtt', 'psrt']:
             return False
         try:
             notifier.control_item_remove(self)
@@ -1186,7 +1188,9 @@ class ActiveItem(Item):
                 n = params[0]
                 import eva.notify
                 notifier = eva.notify.get_notifier(n)
-                if not notifier or notifier.notifier_type != 'mqtt':
+                if not notifier or notifier.notifier_type not in [
+                        'mqtt', 'psrt'
+                ]:
                     return False
                 if len(params) > 1:
                     try:
