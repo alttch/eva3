@@ -2666,44 +2666,25 @@ class GenericMQTTNotifier(GenericNotifier):
                     eva.core.spawn(self.api_callback[response_id][1], d)
                     self.finish_api_request(response_id)
                     return
-            hte = set()
-            if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical(
-                    '.GenericMQTTNotifier::on_message locking broken')
-                eva.core.critical()
-                return False
-            try:
-                for ct in self.custom_handlers:
-                    if mq_topic_match(t, ct):
-                        for h in self.custom_handlers.get(ct, []):
-                            hte.add(h)
-            finally:
-                self.handler_lock.release()
-            for h in hte:
-                eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
-                               msg.retain)
-            if self.collect_logs and t == self.log_topic:
-                records = rapidjson.loads(d)
-                if isinstance(records, list) or 'd' not in records:
-                    for r in records if isinstance(records,
-                                                   list) else [records]:
-                        if r['h'] != eva.core.config.system_name or \
-                                r['p'] != eva.core.product.code:
-                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
-                        else:
-                            break
-                else:
-                    if records['c'] != eva.core.config.controller_name:
-                        for r in records['d']:
-                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
-            elif t in self.items_to_update_by_topic:
-                i = self.items_to_update_by_topic[t]
-                i.mqtt_set_state(
-                    t[0 if not self.space else len(self.space) + 1:], d)
-            elif t in self.items_to_control_by_topic:
-                i = self.items_to_control_by_topic[t]
-                i.mqtt_action(msg=d)
-            elif t.startswith(self.bulk_collect_state_topic):
+            if self.custom_handlers:
+                hte = set()
+                if not self.handler_lock.acquire(
+                        timeout=eva.core.config.timeout):
+                    logging.critical(
+                        '.GenericMQTTNotifier::on_message locking broken')
+                    eva.core.critical()
+                    return False
+                try:
+                    for ct in self.custom_handlers:
+                        if mq_topic_match(t, ct):
+                            for h in self.custom_handlers.get(ct, []):
+                                hte.add(h)
+                finally:
+                    self.handler_lock.release()
+                for h in hte:
+                    eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
+                                   msg.retain)
+            if t.startswith(self.bulk_collect_state_topic):
                 if isinstance(d, str):
                     data = rapidjson.loads(d)
                 else:
@@ -2725,6 +2706,27 @@ class GenericMQTTNotifier(GenericNotifier):
                     else:
                         logging.debug(f'.{self.notifier_id} skipped '
                                       f'{oid} state in bulk update')
+            elif t in self.items_to_update_by_topic:
+                i = self.items_to_update_by_topic[t]
+                i.mqtt_set_state(
+                    t[0 if not self.space else len(self.space) + 1:], d)
+            elif t in self.items_to_control_by_topic:
+                i = self.items_to_control_by_topic[t]
+                i.mqtt_action(msg=d)
+            elif self.collect_logs and t == self.log_topic:
+                records = rapidjson.loads(d)
+                if isinstance(records, list) or 'd' not in records:
+                    for r in records if isinstance(records,
+                                                   list) else [records]:
+                        if r['h'] != eva.core.config.system_name or \
+                                r['p'] != eva.core.product.code:
+                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
+                        else:
+                            break
+                else:
+                    if records['c'] != eva.core.config.controller_name:
+                        for r in records['d']:
+                            pyaltt2.logs.append(rd=r, skip_mqtt=True)
         except:
             eva.core.log_traceback(notifier=True)
 
