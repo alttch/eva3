@@ -2272,7 +2272,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  certfile=None,
                  keyfile=None,
                  proto='mqtt'):
-        notifier_type = 'mqtt'
+        notifier_type = proto
         self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
@@ -3111,7 +3111,6 @@ class GenericMQTTNotifier(GenericNotifier):
         d['bulk_topic'] = self.bulk_topic
         d['bulk_compress'] = self.bulk_compress
         d['bulk_subscribe'] = self.bulk_subscribe
-        d['proto'] = self.proto
         d.update(super().serialize(props=props))
         return d
 
@@ -3120,12 +3119,6 @@ class GenericMQTTNotifier(GenericNotifier):
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
             return True
-        elif prop == 'proto':
-            if value not in ['mqtt', 'psrt']:
-                return False
-            else:
-                self.proto = value
-                return True
         elif prop == 'bulk_compress':
             v = eva.tools.val_to_boolean(value)
             self.bulk_compress = v
@@ -3281,6 +3274,74 @@ class GenericMQTTNotifier(GenericNotifier):
             return super().set_prop(prop, value)
 
 
+class PSRTNotifier(GenericMQTTNotifier):
+    disabled_props = ['keepalive', 'certfile', 'keyfile', 'qos']
+
+    def __init__(self,
+                 notifier_id,
+                 host,
+                 port=None,
+                 space=None,
+                 interval=None,
+                 buf_ttl=0,
+                 bulk_topic=None,
+                 bulk_subscribe=None,
+                 bulk_compress=False,
+                 username=None,
+                 password=None,
+                 timeout=None,
+                 collect_logs=None,
+                 api_enabled=None,
+                 discovery_enabled=None,
+                 announce_interval=None,
+                 ping_interval=None,
+                 subscribe_all=False,
+                 timestamp_enabled=True,
+                 ca_certs=None):
+        if port is None:
+            port = 2883
+        super().__init__(notifier_id=notifier_id,
+                         host=host,
+                         port=port,
+                         space=space,
+                         interval=interval,
+                         buf_ttl=buf_ttl,
+                         bulk_topic=bulk_topic,
+                         bulk_subscribe=bulk_subscribe,
+                         bulk_compress=bulk_compress,
+                         username=username,
+                         password=password,
+                         qos=None,
+                         keepalive=None,
+                         timeout=timeout,
+                         collect_logs=collect_logs,
+                         api_enabled=api_enabled,
+                         discovery_enabled=discovery_enabled,
+                         announce_interval=announce_interval,
+                         ping_interval=ping_interval,
+                         retain_enabled=False,
+                         subscribe_all=subscribe_all,
+                         timestamp_enabled=timestamp_enabled,
+                         ca_certs=ca_certs,
+                         certfile=None,
+                         keyfile=None,
+                         proto='psrt')
+
+    def set_prop(self, prop, value):
+        if prop in self.disabled_props:
+            return False
+        return super().set_prop(prop, value)
+
+    def serialize(self, props=False):
+        d = super().serialize(props=props)
+        for p in self.disabled_props:
+            try:
+                del d[p]
+            except KeyError:
+                pass
+        return d
+
+
 class MQTTNotifier(GenericMQTTNotifier):
 
     def __init__(self,
@@ -3308,8 +3369,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  timestamp_enabled=True,
                  ca_certs=None,
                  certfile=None,
-                 keyfile=None,
-                 proto='mqtt'):
+                 keyfile=None):
         super().__init__(notifier_id=notifier_id,
                          host=host,
                          port=port,
@@ -3335,7 +3395,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          ca_certs=ca_certs,
                          certfile=certfile,
                          keyfile=keyfile,
-                         proto=proto)
+                         proto='mqtt')
 
 
 class UDPNotifier(GenericNotifier):
@@ -4006,7 +4066,6 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         bulk_topic = ncfg.get('bulk_topic')
         bulk_subscribe = ncfg.get('bulk_subscribe')
         bulk_compress = ncfg.get('bulk_compress', False)
-        proto = ncfg.get('proto', 'mqtt')
         n = MQTTNotifier(notifier_id,
                          host=host,
                          port=port,
@@ -4031,8 +4090,47 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          bulk_compress=bulk_compress,
                          ca_certs=ca_certs,
                          certfile=certfile,
-                         keyfile=keyfile,
-                         proto=proto)
+                         keyfile=keyfile)
+    elif ncfg['type'] == 'psrt':
+        host = ncfg.get('host')
+        port = ncfg.get('port')
+        ca_certs = ncfg.get('ca_certs')
+        space = ncfg.get('space')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
+        timeout = ncfg.get('timeout')
+        buf_ttl = ncfg.get('buf_ttl', 0)
+        interval = ncfg.get('interval')
+        collect_logs = ncfg.get('collect_logs', False)
+        api_enabled = ncfg.get('api_enabled', False)
+        discovery_enabled = ncfg.get('discovery_enabled', False)
+        announce_interval = ncfg.get('announce_interval', 0)
+        ping_interval = ncfg.get('ping_interval', 30)
+        subscribe_all = ncfg.get('subscribe_all', False)
+        timestamp_enabled = ncfg.get('timestamp_enabled', True)
+        bulk_topic = ncfg.get('bulk_topic')
+        bulk_subscribe = ncfg.get('bulk_subscribe')
+        bulk_compress = ncfg.get('bulk_compress', False)
+        n = PSRTNotifier(notifier_id,
+                         host=host,
+                         port=port,
+                         space=space,
+                         interval=interval,
+                         username=username,
+                         password=password,
+                         timeout=timeout,
+                         buf_ttl=buf_ttl,
+                         collect_logs=collect_logs,
+                         api_enabled=api_enabled,
+                         discovery_enabled=discovery_enabled,
+                         announce_interval=announce_interval,
+                         ping_interval=ping_interval,
+                         subscribe_all=subscribe_all,
+                         timestamp_enabled=timestamp_enabled,
+                         bulk_topic=bulk_topic,
+                         bulk_subscribe=bulk_subscribe,
+                         bulk_compress=bulk_compress,
+                         ca_certs=ca_certs)
     elif ncfg['type'] == 'udp':
         interval = ncfg.get('interval')
         buf_ttl = ncfg.get('buf_ttl', 0)

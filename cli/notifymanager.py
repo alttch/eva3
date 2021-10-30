@@ -35,7 +35,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             return [
-                    'mqtt:', 'gcpiot:', 'json:',
+                    'mqtt:', 'psrt:', 'gcpiot:', 'json:',
                     'db:', 'influxdb:', 'prometheus:'] if \
                     prefix and prefix.find(':') == -1 else True
 
@@ -90,6 +90,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         Notifier properties:
             json:http(s)://[key]@uri[#jsonrpc|#list]
             mqtt:[username:password]@host:[port]
+            psrt:[username:password]@host:[port]
             gcpiot:project_id/region/registry
             db:db_uri
             timescaledb:db_uri
@@ -330,6 +331,29 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                         password=password,
                                         space=space,
                                         timeout=timeout)
+        elif p[0] == 'psrt':
+            _p = ':'.join(p[1:])
+            if _p.find('@') != -1:
+                auth = _p.split('@')[0]
+                host = _p.split('@')[1]
+                username = auth.split(':')[0]
+                try:
+                    password = auth.split(':')[1]
+                except:
+                    password = None
+            else:
+                username = None
+                password = None
+                host = _p
+            from eva.tools import parse_host_port
+            host, port = parse_host_port(host)
+            n = eva.notify.PSRTNotifier(notifier_id=notifier_id,
+                                        host=host,
+                                        port=port,
+                                        username=username,
+                                        password=password,
+                                        space=space,
+                                        timeout=timeout)
         elif p[0] == 'db':
             db_uri = ':'.join(p[1:])
             n = eva.notify.SQLANotifier(notifier_id=notifier_id,
@@ -398,7 +422,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
             elif isinstance(i, eva.notify.UDPNotifier):
                 n['params'] = '{}:{} ({})'.format(i.host, i.port, i.fmt)
-            elif isinstance(i, eva.notify.MQTTNotifier):
+            elif isinstance(i, eva.notify.MQTTNotifier) or isinstance(
+                    i, eva.notify.PSRTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username,
                                              ':*' if i.password else '')
