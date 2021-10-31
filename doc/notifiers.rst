@@ -441,6 +441,25 @@ use any 3rd party MQTT servers without any risk.
 Optionally, controller can be a member of different clouds via different MQTT
 notifiers.
 
+.. _psrt_:
+
+PSRT
+====
+
+`PSRT <https://github.com/alttch/psrt>`_ is the protocol invented to deal with
+large enterprise setups on slow channels, where huge payloads are generated.
+
+PSRT is almost fully compatible with :ref:`MQTT notifiers<mqtt_>` and its usage
+in EVA ICS is almost the same, except:
+
+* Additional option "socket_buf_size", which should be set to 1.5-2x size of
+  the largest payload expected
+* No option *keep_alive* in PSRT notifiers, as PSRT clients and servers use
+  timeouts to set keep-alive ping frequencies
+* No "qos" option as QoS in PSRT is, using MQTT measurements, always 2
+* No "retain_enabled" option as retains in PSRT are not supported
+* No "certfile" and "keyfile" options as PSRT supports password auth only
+
 .. _lurp:
 
 UDP notifiers (LURP)

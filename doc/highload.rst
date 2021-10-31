@@ -39,6 +39,9 @@ To use EVA ICS in high-load environments, remember the following:
 * For slow channels, set *compress* to *true* for controllers, connected via
   MQTT (unless CPU load is critical on clients)
 
+* Switch from MQTT to :ref:`PSRT <psrt_>`. Do not forget to tune
+  "socket_buf_size" notifier option.
+
 * If HTTP API respond too slow, try increasing value of *thread-pool* option in
   [webapi] config section.
 
