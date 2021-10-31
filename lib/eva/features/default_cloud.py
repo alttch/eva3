@@ -63,7 +63,6 @@ def setup(host=None,
         batch.append(f'set {id} retain_enabled {retain}')
     batch.append(f'test {id}')
     batch.append(f'subscribe state {id} -p "#" -g "#"')
-    batch.append(f'subscribe log {id}')
     batch.append(f'subscribe server {id}')
     batch.append(f'set {id} api_enabled 1')
     batch.append(f'set {id} announce_interval {announce}')
