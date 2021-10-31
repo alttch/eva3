@@ -4,6 +4,8 @@ EVA ICS 3.4.2
 What's new
 ==========
 
+- PSRT support
+- "mqtt" parameter in "default cloud" feature renamed to "host"
 - LM PLC stability and performance improvements
 - Bug fixes and general improvements
 

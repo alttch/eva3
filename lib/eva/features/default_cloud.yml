@@ -1,23 +1,25 @@
 description: Cloud connection for UC and LM PLC
 help: |
   Allows to remove the existing cloud connection and connect the local
-  controllers to a new MQTT server.
+  controllers to a new MQTT/PSRT server.
 
   Sets default announce interval to 30 seconds. Default connection id is eva_1
 
-  Subscribes MQTT to all state, log (INFO) and server events
-example: {{ setup_cmd }}mqtt=user:password@192.168.1.12
+  Subscribes MQTT/PSRT to all state, log (INFO) and server events
+example: {{ setup_cmd }}host=user:password@192.168.1.12
 doc-url: https://eva-ics.readthedocs.io/en/{{ EVA_VERSION }}/notifiers.html#mqtt-mqtt
 setup:
   mandatory-args:
-    mqtt: "as [user:password]@host[:port][/space]"
+    host: "as [user:password]@host[:port][/space]"
   optional-args:
-    id: "MQTT connection ID (default: eva_1)"
+    id: "MQTT/PSRT connection ID (default: eva_1)"
     ca: CA file (absolute path)
-    cert: Certificate file (absolute path)
-    key: Key file (absolute path)
+    cert: "Certificate file (absolute path, for MQTT only)"
+    key: "Key file (absolute path, for MQTT only)"
     retain: "use retain topics (default: True)"
     announce: custom annonce interval
+    proto: "mqtt or psrt"
+    socket_buf_size: "psrt socket buffer size"
 remove:
   optional-args:
-    id: "MQTT connection ID (default: eva_1)"
+    id: "MQTT/PSRT connection ID (default: eva_1)"

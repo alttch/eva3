@@ -9,7 +9,7 @@ ln -sf ../cli/venvl tests/benchmark-uc-crt
 
 BIN="uc-cmd lm-cmd sfa-cmd test-uc-xc test-ext test-phi uc-tpl prepare-sr gen-intl key-deploy key-import"
 NBIN="uc-notifier lm-notifier sfa-notifier"
-SBIN="check-mqtt get-setup-options eva-update-tables apikey-set pypi-mirror"
+SBIN="check-mqtt check-psrt get-setup-options eva-update-tables apikey-set pypi-mirror"
 INSTALL="import-registry-defaults import-registry-schema convert-legacy-configs"
 
 for p in ${BIN}; do

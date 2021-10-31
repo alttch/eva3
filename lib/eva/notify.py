@@ -2454,7 +2454,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def on_connect(self, client, userdata, flags, rc):
         if eva.core.is_shutdown_requested():
             return
-        logging.debug('.%s mqtt reconnect' % self.notifier_id)
+        logging.debug(f'.{self.notifier_id} {self.proto} reconnect')
         self.mq_connected.set()
         if self.announce_interval and not self.test_only_mode:
             eva.core.spawn_daemon(self.start_announcer)
@@ -2682,8 +2682,8 @@ class GenericMQTTNotifier(GenericNotifier):
             d = msg.payload if msg.payload.startswith(
                 b'\x00') else msg.payload.decode()
         except:
-            logging.warning('.Invalid message from MQTT server: {}'.format(
-                msg.payload))
+            logging.warning(
+                f'.Invalid message from {self.proto} server, topic: {t}')
             eva.core.log_traceback(notifier=True)
             return
         try:
@@ -3031,8 +3031,8 @@ class GenericMQTTNotifier(GenericNotifier):
                     f'{self.pfx}controller/{eva.core.product.code}'
                     f'/{eva.core.config.system_name}/test-{uuid.uuid4()}')
                 self.test_topic = test_topic
-                logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
-                        (self.notifier_id,self.host, self.port))
+                logging.debug('.Testing %s notifier %s (%s:%u)' % \
+                        (self.proto, self.notifier_id,self.host, self.port))
                 if not self.check_connection():
                     return False
                 t_start = time.perf_counter()
