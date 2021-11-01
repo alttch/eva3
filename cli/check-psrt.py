@@ -60,7 +60,7 @@ if mq.find('/') != -1:
 else:
     space = None
 
-psrt_host, psrt_port = eva.tools.parse_host_port(mq, 2883)
+psrt_host, psrt_port = eva.tools.parse_host_port(mq, 2873)
 
 n = eva.notify.PSRTNotifier(notifier_id='test',
                             host=psrt_host,

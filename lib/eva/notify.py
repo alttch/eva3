@@ -3297,7 +3297,7 @@ class PSRTNotifier(GenericMQTTNotifier):
                  socket_buf_size=10_000,
                  ca_certs=None):
         if port is None:
-            port = 2883
+            port = 2873
         self.socket_buf_size = socket_buf_size
         super().__init__(notifier_id=notifier_id,
                          host=host,
