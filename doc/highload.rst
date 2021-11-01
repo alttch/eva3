@@ -139,4 +139,3 @@ Below are benchmark results on a test systems (lower CRT is better):
 +--------------------+-------------------------------+-------+------------------+-----------+
 
 *According to tests, EVA ICS 3.2 is about 15% faster than 3.1.1*
-
