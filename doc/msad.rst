@@ -6,6 +6,8 @@ To authenticate EVA ICS users, `Microsoft Active Directory
 
 Active Directory support is not configured by default.
 
+.. contents::
+
 Automatic setup
 ===============
 
