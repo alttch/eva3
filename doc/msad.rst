@@ -39,8 +39,8 @@ Rebuild EVA ICS venv
 
     /opt/eva/install/build-venv
 
-EVA Controller configuration
-----------------------------
+EVA ICS controller configuration
+--------------------------------
 
 Put the following block in controller configuration (e.g. for
 :doc:`SFA</sfa/sfa>` edit *config/sfa/main* :doc:`registry</registry>` key)
