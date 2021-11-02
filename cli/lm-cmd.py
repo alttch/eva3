@@ -449,10 +449,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['iter'] = d['iterations']
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             if api_func == 'list_controllers':
+                psrt_used = d['proto'] == 'psrt'
                 d['type'] = 'static' if d['static'] else 'dynamic'
                 if d.get('compress'):
                     d['proto'] += '.z'
-                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
+                d['proto'] += '/' + (('psrt' if psrt_used else 'mqtt')
+                                     if d.get('mqtt_update') else 'ws')
             elif api_func == 'result':
                 import pytz
                 import time

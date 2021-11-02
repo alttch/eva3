@@ -227,10 +227,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 d['time'] = datetime.fromtimestamp(d['time']['created'],
                                                    tz).isoformat()
             if api_func == 'list_controllers':
+                psrt_used = d['proto'] == 'psrt'
                 d['type'] = 'static' if d['static'] else 'dynamic'
                 if d.get('compress'):
                     d['proto'] += '.z'
-                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
+                d['proto'] += '/' + (('psrt' if psrt_used else 'mqtt')
+                                     if d.get('mqtt_update') else 'ws')
             if api_func in ['list_macros', 'list_cycles', 'list_controllers']:
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':

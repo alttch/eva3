@@ -702,7 +702,12 @@ class RemoteController(eva.item.Item):
             if self.api.protocol_mode == 0:
                 d['proto'] = 'http'
             elif self.api.protocol_mode == 1:
-                d['proto'] = 'mqtt'
+                try:
+                    d['proto'] = eva.notify.get_notifier(
+                        self.api._notifier_id).notifier_type
+                except:
+                    d['proto'] = 'unknown'
+                    raise
             else:
                 d['proto'] = 'unknown'
             d['version'] = self.version
