@@ -72,6 +72,7 @@ n = eva.notify.PSRTNotifier(notifier_id='test',
 
 if n.test():
     print('OK')
+    n.disconnect()
 else:
     print('FAILED')
     sys.exit(1)

@@ -76,6 +76,7 @@ n = eva.notify.MQTTNotifier(notifier_id='test',
 
 if n.test():
     print('OK')
+    n.disconnect()
 else:
     print('FAILED')
     sys.exit(1)
