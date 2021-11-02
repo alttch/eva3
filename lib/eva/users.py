@@ -29,7 +29,7 @@ from pyaltt2.db import format_condition as format_sql_condition
 
 from eva.tools import SimpleNamespace
 
-from eva.tools import fmt_time
+from eva.tools import fmt_time, dict_from_str
 
 _d = SimpleNamespace(msad_host=None,
                      msad_default_domain=None,
@@ -69,8 +69,7 @@ def msad_init(host,
     except:
         eva.core.log_traceback()
         logging.critical('unable to create msad_cache table in db')
-    ad_config = dict(AD_SERVER=host, AD_DOMAIN=domain, CA_CERT_FILE=ca)
-    _d.msad_host = host
+    _d.msad_host = dict_from_str(host) if '=' in host else host
     _d.msad_default_domain = domain
     _d.msad_ca = ca
     _d.msad_key_prefix = key_prefix if key_prefix else ''
@@ -120,6 +119,13 @@ def msad_get_cached_credentials(username, password):
     return r.cn if r else None
 
 
+def get_msad_host_for_domain(domain):
+    if isinstance(_d.msad_host, str):
+        return _d.msad_host
+    else:
+        return _d.msad_host.get(domain)
+
+
 def msad_authenticate(username, password):
     try:
         from easyad import EasyAD
@@ -131,7 +137,11 @@ def msad_authenticate(username, password):
             return None
         else:
             domain = _d.msad_default_domain
-        ad_config = dict(AD_SERVER=_d.msad_host,
+        msad_host = get_msad_host_for_domain(domain)
+        if msad_host is None:
+            logging.debug(f'refusing msad login for {username}: no DC found')
+            return None
+        ad_config = dict(AD_SERVER=msad_host,
                          AD_DOMAIN=domain,
                          CA_CERT_FILE=_d.msad_ca)
         try:

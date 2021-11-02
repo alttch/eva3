@@ -66,6 +66,23 @@ Restart the controller
 
     eva sfa server restart
 
+Configuring multiple domains
+----------------------------
+
+To authenticate users from multiple domains, set the "host" parameter as:
+
+.. code:: yaml
+
+    msad:
+        host: domain1.com=ad.domain1.com,domain2.com=ad.domain2.com
+
+Optional "domain" parameter can be used to specify the default domain.
+
+.. note::
+
+    Multiple domains authentication can not be set up using "eva feature setup
+    msad" command. Please edit controller configs directly.
+
 Active Directory configuration
 ==============================
 
