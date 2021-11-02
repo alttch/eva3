@@ -460,6 +460,18 @@ in EVA ICS is almost the same, except:
 * No "retain_enabled" option as retains in PSRT are not supported
 * No "certfile" and "keyfile" options as PSRT supports password auth only
 
+.. note::
+
+    PSRT protocol is almost fully logically compatible with MQTT. In EVA ICS
+    PSRT notifiers transparently replace MQTT notifiers. After creating, PSRT
+    notifiers are used as regular MQTT notifiers.
+
+    This means, item and controller fields such as "mqtt_update",
+    "mqtt_control" can be set to PSRT notifier IDs.
+
+    For PSRT inter-connections, controller URIs must be set to
+    mqtt:notifier_id:node_id
+
 .. _lurp:
 
 UDP notifiers (LURP)
