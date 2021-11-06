@@ -9,5 +9,8 @@
 #YEDB_WORKERS=2
 #YEDB_CACHE_SIZE=10000
 #YEDB_STRICT_SCHEMA=1
+# seconds to wait until the complete registry startup. increase for large setups
+# (the registry checks itself after crashes, which may take longer)
+#YEDB_MAX_START_WAIT=5
 #YEDB_SUPERVISORD_PROGRAM=eva-registry
 #YEDB_USER=

@@ -4,7 +4,6 @@ D=$(realpath "$0")
 cd "$(dirname "${D}")/.." || exit 1
 
 WAIT_TO_KILL=10 # sec * 2 before kill -KILL
-MAX_START_WAIT=10 # sec * 2 before kill -KILL
 
 EVA_DIR=$(pwd)
 
@@ -17,7 +16,10 @@ EVA_DIR=$(pwd)
 [ -z "${YEDB_SKIP_BAK}" ] && YEDB_SKIP_BAK="eva3/${SYSTEM_NAME}/state"
 [ -z "${YEDB_WORKERS}" ] && YEDB_WORKERS=2
 [ -z "${YEDB_CACHE_SIZE}" ] && YEDB_CACHE_SIZE=1000
+[ -z "${YEDB_MAX_START_WAIT}" ] && YEDB_MAX_START_WAIT=5
 [ "${YEDB_STRICT_SCHEMA}" != "0" ] && YEDB_STRICT="--strict-schema"
+
+let "MAX_START_WAIT = $YEDB_MAX_START_WAIT * 2"
 
 REGISTRY=${EVA_DIR}/yedb/yedb-server
 PIDFILE=${EVA_DIR}/var/registry.pid

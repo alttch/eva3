@@ -19,6 +19,7 @@ Common
     * Poll delay allowed to be set to 1 microsecond
     * Fix for UDP notifier data frames longer than 65K
     * MSAD authentication with multiple domains
+    * Configurable registry max start wait parameter
 
 LM PLC
 ------
