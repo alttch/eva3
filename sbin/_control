@@ -78,7 +78,11 @@ case $1 in
       echo "already started"
       exit 2
     fi
-    exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${PYTHON}" "${CONTROLLER_PROGRAM}" "${CONTROLLER_ARGS}" >& /dev/null &
+    if [ "$VERBOSE_STARTUP" = "1" ]; then
+      exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${PYTHON}" "${CONTROLLER_PROGRAM}" "${CONTROLLER_ARGS}" &
+    else
+      exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${PYTHON}" "${CONTROLLER_PROGRAM}" "${CONTROLLER_ARGS}" >& /dev/null &
+    fi
     "${WATCHDOG}" "${CONTROLLER}" "${CONTROLLER_PROGRAM}" > /dev/null &
     ;;
   launch)

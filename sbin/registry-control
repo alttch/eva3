@@ -72,7 +72,11 @@ case $1 in
         exit 0
       fi
       export YEDB_DISABLE_CC=1
-      exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
+      if [ "$VERBOSE_STARTUP" = "1" ]; then
+        exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" &
+      else
+        exec_cmd "${SAFE_RUN}" "${SAFE_RUN_PIDFILE}" "${REGISTRY}" "${REGISTRY_ARGS}" >& /dev/null &
+      fi
       result=1
       C=0
       while [ "$result" != "0" ]; do

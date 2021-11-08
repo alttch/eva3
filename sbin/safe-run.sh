@@ -16,5 +16,6 @@ fi
 echo $$ > "$1"
 shift
 while true; do
-  "$@" > /dev/null
+  "$@"
+  sleep 0.1
 done

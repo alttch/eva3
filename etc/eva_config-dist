@@ -14,3 +14,5 @@
 #YEDB_MAX_START_WAIT=5
 #YEDB_SUPERVISORD_PROGRAM=eva-registry
 #YEDB_USER=
+# set to 1 to enable verbose startup
+#VERBOSE_STARTUP=

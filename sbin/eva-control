@@ -7,6 +7,10 @@ EVA_DIR=$(pwd)
 
 MAX_START_WAIT=180
 
+[ -f ./etc/eva_config ] && source ./etc/eva_config
+
+export VERBOSE_STARTUP
+
 source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
 source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
 source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
