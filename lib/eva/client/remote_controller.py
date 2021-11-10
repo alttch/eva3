@@ -707,7 +707,6 @@ class RemoteController(eva.item.Item):
                         self.api._notifier_id).notifier_type
                 except:
                     d['proto'] = 'unknown'
-                    raise
             else:
                 d['proto'] = 'unknown'
             d['version'] = self.version
