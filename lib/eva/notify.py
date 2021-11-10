@@ -2277,6 +2277,7 @@ class GenericMQTTNotifier(GenericNotifier):
                          interval=interval,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
+        self.cluster_paths = ''
         self.proto = proto
         self.host = host
         self.bulk_topic = bulk_topic
@@ -2783,9 +2784,14 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.mq.loop_stop()
                 if self.test_only_mode:
                     self.mq.enable_logger()
-                self.mq.connect(host=self.host,
-                                port=self.port,
-                                keepalive=self.keepalive)
+                if self.cluster_paths:
+                    self.mq.connect_cluster(
+                        self.cluster_paths,
+                        randomize=self.cluster_paths_randomize)
+                else:
+                    self.mq.connect(host=self.host,
+                                    port=self.port,
+                                    keepalive=self.keepalive)
                 self.mq.loop_start()
             if self.mq_connected.wait(self.timeout) is False:
                 raise TimeoutError('connection timed out')
@@ -3295,6 +3301,8 @@ class PSRTNotifier(GenericMQTTNotifier):
                  subscribe_all=False,
                  timestamp_enabled=True,
                  socket_buf_size=10_000,
+                 cluster_paths=None,
+                 cluster_paths_randomize=True,
                  ca_certs=None):
         if port is None:
             port = 2873
@@ -3325,6 +3333,8 @@ class PSRTNotifier(GenericMQTTNotifier):
                          certfile=None,
                          keyfile=None,
                          proto='psrt')
+        self.cluster_paths = cluster_paths
+        self.cluster_paths_randomize = cluster_paths_randomize
 
     def set_prop(self, prop, value):
         if prop in self.disabled_props:
@@ -3335,6 +3345,18 @@ class PSRTNotifier(GenericMQTTNotifier):
             except:
                 return False
             self.socket_buf_size = v
+            return True
+        elif prop == 'cluster_paths':
+            self.cluster_paths = str(value) if value else ''
+            return True
+        elif prop == 'cluster_paths_randomize':
+            try:
+                v = val_to_boolean(value)
+                if v is None:
+                    return False
+                self.cluster_paths_randomize = v
+            except:
+                return False
             return True
         else:
             return super().set_prop(prop, value)
@@ -3347,6 +3369,8 @@ class PSRTNotifier(GenericMQTTNotifier):
             except KeyError:
                 pass
         d['socket_buf_size'] = self.socket_buf_size
+        d['cluster_paths'] = self.cluster_paths
+        d['cluster_paths_randomize'] = self.cluster_paths_randomize
         return d
 
 
@@ -4120,6 +4144,8 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         bulk_subscribe = ncfg.get('bulk_subscribe')
         bulk_compress = ncfg.get('bulk_compress', False)
         socket_buf_size = ncfg.get('socket_buf_size', False)
+        cluster_paths = ncfg.get('cluster_paths', '')
+        cluster_paths_randomize = ncfg.get('cluster_paths_randomize', True)
         n = PSRTNotifier(notifier_id,
                          host=host,
                          port=port,
@@ -4140,6 +4166,8 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          bulk_subscribe=bulk_subscribe,
                          bulk_compress=bulk_compress,
                          socket_buf_size=socket_buf_size,
+                         cluster_paths=cluster_paths,
+                         cluster_paths_randomize=cluster_paths_randomize,
                          ca_certs=ca_certs)
     elif ncfg['type'] == 'udp':
         interval = ncfg.get('interval')

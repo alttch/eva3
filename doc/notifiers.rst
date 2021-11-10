@@ -460,6 +460,14 @@ in EVA ICS is almost the same, except:
 * No "retain_enabled" option as retains in PSRT are not supported
 * No "certfile" and "keyfile" options as PSRT supports password auth only
 
+For PSRT clusters, there are two additional options:
+
+* "cluster_paths" - cluster nodes (host:port), comma separated
+* "cluster_paths_randomize" - randomize node selection (default: True)
+
+If "cluster_paths" option is set, it overrides the values of "host" and "port"
+options, which are ignored during connection.
+
 .. note::
 
     PSRT protocol is almost fully logically compatible with MQTT. In EVA ICS
