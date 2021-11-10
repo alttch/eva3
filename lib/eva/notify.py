@@ -4143,7 +4143,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         bulk_topic = ncfg.get('bulk_topic')
         bulk_subscribe = ncfg.get('bulk_subscribe')
         bulk_compress = ncfg.get('bulk_compress', False)
-        socket_buf_size = ncfg.get('socket_buf_size', False)
+        socket_buf_size = ncfg.get('socket_buf_size', 10_000)
         cluster_paths = ncfg.get('cluster_paths', '')
         cluster_paths_randomize = ncfg.get('cluster_paths_randomize', True)
         n = PSRTNotifier(notifier_id,
