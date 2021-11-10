@@ -1026,3 +1026,38 @@ To monitor load of notifiers, "notifier list" :doc:`CLI </cli>` command or
 The obtained "frame_counter" value is a frame counter of total packets sent via
 the notifier. The counter is unsigned 32-bit integer, which means that after
 4,294,967,295 its value is reset to zero.
+
+Switching Pub/sub notifiers
+===========================
+
+Switching notifier type
+-----------------------
+
+To switch between :ref:`MQTT<mqtt_>` and :ref:`PSRT<psrt_>` on-the-flow, use
+the following command:
+
+.. code:: shell
+
+    /opt/eva/install/switch-mqtt-psrt NOTIFIER_ID PROTO PATH
+
+e.g. to switch the notifier "eva_1" to PSRT, use:
+
+.. code:: shell
+
+    /opt/eva/install/switch-mqtt-psrt eva_1 psrt psrt-server:2873
+
+Switching controller notifier path on primary nodes
+---------------------------------------------------
+
+.. code:: shell
+
+    /opt/eva/install/switch-controller-notifier SECONDARY_NAME NOTIFIER_ID
+
+Consider there are two pub/sub notifiers created "eva_1" and "eva_2". To switch
+secondaries, connected to the local :doc:`/lm/lm` and :doc:`/sfa/sfa` from the
+node "nodeX" to "eva_2", use the following command:
+
+.. code:: shell
+
+    /opt/eva/install/switch-controller-notifier nodeX eva_2
+
