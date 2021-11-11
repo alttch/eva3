@@ -15,6 +15,7 @@ h = a.HOST
 
 if ':' in h:
     host, port = h.rsplit(':', 1)
+    port = int(port)
 else:
     host = h
     port = 2873 if a.TYPE == 'psrt' else 1883
