@@ -20,6 +20,7 @@ Common
     * Fix for UDP notifier data frames longer than 65K
     * MSAD authentication with multiple domains
     * Configurable registry max start wait parameter
+    * File notifiers (NDJSON and CSV)
 
 LM PLC
 ------
