@@ -873,6 +873,28 @@ E.g., let's toggle *unit:equipment/cctv*:
 
     {"jsonrpc": "2.0", "method": "action_toggle" }
 
+File notifiers
+==============
+
+EVA ICS controllers can write state events directly into external files.
+Currently, the following file formats are supported:
+
+* **json** JSON (`NDJSON <http://ndjson.org/>`_)
+* **csv** comma-separated values
+
+Files are written as endless, use any external file rotator or pick up the
+file manually when required. As soon as the output file is removed, a new file
+is automatically created.
+
+Special options:
+
+* **auto_flush** by default, files are flushed only when rotated. By setting
+  this option, data is flushed immediately, after each data string (increases
+  disk usage)
+
+* **dos_cr** use DOS-style CR/LF line ending
+
+* **eu_numbers** use European number format for certain file formats (CSV)
 
 HTTP Notifiers
 ==============

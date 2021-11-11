@@ -95,6 +95,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             db:db_uri
             timescaledb:db_uri
             udp:host:port
+            file:file_path#<json|csv>
             influxdb:http(s)://uri#[org/]database
             prometheus:'''),
                                metavar='PROPS').completer = self.ComplNProto()
@@ -360,6 +361,15 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                         db_uri=db_uri,
                                         keep=None,
                                         space=space)
+        elif p[0] == 'file':
+            path = ':'.join(p[1:])
+            try:
+                path, file_format = path.split('#', 2)
+            except:
+                return self.local_func_result_failed
+            n = eva.notify.FileNotifier(notifier_id=notifier_id,
+                                          path=path,
+                                          file_format=file_format)
         elif p[0] == 'timescaledb':
             db_uri = ':'.join(p[1:])
             n = eva.notify.TimescaleNotifier(notifier_id=notifier_id,
@@ -411,6 +421,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 method = getattr(i, 'method', None)
                 n['params'] = 'uri: {}{} '.format(
                     i.uri, ('#{}'.format(method) if method else ''))
+            elif isinstance(i, eva.notify.FileNotifier):
+                n['params'] = f'path: {i.path} ({i.file_format})'
             elif isinstance(i, eva.notify.SQLANotifier) or isinstance(
                     i, eva.notify.TimescaleNotifier):
                 n['params'] = 'db: %s' % i.db_uri

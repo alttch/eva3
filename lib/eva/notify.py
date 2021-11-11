@@ -20,6 +20,7 @@ import uuid
 import threading
 import socket
 import sqlalchemy as sa
+from stat import ST_DEV, ST_INO
 
 import eva.registry
 
@@ -1292,6 +1293,174 @@ class TimescaleNotifier(SQLANotifier):
                 break
             data.append([d[0].timestamp()] + list(d[1:]))
         return list(reversed(data[1:] if sfr else data))
+
+
+class FileNotifier(GenericNotifier):
+
+    file_formats = ['csv', 'json']
+
+    def __init__(self,
+                 notifier_id,
+                 interval=None,
+                 file_format=None,
+                 path=None,
+                 dos_cr=False,
+                 eu_numbers=False,
+                 auto_flush=False):
+        if file_format not in self.file_formats:
+            raise RuntimeError(f'Unsupported file format: {file_format}')
+        notifier_type = 'file'
+        super().__init__(notifier_id=notifier_id,
+                         notifier_type=notifier_type,
+                         interval=interval)
+        self.path = path
+        self.connected = self.path is not None
+        self.file_stream = None
+        self.dos_cr = dos_cr
+        self.eu_numbers = eu_numbers
+        self.auto_flush = auto_flush
+        self.file_format = file_format
+        if file_format == 'csv':
+            import pytz
+            self.tz = pytz.timezone(time.tzname[0])
+        if self.dos_cr:
+            self.new_line_cr = '\r\n'
+        else:
+            self.new_line_cr = '\n'
+        self.dev, self.ino = -1, -1
+
+    def test(self):
+        try:
+            open(self.path, 'a').close()
+            return True
+        except Exception as e:
+            self.log_error(message=e)
+            return False
+
+    def start(self):
+        super().start()
+        self.file_stream = open(self.path, 'a')
+        self.store_fstat()
+        self.write_file_header()
+
+    def stop(self):
+        if self.file_stream:
+            self.file_stream.close()
+        self.dev, self.ino = -1, -1
+        super().stop()
+
+    def serialize(self, props=False):
+        d = super().serialize(props=props)
+        for p in ['space', 'timeout']:
+            try:
+                del d[p]
+            except KeyError:
+                pass
+        d['path'] = self.path
+        d['dos_cr'] = self.dos_cr
+        d['eu_numbers'] = self.eu_numbers
+        d['auto_flush'] = self.auto_flush
+        d['format'] = self.file_format
+        return d
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        if subject == 'state':
+            for d in data if isinstance(data, list) else [data]:
+                self.write_file_string(self.format_file_string(d))
+
+    def store_fstat(self):
+        sres = os.fstat(self.file_stream.fileno())
+        self.dev, self.ino = sres[ST_DEV], sres[ST_INO]
+
+    def write_file_string(self, s):
+        if self.file_stream:
+            try:
+                sres = os.stat(self.path)
+            except FileNotFoundError:
+                sres = None
+            if not sres or sres[ST_DEV] != self.dev or sres[ST_INO] != self.ino:
+                if self.file_stream is not None:
+                    self.file_stream.flush()
+                    self.file_stream.close()
+                    self.file_stream = open(self.path, 'a')
+                    self.store_fstat()
+                    self.write_file_header()
+            self.file_stream.write(s)
+            self.file_stream.write(self.new_line_cr)
+            if self.auto_flush:
+                self.file_stream.flush()
+
+    def write_file_header(self):
+        if self.file_stream.tell() == 0:
+            if self.file_format == 'csv':
+                self.file_stream.write((';' if self.eu_numbers else ',').join([
+                    'OID', 'Type', 'Group', 'Id', 'Timestamp', 'Time', 'Status',
+                    'Value'
+                ]))
+                self.file_stream.write(self.new_line_cr)
+
+    def format_file_string(self, obj):
+
+        def format_csv_string(s):
+            return '"' + s.replace('"', '""') + '"'
+
+        def format_csv_number(n):
+            if self.eu_numbers:
+                return str(n).replace('.', ',')
+            else:
+                return str(n)
+
+        if self.file_format == 'json':
+            return format_json(obj, minimal=True)
+        elif self.file_format == 'csv':
+            from datetime import datetime
+            s = []
+            for f in ['oid', 'type', 'group', 'id']:
+                s.append(format_csv_string(obj.get(f, '')))
+            ts = obj.get('set_time', 0)
+            s.append(format_csv_number(ts))
+            if ts:
+                s.append(
+                    datetime.fromtimestamp(
+                        ts, self.tz).strftime('%Y-%m-%d %H:%M:%S'))
+            else:
+                s.append('')
+            s.append(str(obj.get('status')))
+            value = obj.get('value')
+            try:
+                s.append(format_csv_number(float(value)))
+            except:
+                s.append(format_csv_string(value))
+            return (';' if self.eu_numbers else ',').join(s)
+
+    def set_prop(self, prop, value):
+        if prop == 'path':
+            self.path = value
+            return True
+        elif prop == 'dos_cr':
+            v = val_to_boolean(value)
+            if v is None:
+                return False
+            self.dos_cr = v
+            return True
+        elif prop == 'eu_numbers':
+            v = val_to_boolean(value)
+            if v is None:
+                return False
+            self.eu_numbers = v
+            return True
+        elif prop == 'auto_flush':
+            v = val_to_boolean(value)
+            if v is None:
+                return False
+            self.auto_flush = v
+            return True
+        elif prop == 'format':
+            if value not in self.file_formats:
+                return False
+            self.file_format = value
+            return True
+        return super().set_prop(prop, value)
 
 
 class GenericHTTPNotifier(GenericNotifier):
@@ -4235,6 +4404,20 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                               space=space,
                               buf_ttl=buf_ttl,
                               interval=interval)
+    elif ncfg['type'] == 'file':
+        path = ncfg.get('path')
+        file_format = ncfg.get('format')
+        interval = ncfg.get('interval')
+        dos_cr = ncfg.get('dos_cr', False)
+        eu_numbers = ncfg.get('eu_numbers', False)
+        auto_flush = ncfg.get('auto_flush', False)
+        n = FileNotifier(notifier_id,
+                         path=path,
+                         file_format=file_format,
+                         dos_cr=dos_cr,
+                         eu_numbers=eu_numbers,
+                         auto_flush=auto_flush,
+                         interval=interval)
     elif ncfg['type'] == 'http-json':
         space = ncfg.get('space')
         ssl_verify = ncfg.get('ssl_verify')
