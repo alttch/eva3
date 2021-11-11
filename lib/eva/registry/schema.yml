@@ -188,6 +188,7 @@ config/uc/main:
         thread-pool: *intpositive
         ei-enabled: *bool
         x-real-ip: *bool
+        real-ip-header: *str
     snmptrap:
       type: object
       additionalProperties: false

@@ -679,6 +679,8 @@ Using NGINX as a frontend for SFA interface
     *X-Real-IP* header and set *webapi/x-real-ip: true* option in
     *config/sfa/main* :doc:`registry</registry>` key.
 
+    To override the header name, use the field *webapi/real-ip-header*.
+
 External authentication
 -----------------------
 

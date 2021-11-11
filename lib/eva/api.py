@@ -72,7 +72,8 @@ config = SimpleNamespace(host='127.0.0.1',
                          session_no_prolong=False,
                          thread_pool=15,
                          ei_enabled=True,
-                         use_x_real_ip=False)
+                         use_x_real_ip=False,
+                         real_ip_header='X-Real-IP')
 
 api_result_accepted = 2
 
@@ -550,6 +551,8 @@ def update_config(cfg):
     config.ei_enabled = cfg.get('webapi/ei-enabled', default=True)
     logging.debug(f'webapi.ei_enabled = {config.ei_enabled}')
     config.use_x_real_ip = cfg.get('webapi/x-real-ip', default=False)
+    config.real_ip_header = cfg.get('webapi/real-ip-header',
+                                    default='X-Real-IP')
     logging.debug(f'webapi.x_real_ip = {config.use_x_real_ip}')
     return True
 
@@ -656,9 +659,12 @@ def http_real_ip(get_gw=False, ip_only=False):
         gw = get_aci('gw')
         if gw:
             return None if ip_only else 'gateway/' + gw
-    if config.use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
-            cherrypy.request.headers['X-Real-IP']!='':
-        ip = cherrypy.request.headers['X-Real-IP']
+    if config.use_x_real_ip:
+        real_ip = cherrypy.request.headers.get(config.real_ip_header)
+        if real_ip:
+            ip = real_ip
+        else:
+            ip = cherrypy.request.remote.ip
     else:
         ip = cherrypy.request.remote.ip
     return ip

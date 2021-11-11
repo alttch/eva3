@@ -128,6 +128,8 @@ webapi:
   #ei-enabled: false
   # use frontend X-Real-IP header to get client real IP address
   #x-real-ip: true
+  # override real ip header name
+  #real-ip-header: X-IP
 cloud:
   # default API key ID
   default-key: default
