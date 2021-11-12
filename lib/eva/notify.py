@@ -2377,7 +2377,7 @@ class PrometheusNotifier(GenericNotifier):
         return True
 
 
-class GenericMQTTNotifier(GenericNotifier):
+class GenericPubSubNotifier(GenericNotifier):
 
     class Announcer(BackgroundIntervalWorker):
 
@@ -2629,13 +2629,13 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.announce_interval and not self.test_only_mode:
             eva.core.spawn_daemon(self.start_announcer)
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('.GenericMQTTNotifier::on_connect locking broken')
+            logging.critical('.GenericPubSubNotifier::on_connect locking broken')
             eva.core.critical()
             return False
         try:
             if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
-                    '.GenericMQTTNotifier::on_connect locking (2) broken')
+                    '.GenericPubSubNotifier::on_connect locking (2) broken')
                 eva.core.critical()
                 return False
             custom_handlers = self.custom_handlers.copy()
@@ -2697,7 +2697,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
-                    '.GenericMQTTNotifier::handler_append locking broken')
+                    '.GenericPubSubNotifier::handler_append locking broken')
                 eva.core.critical()
                 return False
             try:
@@ -2724,7 +2724,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
-                    '.GenericMQTTNotifier::handler_remove locking broken')
+                    '.GenericPubSubNotifier::handler_remove locking broken')
                 eva.core.critical()
                 return False
             try:
@@ -2884,7 +2884,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 if not self.handler_lock.acquire(
                         timeout=eva.core.config.timeout):
                     logging.critical(
-                        '.GenericMQTTNotifier::on_message locking broken')
+                        '.GenericPubSubNotifier::on_message locking broken')
                     eva.core.critical()
                     return False
                 try:
@@ -3154,12 +3154,12 @@ class GenericMQTTNotifier(GenericNotifier):
     def send_api_request(self, request_id, controller_id, data, callback):
         try:
             if request_id in self.api_callback:
-                logging.error('.GenericMQTTNotifier: duplicate API request ID')
+                logging.error('.GenericPubSubNotifier: duplicate API request ID')
                 return False
             if not self.api_callback_lock.acquire(
                     timeout=eva.core.config.timeout):
                 logging.critical(
-                    '.GenericMQTTNotifier::api_callback locking broken')
+                    '.GenericPubSubNotifier::api_callback locking broken')
                 eva.core.critical()
                 return False
             try:
@@ -3181,12 +3181,12 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if request_id not in self.api_callback:
                 logging.warning(
-                    '.GenericMQTTNotifier: API request ID not found')
+                    '.GenericPubSubNotifier: API request ID not found')
                 return False
             if not self.api_callback_lock.acquire(
                     timeout=eva.core.config.timeout):
                 logging.critical(
-                    '.GenericMQTTNotifier::api_callback locking broken')
+                    '.GenericPubSubNotifier::api_callback locking broken')
                 eva.core.critical()
                 return False
             try:
@@ -3446,7 +3446,7 @@ class GenericMQTTNotifier(GenericNotifier):
             return super().set_prop(prop, value)
 
 
-class PSRTNotifier(GenericMQTTNotifier):
+class PSRTNotifier(GenericPubSubNotifier):
     disabled_props = ['keepalive', 'certfile', 'keyfile', 'qos']
 
     def __init__(self,
@@ -3543,7 +3543,7 @@ class PSRTNotifier(GenericMQTTNotifier):
         return d
 
 
-class MQTTNotifier(GenericMQTTNotifier):
+class MQTTNotifier(GenericPubSubNotifier):
 
     def __init__(self,
                  notifier_id,
