@@ -1,4 +1,5 @@
-EVA ICS v3 is licensed under Apache License 2.0
+EVA ICS v3 is licensed under Apache License 2.0 with additional Common Clauses
+(1).
 
 Minor modules may contain the code, developed or included under different
 non-compatible Open Source licenses. In this case, specific module license may
@@ -181,4 +182,9 @@ Copyright Altertech Group and other contributors, https://www.altertech.com/
       incurred by, or claims asserted against, such Contributor by reason
       of your accepting any such warranty or additional liability.
 
+   Common Clause 1.
+  
+      Trademark usage conditions: https://www.eva-ics.com/doc?p=trademarks
+
    END OF TERMS AND CONDITIONS
+
