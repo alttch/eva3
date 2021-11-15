@@ -3606,7 +3606,7 @@ class UDPNotifier(GenericNotifier):
                  interval=None,
                  buf_ttl=0,
                  fmt='msgpack',
-                 max_frame_size=1500,
+                 max_frame_size=65000,
                  host=None,
                  port=None):
 

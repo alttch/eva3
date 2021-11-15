@@ -509,9 +509,15 @@ option (on the receiver) *ws_state_events* to *false*.
 
 .. note::
 
-    If UDP frame exceeds 65000 bytes, it is automatically splitted into
-    multiple, which may decrease data replication performance. If faced,
+    If UDP frame exceeds **max_frame_size** bytes, it is automatically splitted
+    into multiple, which may decrease data replication performance. If faced,
     consider lowering or disabling *buf_ttl* notifier property.
+
+    The default max frame size is 65000 bytes, which is good for a single-host
+    replication and usually good for local networks. If used in larger networks
+    and/or packet/event drops occur, it is recommended to either set
+    **max_frame_size** to the value lower than the network MTU or increase the
+    network MTU.
 
 To quickly turn on LURP for inter-connection on a local machine, the following
 command can be used:
