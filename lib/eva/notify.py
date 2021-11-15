@@ -2629,7 +2629,8 @@ class GenericPubSubNotifier(GenericNotifier):
         if self.announce_interval and not self.test_only_mode:
             eva.core.spawn_daemon(self.start_announcer)
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('.GenericPubSubNotifier::on_connect locking broken')
+            logging.critical(
+                '.GenericPubSubNotifier::on_connect locking broken')
             eva.core.critical()
             return False
         try:
@@ -3154,7 +3155,8 @@ class GenericPubSubNotifier(GenericNotifier):
     def send_api_request(self, request_id, controller_id, data, callback):
         try:
             if request_id in self.api_callback:
-                logging.error('.GenericPubSubNotifier: duplicate API request ID')
+                logging.error(
+                    '.GenericPubSubNotifier: duplicate API request ID')
                 return False
             if not self.api_callback_lock.acquire(
                     timeout=eva.core.config.timeout):
@@ -4344,7 +4346,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
         port = ncfg.get('port')
-        max_frame_size = ncfg.get('max_frame_size')
+        max_frame_size = ncfg.get('max_frame_size', 65000)
         n = UDPNotifier(notifier_id,
                         interval=interval,
                         buf_ttl=buf_ttl,
