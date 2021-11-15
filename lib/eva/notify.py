@@ -77,6 +77,8 @@ with_notify_lock = eva.core.RLocker('notify')
 
 mqtt_global_topics = ['unit', 'sensor']
 
+DEFAULT_UDP_FRAME_SIZE = 65000
+
 
 @with_notify_lock
 def _get_notifiers_copy():
@@ -3608,7 +3610,7 @@ class UDPNotifier(GenericNotifier):
                  interval=None,
                  buf_ttl=0,
                  fmt='msgpack',
-                 max_frame_size=65000,
+                 max_frame_size=DEFAULT_UDP_FRAME_SIZE,
                  host=None,
                  port=None):
 
@@ -4346,7 +4348,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
         port = ncfg.get('port')
-        max_frame_size = ncfg.get('max_frame_size', 65000)
+        max_frame_size = ncfg.get('max_frame_size', DEFAULT_UDP_FRAME_SIZE)
         n = UDPNotifier(notifier_id,
                         interval=interval,
                         buf_ttl=buf_ttl,
