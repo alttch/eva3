@@ -517,7 +517,7 @@ option (on the receiver) *ws_state_events* to *false*.
     replication and usually good for local networks. If used in larger networks
     and/or packet/event drops occur, it is recommended to either set
     **max_frame_size** to the value lower than the network MTU or increase the
-    network MTU.
+    network MTU instead.
 
 To quickly turn on LURP for inter-connection on a local machine, the following
 command can be used:
