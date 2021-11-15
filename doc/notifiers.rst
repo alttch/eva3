@@ -446,11 +446,16 @@ notifiers.
 PSRT
 ====
 
-`PSRT <https://github.com/alttch/psrt>`_ is the protocol invented to deal with
-large enterprise setups on slow channels, where huge payloads are generated.
+`PSRT <https://github.com/alttch/psrt>`_ (PubSub Realtime Telemetry Protocol)
+is the protocol invented to deal with large enterprise setups on slow channels,
+where huge payloads are generated.
 
 PSRT is almost fully compatible with :ref:`MQTT notifiers<mqtt_>` and its usage
 in EVA ICS is almost the same, except:
+
+PSRT is ICANN/IESG-approved protocol. `The official ports, assigned by IANA are
+2873 TCP/UDP
+<https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=PubSub+Realtime+Telemetry+Protocol>`_.
 
 * Additional option "socket_buf_size", which should be set to 1.5-2x size of
   the largest payload expected

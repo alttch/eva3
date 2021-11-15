@@ -99,3 +99,15 @@ Limitations
   particular handler function. Watch can be cleared by *oid* or globally only.
 
 * OID masks do not support internal wildcards (e.g. "sensor:*/test")
+
+PubSubRT Enterprise
+===================
+
+PubSubRT Enterprise is the cluster-enabled version of our :ref:`PSRT <psrt_>`
+server, recommended for big industrial/enterprise setups.
+
+Packages for Debian, Ubuntu and other deb-compatible Linux distributions can be
+downloaded at https://get.eva-ics.com/psrt-enterprise/
+
+PubSub Enterprise can be used in "unlimited trial" mode. More info and setup
+instructions can be found at https://github.com/alttch/psrt/#enterprise-version
