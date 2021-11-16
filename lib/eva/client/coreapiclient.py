@@ -173,10 +173,11 @@ class CoreAPIClient(APIClient):
             raise requests.Timeout()
         if cb.code:
             try:
-                r.content = eva.crypto.decrypt(zlib.decompress(
-                    cb.body) if use_compression else cb.body,
+                r.content = eva.crypto.decrypt(cb.body,
                                                self._private_key,
                                                key_is_hash=True)
+                if use_compression:
+                    r.content = zlib.decompress(r.content)
                 if cb.code == 200:
                     r.ok = True
                 r.status_code = cb.code

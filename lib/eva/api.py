@@ -2025,12 +2025,12 @@ def mqtt_api_handler(notifier_id, data, callback):
             raise FunctionFailed('API error')
         if ct == CT_MSGPACK:
             packer = msgpack.Packer(use_bin_type=True)
-            response = eva.crypto.encrypt(packer.pack(response),
-                                          private_key,
-                                          key_is_hash=True)
-            callback(
-                call_id, b'\x00' + b'\xC8' +
-                (zlib.compress(response) if use_compression else response))
+            payload = packer.pack(response)
+            response = eva.crypto.encrypt(
+                zlib.compress(payload) if use_compression else payload,
+                private_key,
+                key_is_hash=True)
+            callback(call_id, b'\x00' + b'\xC8' + response)
         else:
             response = ce.encrypt(rapidjson.dumps(response).encode())
             callback(call_id, '200|' + response.decode())
