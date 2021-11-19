@@ -2613,6 +2613,12 @@ class GenericPubSubNotifier(GenericNotifier):
         if not from_pinger and self.pinger:
             self.pinger.stop()
 
+    def stop(self):
+        super().stop()
+        for i, v in self.api_callback.items():
+            logging.debug(f'.{self.notifier_id} canceling API call {i}')
+            eva.core.spawn(v[1], None)
+
     def restart(self, from_pinger=False):
         self.disconnect(from_pinger=from_pinger)
         self.connect(from_pinger=from_pinger)
@@ -2738,7 +2744,8 @@ class GenericPubSubNotifier(GenericNotifier):
                     logging.debug('.%s removed handler for topic %s: %s' %
                                   (self.notifier_id, _topic, func))
                 if not self.custom_handlers.get(_topic):
-                    self.mq.unsubscribe(_topic)
+                    if self.connected:
+                        self.mq.unsubscribe(_topic)
                     try:
                         del self.custom_handlers[_topic]
                     except:

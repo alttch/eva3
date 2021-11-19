@@ -33,13 +33,14 @@ class CoreAPIClient(APIClient):
 
         def data_handler(self, data):
             self.completed.set()
-            try:
-                if data[0] != 0 and data[0] != 1:
-                    raise ValueError
-                self.code = data[1]
-                self.body = data[2:]
-            except:
-                self.code = 500
+            if data is not None:
+                try:
+                    if data[0] != 0 and data[0] != 1:
+                        raise ValueError
+                    self.code = data[1]
+                    self.body = data[2:]
+                except:
+                    self.code = 500
 
     class Response(object):
         status_code = 500
