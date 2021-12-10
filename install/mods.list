@@ -51,4 +51,4 @@ testresources==2.0.1
 cachetools==4.1.1
 sh==1.14.1
 pytest-runner==5.3.1
-yedb[cli]==0.2.15
+yedb[cli]==0.2.17
