@@ -25,8 +25,8 @@ Common
 LM PLC
 ------
 
-    * new rules option: "block on exec" (blocks decision matrix until a macro
-      is completed).
+    * new rules option: "block_on_exec" (blocks decision matrix until a macro
+      is completed)
     * decision matrix rule indexes (speeds up rule processing, auto-activated)
 
 
