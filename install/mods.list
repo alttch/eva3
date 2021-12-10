@@ -35,7 +35,7 @@ schedule==0.6.0
 pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.7.1
-python-rapidjson==0.7.2
+python-rapidjson==1.5
 msgpack==1.0.2
 pytz==2021.1
 neotermcolor==2.0.8
