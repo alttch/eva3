@@ -13,4 +13,4 @@ What's new
 Update instructions
 ===================
 
-No special instructions.
+No special instructions
