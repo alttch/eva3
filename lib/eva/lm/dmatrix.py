@@ -387,7 +387,7 @@ class DecisionRule(eva.item.Item):
                 '+' in self.for_item_group or \
                 '#' in self.for_item_group or \
                 not self.for_item_id or \
-                '*' in self.for_item_id
+                '*' in self.for_item_id or self.for_item_id == '#'
 
     def get_item_oid(self):
         return None if self.is_mask(
