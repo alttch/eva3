@@ -31,7 +31,7 @@ pycryptodomex==3.12.0
 rapidtables==0.1.10
 sqlalchemy==1.4.22
 service_identity==18.1.0
-schedule==0.6.0
+schedule==1.1.0
 pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.7.1
