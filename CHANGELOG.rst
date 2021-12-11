@@ -21,6 +21,8 @@ Common
     * MSAD authentication with multiple domains
     * Configurable registry max start wait parameter
     * File notifiers (NDJSON and CSV)
+    * Python 3.10 support
+    * Alpine Linux 3.15 support
 
 LM PLC
 ------
