@@ -24,7 +24,7 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
     elif OS_LIKE == 'fedora':
         install_system_packages(['openldap-devel', 'openssl-devel'])
     elif OS_LIKE == 'alpine':
-        with open("/usr/lib/libldap_r.so") as fh:
+        with open('/usr/lib/libldap_r.so', 'w') as fh:
             fh.write('INPUT ( libldap.so )')
         install_system_packages(['openldap-dev'])
     else:
