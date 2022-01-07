@@ -20,12 +20,12 @@ categories of goods and services:
 The Trademark Supervisors
 -------------------------
 
-`Bohemia Automation Limited <https://find-and-update.company-information.service.gov.uk/company/13540412>`__
+`Bohemia Automation Limited <https://www.bohemia-automation.com>`__
 (United Kingdom) is the primary trademarks supervisor in the United Kingdom and
 worldwide, except the following:
 
 - `Altertech s.r.o.
-  <http://www.rzp.cz/cgi-bin/aps_cacheWEB.sh?VSS_SERV=ZVWSBJFND&PODLE=subjekt&Action=Search&ICO=27149099&VYPIS=2>`__
+  <https://www.altertech.com/>`__
   (Czech Republic) is the primary trademarks supervisor in the European Union.
 -  TOV Altertech (Ukraine) is the primary trademarks supervisor in
    Ukraine.
