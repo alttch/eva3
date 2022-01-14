@@ -29,5 +29,5 @@ shell - best IoT CLI tool")
 Note: code in master branch can be unstable or even broken. Please use version
 branches, [stable builds or installer](https://www.eva-ics.com/download).
 
-(c) 2021 Altertech https://www.altertech.com/
+(c) 2022 [Bohemia Automation](https://www.bohemia-automation.com/) / [Altertech](https://www.altertech.com/)
 
