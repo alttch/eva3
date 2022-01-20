@@ -164,7 +164,10 @@ def get_item(item_id):
 
 
 def get_controller(controller_id):
-    controller_lock.acquire()
+    if not controller_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('controller_lock locking broken')
+        eva.core.critical()
+        return
     try:
         _controller_id = oid_to_id(controller_id, 'remote_uc')
         if not _controller_id:
@@ -306,7 +309,10 @@ def save():
         if not eva.core.config.state_to_registry and \
                 eva.core.config.db_update != 1:
             db.close()
-    controller_lock.acquire()
+    if not controller_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('controller_lock locking broken')
+        eva.core.critical()
+        return
     try:
         for i, v in remote_ucs.items():
             if v.config_changed:
@@ -621,7 +627,10 @@ def load_remote_ucs():
         for i, cfg in eva.registry.key_get_recursive('data/lm/remote_uc'):
             u = eva.lm.lremote.LRemoteUC(i)
             u.load(cfg)
-            controller_lock.acquire()
+            if not controller_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical('controller_lock locking broken')
+                eva.core.critical()
+                return
             try:
                 remote_ucs[i] = u
             finally:
@@ -1053,7 +1062,10 @@ def handle_discovered_controller(notifier_id, controller_id, location,
         ct, c_id = controller_id.split('/')
         if ct != 'uc':
             return True
-        controller_lock.acquire()
+        if not controller_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('controller_lock locking broken')
+            eva.core.critical()
+            return
         try:
             c = uc_pool.controllers.get(c_id)
             if c:
@@ -1127,7 +1139,10 @@ def append_controller(uri,
     u._key = key
     if not uc_pool.append(u):
         return False
-    controller_lock.acquire()
+    if not controller_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('controller_lock locking broken')
+        eva.core.critical()
+        return
     try:
         remote_ucs[u.item_id] = u
     finally:
@@ -1147,7 +1162,10 @@ def remove_controller(controller_id):
         _controller_id = _controller_id.split('/')[-1]
     if _controller_id not in remote_ucs:
         raise ResourceNotFound
-    controller_lock.acquire()
+    if not controller_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('controller_lock locking broken')
+        eva.core.critical()
+        return
     try:
         i = remote_ucs[_controller_id]
         i.destroy()
