@@ -514,102 +514,100 @@ def check(k,
           ro_op=False):
     if eva.core.is_setup_mode():
         return True
-    with key_lock:
-        if not k or not k in keys or (master and not keys[k].master):
+    if not k or not k in keys or (master and not keys[k].master):
+        return False
+    _k = keys[k]
+    if _k.combined_from and _k.need_recombine:
+        _recombine_acl(_k)
+    if ip and not netacl_match(ip, _k.hosts_allow):
+        return False
+    if _k.master:
+        return True
+    if sysfunc and not _k.sysfunc:
+        return False
+    if any_item:
+        if _k.groups_deny or _k.item_ids_deny:
             return False
-        _k = keys[k]
-        if _k.combined_from and _k.need_recombine:
-            _recombine_acl(_k)
-        if ip and not netacl_match(ip, _k.hosts_allow):
-            return False
-        if _k.master:
-            return True
-        if sysfunc and not _k.sysfunc:
-            return False
-        if any_item:
-            if _k.groups_deny or _k.item_ids_deny:
+        else:
+            return '#' in _k.item_ids or '#' in _k.groups or (
+                ro_op and ('#' in _k.item_ids_ro or '#' in _k.groups_ro))
+    if item:
+        # check access to PHI
+        try:
+            if ('#' not in _k.item_ids and
+                    item.phi_id not in _k.item_ids) or ('#' not in _k.groups and
+                                                        'phi' not in _k.groups):
                 return False
-            else:
-                return '#' in _k.item_ids or '#' in _k.groups or (
-                    ro_op and ('#' in _k.item_ids_ro or '#' in _k.groups_ro))
-        if item:
-            # check access to PHI
+        except:
+            # check access to regular item
             try:
-                if ('#' not in _k.item_ids and item.phi_id
-                        not in _k.item_ids) or ('#' not in _k.groups and
-                                                'phi' not in _k.groups):
-                    return False
+                grp = item.group
             except:
-                # check access to regular item
-                try:
-                    grp = item.group
-                except:
-                    grp = 'nogroup'
-                if not ro_op and eva.item.item_match(item, _k.item_ids_deny,
-                                                     _k.groups_deny):
-                    return False
-                if not eva.item.item_match(item, _k.item_ids, _k.groups):
-                    if ro_op:
-                        if not eva.item.item_match(item, _k.item_ids_ro,
-                                                   _k.groups_ro):
-                            return False
-                    else:
-                        return False
-        if oid:
-            if not eva.item.oid_match(oid, _k.item_ids, _k.groups):
+                grp = 'nogroup'
+            if not ro_op and eva.item.item_match(item, _k.item_ids_deny,
+                                                 _k.groups_deny):
+                return False
+            if not eva.item.item_match(item, _k.item_ids, _k.groups):
                 if ro_op:
-                    if not eva.item.oid_match(oid, _k.item_ids_ro,
-                                              _k.groups_ro):
+                    if not eva.item.item_match(item, _k.item_ids_ro,
+                                               _k.groups_ro):
                         return False
                 else:
                     return False
-        if allow:
-            for a in allow:
-                if not a in _k.allow:
+    if oid:
+        if not eva.item.oid_match(oid, _k.item_ids, _k.groups):
+            if ro_op:
+                if not eva.item.oid_match(oid, _k.item_ids_ro, _k.groups_ro):
                     return False
-        if pvt_file:
-            if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
-                return True
-            for d in _k.pvt_files:
-                p = d.find('#')
-                if p > -1 and d[:p] == pvt_file[:p]:
-                    return True
-                if d.find('+') > -1:
-                    g1 = d.split('/')
-                    g2 = pvt_file.split('/')
-                    if len(g1) == len(g2):
-                        match = True
-                        for i in range(0, len(g1)):
-                            if g1[i] != '+' and g1[i] != g2[i]:
-                                match = False
-                                break
-                        if match:
-                            return True
-            return False
-        if rpvt_uri:
-            if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
-                r = rpvt_uri.split('//', 1)[1]
             else:
-                r = rpvt_uri
-            if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
+                return False
+    if allow:
+        for a in allow:
+            if not a in _k.allow:
+                return False
+    if pvt_file:
+        if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
+            return True
+        for d in _k.pvt_files:
+            p = d.find('#')
+            if p > -1 and d[:p] == pvt_file[:p]:
                 return True
-            for d in _k.rpvt_uris:
-                p = d.find('#')
-                if p > -1 and d[:p] == r[:p]:
-                    return True
-                if d.find('+') > -1:
-                    g1 = d.split('/')
-                    g2 = r.split('/')
-                    if len(g1) == len(g2):
-                        match = True
-                        for i in range(0, len(g1)):
-                            if g1[i] != '+' and g1[i] != g2[i]:
-                                match = False
-                                break
-                        if match:
-                            return True
-            return False
-        return True
+            if d.find('+') > -1:
+                g1 = d.split('/')
+                g2 = pvt_file.split('/')
+                if len(g1) == len(g2):
+                    match = True
+                    for i in range(0, len(g1)):
+                        if g1[i] != '+' and g1[i] != g2[i]:
+                            match = False
+                            break
+                    if match:
+                        return True
+        return False
+    if rpvt_uri:
+        if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
+            r = rpvt_uri.split('//', 1)[1]
+        else:
+            r = rpvt_uri
+        if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
+            return True
+        for d in _k.rpvt_uris:
+            p = d.find('#')
+            if p > -1 and d[:p] == r[:p]:
+                return True
+            if d.find('+') > -1:
+                g1 = d.split('/')
+                g2 = r.split('/')
+                if len(g1) == len(g2):
+                    match = True
+                    for i in range(0, len(g1)):
+                        if g1[i] != '+' and g1[i] != g2[i]:
+                            match = False
+                            break
+                    if match:
+                        return True
+        return False
+    return True
 
 
 def check_master(k):
