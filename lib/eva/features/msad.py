@@ -1,6 +1,6 @@
 from eva.features import OS_LIKE, UnsupportedOS, install_system_packages
 from eva.features import append_python_libraries, remove_python_libraries
-from eva.features import restart_controller, is_enabled
+from eva.features import restart_controller, is_enabled, val_to_boolean
 
 from eva.features import InvalidParameter, FunctionFailed
 
@@ -9,7 +9,12 @@ import eva.registry
 python_libs = ['easyad==1.0.9']
 
 
-def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
+def setup(host=None,
+          domain=None,
+          key_prefix='',
+          ca=None,
+          cache_time=None,
+          cache_first=False):
     if not is_enabled('sfa'):
         raise FunctionFailed('SFA is not enabled')
     if not host:
@@ -39,6 +44,8 @@ def setup(host=None, domain=None, key_prefix='', ca=None, cache_time=None):
         config['ca'] = ca
     if cache_time and cache_time > 0:
         config['cache-time'] = cache_time
+    if val_to_boolean(cache_first):
+        config['cache-first'] = True
     eva.registry.key_set_field('config/sfa/main', 'msad', config)
     restart_controller('sfa')
 
