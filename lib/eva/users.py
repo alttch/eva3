@@ -29,14 +29,15 @@ from pyaltt2.db import format_condition as format_sql_condition
 
 from eva.tools import SimpleNamespace
 
-from eva.tools import fmt_time, dict_from_str
+from eva.tools import fmt_time, dict_from_str, val_to_boolean
 
 _d = SimpleNamespace(msad_host=None,
                      msad_default_domain=None,
                      msad_ca=None,
                      msad_ou='EVA',
                      msad_key_prefix='',
-                     msad_cache_time=86400)
+                     msad_cache_time=86400,
+                     msad_cache_first=False)
 
 api_log_clean_delay = 60
 
@@ -48,7 +49,8 @@ def msad_init(host,
               ca=None,
               key_prefix=None,
               ou=None,
-              cache_time=86400):
+              cache_time=86400,
+              cache_first=False):
     try:
         from easyad import EasyAD
     except:
@@ -74,6 +76,7 @@ def msad_init(host,
     _d.msad_ca = ca
     _d.msad_key_prefix = key_prefix if key_prefix else ''
     _d.msad_cache_time = cache_time
+    _d.msad_cache_first = cache_first
     if ou is not None:
         _d.msad_ou = ou
     try:
@@ -127,7 +130,22 @@ def get_msad_host_for_domain(domain):
 
 
 def msad_authenticate(username, password):
+
+    def auth_by_cache():
+        result = msad_get_cached_credentials(username, password)
+        if result:
+            d = []
+            for r in result.split(','):
+                d.append(_d.msad_key_prefix + r)
+            return d
+        else:
+            return None
+
     try:
+        if _d.msad_cache_first:
+            cache_result = auth_by_cache()
+            if cache_result:
+                return cache_result
         from easyad import EasyAD
         if not _d.msad_host:
             return None
@@ -150,15 +168,10 @@ def msad_authenticate(username, password):
         except Exception as e:
             logging.warning(f'Unable to access active directory: {e}')
             eva.core.log_traceback()
-            result = msad_get_cached_credentials(username, password)
-            if result:
-                d = []
-                for r in result.split(','):
-                    d.append(_d.msad_key_prefix + r)
-                return d
-            else:
+            if _d.msad_cache_first:
                 return None
-
+            else:
+                return auth_by_cache()
         if not user:
             logging.warning(f'user {username} active directory access denied')
             return None
@@ -558,7 +571,14 @@ def update_config(cfg):
     except:
         cache_time = 86400
     logging.debug(f'msad.cache_time = {cache_time}')
-    msad_init(host, domain, ca, key_prefix, ou, cache_time)
+    try:
+        cache_first = val_to_boolean(cfg.get('msad/cache-first'))
+        if cache_first is None:
+            raise ValueError
+    except:
+        cache_first = False
+    logging.debug(f'msad.cache_first = {cache_first}')
+    msad_init(host, domain, ca, key_prefix, ou, cache_time, cache_first)
 
 
 def run_hook(cmd, u, password=None):

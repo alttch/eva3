@@ -58,6 +58,8 @@ Put the following block in controller configuration (e.g. for
         # cache credentials for the specified time (seconds)
         # default: 86400 (1 day), 0 to disable caching
         #cache-time: 86400
+        # try to authenticate the user against the cache before probing AD
+        #cache-first: true
 
 Host and domain should always be specified. Default key prefix is empty,
 default organizational unit is *EVA*. CA file is not used by default.
@@ -102,10 +104,10 @@ ICS API key ID
     :scale: 70%
     :alt: create AD group
 
-Assign security group to domain user. If multiple security groups are assigned, EVA
-ICS will use :ref:`combined ACL<combined_acl>`. If API key with any required ID doesn't
-exist, authentication attempt is considered as failed, despite user has more
-groups assigned.
+Assign security group to domain user. If multiple security groups are assigned,
+EVA ICS will use :ref:`combined ACL<combined_acl>`. If API key with any
+required ID doesn't exist, authentication attempt is considered as failed,
+despite user has more groups assigned.
 
 Usage
 =====
