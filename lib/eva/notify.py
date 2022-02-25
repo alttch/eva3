@@ -291,12 +291,14 @@ class GenericNotifier(object):
                  notifier_type=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  timeout=None):
         self.notifier_id = notifier_id
         self.notifier_type = notifier_type
         self.space = space
         self.interval = interval
+        self.interval_only = interval_only
         self.events = set()
         self.timeout = timeout
         self.enabled = False
@@ -542,7 +544,7 @@ class GenericNotifier(object):
         self.disconnect()
 
     def notify(self, subject, data, unpicklable=False, retain=False):
-        if not self.can_notify():
+        if self.interval_only or not self.can_notify():
             return False
         data_to_send = self.format_data(subject, data)
         if not data_to_send:
@@ -584,6 +586,8 @@ class GenericNotifier(object):
             d['space'] = self.space
         if self.interval or props:
             d['interval'] = self.interval
+        if self.interval_only or props:
+            d['interval_only'] = self.interval_only
         if self._skip_test is not None or props:
             d['skip_test'] = self._skip_test
         d['enabled'] = self.enabled
@@ -603,7 +607,7 @@ class GenericNotifier(object):
                 return False
             self.enabled = val
             return True
-        if prop == 'skip_test':
+        elif prop == 'skip_test':
             if value is None:
                 self._skip_test = None
                 return True
@@ -623,6 +627,15 @@ class GenericNotifier(object):
                 self.interval = float(value)
             except:
                 return False
+            return True
+        elif prop == 'interval_only':
+            if value is None:
+                self.enabled = False
+                return True
+            val = val_to_boolean(value)
+            if val is None:
+                return False
+            self.interval_only = val
             return True
         elif prop == 'timeout':
             if not value:
@@ -825,14 +838,16 @@ class SQLANotifier(GenericNotifier):
                  simple_cleaning=None,
                  space=None,
                  buf_ttl=0,
-                 interval=None):
+                 interval=None,
+                 interval_only=False):
         notifier_type = 'db'
         self.buf = {}
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
                          buf_ttl=buf_ttl,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
         self.state_storage = 'sql'
         self.keep = keep if keep else \
             db_default_keep
@@ -1304,6 +1319,7 @@ class FileNotifier(GenericNotifier):
     def __init__(self,
                  notifier_id,
                  interval=None,
+                 interval_only=False,
                  file_format=None,
                  path=None,
                  dos_cr=False,
@@ -1314,7 +1330,8 @@ class FileNotifier(GenericNotifier):
         notifier_type = 'file'
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
         self.path = path
         self.connected = self.path is not None
         self.file_stream = None
@@ -1475,6 +1492,7 @@ class GenericHTTPNotifier(GenericNotifier):
                  password=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
@@ -1485,6 +1503,7 @@ class GenericHTTPNotifier(GenericNotifier):
                          notifier_type=notifier_type,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
         self.ssl_verify = ssl_verify
@@ -1562,6 +1581,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                  notify_key=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
@@ -1574,6 +1594,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                          password=password,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
         self.method = method
@@ -1709,6 +1730,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  v2_afixes=True,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  timeout=None,
                  ssl_verify=True):
@@ -1720,6 +1742,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                          password=password,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
         self.method = method
@@ -2419,6 +2442,7 @@ class GenericPubSubNotifier(GenericNotifier):
                  port=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  username=None,
                  password=None,
                  qos=None,
@@ -2446,6 +2470,7 @@ class GenericPubSubNotifier(GenericNotifier):
                          notifier_type=notifier_type,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          timeout=timeout)
         self.cluster_paths = ''
@@ -3466,6 +3491,7 @@ class PSRTNotifier(GenericPubSubNotifier):
                  port=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  bulk_topic=None,
                  bulk_subscribe=None,
@@ -3492,6 +3518,7 @@ class PSRTNotifier(GenericPubSubNotifier):
                          port=port,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          bulk_topic=bulk_topic,
                          bulk_subscribe=bulk_subscribe,
@@ -3562,6 +3589,7 @@ class MQTTNotifier(GenericPubSubNotifier):
                  port=None,
                  space=None,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  bulk_topic=None,
                  bulk_subscribe=None,
@@ -3587,6 +3615,7 @@ class MQTTNotifier(GenericPubSubNotifier):
                          port=port,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          buf_ttl=buf_ttl,
                          bulk_topic=bulk_topic,
                          bulk_subscribe=bulk_subscribe,
@@ -3615,6 +3644,7 @@ class UDPNotifier(GenericNotifier):
     def __init__(self,
                  notifier_id,
                  interval=None,
+                 interval_only=False,
                  buf_ttl=0,
                  fmt='msgpack',
                  max_frame_size=DEFAULT_UDP_FRAME_SIZE,
@@ -3627,7 +3657,8 @@ class UDPNotifier(GenericNotifier):
                          notifier_type=notifier_type,
                          timeout=None,
                          buf_ttl=buf_ttl,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
         self.fmt = fmt
         if fmt == 'msgpack':
             self.serializer = msgpack
@@ -3733,6 +3764,7 @@ class GCP_IoT(GenericNotifier):
                  keepalive=None,
                  timeout=None,
                  interval=None,
+                 interval_only=False,
                  apikey=None,
                  ca_certs=None,
                  keyfile=None,
@@ -3746,7 +3778,8 @@ class GCP_IoT(GenericNotifier):
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          timeout=timeout,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
         try:
             self.keepalive = int(keepalive)
         except:
@@ -4267,6 +4300,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         timeout = ncfg.get('timeout')
         buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         collect_logs = ncfg.get('collect_logs', False)
         api_enabled = ncfg.get('api_enabled', False)
         discovery_enabled = ncfg.get('discovery_enabled', False)
@@ -4283,6 +4317,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          port=port,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          username=username,
                          password=password,
                          qos=qos,
@@ -4313,6 +4348,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         timeout = ncfg.get('timeout')
         buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         collect_logs = ncfg.get('collect_logs', False)
         api_enabled = ncfg.get('api_enabled', False)
         discovery_enabled = ncfg.get('discovery_enabled', False)
@@ -4331,6 +4367,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          port=port,
                          space=space,
                          interval=interval,
+                         interval_only=interval_only,
                          username=username,
                          password=password,
                          timeout=timeout,
@@ -4351,6 +4388,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          ca_certs=ca_certs)
     elif ncfg['type'] == 'udp':
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         buf_ttl = ncfg.get('buf_ttl', 0)
         fmt = ncfg.get('fmt')
         host = ncfg.get('host')
@@ -4358,6 +4396,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         max_frame_size = ncfg.get('max_frame_size', DEFAULT_UDP_FRAME_SIZE)
         n = UDPNotifier(notifier_id,
                         interval=interval,
+                        interval_only=interval_only,
                         buf_ttl=buf_ttl,
                         fmt=fmt,
                         max_frame_size=max_frame_size,
@@ -4367,6 +4406,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         keepalive = ncfg.get('keepalive')
         timeout = ncfg.get('timeout')
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         token_expire = ncfg.get('token_expire')
         ca_certs = ncfg.get('ca_certs')
         keyfile = ncfg.get('keyfile')
@@ -4379,6 +4419,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                     keepalive=keepalive,
                     timeout=timeout,
                     interval=interval,
+                    interval_only=interval_only,
                     apikey=apikey,
                     ca_certs=ca_certs,
                     keyfile=keyfile,
@@ -4393,6 +4434,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         space = ncfg.get('space')
         buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         simple_cleaning = ncfg.get('simple_cleaning')
         n = SQLANotifier(notifier_id,
                          db_uri=db,
@@ -4400,13 +4442,15 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          simple_cleaning=simple_cleaning,
                          space=space,
                          buf_ttl=buf_ttl,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
     elif ncfg['type'] == 'timescaledb':
         db = ncfg.get('db')
         keep = ncfg.get('keep')
         space = ncfg.get('space')
         buf_ttl = ncfg.get('buf_ttl', 0)
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         simple_cleaning = ncfg.get('simple_cleaning')
         n = TimescaleNotifier(notifier_id,
                               db_uri=db,
@@ -4414,11 +4458,13 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                               simple_cleaning=simple_cleaning,
                               space=space,
                               buf_ttl=buf_ttl,
-                              interval=interval)
+                              interval=interval,
+                              interval_only=interval_only)
     elif ncfg['type'] == 'file':
         path = ncfg.get('path')
         file_format = ncfg.get('format')
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         dos_cr = ncfg.get('dos_cr', False)
         eu_numbers = ncfg.get('eu_numbers', False)
         auto_flush = ncfg.get('auto_flush', False)
@@ -4428,7 +4474,8 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                          dos_cr=dos_cr,
                          eu_numbers=eu_numbers,
                          auto_flush=auto_flush,
-                         interval=interval)
+                         interval=interval,
+                         interval_only=interval_only)
     elif ncfg['type'] == 'http-json':
         space = ncfg.get('space')
         ssl_verify = ncfg.get('ssl_verify')
@@ -4436,6 +4483,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         notify_key = ncfg.get('notify_key')
         timeout = ncfg.get('timeout')
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         buf_ttl = ncfg.get('buf_ttl', 0)
         method = ncfg.get('method')
         username = ncfg.get('username')
@@ -4449,6 +4497,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                               notify_key=notify_key,
                               space=space,
                               interval=interval,
+                              interval_only=interval_only,
                               buf_ttl=buf_ttl,
                               timeout=timeout)
     elif ncfg['type'] == 'influxdb':
@@ -4460,6 +4509,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
         uri = ncfg.get('uri')
         timeout = ncfg.get('timeout')
         interval = ncfg.get('interval')
+        interval_only = ncfg.get('interval_only', False)
         buf_ttl = ncfg.get('buf_ttl', 0)
         method = ncfg.get('method')
         username = ncfg.get('username')
@@ -4479,6 +4529,7 @@ def load_notifier(notifier_id, ncfg=None, test=True, connect=True):
                               method=method,
                               space=space,
                               interval=interval,
+                              interval_only=interval_only,
                               buf_ttl=buf_ttl,
                               timeout=timeout)
     elif ncfg['type'] == 'prometheus':
