@@ -1784,6 +1784,10 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         import dateutil.parser
         import eva.item
         from datetime import datetime
+        vfn = xopts.get('vfn', 'mean')
+        for c in [' ', '[', ']', '(', ')', ';', ',', '.']:
+            if c in vfn:
+                raise ValueError('invalid symbols in vfn')
         l = int(limit) if limit else None
         sfr = False
         if t_start:
@@ -1824,12 +1828,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                 q += ' and' if q else 'where'
                 q += ' time<=%u' % (t_e * 1000000000)
             if prop in ['status', 'S']:
-                props = 'status' if not fill else 'mode(status)'
+                props = 'status' if not fill else 'last(status)'
             elif prop in ['value', 'V']:
-                props = 'value' if not fill else 'mean(value)'
+                props = 'value' if not fill else f'{vfn}(value)'
             else:
                 props = 'status,value' if not fill \
-                        else 'mode(status),mean(value)'
+                        else f'last(status),{vfn}(value)'
             q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
             if fill:
                 q += ' group by time({}{}) fill(previous)'.format(
@@ -1875,9 +1879,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                         req_q += f' and r._field == "{p}"'
                     req_q += ')\n'
                     if fill:
-                        req_q += (' |> aggregateWindow(every: {}{}, fn: mean)\n'
-                                  .format(fill[:-1],
-                                          self.__fills[fill[-1].upper()]))
+                        req_q += (
+                            ' |> aggregateWindow(every: {}{}, fn: {})\n'.format(
+                                fill[:-1], self.__fills[fill[-1].upper()]), vfn)
                         req_q += ' |> fill(usePrevious: true)\n'
                     r = self.rsession().post(
                         url=self.uri + '/api/v2/query?org={}'.format(self.org),
