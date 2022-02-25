@@ -1784,7 +1784,10 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         import dateutil.parser
         import eva.item
         from datetime import datetime
-        vfn = xopts.get('vfn', 'mean')
+        if xopts is not None:
+            vfn = xopts.get('vfn', 'mean')
+        else:
+            vfn = 'mean'
         for c in [' ', '[', ']', '(', ')', ';', ',', '.']:
             if c in vfn:
                 raise ValueError('invalid symbols in vfn')
@@ -1880,8 +1883,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     req_q += ')\n'
                     if fill:
                         req_q += (
-                            ' |> aggregateWindow(every: {}{}, fn: {})\n'.format(
-                                fill[:-1], self.__fills[fill[-1].upper()]), vfn)
+                            ' |> aggregateWindow(every: {}{}, fn: '.format(
+                                fill[:-1], self.__fills[fill[-1].upper()])
+                        ) + str(vfn) + ')\n'
                         req_q += ' |> fill(usePrevious: true)\n'
                     r = self.rsession().post(
                         url=self.uri + '/api/v2/query?org={}'.format(self.org),
