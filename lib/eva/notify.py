@@ -1014,6 +1014,9 @@ class SQLANotifier(GenericNotifier):
         import dateutil.parser
         from datetime import datetime
         l = int(limit) if limit is not None else None
+        offset = xopts.get('offset') if xopts else None
+        if offset is not None:
+            offset = int(offset)
         if l is not None and l <= 0:
             return []
         if t_start:
@@ -1044,6 +1047,8 @@ class SQLANotifier(GenericNotifier):
         q += ' order by t desc, oid'
         if l is not None:
             q += ' limit %u' % l
+        if offset is not None:
+            q += ' offset %u' % offset
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
