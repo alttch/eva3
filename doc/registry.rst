@@ -10,7 +10,7 @@ registry system" or just "registry".
 Technology
 ==========
 
-EVA ICS uses `YEDB <https://www.yedb.org>`_ as the structured database. YEDB is
+EVA ICS uses `YEDB <https://yedb.bma.ai>`_ as the structured database. YEDB is
 fast, easy to repair and crash-free.
 
 Registry server is started with "/opt/eva/sbin/registry-control start" and MUST
