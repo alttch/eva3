@@ -191,6 +191,8 @@ class DataPuller:
                     f'{eva.core.dir_eva}/{self.cmd}'
                 ],
                                           shell=True,
+                                          bufsize=1,
+                                          universal_newlines=True,
                                           env=env,
                                           preexec_fn=preexec_function,
                                           stdout=subprocess.PIPE,
