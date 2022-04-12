@@ -288,18 +288,8 @@ class DataPuller:
             if data:
                 logging.error(f'data puller {self.name} {data}')
 
-        def decode_line(line):
-            self.last_activity = time.perf_counter()
-            try:
-                return line.decode().strip()
-            except Exception as e:
-                logging.error(
-                    f'data puller {self.name} unable to decode data: {e}')
-                eva.core.log_traceback()
-                return None
-
         def _t_collect_stream(pipe, q):
-            for i in iter(pipe.readline, b''):
+            for i in iter(pipe.readline, ''):
                 q.put(i)
 
         stdout_q = queue.Queue()
@@ -320,19 +310,17 @@ class DataPuller:
         while self.active:
             ns = True
             try:
-                d = stdout_q.get_nowait()
+                line = stdout_q.get_nowait().strip()
                 ns = False
-                line = decode_line(d)
-                if line is not None:
-                    process_stdout(line)
+                self.last_activity = time.perf_counter()
+                process_stdout(line)
             except queue.Empty:
                 pass
             try:
-                d = stderr_q.get_nowait()
+                line = stderr_q.get_nowait().strip()
                 ns = False
-                line = decode_line(d)
-                if line is not None:
-                    process_stderr(line)
+                self.last_activity = time.perf_counter()
+                process_stderr(line)
             except queue.Empty:
                 pass
             if ns:
