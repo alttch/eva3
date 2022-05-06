@@ -1,10 +1,10 @@
 The Trademarks
 ==============
 
-**EVA ICS®** is the registered trademark (EUIPO 018411224), owned by
-`Serhij Symonenko <https://www.makeitwork.cz>`__ and used by the
-`Altertech Group <https://www.altertech.com>`__ companies and their
-partners for the following categories of goods and services:
+**EVA ICS®** is the registered trademark (EUIPO 018411224, UK 00003751405),
+owned by `Serhij Symonenko <https://www.makeitwork.cz>`__ and used by the
+`Altertech Group <https://www.altertech.com>`__ companies and their partners
+for the following categories of goods and services:
 
 -  Industrial automation software
 -  Industrial process control software
@@ -25,8 +25,9 @@ The Trademark Supervisors
 worldwide, except the following:
 
 - `Altertech s.r.o.
-  <https://www.altertech.com/>`__
-  (Czech Republic) is the primary trademarks supervisor in the European Union.
+  <https://www.altertech.com/>`__ (Czech Republic) is the primary trademarks
+  supervisor in the Czech Republic.
+
 -  TOV Altertech (Ukraine) is the primary trademarks supervisor in
    Ukraine.
 
