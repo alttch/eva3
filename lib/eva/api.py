@@ -1031,7 +1031,7 @@ class GenericAPI(API):
         """
         get item state history
 
-        State history of one :doc:`item</items>` or several items of the
+        State history of one :doc:`item<../items>` or several items of the
         specified type can be obtained using **state_history** command.
 
         If master key is used, the method attempts to get stored state for an
@@ -1253,7 +1253,7 @@ class GenericAPI(API):
         """
         get item state log
 
-        State log of a single :doc:`item</items>` or group of the specified
+        State log of a single :doc:`item<../items>` or group of the specified
         type can be obtained using **state_log** command.
 
         note: only SQL notifiers are supported
@@ -1392,8 +1392,8 @@ class GenericAPI(API):
         """
         log in and get authentication token
 
-        Obtains authentication :doc:`token</api_tokens>` which can be used in
-        API calls instead of API key.
+        Obtains an authentication token which can be used in API calls instead
+        of API key.
 
         If both **k** and **u** args are absent, but API method is called with
         HTTP request, which contain HTTP header for basic authorization, the
@@ -1491,9 +1491,7 @@ class GenericAPI(API):
     @notify_plugins
     def logout(self, **kwargs):
         """
-        log out and purge authentication token
-
-        Purges authentication :doc:`token</api_tokens>`
+        log out and purge the authentication token
 
         Args:
             k: valid token
