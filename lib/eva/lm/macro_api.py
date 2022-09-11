@@ -314,8 +314,8 @@ class MacroAPI(object):
                     *2H* - 2 hours etc.), optional. If specified, t_start is
                     required
             fmt: output format, 'list' (default) or 'dict'
-            db: :doc:`notifier</notifiers>` ID which keeps history for the
-                    specified item(s) (default: **db_1**)
+            db: :doc:`notifier<../notifiers>` ID which keeps history for the
+            specified item(s) (default: **db_1**)
 
         Returns:
             list of dicts or dict of lists
@@ -1238,7 +1238,7 @@ class MacroAPI(object):
         """
         execute a remote system command
 
-        Executes a :ref:`command script<cmd>` on the server where the
+        Executes a :ref:`command script<eva3_cmd>` on the server where the
         controller is installed.
 
         Args:
@@ -1394,7 +1394,7 @@ class MacroAPI(object):
         """
         deploy device items from template
 
-        Deploys the :ref:`device<device>` from the specified template.
+        Deploys the :ref:`device<eva3_device>` from the specified template.
 
         Args:
             controller_id: controller id to deploy device on

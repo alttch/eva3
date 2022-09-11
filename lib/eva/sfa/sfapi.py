@@ -724,7 +724,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         set lvar state
 
-        Set status and value of a :ref:`logic variable<lvar>`.
+        Set status and value of a :ref:`logic variable<eva3_lvar>`.
 
         Args:
             k:
@@ -754,9 +754,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         reset lvar state
 
-        Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
-        when lvar is being used as a timer to reset it, or as a flag to set it
-        *True*.
+        Set status and value of a :ref:`logic variable<eva3_lvar>` to *1*.
+        Useful when lvar is being used as a timer to reset it, or as a flag to
+        set it *True*.
 
         Args:
             k:
@@ -779,8 +779,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         clear lvar state
 
         set status (if **expires** lvar param > 0) or value (if **expires**
-        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
-        used as a timer to stop it, or as a flag to set it *False*.
+        isn't set) of a :ref:`logic variable<eva3_lvar>` to *0*. Useful when
+        lvar is used as a timer to stop it, or as a flag to set it *False*.
 
         Args:
             k:
@@ -803,8 +803,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         clear lvar state
 
         set status (if **expires** lvar param > 0) or value (if **expires**
-        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
-        used as a timer to stop it, or as a flag to set it *False*.
+        isn't set) of a :ref:`logic variable<eva3_lvar>` to *0*. Useful when
+        lvar is used as a timer to stop it, or as a flag to set it *False*.
 
         Args:
             k:
@@ -826,8 +826,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         increment lvar value
 
-        Increment value of a :ref:`logic variable<lvar>`. Initial value should
-        be number
+        Increment value of a :ref:`logic variable<eva3_lvar>`. Initial value
+        should be number
 
         Args:
             k:
@@ -849,8 +849,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         decrement lvar value
 
-        Decrement value of a :ref:`logic variable<lvar>`. Initial value should
-        be number
+        Decrement value of a :ref:`logic variable<eva3_lvar>`. Initial value
+        should be number
 
         Args:
             k:
@@ -871,7 +871,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         get macro list
 
-        Get the list of all available :doc:`macros</lm/macros>`.
+        Get the list of all available :doc:`macros<../lm/macros>`.
 
         Args:
             k:
@@ -934,7 +934,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         execute macro
 
-        Execute a :doc:`macro</lm/macros>` with the specified arguments.
+        Execute a :doc:`macro<../lm/macros>` with the specified arguments.
 
         Args:
             k:
@@ -970,7 +970,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         get cycle list
 
-        Get the list of all available :doc:`cycles</lm/cycles>`.
+        Get the list of all available :doc:`cycles<../lm/cycles>`.
 
         Args:
             k:
@@ -1057,7 +1057,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         get controllers list
 
-        Get the list of all connected :ref:`controllers<sfa_remote_c>`.
+        Get the list of all connected :ref:`controllers<eva3_sfa_remote_c>`.
 
         Args:
             k: .master
@@ -1082,7 +1082,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         connect remote controller via HTTP
 
-        Connects remote :ref:`controller<sfa_remote_c>` to the local.
+        Connects remote :ref:`controller<eva3_sfa_remote_c>` to the local.
 
         Args:
             k: .master
@@ -1290,8 +1290,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         the interface.
 
         All the connected clients receive the event with *subject="reload"* and
-        *data="asap"*. If the clients use :ref:`js_framework`, they can catch
-        *server.reload* event.
+        *data="asap"*. If the clients use :doc:`/eva-js-framework/index`, they
+        can catch *server.reload* event.
 
         Args:
             k: .master
@@ -1308,8 +1308,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         to prepare for server restart.
 
         All the connected clients receive the event with *subject="server"* and
-        *data="restart"*. If the clients use :ref:`js_framework`, they can
-        catch *server.restart* event.
+        *data="restart"*. If the clients use :doc:`/eva-js-framework/index`,
+        they can catch *server.restart* event.
 
         Server restart notification is sent automatically to all connected
         clients when the server is restarting. This API function allows to send

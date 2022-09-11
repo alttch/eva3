@@ -63,8 +63,8 @@ def send(subject=None, text=None, rcp=None):
     """
     send email message
 
-    The function uses config/common/mailer :doc:`registry</registry>` key get
-    sender address and list of the recipients (if not specified).
+    The function uses config/common/mailer EVA ICS registry key get sender
+    address and list of the recipients (if not specified).
 
     Optional:
         subject: email subject

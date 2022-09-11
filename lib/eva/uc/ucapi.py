@@ -423,8 +423,8 @@ class UC_API(GenericAPI):
         """
         update the status and value of the item
 
-        Updates the status and value of the :doc:`item</items>`. This is one of
-        the ways of passive state update, for example with the use of an
+        Updates the status and value of the :doc:`item<../items>`. This is one
+        of the ways of passive state update, for example with the use of an
         external controller.
         
         .. note::
@@ -581,7 +581,7 @@ class UC_API(GenericAPI):
             .i: item id
 
         Returns:
-            complete :doc:`item</items>` configuration
+            complete :doc:`item<../items>` configuration
         """
         i = parse_api_params(kwargs, 'i', 's')
         if is_oid(i):
@@ -598,7 +598,7 @@ class UC_API(GenericAPI):
         """
         save item configuration
 
-        Saves :doc:`item</items>`. configuration on disk (even if it hasn't
+        Saves :doc:`item<../items>`. configuration on disk (even if it hasn't
         been changed)
 
         Args:
@@ -630,7 +630,7 @@ class UC_API(GenericAPI):
             x: serialize specified item prop(s)
 
         Returns:
-            the list of all :doc:`item</items>` available
+            the list of all :doc:`item<../items>` available
         """
         tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.')
         if prop:
@@ -679,7 +679,7 @@ class UC_API(GenericAPI):
         """
         list item properties
 
-        Get all editable parameters of the :doc:`item</items>` confiugration.
+        Get all editable parameters of the :doc:`item<../items>` confiugration.
 
         Args:
             k: .master
@@ -700,7 +700,7 @@ class UC_API(GenericAPI):
         """
         set item property
 
-        Set configuration parameters of the :doc:`item</items>`.
+        Set configuration parameters of the :doc:`item<../items>`.
 
         Args:
             k: .master
@@ -729,7 +729,7 @@ class UC_API(GenericAPI):
         """
         create new unit
 
-        Creates new :ref:`unit<unit>`.
+        Creates new :ref:`unit<eva3_unit>`.
 
         Args:
             k: .master
@@ -754,7 +754,7 @@ class UC_API(GenericAPI):
         """
         create new sensor
 
-        Creates new :ref:`sensor<sensor>`.
+        Creates new :ref:`sensor<eva3_sensor>`.
 
         Args:
             k: .master
@@ -779,7 +779,7 @@ class UC_API(GenericAPI):
         """
         create multi-update
 
-        Creates new :ref:`multi-update<multiupdate>`.
+        Creates new :ref:`multi-update<eva3_multiupdate>`.
 
         Args:
             k: .master
@@ -802,7 +802,7 @@ class UC_API(GenericAPI):
         """
         create new item
 
-        Creates new :doc:`item</items>`.
+        Creates new :doc:`item<../items>`.
 
         Args:
             k: .master
@@ -831,7 +831,7 @@ class UC_API(GenericAPI):
         """
         clone item
 
-        Creates a copy of the :doc:`item</items>`.
+        Creates a copy of the :doc:`item<../items>`.
 
         Args:
             k: .master
@@ -857,7 +857,7 @@ class UC_API(GenericAPI):
         """
         clone group
 
-        Creates a copy of all :doc:`items</items>` from the group.
+        Creates a copy of all :doc:`items<../items>` from the group.
 
         Args:
             k: .master
@@ -887,7 +887,7 @@ class UC_API(GenericAPI):
         """
         delete item or group
 
-        Deletes the :doc:`item</items>` or the group (and all the items in it)
+        Deletes the :doc:`item<../items>` or the group (and all the items in it)
         from the system.
 
         Args:
@@ -931,7 +931,7 @@ class UC_API(GenericAPI):
         """
         deploy device items from template
 
-        Deploys the :ref:`device<device>` from the specified template.
+        Deploys the :ref:`device<eva3_device>` from the specified template.
 
         Args:
             k: .allow=device
@@ -996,7 +996,7 @@ class UC_API(GenericAPI):
         """
         update device items
 
-        Works similarly to :ref:`ucapi_deploy_device` function but doesn't
+        Works similarly to :ref:`eva3_ucapi_deploy_device` function but doesn't
         create new items, updating the item configuration of the existing ones.
 
         Args:
@@ -1122,7 +1122,7 @@ class UC_API(GenericAPI):
         """
         delete device items
 
-        Works in an opposite way to :ref:`ucapi_deploy_device` function,
+        Works in an opposite way to :ref:`eva3_ucapi_deploy_device` function,
         destroying all items specified in the template.
 
         Args:
@@ -1222,7 +1222,7 @@ class UC_API(GenericAPI):
         """
         create virtual Modbus port
 
-        Creates virtual :doc:`Modbus port</modbus>` with the specified
+        Creates virtual :doc:`Modbus port<../modbus>` with the specified
         configuration.
 
         Modbus params should contain the configuration of hardware Modbus port.
@@ -1241,7 +1241,7 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .i: virtual port ID which will be used later in
-                :doc:`PHI</drivers>` configurations, required
+                :doc:`PHI<../drivers>` configurations, required
             p: Modbus params
 
         Optional:
@@ -1276,7 +1276,7 @@ class UC_API(GenericAPI):
         """
         delete virtual Modbus port
 
-        Deletes virtual :doc:`Modbus port</modbus>`.
+        Deletes virtual :doc:`Modbus port<../modbus>`.
 
         Args:
             k: .master
@@ -1324,7 +1324,7 @@ class UC_API(GenericAPI):
         """
         test virtual Modbus port
 
-        Verifies virtual :doc:`Modbus port</modbus>` by calling connect()
+        Verifies virtual :doc:`Modbus port<../modbus>` by calling connect()
         Modbus client method.
 
         .. note::
@@ -1773,7 +1773,7 @@ class UC_API(GenericAPI):
         """
         create OWFS bus
 
-        Creates (defines) :doc:`OWFS bus</owfs>` with the specified
+        Creates (defines) :doc:`OWFS bus<../owfs>` with the specified
         configuration.
 
         Parameter "location" ("n") should contain the connection configuration,
@@ -1783,7 +1783,7 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .i: bus ID which will be used later in
-                :doc:`PHI</drivers>` configurations, required
+                :doc:`PHI<../drivers>` configurations, required
             n: OWFS location
 
         Optional:
@@ -1813,7 +1813,7 @@ class UC_API(GenericAPI):
         """
         delete OWFS bus
 
-        Deletes (undefines) :doc:`OWFS bus</owfs>`.
+        Deletes (undefines) :doc:`OWFS bus<../owfs>`.
 
         .. note::
 
@@ -1866,7 +1866,8 @@ class UC_API(GenericAPI):
         """
         test OWFS bus
 
-        Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
+        Verifies :doc:`OWFS bus<../owfs>` checking library initialization
+        status.
 
         Args:
             k: .master
@@ -1891,7 +1892,7 @@ class UC_API(GenericAPI):
         """
         scan OWFS bus
 
-        Scan :doc:`OWFS bus</owfs>` for connected 1-Wire devices.
+        Scan :doc:`OWFS bus<../owfs>` for connected 1-Wire devices.
 
         Args:
             k: .master
@@ -1966,7 +1967,7 @@ class UC_API(GenericAPI):
         """
         create data puller
 
-        Creates :doc:`data puller</datapullers>` with the specified
+        Creates :doc:`data puller<../datapullers>` with the specified
         configuration.
 
         Args:
@@ -1999,7 +2000,7 @@ class UC_API(GenericAPI):
         """
         destroy data puller
 
-        Creates :doc:`data puller</datapullers>` with the specified
+        Creates :doc:`data puller<../datapullers>` with the specified
         configuration.
 
         Args:
@@ -2112,7 +2113,7 @@ class UC_API(GenericAPI):
         """
         load PHI module
 
-        Loads :doc:`Physical Interface</drivers>`.
+        Loads :doc:`Physical Interface<../drivers>`.
 
         Args:
             k: .master
@@ -2278,9 +2279,9 @@ class UC_API(GenericAPI):
         """
         unload PHI
 
-        Unloads PHI. PHI should not be used by any :doc:`driver</drivers>`
+        Unloads PHI. PHI should not be used by any :doc:`driver<../drivers>`
         (except *default*, but the driver should not be in use by any
-        :doc:`item</items>`).
+        :doc:`item<../items>`).
 
         If driver <phi_id.default> (which's loaded automatically with PHI) is
         present, it will be unloaded as well.
@@ -2411,7 +2412,7 @@ class UC_API(GenericAPI):
         """
         load a driver
 
-        Loads a :doc:`driver</drivers>`, combining previously loaded PHI and
+        Loads a :doc:`driver<../drivers>`, combining previously loaded PHI and
         chosen LPI module.
 
         Args:
@@ -2444,7 +2445,7 @@ class UC_API(GenericAPI):
         """
         unload driver
 
-        Unloads driver. Driver should not be used by any :doc:`item</items>`.
+        Unloads driver. Driver should not be used by any :doc:`item<../items>`.
 
         Args:
             k: .master
@@ -2566,7 +2567,7 @@ class UC_API(GenericAPI):
         """
         assign driver to item
 
-        Sets the specified driver to :doc:`item</items>`, automatically
+        Sets the specified driver to :doc:`item<../items>`, automatically
         updating item props:
 
         * **action_driver_config**,**update_driver_config** to the specified

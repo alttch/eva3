@@ -162,8 +162,7 @@ class LockAPI(object):
             failed or forgot to release the lock
         
         used to restrict parallel process starting or access to system
-        files/resources. LM PLC :doc:`macro</lm/macros>` share locks with
-        extrnal scripts.
+        files/resources. LM PLC can share locks with extrnal scripts.
 
         .. note::
 
@@ -334,7 +333,7 @@ class CMDAPI(object):
         """
         execute a remote system command
 
-        Executes a :ref:`command script<cmd>` on the server where the
+        Executes a :ref:`command script<eva3_cmd>` on the server where the
         controller is installed.
 
         Args:
@@ -581,8 +580,6 @@ class FileAPI(object):
     def install_pkg(self, **kwargs):
         """
         install a package
-
-        Installs the :doc:`package </packages>`
 
         Args:
             k: .master

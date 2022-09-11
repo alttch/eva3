@@ -153,7 +153,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         set lvar state
 
-        Set status and value of a :ref:`logic variable<lvar>`.
+        Set status and value of a :ref:`logic variable<eva3_lvar>`.
 
         Args:
             k:
@@ -186,7 +186,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         reset lvar state
 
-        Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
+        Set status and value of a :ref:`logic variable<eva3_lvar>` to *1*. Useful
         when lvar is being used as a timer to reset it, or as a flag to set it
         *True*.
 
@@ -204,7 +204,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         clear lvar state
 
         set status (if **expires** lvar param > 0) or value (if **expires**
-        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
+        isn't set) of a :ref:`logic variable<eva3_lvar>` to *0*. Useful when lvar is
         used as a timer to stop it, or as a flag to set it *False*.
 
         Args:
@@ -225,7 +225,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         toggle lvar state
 
-        switch value of a :ref:`logic variable<lvar>` between *0* and *1*.
+        switch value of a :ref:`logic variable<eva3_lvar>` between *0* and *1*.
         Useful when lvar is being used as a flag to switch it between
         *True*/*False*.
 
@@ -251,7 +251,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         increment lvar value
 
-        Increment value of a :ref:`logic variable<lvar>`. Initial value should
+        Increment value of a :ref:`logic variable<eva3_lvar>`. Initial value should
         be number
 
         Args:
@@ -272,7 +272,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         decrement lvar value
 
-        Decrement value of a :ref:`logic variable<lvar>`. Initial value should
+        Decrement value of a :ref:`logic variable<eva3_lvar>`. Initial value should
         be number
 
         Args:
@@ -433,7 +433,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         list rule properties
 
         Get all editable parameters of the :doc:`decision
-        rule</lm/decision_matrix>`.
+        rule<decision_matrix>`.
 
         Args:
             k:
@@ -462,7 +462,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         set rule parameters
 
         Set configuration parameters of the :doc:`decision
-        rule</lm/decision_matrix>`.
+        rule<decision_matrix>`.
 
         .. note::
 
@@ -619,7 +619,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         list job properties
 
-        Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
+        Get all editable parameters of the :doc:`scheduled job<jobs>`.
 
         Args:
             k: .master
@@ -641,7 +641,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         set job parameters
 
-        Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+        Set configuration parameters of the :doc:`scheduled job<jobs>`.
 
         Args:
         
@@ -1143,7 +1143,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: lvaar id
 
         Returns:
-            complete :ref:`lvar<lvar>` configuration.
+            complete :ref:`lvar<eva3_lvar>` configuration.
         """
         i = parse_api_params(kwargs, 'i', 's')
         if is_oid(i):
@@ -1160,7 +1160,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         save lvar configuration
 
-        Saves :ref:`lvar<lvar>`. configuration on disk (even if it hasn't been
+        Saves :ref:`lvar<eva3_lvar>`. configuration on disk (even if it hasn't been
         changed)
 
         Args:
@@ -1191,7 +1191,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             x: serialize specified item prop(s)
 
         Returns:
-            the list of all :ref:`lvars<lvar>` available
+            the list of all :ref:`lvars<eva3_lvar>` available
         """
         tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.', {'p': 'lvar'})
         if prop:
@@ -1236,7 +1236,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         list lvar properties
 
-        Get all editable parameters of the :ref:`lvar<lvar>` confiugration.
+        Get all editable parameters of the :ref:`lvar<eva3_lvar>` confiugration.
 
         Args:
             k: .master
@@ -1257,7 +1257,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         set lvar property
 
-        Set configuration parameters of the :ref:`lvar<lvar>`.
+        Set configuration parameters of the :ref:`lvar<eva3_lvar>`.
 
         Args:
             k: .master
@@ -1286,7 +1286,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         create lvar
 
-        Create new :ref:`lvar<lvar>`
+        Create new :ref:`lvar<eva3_lvar>`
 
         Args:
             k: .master
@@ -1347,7 +1347,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         get a list of items from connected UCs
 
         Get a list of the items loaded from the connected :ref:`UC
-        controllers<lm_remote_uc>`. Useful to debug the controller
+        controllers<eva3_lm_remote_uc>`. Useful to debug the controller
         connections.
 
         Args:
@@ -1405,7 +1405,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         get controllers list
 
-        Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
+        Get the list of all connected :ref:`UC controllers<eva3_lm_remote_uc>`.
 
         Args:
             k: .master
@@ -1422,11 +1422,11 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         connect remote UC via HTTP
 
-        Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
+        Connects remote :ref:`UC controller<eva3_lm_remote_uc>` to the local.
 
         Args:
             k: .master
-            u: :doc:`/uc/uc_api` uri (*proto://host:port*, port not required
+            u: :doc:`../uc/uc_api` uri (*proto://host:port*, port not required
                 if default)
             a: remote controller API key (\$key to use local key)
 
@@ -1497,7 +1497,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         load extension module
 
-        Loads:doc:`macro extension</lm/ext>`.
+        Loads:doc:`macro extension<../lm/ext>`.
 
         Args:
             k: .master
