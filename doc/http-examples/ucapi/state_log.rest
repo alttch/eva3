@@ -1,3 +1,0 @@
-GET /r/sensor/tests/test1@log HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey

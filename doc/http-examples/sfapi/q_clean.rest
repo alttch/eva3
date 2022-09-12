@@ -1,6 +1,0 @@
-POST /r/unit/tests/unit3 HTTP/1.1
-Host: localhost:8828
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "method": "q_clean" }

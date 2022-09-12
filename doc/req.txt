@@ -1,4 +1,0 @@
-docutils==0.17.1
-sphinxcontrib-httpdomain
-sphinxcontrib-httpexmpl>=0.9.13
-sphinxcontrib.yt==0.2.2

@@ -1,5 +1,0 @@
-POST /lm-api/save_config HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "lvar:tests/lvar1" }

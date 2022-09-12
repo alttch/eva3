@@ -1,6 +1,0 @@
-PATCH /r/dmatrix_rule/4c6e8c99-56fe-490c-8442-4936ba777498 HTTP/1.1
-Host: localhost:8817
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "for_initial": "any", "enabled": true }

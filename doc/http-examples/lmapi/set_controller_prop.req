@@ -1,5 +1,0 @@
-POST /lm-api/set_controller_prop HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "uc/ws1-v1", "p": "reload_interval", "v": 60, "save": true }

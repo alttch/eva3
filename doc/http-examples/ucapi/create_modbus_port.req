@@ -1,5 +1,0 @@
-POST /uc-api/create_modbus_port HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "mbp1", "p": "udp:192.168.33.33:502", "l": true, "t": 0.5, "r": 3, "d": 0.2, "save": true }

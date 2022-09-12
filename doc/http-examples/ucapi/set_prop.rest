@@ -1,6 +1,0 @@
-PATCH /r/unit/tests/unit3 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "action_allow_termination": true, "action_timeout": 10, "update_interval": 10 }

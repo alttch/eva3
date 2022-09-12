@@ -1,5 +1,0 @@
-POST /uc-api/set_driver_prop HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "test1.my", "p": "bose", "v": 1, "save": true }

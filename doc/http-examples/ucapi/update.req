@@ -1,5 +1,0 @@
-POST /uc-api/update HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "sensor:tests/sensor1", "s": 1, "v": 29.445 }

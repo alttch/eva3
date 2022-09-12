@@ -1,2 +1,0 @@
-.. automodule:: eva.registry
-    :members: 

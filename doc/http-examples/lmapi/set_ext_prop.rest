@@ -1,6 +1,0 @@
-PATCH /r/ext/test_a HTTP/1.1
-Host: localhost:8817
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "d": 2, "save": true }

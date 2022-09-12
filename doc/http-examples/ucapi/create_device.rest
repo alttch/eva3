@@ -1,6 +1,0 @@
-POST /r/device-tpl/device1 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "c": "PORT=2,ID=5", "method": "deploy", "c": "PORT=3,ID=7" }

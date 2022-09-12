@@ -1,5 +1,0 @@
-POST /lm-api/list_controller_props HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "uc/ws1-v1" }

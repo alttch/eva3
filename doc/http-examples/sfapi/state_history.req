@@ -1,5 +1,0 @@
-POST /sfa-api/state_history HTTP/1.1
-Host: localhost:8828
-Content-Type: application/json
-
-{ "k": "mykey", "i": "sensor:env/temp_test" }

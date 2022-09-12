@@ -1,5 +1,0 @@
-POST /uc-api/put_phi_mod HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "m": "gpio_button", "c": "<MODULE_CONTENT>" }

@@ -5,8 +5,8 @@ from eva.features import val_to_boolean
 python_libraries = ['cpppo==4.0.6']
 
 phis = [
-    'https://get.eva-ics.com/phi/enip/enip_sensor.py',
-    'https://get.eva-ics.com/phi/enip/enip_xvunit.py'
+    'https://pub.bma.ai/eva3/phi/enip/enip_sensor.py',
+    'https://pub.bma.ai/eva3/phi/enip/enip_xvunit.py'
 ]
 
 

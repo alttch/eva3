@@ -1,6 +1,0 @@
-PUT /r/lvar/tests/lvar2 HTTP/1.1
-Host: localhost:8817
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "expires": 30 }

@@ -1,5 +1,0 @@
-POST /lm-api/get_job HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "9c6e8c99-56fe-490c-8442-4936ba777499" }

@@ -1,8 +1,0 @@
-{
-    "autostart": false,
-    "description": "",
-    "ict": 20,
-    "interval": 0.01,
-    "macro": "tests/test",
-    "on_error": null
-}

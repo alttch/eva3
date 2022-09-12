@@ -1,5 +1,0 @@
-POST /lm-api/run HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "tests/test_macro" }

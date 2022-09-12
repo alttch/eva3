@@ -1,5 +1,0 @@
-POST /uc-api/exec_phi HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "test1", "c": "update_firmware", "a": "/opt/firmware/fw.dat" }

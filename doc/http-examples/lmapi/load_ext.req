@@ -1,5 +1,0 @@
-POST /lm-api/load_ext HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "test_a", "m": "audio", "c": "sdir=/opt/data/snd", "save": true }

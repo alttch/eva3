@@ -1,5 +1,0 @@
-POST /uc-api/destroy_device HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "t": "device1", "c": "PORT=2,ID=5" }

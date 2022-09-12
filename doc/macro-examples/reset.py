@@ -1,1 +1,0 @@
-reset('tests/test1')

@@ -1,5 +1,0 @@
-POST /uc-api/destroy_modbus_port HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "mbp1" }

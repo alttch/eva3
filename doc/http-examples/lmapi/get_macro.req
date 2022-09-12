@@ -1,5 +1,0 @@
-POST /lm-api/get_macro HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "tests/test_macro" }

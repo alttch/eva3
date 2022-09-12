@@ -1,6 +1,0 @@
-PUT /r/owfs/bus1 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "n": "localhost:4304", "l": true, "t": 1, "r": 5, "d": 0.3, "save": true }

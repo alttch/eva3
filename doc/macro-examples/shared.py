@@ -1,1 +1,0 @@
-r = shared('var1')

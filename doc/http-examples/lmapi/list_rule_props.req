@@ -1,5 +1,0 @@
-POST /lm-api/list_rule_props HTTP/1.1
-Host: localhost:8817
-Content-Type: application/json
-
-{ "k": "mykey", "i": "4c6e8c99-56fe-490c-8442-4936ba777498" }

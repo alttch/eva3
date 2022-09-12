@@ -1,6 +1,0 @@
-PATCH /r/core HTTP/1.1
-Host: localhost:8828
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "supervisor_lock": {} }

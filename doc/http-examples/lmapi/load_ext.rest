@@ -1,6 +1,0 @@
-PUT /r/ext/test_a2 HTTP/1.1
-Host: localhost:8817
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "m": "audio", "c": "sdir=/opt/data/snd", "save": true }

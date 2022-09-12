@@ -1,5 +1,0 @@
-POST /uc-api/create_mu HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "mu:tests/mu1", "save": true }

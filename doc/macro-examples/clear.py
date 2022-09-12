@@ -1,1 +1,0 @@
-clear('tests/test1')

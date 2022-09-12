@@ -1,5 +1,0 @@
-POST /sfa-api/kill HTTP/1.1
-Host: localhost:8828
-Content-Type: application/json
-
-{ "k": "mykey", "i": "unit:tests/unit1" }

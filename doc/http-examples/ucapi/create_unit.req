@@ -1,5 +1,0 @@
-POST /uc-api/create_unit HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "tests/unit1", "save": true }

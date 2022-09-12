@@ -1,1 +1,0 @@
-kill('tests/unit1')

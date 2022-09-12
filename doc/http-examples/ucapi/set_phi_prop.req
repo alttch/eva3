@@ -1,5 +1,0 @@
-POST /uc-api/set_phi_prop HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "test1", "p": "default_status", "v": 1, "save": true }
