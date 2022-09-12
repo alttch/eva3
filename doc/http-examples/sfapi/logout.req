@@ -1,5 +1,0 @@
-POST /sfa-api/logout HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "token:c063c19fb54dd6b773b4f236f26ea7e5fbaa96f48b103221ae1107420096aef7" }

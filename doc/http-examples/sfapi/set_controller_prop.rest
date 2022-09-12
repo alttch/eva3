@@ -1,6 +1,0 @@
-PATCH /r/controller/uc/ws1-v1 HTTP/1.1
-Host: localhost:8828
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "reload_interval": 60 }

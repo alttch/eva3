@@ -1,5 +1,0 @@
-POST /uc-api/load_phi HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "test1", "m": "vrtrelay", "c": "default_status=0", "save": true }

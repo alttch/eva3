@@ -1,5 +1,0 @@
-POST /sys-api/log_get HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "l": "warning", "t": 3600, "n": 3 }

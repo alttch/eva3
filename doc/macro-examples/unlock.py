@@ -1,1 +1,0 @@
-unlock('lock1')

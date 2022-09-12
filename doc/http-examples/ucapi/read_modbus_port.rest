@@ -1,3 +1,0 @@
-GET /r/modbus/local/1/h10-12,c5-6 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey

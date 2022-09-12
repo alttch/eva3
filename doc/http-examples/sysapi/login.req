@@ -1,5 +1,0 @@
-POST /sys-api/login HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "u": "admin", "p": "123" }

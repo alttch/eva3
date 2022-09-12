@@ -1,3 +1,0 @@
-GET /r/phi-module/nanoleaf@discover HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey

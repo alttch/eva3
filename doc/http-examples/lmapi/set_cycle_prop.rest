@@ -1,6 +1,0 @@
-PATCH /r/lcycle/tests/test_cycle HTTP/1.1
-Host: localhost:8817
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "ict": 20, "macro": "tests/test_macro" }

@@ -1,6 +1,0 @@
-PUT /r/modbus/mbp2 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "p": "udp:192.168.33.33:502", "l": true, "t": 0.5, "r": 3, "d": 0.2, "save": true }

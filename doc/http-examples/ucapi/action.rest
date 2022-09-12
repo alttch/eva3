@@ -1,6 +1,0 @@
-POST /r/action HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "s": 1, "i": "unit:tests/unit3", "s": 1 }

@@ -1,6 +1,0 @@
-PUT /r/key/testkey2 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "sysfunc": true, "allow": "cmd" }

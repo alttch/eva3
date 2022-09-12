@@ -1,1 +1,0 @@
-decrement('tests/test1')

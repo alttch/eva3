@@ -1,5 +1,0 @@
-POST /sys-api/set_key_prop HTTP/1.1
-Host: localhost:8812
-Content-Type: application/json
-
-{ "k": "mykey", "i": "testkey", "save": true, "p": "sysfunc", "v": true }

@@ -1,6 +1,0 @@
-PUT /r/mu/tests/mu2 HTTP/1.1
-Host: localhost:8812
-X-Auth-Key: mykey
-Content-Type: application/json
-
-{ "save": true, "update_timeout": 10, "update_interval": 5 }
