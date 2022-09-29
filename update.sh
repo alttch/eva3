@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.4.2
-BUILD=2022091201
+BUILD=2022092903
 
 PYTHON3_MIN=6
 if [ -d ./venv ]; then
@@ -15,7 +15,7 @@ if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   exit 1
 fi
 
-[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://pub.bma.ai/eva3
 
 export EVA_REPOSITORY_URL
 

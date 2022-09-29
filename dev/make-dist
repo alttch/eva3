@@ -16,9 +16,9 @@ else
 fi
 BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
 
-echo curl -v https://get.eva-ics.com/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz
+echo curl -v https://pub.bma.ai/eva3/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz
 
-( curl -v https://get.eva-ics.com/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz 2>&1|grep "NoSuchKey" ) > /dev/null 2>&1
+( curl -v https://pub.bma.ai/eva3/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz 2>&1|grep "NoSuchKey" ) > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
   echo "Version ${VERSION} build ${BUILD} already exists"
@@ -67,11 +67,11 @@ rm -rf eva-${VERSION}
 echo "Uploading to eva-ics.com"
 #scp -P 222 eva-${VERSION}-${BUILD}.tgz root@d1.altertech.net:/www/download/eva-ics/${VERSION}/nightly/
 #scp -P 222 eva-${VERSION}-${BUILD}.tgz root@d1.altertech.net:/www/download/test.eva-ics/${VERSION}/nightly/
-gsutil cp -a public-read eva-${VERSION}-${BUILD}.tgz gs://get.eva-ics.com/${VERSION}/nightly/
+gsutil cp -a public-read eva-${VERSION}-${BUILD}.tgz gs://pub.bma.ai/eva3/${VERSION}/nightly/
 
 cd ..
 ./dev/upload-changelog
 ./dev/upload-update
 
-#jks build get.eva-ics.com
+#jks build pub.bma.ai
 

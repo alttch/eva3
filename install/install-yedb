@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://pub.bma.ai/eva3
 
 D=`realpath $0`
 cd `dirname ${D}`/..

@@ -19,7 +19,7 @@ test-build:
 	git push
 	make dmaster
 	make test-release
-	jks build get.eva-ics.com
+	jks build pub.bma.ai
 
 test-build-for-stable:
 	make build
@@ -27,12 +27,12 @@ test-build-for-stable:
 	git push
 	make d
 	make test-release
-	jks build get.eva-ics.com
+	jks build pub.bma.ai
 
 rc-pub:
 	make d
 	make test-release
-	jks build get.eva-ics.com
+	jks build pub.bma.ai
 
 d:
 	mkdir -p dist
@@ -44,7 +44,7 @@ dmaster:
 
 stable-release:
 	@./dev/make-release
-	jks build get.eva-ics.com
+	jks build pub.bma.ai
 
 test-release:
 	@./dev/make-release --test
@@ -104,7 +104,7 @@ min:
 
 #pub-compose:
 	#scp -P 222 install/demos/eva_basic/docker-compose.yml root@d1.altertech.net:/www/download/eva-ics/configs/
-	#gsutil cp -a public-read install/demos/eva_basic/docker-compose.yml gs://get.eva-ics.com/configs/
+	#gsutil cp -a public-read install/demos/eva_basic/docker-compose.yml gs://pub.bma.ai/eva3/configs/
 	#cd /opt/eva-ics.com/indexer && make prefix=/configs pub
 
 #demo-basic:
