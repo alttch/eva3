@@ -8,6 +8,6 @@ BUILD=`grep "^product_build = " sbin/ucserv.py|cut -d= -f2|awk '{ print $1 }'`
 #scp -P 222 UPDATE.rst root@d1.altertech.net:/www/download/eva-ics/${VERSION}/nightly/
 #scp -P 222 UPDATE.rst root@d1.altertech.net:/www/download/test.eva-ics/${VERSION}/nightly/
 
-gsutil cp -a public-read update.sh gs://get.eva-ics.com/${VERSION}/nightly/update-${BUILD}.sh
-gsutil -h "Content-Type:text/x-rst" cp -a public-read UPDATE.rst gs://get.eva-ics.com/${VERSION}/nightly/UPDATE.rst
+gsutil cp -a public-read update.sh gs://pub.bma.ai/eva3/${VERSION}/nightly/update-${BUILD}.sh
+gsutil -h "Content-Type:text/x-rst" cp -a public-read UPDATE.rst gs://pub.bma.ai/eva3/${VERSION}/nightly/UPDATE.rst
 

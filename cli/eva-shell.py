@@ -41,7 +41,7 @@ exec_before_save = None
 exec_after_save = None
 cmds = []
 
-update_repo = 'https://get.eva-ics.com'
+update_repo = 'https://pub.bma.ai/eva3'
 
 import eva.client.cli
 

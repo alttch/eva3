@@ -40,7 +40,7 @@ fname_manifest = '/tmp/manifest-{}.json'.format(random.randint(1, 1000000))
 content = {}
 priv_key = open(f'{dir_eva}/.keys/private.key', 'rb').read()
 for f in [f'eva-{a.version}-{a.build}.tgz', f'update-{a.build}.sh']:
-    uri = f'https://get.eva-ics.com/{a.version}/nightly/{f}'
+    uri = f'https://pub.bma.ai/eva3/{a.version}/nightly/{f}'
     r = requests.get(uri)
     if not r.ok:
         raise RuntimeError(f'http response: {r.status_code} for {uri}')
@@ -61,7 +61,7 @@ try:
                 'content': content
             }))
     gsutil(f'cp -a public-read {fname_manifest}'
-           f' gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.build}.json')
+           f' gs://pub.bma.ai/eva3/{a.version}/nightly/manifest-{a.build}.json')
 finally:
     try:
         os.unlink(fname_manifest)
@@ -71,31 +71,31 @@ finally:
 if not a.test:
     gsutil(
         f'cp -a public-read '
-        f'gs://get.eva-ics.com/{a.version}/nightly/eva-{a.version}-{a.build}.tgz'
-        f' gs://get.eva-ics.com/{a.version}/stable/eva-{a.version}-{a.build}.tgz'
+        f'gs://pub.bma.ai/eva3/{a.version}/nightly/eva-{a.version}-{a.build}.tgz'
+        f' gs://pub.bma.ai/eva3/{a.version}/stable/eva-{a.version}-{a.build}.tgz'
     )
 
     fname = '/tmp/update{}.sh'.format(random.randint(1, 1000000))
     gsutil(f'cp '
-           f'gs://get.eva-ics.com/{a.version}/nightly/update-{a.build}.sh '
+           f'gs://pub.bma.ai/eva3/{a.version}/nightly/update-{a.build}.sh '
            f' {fname}')
     gsutil(f'-h "Cache-Control:no-cache" cp -a public-read '
            f'{fname} '
-           f' gs://get.eva-ics.com/{a.version}/stable/update.sh')
+           f' gs://pub.bma.ai/eva3/{a.version}/stable/update.sh')
     os.unlink(fname)
 
     gsutil(f'cp -a public-read '
-           f'gs://get.eva-ics.com/{a.version}/nightly/CHANGELOG.html'
-           f' gs://get.eva-ics.com/{a.version}/stable/CHANGELOG.html')
+           f'gs://pub.bma.ai/eva3/{a.version}/nightly/CHANGELOG.html'
+           f' gs://pub.bma.ai/eva3/{a.version}/stable/CHANGELOG.html')
 
     gsutil(f'-h "Content-Type:text/x-rst" cp -a public-read '
-           f'gs://get.eva-ics.com/{a.version}/nightly/UPDATE.rst '
-           f'gs://get.eva-ics.com/{a.version}/stable/UPDATE.rst')
+           f'gs://pub.bma.ai/eva3/{a.version}/nightly/UPDATE.rst '
+           f'gs://pub.bma.ai/eva3/{a.version}/stable/UPDATE.rst')
 
     gsutil(
         f'cp -a public-read '
-        f'gs://get.eva-ics.com/{a.version}/nightly/manifest-{a.build}.json'
-        f' gs://get.eva-ics.com/{a.version}/stable/manifest-{a.build}.json'
+        f'gs://pub.bma.ai/eva3/{a.version}/nightly/manifest-{a.build}.json'
+        f' gs://pub.bma.ai/eva3/{a.version}/stable/manifest-{a.build}.json'
     )
 
 if a.update_info or a.test:
@@ -108,7 +108,7 @@ if a.update_info or a.test:
                 'build': a.build,
             }))
         gsutil(f'-h "Cache-Control:no-cache" cp -a public-read '
-               f'{fname} gs://get.eva-ics.com/{ftarget}')
+               f'{fname} gs://pub.bma.ai/eva3/{ftarget}')
     finally:
         try:
             os.unlink(fname)

@@ -15,7 +15,7 @@ if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   exit 1
 fi
 
-[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://pub.bma.ai/eva3
 
 export EVA_REPOSITORY_URL
 

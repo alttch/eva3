@@ -2,7 +2,7 @@
 
 [ "${debug}" == "1" ] && set -o xtrace
 
-[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
+[ -z "${EVA_REPOSITORY_URL}" ] && EVA_REPOSITORY_URL=https://pub.bma.ai/eva3
 export EVA_REPOSITORY_URL
 
 PYTHON3_MIN=6

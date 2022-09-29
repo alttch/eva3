@@ -15,7 +15,7 @@
 
 [update]
 ; specify custom update repository url
-;url = https://get.eva-ics.com
+;url = https://pub.bma.ai/eva3
 ; extra Python versions for mirroring, comma separated
 ; "source" for downloading sources for all modules
 ;mirror_extra_python_versions = 3.7, 3.9, source

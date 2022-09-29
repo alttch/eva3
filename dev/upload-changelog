@@ -8,6 +8,6 @@ rst2html5.py CHANGELOG.rst CHANGELOG.html
 #scp -P 222 CHANGELOG.html root@d1.altertech.net:/www/download/eva-ics/${VERSION}/nightly/
 #scp -P 222 CHANGELOG.html root@d1.altertech.net:/www/download/test.eva-ics/${VERSION}/nightly/
 
-gsutil cp -a public-read -z html CHANGELOG.html gs://get.eva-ics.com/${VERSION}/nightly/
+gsutil cp -a public-read -z html CHANGELOG.html gs://pub.bma.ai/eva3/${VERSION}/nightly/
 
 rm -f CHANGELOG.html
