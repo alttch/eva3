@@ -358,6 +358,10 @@ class ManagementCLI(GenericCLI):
                                dest='i',
                                help='Check for a new version without upgrading',
                                action='store_true')
+        ap_update.add_argument('--test',
+                               dest='test',
+                               help='Update to test (unstable) builds',
+                               action='store_true')
         ap_update.add_argument('-M',
                                '--mirror',
                                dest='mirror',
@@ -1211,8 +1215,11 @@ sys.argv = {argv}
                     forced_version = True
                 else:
                     result = rapidjson.loads(
-                        safe_download(_update_repo + '/update_info.json',
-                                      timeout=10))
+                        safe_download(
+                            _update_repo +
+                            ('/update_info_test.json'
+                             if params.get('test') else '/update_info.json'),
+                            timeout=10))
                     new_build = int(result['build'])
                     new_version = result['version']
                     forced_version = False
