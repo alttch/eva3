@@ -16,3 +16,5 @@
 #YEDB_USER=
 # set to 1 to enable verbose startup
 #VERBOSE_STARTUP=
+# controller startup timeout
+#STARTUP_TIMEOUT=90
