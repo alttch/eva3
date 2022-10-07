@@ -10,8 +10,6 @@ EVA_DIR=$(pwd)
 [ -z ${STARTUP_TIMEOUT} ] && STARTUP_TIMEOUT=90
 MAX_START_WAIT=$(( STARTUP_TIMEOUT*2 ))
 
-echo $MAX_START_WAIT
-
 export VERBOSE_STARTUP
 
 source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
