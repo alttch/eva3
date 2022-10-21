@@ -7,7 +7,6 @@ import hashlib
 import eva.core
 import logging
 import rapidjson
-import ldap
 import sqlalchemy as sa
 import subprocess
 import time
@@ -163,6 +162,7 @@ def msad_authenticate(username, password):
         ad_config = dict(AD_SERVER=msad_host,
                          AD_DOMAIN=domain,
                          CA_CERT_FILE=_d.msad_ca)
+        import ldap
         try:
             msad = EasyAD(ad_config)
             credentials = dict(username=username, password=password)
