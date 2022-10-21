@@ -65,6 +65,8 @@ cvars = {}
 
 controllers = []
 
+lockers = []
+
 plugin_modules = {}
 
 plugin_lock = threading.RLock()
@@ -256,6 +258,7 @@ class Locker(GenericLocker):
 
         super().__init__(mod=mod, relative=False)
         self.critical = critical
+        lockers.append(self)
 
 
 class RLocker(GenericLocker):
@@ -264,6 +267,7 @@ class RLocker(GenericLocker):
 
         super().__init__(mod=mod, relative=True)
         self.critical = critical
+        lockers.append(self)
 
 
 cvars_lock = RLocker('core')
@@ -882,6 +886,7 @@ def load(initial=False, init_log=True, check_pid=True, omit_plugins=False):
         config.timeout = float(cfg.get('server/timeout'))
     except LookupError:
         pass
+    update_timeout(config.timeout)
     if not config.polldelay:
         config.polldelay = 0.01
     logging.debug(f'server.timeout = {config.timeout}')
@@ -1268,12 +1273,17 @@ def dummy_false():
 def init():
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
-    Locker.timeout = config.timeout
-    RLocker.timeout = config.timeout
     if not os.environ.get('EVA_CORE_ENABLE_CC'):
         signal.signal(signal.SIGINT, sighandler_int)
     else:
         signal.signal(signal.SIGINT, sighandler_term)
+
+
+def update_timeout(timeout):
+    Locker.timeout = config.timeout
+    RLocker.timeout = config.timeout
+    for locker in lockers:
+        locker.timeout = timeout
 
 
 def start_supervisor():
