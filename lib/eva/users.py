@@ -7,6 +7,7 @@ import hashlib
 import eva.core
 import logging
 import rapidjson
+import ldap
 import sqlalchemy as sa
 import subprocess
 import time
@@ -164,7 +165,12 @@ def msad_authenticate(username, password):
                          CA_CERT_FILE=_d.msad_ca)
         try:
             msad = EasyAD(ad_config)
-            user = msad.authenticate_user(username, password, json_safe=True)
+            credentials = dict(username=username, password=password)
+            user = msad.get_user(username.split('@')[0],
+                                 credentials=credentials,
+                                 json_safe=True)
+        except ldap.INVALID_CREDENTIALS:
+            user = None
         except Exception as e:
             logging.warning(f'Unable to access active directory: {e}')
             eva.core.log_traceback()
