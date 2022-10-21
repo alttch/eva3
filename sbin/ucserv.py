@@ -49,7 +49,7 @@ for production use eva-control only to start/stop UC
 """)
 
 
-product_build = 2022100702
+product_build = 2022102101
 
 product_code = 'uc'
 
