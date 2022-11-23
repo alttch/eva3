@@ -199,6 +199,7 @@ class DataPuller:
                                                  daemon=False,
                                                  name=f'datapuller_{self.name}')
                 self.executor.start()
+                self.last_event = time.perf_counter()
             except:
                 eva.core.log_traceback()
 
@@ -353,7 +354,7 @@ class DataPuller:
                                   f'timed out (no events). restarting')
                     self.restart(auto=True)
                 break
-            elif self.last_activity + self.timeout < time.perf_counter():
+            if self.last_activity + self.timeout < time.perf_counter():
                 if not eva.core.is_shutdown_requested() and self.active:
                     logging.error(f'data puller {self.name} timed '
                                   f'out (no output). restarting')
