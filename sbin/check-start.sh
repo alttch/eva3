@@ -11,6 +11,11 @@ if [ "$CURR" -gt 2 ]; then
   exit 0
 fi
 
+UPTIME=$(echo 'import time;print(int(time.perf_counter()))'|python3)
+if [ "${UPTIME}" -lt 600 ]; then
+  exit 0
+fi
+
 source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
 source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
 source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
