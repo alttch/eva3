@@ -5,7 +5,7 @@ cd "$(dirname "${D}")/.." || exit 1
 
 EVA_DIR=$(pwd)
 
-CURR=$(pgrep -f "${EVA_DIR}/sbin/check-start.sh" | wc -l)
+CURR=$(pgrep -f "bash ${EVA_DIR}/sbin/check-start.sh" | wc -l)
 
 if [ "$CURR" -gt 2 ]; then
   exit 0
