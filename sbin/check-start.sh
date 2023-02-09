@@ -5,6 +5,12 @@ cd "$(dirname "${D}")/.." || exit 1
 
 EVA_DIR=$(pwd)
 
+CURR=$(pgrep -f "${EVA_DIR}/sbin/check-start.sh" | wc -l)
+
+if [ "$CURR" -gt 2 ]; then
+  exit 0
+fi
+
 source <(./sbin/key-as-source config/uc/service UC 2>/dev/null)
 source <(./sbin/key-as-source config/lm/service LM 2>/dev/null)
 source <(./sbin/key-as-source config/sfa/service SFA 2>/dev/null)
