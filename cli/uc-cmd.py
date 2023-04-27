@@ -1047,7 +1047,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_write.add_argument(
             '-f',
             '--data-type',
-            help='Data type (u16, i16, u32, i32, u64, i64, f64), ignored '
+            help='Data type (u16, i16, u32, i32, u64, i64, f32), ignored '
             'if single-write command is selected',
             metavar='TYPE',
             choices=['u16', 'i16', 'u32', 'i32', 'u64', 'i64', 'f32'],
