@@ -4,6 +4,10 @@ Install instructions and stable builds: https://www.eva-ics.com/download
 
 Documentation: https://info.bma.ai/en/actual/eva3/index.html
 
+Note: EVA ICS v3 is OBSOLETE and no longer supported (unless for Enterprise
+customers). Consider using [EVA ICS v4](https://github.com/eva-ics/eva4)
+instead.
+
 EVA ICS is a platform for automated control and monitoring systems development,
 for any needs, from home/office to industrial setups. It is completely free for
 non-commercial use as well as for commercial, on condition that Enterprise
