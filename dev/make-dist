@@ -73,5 +73,5 @@ cd ..
 ./dev/upload-changelog
 ./dev/upload-update
 
-#jks build pub.bma.ai
+#rci job run pub.bma.ai
 

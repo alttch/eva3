@@ -19,7 +19,7 @@ test-build:
 	git push
 	make dmaster
 	make test-release
-	jks build pub.bma.ai
+	rci job run pub.bma.ai
 
 test-build-for-stable:
 	make build
@@ -27,12 +27,12 @@ test-build-for-stable:
 	git push
 	make d
 	make test-release
-	jks build pub.bma.ai
+	rci job run pub.bma.ai
 
 rc-pub:
 	make d
 	make test-release
-	jks build pub.bma.ai
+	rci job run pub.bma.ai
 
 d:
 	mkdir -p dist
@@ -44,7 +44,7 @@ dmaster:
 
 stable-release:
 	@./dev/make-release
-	jks build pub.bma.ai
+	rci job run pub.bma.ai
 
 test-release:
 	@./dev/make-release --test
